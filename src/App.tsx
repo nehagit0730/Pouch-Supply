@@ -13,6 +13,7 @@ import BrandList from './components/BrandList';
 import CustomerAccount from './components/CustomerAccount';
 import CartDrawer from './components/CartDrawer';
 import AdminDashboard from './components/AdminDashboard';
+import PageRenderer from './components/PageRenderer';
 import { 
   Sparkles, ShieldCheck, Truck, RefreshCw, Star, ArrowRight, Package, ShoppingCart, Check, Heart, User, CheckCircle2 
 } from 'lucide-react';
@@ -73,6 +74,24 @@ export default function App() {
   
   // Checkout Successful Indicator modal
   const [checkoutSuccessful, setCheckoutSuccessful] = useState<{ id: string; amount: number } | null>(null);
+
+  // Synchronize path and load links successfully in iframe/new tab
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path.startsWith('/pages/')) {
+      const slug = path.replace('/pages/', '');
+      setCurrentTab(slug);
+      setIsAdminActive(false);
+    } else if (path.startsWith('/collections/')) {
+      const colId = path.replace('/collections/', '');
+      setActiveCollectionId(colId);
+      setCurrentTab('frontend-shop');
+      setIsAdminActive(false);
+    } else if (path.startsWith('/products/')) {
+      setCurrentTab('frontend-shop');
+      setIsAdminActive(false);
+    }
+  }, []);
 
   // --- Write to LocalStorage on Changes ---
   useEffect(() => {
@@ -328,137 +347,194 @@ export default function App() {
           /* VIEW 2: FRONTEND VIEW NAVIGATION */
           <>
             {/* FRONTEND VIEW - HOME */}
-            {currentTab === 'frontend-home' && (
-              <div className="space-y-16 pb-16">
-                
-                {/* Hero section */}
-                <section className="bg-slate-900 text-white min-h-[50vh] flex items-center relative overflow-hidden px-6 lg:px-12 py-16">
-                  <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
-                    <div className="space-y-6">
-                      <span className="text-xs bg-indigo-600 text-white font-extrabold py-1 px-3.5 rounded-full uppercase tracking-widest inline-flex items-center gap-1.5 animate-pulse">
-                        <Sparkles className="h-3 w-3" /> OFFICIAL IMPORT RESELLERS
-                      </span>
-                      <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none text-white">
-                        THE FINEST FLAVOR <br />POUCHES AT SCALE
-                      </h1>
-                      <p className="text-sm text-slate-300 leading-relaxed max-w-md font-sans">
-                        Sourced globally from premium certified laboratories. Settle for nothing but the crispest breath freeze crystal cans delivered straight to your door step.
-                      </p>
-                      
-                      <div className="pt-2 flex flex-wrap gap-4 text-xs font-bold leading-normal">
-                        <button
-                          onClick={() => setCurrentTab('frontend-shop')}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 px-8 rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
-                        >
-                          Shop Now (All Brands) <ArrowRight className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => setCurrentTab('frontend-subscribe')}
-                          className="bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 py-3.5 px-8 rounded-xl cursor-pointer"
-                        >
-                          Subscription Box 📦
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="hidden md:flex justify-end relative">
-                      <div className="relative h-72 w-72 rounded-full bg-indigo-500/10 flex items-center justify-center p-6 border border-slate-800/80 shadow-2xl animate-spin-slow">
-                        <span className="text-6xl">📦</span>
-                        <div className="absolute inset-0 border-2 border-dashed border-indigo-500/20 rounded-full" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Aesthetic Background design */}
-                  <div className="absolute inset-0 bg-radial-gradient from-indigo-950/20 to-transparent pointer-events-none" />
-                </section>
-
-                {/* Popular Brands Row */}
-                <section className="max-w-7xl mx-auto px-6">
-                  <div className="text-center mb-8">
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Our Premium Partner directory</h3>
-                  </div>
-                  <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-75">
-                    {['77 Pouches', 'CUBA Power', 'CLEW White', 'KILLA Siberian', 'VELO Eucalyptus'].map((bLabel, index) => (
-                      <span 
-                        key={index} 
-                        onClick={() => {
-                          setCurrentTab('frontend-brands');
-                          setIsAdminActive(false);
-                        }}
-                        className="text-sm font-black tracking-widest text-slate-500 hover:text-indigo-600 cursor-pointer capitalize transition-colors border-b border-transparent hover:border-indigo-650 pb-1"
-                      >
-                        {bLabel}
-                      </span>
-                    ))}
-                  </div>
-                </section>
-
-                {/* Welcome Highlights */}
-                <section className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                  <img
-                    src="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80"
-                    alt="Canisters"
-                    className="rounded-2xl shadow-md border object-cover h-80 w-full"
-                    referrerPolicy="no-referrer"
+            {currentTab === 'frontend-home' && (() => {
+              const hp = customPages.find(p => p.isHomepage);
+              if (hp) {
+                return (
+                  <PageRenderer 
+                    page={hp} 
+                    allProducts={products}
+                    allCollections={collections}
+                    loggedInCustomer={loggedInCustomer}
+                    onAddToCart={handleAddToCart} 
+                    onToggleWishlist={handleToggleWishlist}
+                    onNavigate={(target) => {
+                      if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
+                        setCurrentTab(target);
+                      } else if (target.startsWith('/pages/')) {
+                        setCurrentTab(target.replace('/pages/', ''));
+                      } else if (target.startsWith('/collections/')) {
+                        const colId = target.replace('/collections/', '');
+                        setActiveCollectionId(colId);
+                        setCurrentTab('frontend-shop');
+                      } else {
+                        setCurrentTab(target);
+                      }
+                    }} 
                   />
-                  <div className="space-y-4">
-                    <span className="text-xs text-indigo-650 font-bold uppercase tracking-wider">High performance Can packaging</span>
-                    <h2 className="text-2xl font-black text-slate-900">Custom Subscription Box: Curate your customized flavor bundle saving 15%</h2>
-                    <p className="text-slate-500 leading-normal text-xs">
-                      No more constant ordering pipelines. Set up your bespoke recurring deliveries of 6 cans, tweak frequencies automatically, cancel or edit anything from your user account.
-                    </p>
-                    <button
-                      onClick={() => setCurrentTab('frontend-subscribe')}
-                      className="text-xs text-indigo-600 hover:text-indigo-805 font-bold flex items-center gap-1 cursor-pointer pt-2"
-                    >
-                      Configure LITE plan boxes <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </section>
-
-                {/* Top Seller canisters */}
-                <section className="max-w-7xl mx-auto px-6">
-                  <div className="flex justify-between items-end mb-8">
-                    <div>
-                      <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider">curated picks</h4>
-                      <h2 className="text-2xl font-black text-slate-900 mt-1">BEST SELLING CANISTERS TODAY</h2>
-                    </div>
-                    <button
-                      onClick={() => setCurrentTab('frontend-shop')}
-                      className="text-xs text-indigo-600 hover:text-indigo-800 font-extrabold cursor-pointer"
-                    >
-                      Browse full catalog →
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                    {products.slice(0, 4).map(prod => (
-                      <div 
-                        key={prod.id} 
-                        onClick={() => {
-                          setCurrentTab('frontend-shop');
-                          setIsAdminActive(false);
-                        }}
-                        className="bg-white border hover:border-slate-350 p-4 rounded-xl space-y-3 cursor-pointer group hover:shadow-xs transition-shadow"
-                      >
-                        <div className="h-44 rounded-lg bg-slate-50 border overflow-hidden relative">
-                          <img src={prod.image} className="w-full h-full object-cover transition-transform group-hover:scale-102" alt="" referrerPolicy="no-referrer" />
-                          <span className="absolute top-2.5 left-2.5 bg-slate-900 text-white text-[9px] font-bold uppercase py-0.5 px-2 rounded-full">
-                            {prod.vendor}
-                          </span>
-                        </div>
-                        <div className="space-y-1 text-center">
-                          <h4 className="text-xs font-bold text-slate-800 truncate">{prod.title}</h4>
-                          <p className="text-slate-900 font-black text-xs">£{prod.price.toFixed(2)}</p>
+                );
+              }
+              return (
+                <div className="space-y-16 pb-16">
+                  
+                  {/* Hero section */}
+                  <section className="bg-slate-900 text-white min-h-[50vh] flex items-center relative overflow-hidden px-6 lg:px-12 py-16">
+                    <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
+                      <div className="space-y-6">
+                        <span className="text-xs bg-indigo-600 text-white font-extrabold py-1 px-3.5 rounded-full uppercase tracking-widest inline-flex items-center gap-1.5 animate-pulse">
+                          <Sparkles className="h-3 w-3" /> OFFICIAL IMPORT RESELLERS
+                        </span>
+                        <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none text-white">
+                          THE FINEST FLAVOR <br />POUCHES AT SCALE
+                        </h1>
+                        <p className="text-sm text-slate-300 leading-relaxed max-w-md font-sans">
+                          Sourced globally from premium certified laboratories. Settle for nothing but the crispest breath freeze crystal cans delivered straight to your door step.
+                        </p>
+                        
+                        <div className="pt-2 flex flex-wrap gap-4 text-xs font-bold leading-normal">
+                          <button
+                            onClick={() => setCurrentTab('frontend-shop')}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 px-8 rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                          >
+                            Shop Now (All Brands) <ArrowRight className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => setCurrentTab('frontend-subscribe')}
+                            className="bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 py-3.5 px-8 rounded-xl cursor-pointer"
+                          >
+                            Subscription Box 📦
+                          </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </section>
 
-              </div>
-            )}
+                      <div className="hidden md:flex justify-end relative">
+                        <div className="relative h-72 w-72 rounded-full bg-indigo-500/10 flex items-center justify-center p-6 border border-slate-800/80 shadow-2xl animate-spin-slow">
+                          <span className="text-6xl">📦</span>
+                          <div className="absolute inset-0 border-2 border-dashed border-indigo-500/20 rounded-full" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Aesthetic Background design */}
+                    <div className="absolute inset-0 bg-radial-gradient from-indigo-950/20 to-transparent pointer-events-none" />
+                  </section>
+
+                  {/* Popular Brands Row */}
+                  <section className="max-w-7xl mx-auto px-6">
+                    <div className="text-center mb-8">
+                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Our Premium Partner directory</h3>
+                    </div>
+                    <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-75">
+                      {['77 Pouches', 'CUBA Power', 'CLEW White', 'KILLA Siberian', 'VELO Eucalyptus'].map((bLabel, index) => (
+                        <span 
+                          key={index} 
+                          onClick={() => {
+                            setCurrentTab('frontend-brands');
+                            setIsAdminActive(false);
+                          }}
+                          className="text-sm font-black tracking-widest text-slate-500 hover:text-indigo-600 cursor-pointer capitalize transition-colors border-b border-transparent hover:border-indigo-650 pb-1"
+                        >
+                          {bLabel}
+                        </span>
+                      ))}
+                    </div>
+                  </section>
+
+                  {/* Welcome Highlights */}
+                  <section className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <img
+                      src="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80"
+                      alt="Canisters"
+                      className="rounded-2xl shadow-md border object-cover h-80 w-full"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="space-y-4">
+                      <span className="text-xs text-indigo-650 font-bold uppercase tracking-wider">High performance Can packaging</span>
+                      <h2 className="text-2xl font-black text-slate-900">Custom Subscription Box: Curate your customized flavor bundle saving 15%</h2>
+                      <p className="text-slate-500 leading-normal text-xs">
+                        No more constant ordering pipelines. Set up your bespoke recurring deliveries of 6 cans, tweak frequencies automatically, cancel or edit anything from your user account.
+                      </p>
+                      <button
+                        onClick={() => setCurrentTab('frontend-subscribe')}
+                        className="text-xs text-indigo-600 hover:text-indigo-805 font-bold flex items-center gap-1 cursor-pointer pt-2"
+                      >
+                        Configure LITE plan boxes <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </section>
+
+                  {/* Top Seller canisters */}
+                  <section className="max-w-7xl mx-auto px-6">
+                    <div className="flex justify-between items-end mb-8">
+                      <div>
+                        <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider">curated picks</h4>
+                        <h2 className="text-2xl font-black text-slate-900 mt-1">BEST SELLING CANISTERS TODAY</h2>
+                      </div>
+                      <button
+                        onClick={() => setCurrentTab('frontend-shop')}
+                        className="text-xs text-indigo-600 hover:text-indigo-800 font-extrabold cursor-pointer"
+                      >
+                        Browse full catalog →
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                      {products.slice(0, 4).map(prod => (
+                        <div 
+                          key={prod.id} 
+                          onClick={() => {
+                            setCurrentTab('frontend-shop');
+                            setIsAdminActive(false);
+                          }}
+                          className="bg-white border hover:border-slate-350 p-4 rounded-xl space-y-3 cursor-pointer group hover:shadow-xs transition-shadow"
+                        >
+                          <div className="h-44 rounded-lg bg-slate-50 border overflow-hidden relative">
+                            <img src={prod.image} className="w-full h-full object-cover transition-transform group-hover:scale-102" alt="" referrerPolicy="no-referrer" />
+                            <span className="absolute top-2.5 left-2.5 bg-slate-900 text-white text-[9px] font-bold uppercase py-0.5 px-2 rounded-full">
+                              {prod.vendor}
+                            </span>
+                          </div>
+                          <div className="space-y-1 text-center">
+                            <h4 className="text-xs font-bold text-slate-800 truncate">{prod.title}</h4>
+                            <p className="text-slate-900 font-black text-xs">£{prod.price.toFixed(2)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                </div>
+              );
+            })()}
+
+            {/* FRONTEND VIEW - CUSTOMIZABLE BUILDER SUBPAGES */}
+            {customPages.some(p => p.slug === currentTab && !p.isHomepage) && (() => {
+              const matchedPage = customPages.find(p => p.slug === currentTab);
+              if (!matchedPage) return null;
+              return (
+                <PageRenderer 
+                  page={matchedPage} 
+                  allProducts={products}
+                  allCollections={collections}
+                  loggedInCustomer={loggedInCustomer}
+                  onAddToCart={handleAddToCart} 
+                  onToggleWishlist={handleToggleWishlist}
+                  onNavigate={(target) => {
+                    if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
+                      setCurrentTab(target);
+                    } else if (target.startsWith('/pages/')) {
+                      setCurrentTab(target.replace('/pages/', ''));
+                    } else if (target.startsWith('/collections/')) {
+                      const colId = target.replace('/collections/', '');
+                      setActiveCollectionId(colId);
+                      setCurrentTab('frontend-shop');
+                    } else {
+                      setCurrentTab(target);
+                    }
+                  }} 
+                />
+              );
+            })()}
 
             {/* FRONTEND VIEW - SUBSCRIBE BUILDER */}
             {currentTab === 'frontend-subscribe' && (

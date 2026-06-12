@@ -643,6 +643,56 @@ export const INITIAL_DISCOUNTS: Discount[] = [
 
 export const DEFAULT_PAGES: CustomPage[] = [
   {
+    id: 'homepage',
+    title: 'Home Page',
+    slug: '',
+    visibility: 'Visible',
+    updatedAt: 'Jun 11, 2026',
+    isHomepage: true,
+    sections: [
+      {
+        id: 'h-s1',
+        type: 'Image banner',
+        settings: {
+          fullWidth: true,
+          backgroundColor: '#1E293B',
+          headingColor: '#FFFFFF',
+          textColor: '#CBD5E1',
+          title: 'THE FINEST FLAVOR POUCHES AT SCALE',
+          description: 'Sourced globally from premium certified laboratories. Settle for nothing but the crispest breath freeze crystal cans delivered straight to your door step.',
+          buttonText: 'Shop Now (All Brands)',
+          buttonLink: 'frontend-shop',
+          imageUrl: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=1200&q=80'
+        }
+      },
+      {
+        id: 'h-s2',
+        type: 'Logo list',
+        settings: {
+          fullWidth: false,
+          backgroundColor: '#FFFFFF',
+          headingColor: '#0F172A',
+          textColor: '#475569',
+          title: 'Official Partners & Brands Directory',
+          description: 'Our certified premium brand partners'
+        }
+      },
+      {
+        id: 'h-s3',
+        type: 'Featured collection',
+        settings: {
+          fullWidth: false,
+          backgroundColor: '#F8FAFC',
+          headingColor: '#0F172A',
+          textColor: '#475569',
+          title: 'BEST SELLING CANISTERS TODAY',
+          description: 'The highest rated and absolute crispest tobacco-free crystals in stock.',
+          itemsCount: 4
+        }
+      }
+    ]
+  },
+  {
     id: 'subscribe',
     title: 'Subscribe Package Builder',
     slug: 'subscribe',

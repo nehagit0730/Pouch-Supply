@@ -68,6 +68,69 @@ export default function AdminDashboard({
   const [selectedBuilderPageId, setSelectedBuilderPageId] = useState<string | null>(null);
   const [selectedBuilderSectionId, setSelectedBuilderSectionId] = useState<string | null>(null);
 
+  // Draft page & collection builder custom states
+  const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
+  const [localPages, setLocalPages] = useState<CustomPage[]>(customPages);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  React.useEffect(() => {
+    if (!hasUnsavedChanges) {
+      setLocalPages(customPages);
+    }
+  }, [customPages, hasUnsavedChanges]);
+
+  // Clean title-to-slug utility
+  const slugify = (text: string) => {
+    return text
+      .toString()
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')           // Replace spaces with -
+      .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+      .replace(/\-\-+/g, '-');        // Replace multiple - with single -
+  };
+
+  // Pages management handlers
+  const handleDuplicatePage = (page: CustomPage) => {
+    let count = 1;
+    let baseSlug = page.slug || 'slug';
+    if (baseSlug.match(/-\d+$/)) {
+      baseSlug = baseSlug.replace(/-\d+$/, '');
+    }
+    let newSlug = `${baseSlug}-${count}`;
+    while (localPages.some(p => p.slug === newSlug)) {
+      count++;
+      newSlug = `${baseSlug}-${count}`;
+    }
+    const duplicated: CustomPage = {
+      ...JSON.parse(JSON.stringify(page)),
+      id: `page-${Date.now()}`,
+      title: `${page.title} (Copy)`,
+      slug: newSlug,
+      isHomepage: false,
+      updatedAt: 'Just Now'
+    };
+    const updated = [...localPages, duplicated];
+    setLocalPages(updated);
+    onUpdateCustomPages(updated);
+  };
+
+  const handleSetPageAsHomepage = (id: string) => {
+    const updated = localPages.map(p => {
+      if (p.id === id) {
+        return { ...p, isHomepage: true, slug: '' };
+      }
+      return { ...p, isHomepage: false };
+    });
+    setLocalPages(updated);
+    onUpdateCustomPages(updated);
+  };
+
+  const handlePreviewPage = (page: CustomPage) => {
+    const url = page.isHomepage ? '/' : `/pages/${page.slug}`;
+    window.open(url, '_blank');
+  };
+
   const [fileQuery, setFileQuery] = useState('');
   const [showAddFile, setShowAddFile] = useState(false);
   const [newFileForm, setNewFileForm] = useState({ fileName: '', altText: '', url: '' });
@@ -161,6 +224,30 @@ export default function AdminDashboard({
     setShowAddProduct(true);
   };
 
+  const handleDuplicateProduct = (prod: Product) => {
+    let count = 1;
+    let baseId = prod.id;
+    if (baseId.match(/-\d+$/)) {
+      baseId = baseId.replace(/-\d+$/, '');
+    }
+    let newId = `${baseId}-${count}`;
+    while (products.some(p => p.id === newId)) {
+      count++;
+      newId = `${baseId}-${count}`;
+    }
+    const duplicated: Product = {
+      ...JSON.parse(JSON.stringify(prod)),
+      id: newId,
+      sku: prod.sku ? `${prod.sku}-COPY` : '',
+      title: `${prod.title} (Copy)`
+    };
+    onUpdateProducts([...products, duplicated]);
+  };
+
+  const handlePreviewProduct = (prod: Product) => {
+    window.open(`/products/${prod.id}`, '_blank');
+  };
+
   const handleDeleteProduct = (pId: string) => {
     if (confirm("Are you sure you want to delete this product?")) {
       const updated = products.filter(p => p.id !== pId);
@@ -168,27 +255,66 @@ export default function AdminDashboard({
     }
   };
 
-  // Create Collection
+  // Create & Edit Collection
   const handleCreateCollection = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCollectionForm.title) return;
 
-    const item: Collection = {
-      id: newCollectionForm.title.toLowerCase().replace(/\s+/g, '-'),
-      title: newCollectionForm.title,
-      description: newCollectionForm.description || '',
-      type: (newCollectionForm.type as any) || 'Manual',
-      image: newCollectionForm.image || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=500&q=80',
-      productIds: []
-    };
+    if (editingCollection) {
+      const updated = collections.map(c => 
+        c.id === editingCollection.id 
+          ? { 
+              ...c, 
+              title: newCollectionForm.title!, 
+              description: newCollectionForm.description || '', 
+              type: newCollectionForm.type || 'Manual',
+              image: newCollectionForm.image || c.image
+            } 
+          : c
+      );
+      onUpdateCollections(updated);
+      setEditingCollection(null);
+    } else {
+      const item: Collection = {
+        id: slugify(newCollectionForm.title),
+        title: newCollectionForm.title,
+        description: newCollectionForm.description || '',
+        type: (newCollectionForm.type as any) || 'Manual',
+        image: newCollectionForm.image || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=500&q=80',
+        productIds: []
+      };
+      onUpdateCollections([...collections, item]);
+    }
 
-    onUpdateCollections([...collections, item]);
     setShowAddCollection(false);
-    setNewCollectionForm({ title: '', description: '', type: 'Manual', image: '' });
+    setNewCollectionForm({ title: '', description: '', type: 'Manual', image: '', productIds: [] });
+  };
+
+  const handleDuplicateCollection = (col: Collection) => {
+    let count = 1;
+    let baseId = col.id;
+    if (baseId.match(/-\d+$/)) {
+      baseId = baseId.replace(/-\d+$/, '');
+    }
+    let newId = `${baseId}-${count}`;
+    while (collections.some(c => c.id === newId)) {
+      count++;
+      newId = `${baseId}-${count}`;
+    }
+    const duplicated: Collection = {
+      ...JSON.parse(JSON.stringify(col)),
+      id: newId,
+      title: `${col.title} (Copy)`
+    };
+    onUpdateCollections([...collections, duplicated]);
+  };
+
+  const handlePreviewCollection = (col: Collection) => {
+    window.open(`/collections/${col.id}`, '_blank');
   };
 
   const handleDeleteCollection = (id: string) => {
-    if (confirm("Are you sure you want to delete this collection wrapper?")) {
+    if (confirm("Are you sure you want to delete this collection?")) {
       onUpdateCollections(collections.filter(c => c.id !== id));
     }
   };
@@ -198,7 +324,7 @@ export default function AdminDashboard({
     e.preventDefault();
     if (!newPageForm.title) return;
 
-    const slug = newPageForm.slug.trim().toLowerCase().replace(/\s+/g, '-') || newPageForm.title.trim().toLowerCase().replace(/\s+/g, '-');
+    const slug = newPageForm.slug.trim() ? slugify(newPageForm.slug) : slugify(newPageForm.title);
     const page: CustomPage = {
       id: `page-${Date.now()}`,
       title: newPageForm.title,
@@ -221,13 +347,15 @@ export default function AdminDashboard({
       ]
     };
 
-    onUpdateCustomPages([...customPages, page]);
+    const updatedPages = [...localPages, page];
+    setLocalPages(updatedPages);
+    onUpdateCustomPages(updatedPages);
     setShowAddPage(false);
     setNewPageForm({ title: '', slug: '' });
   };
 
   // Section builder editing
-  const currentlyEditingPage = customPages.find(p => p.id === selectedBuilderPageId);
+  const currentlyEditingPage = localPages.find(p => p.id === selectedBuilderPageId);
   const currentlyEditingSection = currentlyEditingPage?.sections.find(s => s.id === selectedBuilderSectionId);
 
   const handleAddSectionToPage = (sectionType: PageSection['type']) => {
@@ -248,7 +376,7 @@ export default function AdminDashboard({
       }
     };
 
-    const updated = customPages.map(page => {
+    const updated = localPages.map(page => {
       if (page.id === selectedBuilderPageId) {
         return {
           ...page,
@@ -257,13 +385,14 @@ export default function AdminDashboard({
       }
       return page;
     });
-    onUpdateCustomPages(updated);
+    setLocalPages(updated);
+    setHasUnsavedChanges(true);
     setSelectedBuilderSectionId(newSection.id);
   };
 
   const handleRemoveSectionFromPage = (sectionId: string) => {
     if (!selectedBuilderPageId) return;
-    const updated = customPages.map(page => {
+    const updated = localPages.map(page => {
       if (page.id === selectedBuilderPageId) {
         return {
           ...page,
@@ -272,7 +401,8 @@ export default function AdminDashboard({
       }
       return page;
     });
-    onUpdateCustomPages(updated);
+    setLocalPages(updated);
+    setHasUnsavedChanges(true);
     if (selectedBuilderSectionId === sectionId) {
       setSelectedBuilderSectionId(null);
     }
@@ -280,7 +410,7 @@ export default function AdminDashboard({
 
   const handleUpdateSectionSettings = (settingsKey: string, val: any) => {
     if (!selectedBuilderPageId || !selectedBuilderSectionId) return;
-    const updated = customPages.map(page => {
+    const updated = localPages.map(page => {
       if (page.id === selectedBuilderPageId) {
         return {
           ...page,
@@ -300,13 +430,14 @@ export default function AdminDashboard({
       }
       return page;
     });
-    onUpdateCustomPages(updated);
+    setLocalPages(updated);
+    setHasUnsavedChanges(true);
   };
 
   // Move Section Up/Down
   const handleMoveSection = (idx: number, direction: 'up' | 'down') => {
     if (!selectedBuilderPageId) return;
-    const page = customPages.find(p => p.id === selectedBuilderPageId);
+    const page = localPages.find(p => p.id === selectedBuilderPageId);
     if (!page) return;
     const sections = [...page.sections];
     const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
@@ -317,13 +448,14 @@ export default function AdminDashboard({
     sections[idx] = sections[targetIdx];
     sections[targetIdx] = temp;
 
-    const updated = customPages.map(p => {
+    const updated = localPages.map(p => {
       if (p.id === selectedBuilderPageId) {
         return { ...p, sections };
       }
       return p;
     });
-    onUpdateCustomPages(updated);
+    setLocalPages(updated);
+    setHasUnsavedChanges(true);
   };
 
   // Add Mock File Upload
@@ -457,93 +589,97 @@ export default function AdminDashboard({
     <div id="shopify-admin-scaffold" className="flex flex-col lg:flex-row min-h-screen bg-[#f6f6f7] text-slate-800 font-sans">
       
       {/* Left Shopify-like sidebar Navigation */}
-      <aside className="w-full lg:w-60 bg-[#ebebeb] text-[#4a4d50] shrink-0 border-r border-[#e1e3e5] p-3.5 flex flex-col justify-between">
-        <div className="space-y-6">
-          
-          {/* Dashboard Head */}
-          <div className="flex items-center gap-3 pb-4 border-b border-[#e1e3e5]">
-            <div className="w-8 h-8 bg-[#008060] rounded flex items-center justify-center">
-              <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
+      {!selectedBuilderPageId && (
+        <aside className="w-full lg:w-60 bg-[#ebebeb] text-[#4a4d50] shrink-0 border-r border-[#e1e3e5] p-3.5 flex flex-col justify-between">
+          <div className="space-y-6">
+            
+            {/* Dashboard Head */}
+            <div className="flex items-center gap-3 pb-4 border-b border-[#e1e3e5]">
+              <div className="w-8 h-8 bg-[#008060] rounded flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-[#1a1c1d]">Pouch Supply</h2>
+                <span className="bg-gray-100 text-[9px] px-1.5 py-0.5 rounded border border-gray-200 text-gray-500 uppercase font-bold tracking-tighter">Admin</span>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-[#1a1c1d]">Pouch Supply</h2>
-              <span className="bg-gray-100 text-[9px] px-1.5 py-0.5 rounded border border-gray-200 text-gray-500 uppercase font-bold tracking-tighter">Admin</span>
-            </div>
+
+            {/* Nav Links */}
+            <nav className="space-y-1 block">
+              {[
+                { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+                { id: 'orders', label: 'Orders', icon: Package, badge: orders.filter(o => o.fulfillmentStatus === 'Unfulfilled').length },
+                { id: 'collections', label: 'Collections', icon: Building },
+                { id: 'products', label: 'Products', icon: ShoppingBag },
+                { id: 'pages', label: 'Page Builder', icon: FileCode },
+                { id: 'files', label: 'Files Manager', icon: HardDrive },
+                { id: 'customers', label: 'Customers', icon: Users },
+                { id: 'discounts', label: 'Discounts', icon: Percent },
+              ].map(item => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id as SidebarTab);
+                      setSelectedBuilderPageId(null);
+                    }}
+                    className={`w-full flex items-center justify-between p-2 rounded-md text-[13px] font-medium transition-all cursor-pointer ${
+                      isActive 
+                        ? 'bg-[#edeeef] text-[#1a1c1d] font-semibold shadow-xs' 
+                        : 'hover:bg-[#edeeef] text-[#4a4d50]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 rounded select-none">
+                      <Icon className={`h-4 w-4 ${isActive ? 'text-[#1a1c1d]' : 'text-slate-500'}`} />
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className="bg-[#e3f5e9] text-[#008060] font-bold text-[10px] py-0.5 px-2 rounded-full border border-[#c8ebd3]">
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
           </div>
 
-          {/* Nav Links */}
-          <nav className="space-y-1 block">
-            {[
-              { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-              { id: 'orders', label: 'Orders', icon: Package, badge: orders.filter(o => o.fulfillmentStatus === 'Unfulfilled').length },
-              { id: 'collections', label: 'Collections', icon: Building },
-              { id: 'products', label: 'Products', icon: ShoppingBag },
-              { id: 'pages', label: 'Page Builder', icon: FileCode },
-              { id: 'files', label: 'Files Manager', icon: HardDrive },
-              { id: 'customers', label: 'Customers', icon: Users },
-              { id: 'discounts', label: 'Discounts', icon: Percent },
-            ].map(item => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id as SidebarTab);
-                    setSelectedBuilderPageId(null);
-                  }}
-                  className={`w-full flex items-center justify-between p-2 rounded-md text-[13px] font-medium transition-all cursor-pointer ${
-                    isActive 
-                      ? 'bg-[#edeeef] text-[#1a1c1d] font-semibold shadow-xs' 
-                      : 'hover:bg-[#edeeef] text-[#4a4d50]'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 rounded select-none">
-                    <Icon className={`h-4 w-4 ${isActive ? 'text-[#1a1c1d]' : 'text-slate-500'}`} />
-                    <span>{item.label}</span>
-                  </div>
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="bg-[#e3f5e9] text-[#008060] font-bold text-[10px] py-0.5 px-2 rounded-full border border-[#c8ebd3]">
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Foot of sidebar */}
-        <div className="pt-4 border-t border-[#e1e3e5] text-[10px] text-[#707579]">
-          <p>Running: Merchant v4.12</p>
-          <p className="mt-1">Cloud Engine Active</p>
-        </div>
-      </aside>
+          {/* Foot of sidebar */}
+          <div className="pt-4 border-t border-[#e1e3e5] text-[10px] text-[#707579]">
+            <p>Running: Merchant v4.12</p>
+            <p className="mt-1">Cloud Engine Active</p>
+          </div>
+        </aside>
+      )}
 
       {/* Main Panel space */}
-      <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 overflow-x-hidden">
+      <main className={selectedBuilderPageId ? "w-full p-4 lg:p-6" : "flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 overflow-x-hidden"}>
         
         {/* Global panel header with stats glance info */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-250">
-          <div>
-            <span className="text-[10px] text-indigo-600 bg-indigo-50 font-black uppercase py-1 px-3 rounded-full border border-indigo-100">Shopify Partner Portal</span>
-            <h1 className="text-2xl font-black text-slate-900 mt-2 capitalize flex items-center gap-2">
-              {activeTab} Management Panel
-            </h1>
-          </div>
-          
-          {/* Quick Metrics display */}
-          <div className="flex flex-wrap items-center gap-3 text-xs">
-            <div className="bg-white border border-slate-250 px-4 py-2.5 rounded-xl shadow-xs">
-              <span className="text-slate-400 block text-[9px] font-bold uppercase tracking-wider">Gross Sales</span>
-              <span className="font-extrabold text-slate-950 text-sm">£{stats.totalSales.toFixed(2)}</span>
+        {!selectedBuilderPageId && (
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-250">
+            <div>
+              <span className="text-[10px] text-indigo-600 bg-indigo-50 font-black uppercase py-1 px-3 rounded-full border border-indigo-100">Shopify Partner Portal</span>
+              <h1 className="text-2xl font-black text-slate-900 mt-2 capitalize flex items-center gap-2">
+                {activeTab} Management Panel
+              </h1>
             </div>
-            <div className="bg-white border border-slate-250 px-4 py-2.5 rounded-xl shadow-xs">
-              <span className="text-slate-400 block text-[9px] font-bold uppercase tracking-wider">Unfulfilled</span>
-              <span className="font-extrabold text-amber-500 text-sm">{orders.filter(o => o.fulfillmentStatus === 'Unfulfilled').length} Orders</span>
+            
+            {/* Quick Metrics display */}
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <div className="bg-white border border-slate-250 px-4 py-2.5 rounded-xl shadow-xs">
+                <span className="text-slate-400 block text-[9px] font-bold uppercase tracking-wider">Gross Sales</span>
+                <span className="font-extrabold text-slate-950 text-sm">£{stats.totalSales.toFixed(2)}</span>
+              </div>
+              <div className="bg-white border border-slate-250 px-4 py-2.5 rounded-xl shadow-xs">
+                <span className="text-slate-400 block text-[9px] font-bold uppercase tracking-wider">Unfulfilled</span>
+                <span className="font-extrabold text-amber-500 text-sm">{orders.filter(o => o.fulfillmentStatus === 'Unfulfilled').length} Orders</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Tab content conditionals */}
         
@@ -868,16 +1004,50 @@ export default function AdminDashboard({
                     )}
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100 mt-4 flex justify-between items-center text-xs">
-                    <span className="text-slate-400 block">Products count: <span className="font-extrabold text-slate-700">{col.id === 'all' ? products.length : col.productIds.length}</span></span>
-                    {col.id !== 'all' && (
+                  <div className="pt-3 border-t border-slate-100 mt-4 flex justify-between items-center text-[11px] gap-2">
+                    <span className="text-slate-400 block">Products: <span className="font-extrabold text-slate-700">{col.id === 'all' ? products.length : col.productIds.length}</span></span>
+                    
+                    <div className="flex items-center gap-1.5">
                       <button
-                        onClick={() => handleDeleteCollection(col.id)}
-                        className="text-red-500 hover:text-red-700 font-semibold cursor-pointer"
+                        onClick={() => {
+                          setEditingCollection(col);
+                          setNewCollectionForm(col);
+                          setShowAddCollection(true);
+                        }}
+                        className="text-indigo-600 hover:text-indigo-800 font-extrabold cursor-pointer"
+                        title="Edit collection details"
                       >
-                        Delete
+                        Edit
                       </button>
-                    )}
+                      <span className="text-slate-200">|</span>
+                      <button
+                        onClick={() => handleDuplicateCollection(col)}
+                        className="text-teal-600 hover:text-teal-850 font-extrabold cursor-pointer"
+                        title="Duplicate collection"
+                      >
+                        Dup
+                      </button>
+                      <span className="text-slate-200">|</span>
+                      <button
+                        onClick={() => handlePreviewCollection(col)}
+                        className="text-sky-650 hover:text-sky-800 font-extrabold cursor-pointer"
+                        title="Preview collection"
+                      >
+                        View
+                      </button>
+                      {col.id !== 'all' && (
+                        <>
+                          <span className="text-slate-200">|</span>
+                          <button
+                            onClick={() => handleDeleteCollection(col.id)}
+                            className="text-red-500 hover:text-red-700 font-extrabold cursor-pointer"
+                            title="Delete collection"
+                          >
+                            Del
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -888,8 +1058,19 @@ export default function AdminDashboard({
               <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
                 <div className="bg-white rounded-xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl">
                   <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
-                    <h3 className="font-extrabold text-slate-800 text-sm">Add New Collection Form</h3>
-                    <button onClick={() => setShowAddCollection(false)} className="text-slate-400 hover:text-slate-650 cursor-pointer text-xs font-bold">Close</button>
+                    <h3 className="font-extrabold text-slate-800 text-sm">
+                      {editingCollection ? 'Edit Collection Details' : 'Add New Collection Form'}
+                    </h3>
+                    <button 
+                      onClick={() => {
+                        setShowAddCollection(false);
+                        setEditingCollection(null);
+                        setNewCollectionForm({ title: '', description: '', type: 'Manual', image: '', productIds: [] });
+                      }} 
+                      className="text-slate-400 hover:text-slate-650 cursor-pointer text-xs font-bold"
+                    >
+                      Close
+                    </button>
                   </div>
 
                   <form onSubmit={handleCreateCollection} className="space-y-4 text-xs">
@@ -1033,16 +1214,34 @@ export default function AdminDashboard({
                           <td className="p-4 text-center text-xs space-x-1.5 whitespace-nowrap">
                             <button
                               onClick={() => handleEditProductClick(prod)}
-                              className="text-xs hover:text-indigo-600 font-extrabold cursor-pointer"
+                              className="hover:text-indigo-600 font-bold cursor-pointer"
+                              title="Edit product"
                             >
-                              Edit Info
+                              Edit
+                            </button>
+                            <span className="text-slate-350">|</span>
+                            <button
+                              onClick={() => handleDuplicateProduct(prod)}
+                              className="text-teal-650 hover:text-teal-850 font-bold cursor-pointer"
+                              title="Duplicate product"
+                            >
+                              Dup
+                            </button>
+                            <span className="text-slate-350">|</span>
+                            <button
+                              onClick={() => handlePreviewProduct(prod)}
+                              className="text-sky-650 hover:text-sky-850 font-bold cursor-pointer"
+                              title="Preview product"
+                            >
+                              View
                             </button>
                             <span className="text-slate-350">|</span>
                             <button
                               onClick={() => handleDeleteProduct(prod.id)}
-                              className="text-xs text-red-500 hover:text-red-700 font-extrabold cursor-pointer"
+                              className="text-red-500 hover:text-red-700 font-bold cursor-pointer"
+                              title="Delete product"
                             >
-                              Delete
+                              Del
                             </button>
                           </td>
                         </tr>
@@ -1237,37 +1436,67 @@ export default function AdminDashboard({
                 </div>
 
                 <div className="bg-white border rounded-xl divide-y divide-slate-100 shadow-xs">
-                  {customPages.map(page => (
-                    <div key={page.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 hover:bg-slate-50/50">
+                  {localPages.map(page => (
+                    <div key={page.id} className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 hover:bg-slate-50/50">
                       <div>
-                        <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                          {page.title}
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                            {page.title}
+                          </h4>
                           <span className={`text-[8px] py-0.5 px-1.5 font-bold uppercase tracking-widest rounded ${
                             page.visibility === 'Visible' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-400'
                           }`}>
                             {page.visibility}
                           </span>
-                        </h4>
-                        <p className="text-[10px] text-slate-400 mt-0.5">Route URL: /pages/{page.slug} • Last updated {page.updatedAt}</p>
+                          {page.isHomepage && (
+                            <span className="text-[8px] py-0.5 px-1.5 font-black uppercase tracking-widest rounded bg-amber-500 text-white flex items-center gap-1">
+                              🏠 Active Homepage
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          Route URL: <span className="font-mono bg-slate-100 px-1 rounded">{page.isHomepage ? '/' : `/pages/${page.slug}`}</span> • Last updated {page.updatedAt || 'Just Now'}
+                        </p>
                       </div>
 
-                      <div className="flex items-center gap-2 text-xs">
+                      <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                        {!page.isHomepage && (
+                          <button
+                            onClick={() => handleSetPageAsHomepage(page.id)}
+                            className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-extrabold py-1.5 px-3 rounded-lg border border-indigo-100 cursor-pointer"
+                          >
+                            Set as Homepage
+                          </button>
+                        )}
                         <button
                           onClick={() => setSelectedBuilderPageId(page.id)}
-                          className="bg-indigo-600 hover:bg-indigo-700 font-bold text-white py-1.5 px-3.5 rounded-lg flex items-center gap-1 cursor-pointer"
+                          className="bg-teal-50 text-teal-800 hover:bg-teal-100 font-extrabold py-1.5 px-3 rounded-lg border border-teal-100 flex items-center gap-1 cursor-pointer"
                         >
-                          <Settings className="h-3.5 w-3.5" /> Customize Section Layout
+                          <Settings className="h-3.5 w-3.5" /> Customize Layout
+                        </button>
+                        <button
+                          onClick={() => handleDuplicatePage(page)}
+                          className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold py-1.5 px-3 rounded-lg border border-slate-200 cursor-pointer"
+                        >
+                          Duplicate
+                        </button>
+                        <button
+                          onClick={() => handlePreviewPage(page)}
+                          className="bg-sky-50 text-sky-800 hover:bg-sky-100 font-extrabold py-1.5 px-3 rounded-lg border border-sky-100 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Eye className="h-3.5 w-3.5" /> Preview
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm("Are you sure you want to delete this builder page?")) {
-                              onUpdateCustomPages(customPages.filter(p => p.id !== page.id));
+                            if (confirm(`Are you sure you want to permanently delete "${page.title}"?`)) {
+                              const updated = localPages.filter(p => p.id !== page.id);
+                              setLocalPages(updated);
+                              onUpdateCustomPages(updated);
                             }
                           }}
-                          className="text-red-500 hover:text-red-700 font-bold p-1 bg-red-50 rounded"
-                          title="Delete template"
+                          className="text-red-600 hover:text-white hover:bg-red-600 font-extrabold py-1.5 px-3 border border-red-200 rounded-lg cursor-pointer transition-all"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
                         </button>
                       </div>
                     </div>
@@ -1323,20 +1552,82 @@ export default function AdminDashboard({
               // ----------------------------------------------------
               // THE EXQUISITE VISUAL SECTION LAYOUT BUILDER SCREEN
               // ----------------------------------------------------
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 bg-slate-100 p-5 rounded-2xl border border-slate-250">
-                
-                {/* 1. Left controls column: Section stacking */}
-                <div className="lg:col-span-1 space-y-4">
-                  <div className="bg-white border rounded-xl p-4 shadow-xs space-y-4">
-                    <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                      <h4 className="font-black text-slate-700 uppercase tracking-wide text-xs">Page Sections</h4>
-                      <button
-                        onClick={() => setSelectedBuilderPageId(null)}
-                        className="text-[10px] text-slate-400 font-semibold hover:text-slate-655"
-                      >
-                        ← Exit Builder
-                      </button>
+              <div className="space-y-4">
+                {/* Save Options Action Bar */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900 text-white p-3.5 px-4 rounded-xl shadow-md border border-slate-800 gap-3">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        if (hasUnsavedChanges && !confirm("You have unsaved adjustments! Exit anyway and discard modifications?")) {
+                          return;
+                        }
+                        setSelectedBuilderPageId(null);
+                        setSelectedBuilderSectionId(null);
+                        setHasUnsavedChanges(false);
+                      }}
+                      className="text-white hover:text-slate-300 cursor-pointer text-xs font-bold flex items-center gap-1.5 bg-slate-800 hover:bg-slate-750 p-2 py-1 rounded-lg border border-slate-700 transition"
+                    >
+                      ← Exit Builder
+                    </button>
+                    <div>
+                      <span className="text-xs font-black uppercase tracking-widest block">{currentlyEditingPage?.title}</span>
+                      <div className="flex items-center gap-1.5 mt-0.5 select-none">
+                        <span className={`h-2 w-2 rounded-full ${hasUnsavedChanges ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'}`} />
+                        <span className="text-[9px] text-slate-300 font-bold">
+                          {hasUnsavedChanges ? 'Unsaved Customizations' : 'All Changes Saved & Live'}
+                        </span>
+                      </div>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    {hasUnsavedChanges && (
+                      <button
+                        onClick={() => {
+                          if (confirm("Revert layout to the last saved state?")) {
+                            setLocalPages(customPages);
+                            setHasUnsavedChanges(false);
+                            setSelectedBuilderSectionId(null);
+                          }
+                        }}
+                        className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] py-1.5 px-3 rounded-lg border border-slate-700 cursor-pointer transition"
+                      >
+                        Revert Draft
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        onUpdateCustomPages(localPages);
+                        setHasUnsavedChanges(false);
+                      }}
+                      className="bg-[#008060] hover:bg-[#006e52] text-white font-bold text-[10px] py-1.5 px-3.5 rounded-lg flex items-center gap-1.5 cursor-pointer uppercase tracking-wider transition shadow-sm"
+                    >
+                      <Save className="h-3.5 w-3.5" />
+                      <span>Save Changes</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 bg-slate-100 p-5 rounded-2xl border border-slate-250">
+                  
+                  {/* 1. Left controls column: Section stacking */}
+                  <div className="lg:col-span-1 space-y-4">
+                    <div className="bg-white border rounded-xl p-4 shadow-xs space-y-4">
+                      <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                        <h4 className="font-black text-slate-700 uppercase tracking-wide text-xs">Page Sections</h4>
+                        <button
+                          onClick={() => {
+                            if (hasUnsavedChanges && !confirm("You have unsaved adjustments! Exit anyway and discard modifications?")) {
+                              return;
+                            }
+                            setSelectedBuilderPageId(null);
+                            setSelectedBuilderSectionId(null);
+                            setHasUnsavedChanges(false);
+                          }}
+                          className="text-[10px] text-slate-400 font-semibold hover:text-slate-600"
+                        >
+                          ← Exit
+                        </button>
+                      </div>
 
                     {/* Section stacking list */}
                     <div className="space-y-2">
@@ -1700,6 +1991,7 @@ export default function AdminDashboard({
                   </div>
                 </div>
 
+              </div>
               </div>
             )}
 

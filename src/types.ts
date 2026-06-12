@@ -105,6 +105,7 @@ export interface CustomPage {
   visibility: 'Visible' | 'Hidden';
   updatedAt: string;
   sections: PageSection[];
+  isHomepage?: boolean;
 }
 
 export interface CartItem {
