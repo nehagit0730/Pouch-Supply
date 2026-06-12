@@ -20,6 +20,24 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
+
+    // Fallback all other requests during development to index.html to support SPA routes
+    app.get("*", async (req, res, next) => {
+      const url = req.originalUrl;
+      // Skip api paths and files with extensions (e.g. .js, .css, .png, etc.)
+      const lastSegment = url.split('/').pop() || '';
+      if (url.startsWith("/api") || lastSegment.includes(".")) {
+        return next();
+      }
+      try {
+        const fs = await import("fs");
+        let html = fs.readFileSync(path.resolve(process.cwd(), "index.html"), "utf-8");
+        html = await vite.transformIndexHtml(url, html);
+        res.status(200).set({ "Content-Type": "text/html" }).end(html);
+      } catch (e) {
+        next(e);
+      }
+    });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));

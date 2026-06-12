@@ -83,6 +83,41 @@ export default function App() {
   const [cartOpen, setCartOpen] = useState<boolean>(false);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
+  // Unified SPA navigation helper mapping state shifts to matching browser URLs
+  const navigateToTab = (tab: string, productId?: string, collectionId?: string) => {
+    let url = '/';
+    if (tab === 'frontend-home') {
+      url = '/';
+    } else if (tab === 'frontend-shop') {
+      url = '/collections/all';
+    } else if (tab === 'frontend-brands') {
+      url = '/collections/all';
+    } else if (tab === 'frontend-subscribe') {
+      url = '/pages/subscribe';
+    } else if (tab === 'frontend-account') {
+      url = '/pages/account';
+    } else if (tab === 'product-detail' && productId) {
+      url = `/products/${productId}`;
+    } else if (tab === 'collection-detail' && collectionId) {
+      url = `/collections/${collectionId}`;
+    } else {
+      url = `/pages/${tab}`;
+    }
+
+    if (window.location.pathname !== url) {
+      window.history.pushState({}, '', url);
+    }
+    
+    setCurrentTab(tab);
+    if (productId !== undefined) {
+      setSelectedProductId(productId);
+    }
+    if (collectionId !== undefined) {
+      setActiveCollectionId(collectionId);
+    }
+    setIsAdminActive(false);
+  };
+
   // Unsaved changes sync dialog states
   const [isAdminDirty, setIsAdminDirty] = useState<boolean>(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState<boolean>(false);
@@ -365,8 +400,7 @@ export default function App() {
             setPendingNavAction({ type: 'change-tab', payload: tab });
             setShowUnsavedModal(true);
           } else {
-            setCurrentTab(tab);
-            setIsAdminActive(false);
+            navigateToTab(tab);
           }
         }}
         loggedInCustomer={loggedInCustomer}
@@ -415,8 +449,7 @@ export default function App() {
                   setIsAdminActive(!isAdminActive);
                 } else if (pendingNavAction.type === 'change-tab' && pendingNavAction.payload) {
                   const tab = pendingNavAction.payload;
-                  setCurrentTab(tab);
-                  setIsAdminActive(false);
+                  navigateToTab(tab);
                 }
                 setPendingNavAction(null);
               }
@@ -440,21 +473,18 @@ export default function App() {
                     onToggleWishlist={handleToggleWishlist}
                     onNavigate={(target, arg) => {
                       if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
-                        setCurrentTab(target);
+                        navigateToTab(target);
                       } else if (target.startsWith('/pages/') || target.startsWith('page-')) {
                         const slug = target.replace('/pages/', '').replace('page-', '');
-                        window.history.pushState({}, '', `/pages/${slug}`);
-                        window.dispatchEvent(new Event('popstate'));
+                        navigateToTab(slug);
                       } else if (target.startsWith('/collections/') || target.startsWith('collection-')) {
                         const colId = target.replace('/collections/', '').replace('collection-', '');
-                        window.history.pushState({}, '', `/collections/${colId}`);
-                        window.dispatchEvent(new Event('popstate'));
+                        navigateToTab('collection-detail', undefined, colId);
                       } else if (target.startsWith('/products/') || target.startsWith('product-')) {
                         const prodId = target.replace('/products/', '').replace('product-', '');
-                        window.history.pushState({}, '', `/products/${prodId}`);
-                        window.dispatchEvent(new Event('popstate'));
+                        navigateToTab('product-detail', prodId);
                       } else {
-                        setCurrentTab(target);
+                        navigateToTab(target);
                       }
                     }} 
                   />
@@ -479,13 +509,13 @@ export default function App() {
                         
                         <div className="pt-2 flex flex-wrap gap-4 text-xs font-bold leading-normal">
                           <button
-                            onClick={() => setCurrentTab('frontend-shop')}
+                            onClick={() => navigateToTab('frontend-shop')}
                             className="bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 px-8 rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
                           >
                             Shop Now (All Brands) <ArrowRight className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => setCurrentTab('frontend-subscribe')}
+                            onClick={() => navigateToTab('frontend-subscribe')}
                             className="bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 py-3.5 px-8 rounded-xl cursor-pointer"
                           >
                             Subscription Box 📦
@@ -515,8 +545,7 @@ export default function App() {
                         <span 
                           key={index} 
                           onClick={() => {
-                            setCurrentTab('frontend-brands');
-                            setIsAdminActive(false);
+                            navigateToTab('frontend-brands');
                           }}
                           className="text-sm font-black tracking-widest text-slate-500 hover:text-indigo-600 cursor-pointer capitalize transition-colors border-b border-transparent hover:border-indigo-650 pb-1"
                         >
@@ -541,7 +570,7 @@ export default function App() {
                         No more constant ordering pipelines. Set up your bespoke recurring deliveries of 6 cans, tweak frequencies automatically, cancel or edit anything from your user account.
                       </p>
                       <button
-                        onClick={() => setCurrentTab('frontend-subscribe')}
+                        onClick={() => navigateToTab('frontend-subscribe')}
                         className="text-xs text-indigo-600 hover:text-indigo-805 font-bold flex items-center gap-1 cursor-pointer pt-2"
                       >
                         Configure LITE plan boxes <ArrowRight className="h-4 w-4" />
@@ -557,7 +586,7 @@ export default function App() {
                         <h2 className="text-2xl font-black text-slate-900 mt-1">BEST SELLING CANISTERS TODAY</h2>
                       </div>
                       <button
-                        onClick={() => setCurrentTab('frontend-shop')}
+                        onClick={() => navigateToTab('frontend-shop')}
                         className="text-xs text-indigo-600 hover:text-indigo-800 font-extrabold cursor-pointer"
                       >
                         Browse full catalog →
@@ -569,8 +598,7 @@ export default function App() {
                         <div 
                           key={prod.id} 
                           onClick={() => {
-                            setCurrentTab('frontend-shop');
-                            setIsAdminActive(false);
+                            navigateToTab('frontend-shop');
                           }}
                           className="bg-white border hover:border-slate-350 p-4 rounded-xl space-y-3 cursor-pointer group hover:shadow-xs transition-shadow"
                         >
@@ -607,21 +635,18 @@ export default function App() {
                   onToggleWishlist={handleToggleWishlist}
                   onNavigate={(target, arg) => {
                     if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
-                      setCurrentTab(target);
+                      navigateToTab(target);
                     } else if (target.startsWith('/pages/') || target.startsWith('page-')) {
                       const slug = target.replace('/pages/', '').replace('page-', '');
-                      window.history.pushState({}, '', `/pages/${slug}`);
-                      window.dispatchEvent(new Event('popstate'));
+                      navigateToTab(slug);
                     } else if (target.startsWith('/collections/') || target.startsWith('collection-')) {
                       const colId = target.replace('/collections/', '').replace('collection-', '');
-                      window.history.pushState({}, '', `/collections/${colId}`);
-                      window.dispatchEvent(new Event('popstate'));
+                      navigateToTab('collection-detail', undefined, colId);
                     } else if (target.startsWith('/products/') || target.startsWith('product-')) {
                       const prodId = target.replace('/products/', '').replace('product-', '');
-                      window.history.pushState({}, '', `/products/${prodId}`);
-                      window.dispatchEvent(new Event('popstate'));
+                      navigateToTab('product-detail', prodId);
                     } else {
-                      setCurrentTab(target);
+                      navigateToTab(target);
                     }
                   }} 
                 />
@@ -629,39 +654,90 @@ export default function App() {
             })()}
 
             {/* FRONTEND VIEW - PRODUCT DETAIL PAGE */}
-            {currentTab === 'product-detail' && selectedProductId && (
-              <ProductDetailView
-                product={products.find(p => p.id === selectedProductId || slugify(p.title) === selectedProductId) || products[0]}
-                allProducts={products}
-                onAddToCart={handleAddToCart}
-                onToggleWishlist={handleToggleWishlist}
-                onNavigate={(target, arg) => {
-                  if (target === 'product-detail' && arg) {
-                    setSelectedProductId(arg);
-                  } else {
-                    setCurrentTab(target);
-                  }
-                }}
-              />
-            )}
+            {currentTab === 'product-detail' && (() => {
+              const matchedProduct = products.find(p => p.id === selectedProductId || slugify(p.title) === selectedProductId);
+              if (!matchedProduct) {
+                return (
+                  <div className="max-w-6xl mx-auto py-24 px-4 text-center space-y-6">
+                    <span className="text-7xl block">🔍</span>
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] bg-red-100 text-red-700 font-extrabold py-1 px-3 rounded-full uppercase tracking-widest inline-block">
+                        Error 404 - Product Not Found
+                      </span>
+                      <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Canister Not Found</h1>
+                    </div>
+                    <p className="text-slate-500 max-w-sm mx-auto text-xs leading-relaxed">
+                      We couldn't locate the premium nicotine canister you requested. It might have been unlisted, archived, or deleted.
+                    </p>
+                    <button
+                      onClick={() => navigateToTab('frontend-shop')}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 px-8 rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-xs"
+                    >
+                      Back to Catalog
+                    </button>
+                  </div>
+                );
+              }
+              return (
+                <ProductDetailView
+                  product={matchedProduct}
+                  allProducts={products}
+                  onAddToCart={handleAddToCart}
+                  onToggleWishlist={handleToggleWishlist}
+                  onNavigate={(target, arg) => {
+                    if (target === 'product-detail' && arg) {
+                      navigateToTab('product-detail', arg);
+                    } else if (target === 'collection-detail' && arg) {
+                      navigateToTab('collection-detail', undefined, arg);
+                    } else {
+                      navigateToTab(target);
+                    }
+                  }}
+                />
+              );
+            })()}
 
             {/* FRONTEND VIEW - COLLECTION DETAIL PAGE */}
-            {currentTab === 'collection-detail' && (
-              <CollectionDetailView
-                collection={collections.find(c => c.id === activeCollectionId || slugify(c.title) === activeCollectionId) || collections[0]}
-                allProducts={products}
-                onAddToCart={handleAddToCart}
-                onToggleWishlist={handleToggleWishlist}
-                onNavigate={(target, arg) => {
-                  if (arg) {
-                    setSelectedProductId(arg);
-                    setCurrentTab('product-detail');
-                  } else {
-                    setCurrentTab(target);
-                  }
-                }}
-              />
-            )}
+            {currentTab === 'collection-detail' && (() => {
+              const matchedCollection = collections.find(c => c.id === activeCollectionId || slugify(c.title) === activeCollectionId);
+              if (!matchedCollection) {
+                return (
+                  <div className="max-w-6xl mx-auto py-24 px-4 text-center space-y-6">
+                    <span className="text-7xl block">📦</span>
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] bg-red-100 text-red-700 font-extrabold py-1 px-3 rounded-full uppercase tracking-widest inline-block">
+                        Error 404 - Collection Not Found
+                      </span>
+                      <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Collection Not Found</h1>
+                    </div>
+                    <p className="text-slate-500 max-w-sm mx-auto text-xs leading-relaxed">
+                      The curated collection category you requested doesn't exist, or has been unregistered from the vendor portfolio.
+                    </p>
+                    <button
+                      onClick={() => navigateToTab('frontend-shop')}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 px-8 rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-xs"
+                    >
+                      Back to Catalog
+                    </button>
+                  </div>
+                );
+              }
+              return (
+                <CollectionDetailView
+                  collection={matchedCollection}
+                  allProducts={products}
+                  onAddToCart={handleAddToCart}
+                  onToggleWishlist={handleToggleWishlist}
+                  onNavigate={(target, arg) => {
+                    if (arg) {
+                      navigateToTab('product-detail', arg);
+                    } else {
+                      navigateToTab(target);
+                    }
+                  }}
+                />
+              );
+            })()}
 
             {/* FRONTEND VIEW - SUBSCRIBE BUILDER */}
             {currentTab === 'frontend-subscribe' && (
@@ -681,7 +757,7 @@ export default function App() {
                 loggedInCustomer={loggedInCustomer}
                 onToggleWishlist={handleToggleWishlist}
                 onAddToCart={handleAddToCart}
-                onOpenLoginModal={() => setCurrentTab('frontend-account')}
+                onOpenLoginModal={() => navigateToTab('frontend-account')}
               />
             )}
 
@@ -690,8 +766,7 @@ export default function App() {
               <BrandList
                 collections={collections}
                 onBrandClick={(colId) => {
-                  window.history.pushState({}, '', `/collections/${colId}`);
-                  window.dispatchEvent(new Event('popstate'));
+                  navigateToTab('collection-detail', undefined, colId);
                 }}
               />
             )}
@@ -709,6 +784,36 @@ export default function App() {
                 onAddAddress={handleAddAddress}
                 onRemoveAddress={handleRemoveAddress}
               />
+            )}
+
+            {/* FRONTEND VIEW - 404 NOT FOUND FOR NONEXISTENT PAGES */}
+            {!['frontend-home', 'frontend-shop', 'frontend-brands', 'frontend-subscribe', 'frontend-account', 'product-detail', 'collection-detail'].includes(currentTab) && !customPages.some(p => p.slug === currentTab) && (
+              <div className="max-w-6xl mx-auto py-24 px-4 text-center space-y-6">
+                <span className="text-7xl block">🔍</span>
+                <div className="space-y-1.5">
+                  <span className="text-[10px] bg-red-100 text-red-700 font-extrabold py-1 px-3 rounded-full uppercase tracking-widest inline-block">
+                    Error 404 - Page Not Found
+                  </span>
+                  <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">This page does not exist</h1>
+                </div>
+                <p className="text-slate-500 max-w-sm mx-auto text-xs leading-relaxed">
+                  We searched far and wide, but the custom page or theme layout you linked doesn't exist inside our merchant records.
+                </p>
+                <div className="pt-2 flex justify-center gap-3">
+                  <button
+                    onClick={() => navigateToTab('frontend-home')}
+                    className="bg-slate-900 hover:bg-black text-white font-black py-3 px-6 rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-xs"
+                  >
+                    Go Back Home
+                  </button>
+                  <button
+                    onClick={() => navigateToTab('frontend-shop')}
+                    className="bg-white border hover:bg-slate-50 text-slate-700 font-extrabold py-3 px-6 rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer"
+                  >
+                    Shop Canisters
+                  </button>
+                </div>
+              </div>
             )}
           </>
         )}
@@ -753,7 +858,7 @@ export default function App() {
             <button
               onClick={() => {
                 setCheckoutSuccessful(null);
-                setCurrentTab('frontend-account');
+                navigateToTab('frontend-account');
               }}
               className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs py-3 rounded-lg cursor-pointer transition-colors"
             >
