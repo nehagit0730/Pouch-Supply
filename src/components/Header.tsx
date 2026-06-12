@@ -104,7 +104,7 @@ export default function Header({
             }`}
           >
             <LayoutDashboard className="h-4 w-4 shrink-0" />
-            <span>{isAdminActive ? 'Viewing Dashboard' : 'Shopify Admin'}</span>
+            <span>{isAdminActive ? 'Viewing Dashboard' : 'Admin Portal'}</span>
           </button>
 
           <span className="h-5 w-px bg-slate-200 hidden sm:block" />

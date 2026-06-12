@@ -235,7 +235,7 @@ export default function CartDrawer({
                   </button>
 
                   <div className="flex justify-center items-center gap-1 text-[10px] text-slate-400 font-medium">
-                    <span>🔒 Secured, encrypted Shopify checkout sequence setup</span>
+                    <span>🔒 Secured, encrypted checkout sequence setup</span>
                   </div>
                 </div>
               )}

@@ -14,8 +14,10 @@ import CustomerAccount from './components/CustomerAccount';
 import CartDrawer from './components/CartDrawer';
 import AdminDashboard from './components/AdminDashboard';
 import PageRenderer from './components/PageRenderer';
+import ProductDetailView from './components/ProductDetailView';
+import CollectionDetailView from './components/CollectionDetailView';
 import { 
-  Sparkles, ShieldCheck, Truck, RefreshCw, Star, ArrowRight, Package, ShoppingCart, Check, Heart, User, CheckCircle2 
+  Sparkles, ShieldCheck, Truck, RefreshCw, Star, ArrowRight, Package, ShoppingCart, Check, Heart, User, CheckCircle2, Save, AlertTriangle
 } from 'lucide-react';
 
 export default function App() {
@@ -52,7 +54,15 @@ export default function App() {
 
   const [customPages, setCustomPages] = useState<CustomPage[]>(() => {
     const saved = localStorage.getItem('ps_custom_pages');
-    return saved ? JSON.parse(saved) : DEFAULT_PAGES;
+    const loaded = saved ? JSON.parse(saved) : DEFAULT_PAGES;
+    // Guaranteed presence check for Homepage in Pages list
+    if (!loaded.some((p: any) => p.isHomepage)) {
+      const defaultHome = DEFAULT_PAGES.find((p: any) => p.isHomepage);
+      if (defaultHome) {
+        return [defaultHome, ...loaded];
+      }
+    }
+    return loaded;
   });
 
   // Shopping Cart & User session statuses
@@ -71,27 +81,67 @@ export default function App() {
   const [activeCollectionId, setActiveCollectionId] = useState<string>('all');
   const [isAdminActive, setIsAdminActive] = useState<boolean>(false);
   const [cartOpen, setCartOpen] = useState<boolean>(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+
+  // Unsaved changes sync dialog states
+  const [isAdminDirty, setIsAdminDirty] = useState<boolean>(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState<boolean>(false);
+  const [pendingNavAction, setPendingNavAction] = useState<{
+    type: 'toggle-admin' | 'change-tab';
+    payload?: string;
+  } | null>(null);
+  const [adminActionTrigger, setAdminActionTrigger] = useState<{
+    action: 'save' | 'discard';
+    timestamp: number;
+  } | null>(null);
+
+  const slugify = (text: string) => {
+    return text
+      .toString()
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-');
+  };
   
   // Checkout Successful Indicator modal
   const [checkoutSuccessful, setCheckoutSuccessful] = useState<{ id: string; amount: number } | null>(null);
 
   // Synchronize path and load links successfully in iframe/new tab
   useEffect(() => {
-    const path = window.location.pathname;
-    if (path.startsWith('/pages/')) {
-      const slug = path.replace('/pages/', '');
-      setCurrentTab(slug);
-      setIsAdminActive(false);
-    } else if (path.startsWith('/collections/')) {
-      const colId = path.replace('/collections/', '');
-      setActiveCollectionId(colId);
-      setCurrentTab('frontend-shop');
-      setIsAdminActive(false);
-    } else if (path.startsWith('/products/')) {
-      setCurrentTab('frontend-shop');
-      setIsAdminActive(false);
-    }
-  }, []);
+    const handleLocationChange = () => {
+      const path = window.location.pathname;
+      if (path === '/' || path === '') {
+        setCurrentTab('frontend-home');
+        setIsAdminActive(false);
+      } else if (path.startsWith('/pages/')) {
+        const slug = path.replace('/pages/', '');
+        setCurrentTab(slug);
+        setIsAdminActive(false);
+      } else if (path.startsWith('/collections/')) {
+        const colId = path.replace('/collections/', '');
+        const matchedCol = collections.find(c => c.id === colId || slugify(c.title) === colId);
+        if (matchedCol) {
+          setActiveCollectionId(matchedCol.id);
+          setCurrentTab('collection-detail');
+        } else {
+          setActiveCollectionId('all');
+          setCurrentTab('frontend-shop');
+        }
+        setIsAdminActive(false);
+      } else if (path.startsWith('/products/')) {
+        const prodId = path.replace('/products/', '');
+        setSelectedProductId(decodeURIComponent(prodId));
+        setCurrentTab('product-detail');
+        setIsAdminActive(false);
+      }
+    };
+
+    handleLocationChange();
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, [collections]);
 
   // --- Write to LocalStorage on Changes ---
   useEffect(() => {
@@ -311,13 +361,25 @@ export default function App() {
       <Header
         currentTab={currentTab}
         onTabChange={(tab) => {
-          setCurrentTab(tab);
-          setIsAdminActive(false);
+          if (isAdminDirty) {
+            setPendingNavAction({ type: 'change-tab', payload: tab });
+            setShowUnsavedModal(true);
+          } else {
+            setCurrentTab(tab);
+            setIsAdminActive(false);
+          }
         }}
         loggedInCustomer={loggedInCustomer}
         cartItems={cartItems}
         onOpenCart={() => setCartOpen(true)}
-        onOpenAdmin={() => setIsAdminActive(!isAdminActive)}
+        onOpenAdmin={() => {
+          if (isAdminActive && isAdminDirty) {
+            setPendingNavAction({ type: 'toggle-admin' });
+            setShowUnsavedModal(true);
+          } else {
+            setIsAdminActive(!isAdminActive);
+          }
+        }}
         isAdminActive={isAdminActive}
       />
 
@@ -341,6 +403,24 @@ export default function App() {
             onUpdateDiscounts={setDiscounts}
             customPages={customPages}
             onUpdateCustomPages={setCustomPages}
+            onDirtyChange={setIsAdminDirty}
+            adminActionTrigger={adminActionTrigger}
+            onAdminActionComplete={(actionHandled) => {
+              setIsAdminDirty(false);
+              setAdminActionTrigger(null);
+              setShowUnsavedModal(false);
+
+              if (pendingNavAction) {
+                if (pendingNavAction.type === 'toggle-admin') {
+                  setIsAdminActive(!isAdminActive);
+                } else if (pendingNavAction.type === 'change-tab' && pendingNavAction.payload) {
+                  const tab = pendingNavAction.payload;
+                  setCurrentTab(tab);
+                  setIsAdminActive(false);
+                }
+                setPendingNavAction(null);
+              }
+            }}
           />
         ) : (
           
@@ -358,15 +438,21 @@ export default function App() {
                     loggedInCustomer={loggedInCustomer}
                     onAddToCart={handleAddToCart} 
                     onToggleWishlist={handleToggleWishlist}
-                    onNavigate={(target) => {
+                    onNavigate={(target, arg) => {
                       if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
                         setCurrentTab(target);
-                      } else if (target.startsWith('/pages/')) {
-                        setCurrentTab(target.replace('/pages/', ''));
-                      } else if (target.startsWith('/collections/')) {
-                        const colId = target.replace('/collections/', '');
-                        setActiveCollectionId(colId);
-                        setCurrentTab('frontend-shop');
+                      } else if (target.startsWith('/pages/') || target.startsWith('page-')) {
+                        const slug = target.replace('/pages/', '').replace('page-', '');
+                        window.history.pushState({}, '', `/pages/${slug}`);
+                        window.dispatchEvent(new Event('popstate'));
+                      } else if (target.startsWith('/collections/') || target.startsWith('collection-')) {
+                        const colId = target.replace('/collections/', '').replace('collection-', '');
+                        window.history.pushState({}, '', `/collections/${colId}`);
+                        window.dispatchEvent(new Event('popstate'));
+                      } else if (target.startsWith('/products/') || target.startsWith('product-')) {
+                        const prodId = target.replace('/products/', '').replace('product-', '');
+                        window.history.pushState({}, '', `/products/${prodId}`);
+                        window.dispatchEvent(new Event('popstate'));
                       } else {
                         setCurrentTab(target);
                       }
@@ -519,15 +605,21 @@ export default function App() {
                   loggedInCustomer={loggedInCustomer}
                   onAddToCart={handleAddToCart} 
                   onToggleWishlist={handleToggleWishlist}
-                  onNavigate={(target) => {
+                  onNavigate={(target, arg) => {
                     if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
                       setCurrentTab(target);
-                    } else if (target.startsWith('/pages/')) {
-                      setCurrentTab(target.replace('/pages/', ''));
-                    } else if (target.startsWith('/collections/')) {
-                      const colId = target.replace('/collections/', '');
-                      setActiveCollectionId(colId);
-                      setCurrentTab('frontend-shop');
+                    } else if (target.startsWith('/pages/') || target.startsWith('page-')) {
+                      const slug = target.replace('/pages/', '').replace('page-', '');
+                      window.history.pushState({}, '', `/pages/${slug}`);
+                      window.dispatchEvent(new Event('popstate'));
+                    } else if (target.startsWith('/collections/') || target.startsWith('collection-')) {
+                      const colId = target.replace('/collections/', '').replace('collection-', '');
+                      window.history.pushState({}, '', `/collections/${colId}`);
+                      window.dispatchEvent(new Event('popstate'));
+                    } else if (target.startsWith('/products/') || target.startsWith('product-')) {
+                      const prodId = target.replace('/products/', '').replace('product-', '');
+                      window.history.pushState({}, '', `/products/${prodId}`);
+                      window.dispatchEvent(new Event('popstate'));
                     } else {
                       setCurrentTab(target);
                     }
@@ -535,6 +627,41 @@ export default function App() {
                 />
               );
             })()}
+
+            {/* FRONTEND VIEW - PRODUCT DETAIL PAGE */}
+            {currentTab === 'product-detail' && selectedProductId && (
+              <ProductDetailView
+                product={products.find(p => p.id === selectedProductId || slugify(p.title) === selectedProductId) || products[0]}
+                allProducts={products}
+                onAddToCart={handleAddToCart}
+                onToggleWishlist={handleToggleWishlist}
+                onNavigate={(target, arg) => {
+                  if (target === 'product-detail' && arg) {
+                    setSelectedProductId(arg);
+                  } else {
+                    setCurrentTab(target);
+                  }
+                }}
+              />
+            )}
+
+            {/* FRONTEND VIEW - COLLECTION DETAIL PAGE */}
+            {currentTab === 'collection-detail' && (
+              <CollectionDetailView
+                collection={collections.find(c => c.id === activeCollectionId || slugify(c.title) === activeCollectionId) || collections[0]}
+                allProducts={products}
+                onAddToCart={handleAddToCart}
+                onToggleWishlist={handleToggleWishlist}
+                onNavigate={(target, arg) => {
+                  if (arg) {
+                    setSelectedProductId(arg);
+                    setCurrentTab('product-detail');
+                  } else {
+                    setCurrentTab(target);
+                  }
+                }}
+              />
+            )}
 
             {/* FRONTEND VIEW - SUBSCRIBE BUILDER */}
             {currentTab === 'frontend-subscribe' && (
@@ -563,8 +690,8 @@ export default function App() {
               <BrandList
                 collections={collections}
                 onBrandClick={(colId) => {
-                  setActiveCollectionId(colId);
-                  setCurrentTab('frontend-shop');
+                  window.history.pushState({}, '', `/collections/${colId}`);
+                  window.dispatchEvent(new Event('popstate'));
                 }}
               />
             )}
@@ -621,7 +748,7 @@ export default function App() {
               </div>
             </div>
 
-            <p className="text-[10px] text-slate-400">Your mock order was registered within our active database. Toggle to the **Shopify Admin** portal to fulfill this order and check revenue updates!</p>
+            <p className="text-[10px] text-slate-400">Your mock order was registered within our active database. Toggle to the **Admin Portal** to fulfill this order and check revenue updates!</p>
 
             <button
               onClick={() => {
@@ -632,6 +759,55 @@ export default function App() {
             >
               Check My Orders History
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Unsaved Changes Confirmation Modal */}
+      {showUnsavedModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl relative">
+            <div className="h-12 w-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-xl font-bold animate-pulse mt-2">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            
+            <div className="space-y-1">
+              <h3 className="text-base font-black text-slate-900">You have unsaved changes.</h3>
+              <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
+                You modified content, settings, layout or sections inside the current session. Your updates will be lost if you leave without saving.
+              </p>
+            </div>
+
+            <div className="space-y-2 pt-2 text-xs">
+              <button
+                onClick={() => {
+                  setAdminActionTrigger({ action: 'save', timestamp: Date.now() });
+                }}
+                className="w-full bg-[#008060] hover:bg-[#006e52] text-white font-black py-2.5 rounded-xl uppercase tracking-widest transition cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+              >
+                <Save className="h-4 w-4" />
+                <span>Save Changes</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setAdminActionTrigger({ action: 'discard', timestamp: Date.now() });
+                }}
+                className="w-full bg-red-50 text-red-700 hover:bg-red-100 font-extrabold py-2.5 rounded-xl uppercase tracking-widest transition cursor-pointer border border-red-150"
+              >
+                Discard Changes
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowUnsavedModal(false);
+                  setPendingNavAction(null);
+                }}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-650 font-bold py-2 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

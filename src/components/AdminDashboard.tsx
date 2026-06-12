@@ -22,27 +22,149 @@ interface AdminDashboardProps {
   onUpdateDiscounts: (newDiscs: Discount[]) => void;
   customPages: CustomPage[];
   onUpdateCustomPages: (newPages: CustomPage[]) => void;
+  onDirtyChange?: (dirty: boolean) => void;
+  adminActionTrigger?: { action: 'save' | 'discard'; timestamp: number } | null;
+  onAdminActionComplete?: (action: 'save' | 'discard') => void;
 }
 
 type SidebarTab = 'analytics' | 'orders' | 'collections' | 'products' | 'pages' | 'files' | 'customers' | 'discounts';
 
 export default function AdminDashboard({
-  products,
-  onUpdateProducts,
-  collections,
-  onUpdateCollections,
-  orders,
-  onUpdateOrders,
-  files,
-  onUpdateFiles,
-  customers,
-  onUpdateCustomers,
-  discounts,
-  onUpdateDiscounts,
-  customPages,
-  onUpdateCustomPages
+  products: parentProducts,
+  onUpdateProducts: parentOnUpdateProducts,
+  collections: parentCollections,
+  onUpdateCollections: parentOnUpdateCollections,
+  orders: parentOrders,
+  onUpdateOrders: parentOnUpdateOrders,
+  files: parentFiles,
+  onUpdateFiles: parentOnUpdateFiles,
+  customers: parentCustomers,
+  onUpdateCustomers: parentOnUpdateCustomers,
+  discounts: parentDiscounts,
+  onUpdateDiscounts: parentOnUpdateDiscounts,
+  customPages: parentCustomPages,
+  onUpdateCustomPages: parentOnUpdateCustomPages,
+  onDirtyChange,
+  adminActionTrigger,
+  onAdminActionComplete
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<SidebarTab>('analytics');
+
+  // --- Draft State Hooks for unified safe saves ---
+  const [localProducts, setLocalProducts] = useState<Product[]>(parentProducts);
+  const [localCollections, setLocalCollections] = useState<Collection[]>(parentCollections);
+  const [localPages, setLocalPages] = useState<CustomPage[]>(parentCustomPages);
+  const [localDiscounts, setLocalDiscounts] = useState<Discount[]>(parentDiscounts);
+  const [localOrders, setLocalOrders] = useState<Order[]>(parentOrders);
+  const [localFiles, setLocalFiles] = useState<FileEntry[]>(parentFiles);
+  const [localCustomers, setLocalCustomers] = useState<Customer[]>(parentCustomers);
+
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Sync edits wrapper overrides so existing handlers automatically write to drafts
+  const onUpdateProducts = (updatedProds: Product[]) => {
+    setLocalProducts(updatedProds);
+    setHasUnsavedChanges(true);
+    if (onDirtyChange) onDirtyChange(true);
+  };
+
+  const onUpdateCollections = (updatedColls: Collection[]) => {
+    setLocalCollections(updatedColls);
+    setHasUnsavedChanges(true);
+    if (onDirtyChange) onDirtyChange(true);
+  };
+
+  const onUpdateCustomPages = (updatedPages: CustomPage[]) => {
+    setLocalPages(updatedPages);
+    setHasUnsavedChanges(true);
+    if (onDirtyChange) onDirtyChange(true);
+  };
+
+  const onUpdateDiscounts = (updatedDiscs: Discount[]) => {
+    setLocalDiscounts(updatedDiscs);
+    setHasUnsavedChanges(true);
+    if (onDirtyChange) onDirtyChange(true);
+  };
+
+  const onUpdateOrders = (updatedOrders: Order[]) => {
+    setLocalOrders(updatedOrders);
+    setHasUnsavedChanges(true);
+    if (onDirtyChange) onDirtyChange(true);
+  };
+
+  const onUpdateFiles = (updatedFiles: FileEntry[]) => {
+    setLocalFiles(updatedFiles);
+    setHasUnsavedChanges(true);
+    if (onDirtyChange) onDirtyChange(true);
+  };
+
+  const onUpdateCustomers = (updatedCusts: Customer[]) => {
+    setLocalCustomers(updatedCusts);
+    setHasUnsavedChanges(true);
+    if (onDirtyChange) onDirtyChange(true);
+  };
+
+  // Global Save & Discard triggers
+  const handleGlobalSave = () => {
+    parentOnUpdateProducts(localProducts);
+    parentOnUpdateCollections(localCollections);
+    parentOnUpdateCustomPages(localPages);
+    parentOnUpdateDiscounts(localDiscounts);
+    parentOnUpdateOrders(localOrders);
+    parentOnUpdateFiles(localFiles);
+    parentOnUpdateCustomers(localCustomers);
+
+    setHasUnsavedChanges(false);
+    if (onDirtyChange) onDirtyChange(false);
+    if (onAdminActionComplete) onAdminActionComplete('save');
+  };
+
+  const handleGlobalDiscard = () => {
+    setLocalProducts(parentProducts);
+    setLocalCollections(parentCollections);
+    setLocalPages(parentCustomPages);
+    setLocalDiscounts(parentDiscounts);
+    setLocalOrders(parentOrders);
+    setLocalFiles(parentFiles);
+    setLocalCustomers(parentCustomers);
+
+    setHasUnsavedChanges(false);
+    if (onDirtyChange) onDirtyChange(false);
+    if (onAdminActionComplete) onAdminActionComplete('discard');
+  };
+
+  // Sync draft states when external database updates occur (when not dirty)
+  React.useEffect(() => {
+    if (!hasUnsavedChanges) {
+      setLocalProducts(parentProducts);
+      setLocalCollections(parentCollections);
+      setLocalPages(parentCustomPages);
+      setLocalDiscounts(parentDiscounts);
+      setLocalOrders(parentOrders);
+      setLocalFiles(parentFiles);
+      setLocalCustomers(parentCustomers);
+    }
+  }, [parentProducts, parentCollections, parentCustomPages, parentDiscounts, parentOrders, parentFiles, parentCustomers, hasUnsavedChanges]);
+
+  // Listen to external modal command requests (from App.tsx confirm triggers)
+  React.useEffect(() => {
+    if (adminActionTrigger) {
+      if (adminActionTrigger.action === 'save') {
+        handleGlobalSave();
+      } else if (adminActionTrigger.action === 'discard') {
+        handleGlobalDiscard();
+      }
+    }
+  }, [adminActionTrigger]);
+
+  // Expose standard namespace variables to keep all existing loops intact
+  const products = localProducts;
+  const collections = localCollections;
+  const customPages = localPages;
+  const discounts = localDiscounts;
+  const orders = localOrders;
+  const files = localFiles;
+  const customers = localCustomers;
 
   // Search, filter, edit states
   const [orderQuery, setOrderQuery] = useState('');
@@ -70,14 +192,6 @@ export default function AdminDashboard({
 
   // Draft page & collection builder custom states
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
-  const [localPages, setLocalPages] = useState<CustomPage[]>(customPages);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-  React.useEffect(() => {
-    if (!hasUnsavedChanges) {
-      setLocalPages(customPages);
-    }
-  }, [customPages, hasUnsavedChanges]);
 
   // Clean title-to-slug utility
   const slugify = (text: string) => {
@@ -145,7 +259,7 @@ export default function AdminDashboard({
     title: '', type: 'Amount off order', details: '', eligibility: 'All customers', status: 'Active'
   });
 
-  // Calculate high-fidelity shopify metrics
+  // Calculate high-fidelity partner portal metrics
   const stats = useMemo(() => {
     const totalSales = orders.reduce((sum, o) => sum + o.total, 0);
     const completedOrders = orders.length;
@@ -586,9 +700,9 @@ export default function AdminDashboard({
   }, [discounts, discountQuery]);
 
   return (
-    <div id="shopify-admin-scaffold" className="flex flex-col lg:flex-row min-h-screen bg-[#f6f6f7] text-slate-800 font-sans">
+    <div id="partner-admin-scaffold" className="flex flex-col lg:flex-row min-h-screen bg-[#f6f6f7] text-slate-800 font-sans">
       
-      {/* Left Shopify-like sidebar Navigation */}
+      {/* Left sidebar Navigation */}
       {!selectedBuilderPageId && (
         <aside className="w-full lg:w-60 bg-[#ebebeb] text-[#4a4d50] shrink-0 border-r border-[#e1e3e5] p-3.5 flex flex-col justify-between">
           <div className="space-y-6">
@@ -661,7 +775,7 @@ export default function AdminDashboard({
         {!selectedBuilderPageId && (
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-250">
             <div>
-              <span className="text-[10px] text-indigo-600 bg-indigo-50 font-black uppercase py-1 px-3 rounded-full border border-indigo-100">Shopify Partner Portal</span>
+              <span className="text-[10px] text-indigo-600 bg-indigo-50 font-black uppercase py-1 px-3 rounded-full border border-indigo-100">Pouch Supply Partner Portal</span>
               <h1 className="text-2xl font-black text-slate-900 mt-2 capitalize flex items-center gap-2">
                 {activeTab} Management Panel
               </h1>
@@ -669,6 +783,43 @@ export default function AdminDashboard({
             
             {/* Quick Metrics display */}
             <div className="flex flex-wrap items-center gap-3 text-xs">
+              {/* Draft Status Indicator */}
+              <div className="flex items-center gap-2 bg-white border border-slate-250 px-4 py-2.5 rounded-xl shadow-xs">
+                <span className={`h-2.5 w-2.5 rounded-full ${hasUnsavedChanges ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+                <span className="font-extrabold text-[10px] text-slate-700 uppercase tracking-widest whitespace-nowrap">
+                  {hasUnsavedChanges ? 'Unsaved Edits Present' : 'All Changes Saved'}
+                </span>
+              </div>
+
+              {/* Save changes button */}
+              <button
+                onClick={handleGlobalSave}
+                disabled={!hasUnsavedChanges}
+                className={`py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all shadow-xs border ${
+                  hasUnsavedChanges
+                    ? 'bg-[#008060] hover:bg-[#006e52] text-white border-[#008060] cursor-pointer ring-2 ring-emerald-405'
+                    : 'bg-slate-100 text-slate-350 border-slate-200 cursor-not-allowed select-none'
+                }`}
+              >
+                <Save className="h-4 w-4 shrink-0" />
+                <span>Save Changes</span>
+              </button>
+
+              {/* Discard button */}
+              {hasUnsavedChanges && (
+                <button
+                  onClick={() => {
+                    if (confirm("Are you sure you want to discard all unsaved edits made during this session? This action cannot be undone.")) {
+                      handleGlobalDiscard();
+                    }
+                  }}
+                  className="py-2.5 px-3.5 bg-red-50 text-red-700 hover:bg-red-100 border border-red-150 rounded-xl text-[10px] uppercase font-black tracking-widest transition-all cursor-pointer"
+                  title="Discard All Draft Changes"
+                >
+                  Discard
+                </button>
+              )}
+
               <div className="bg-white border border-slate-250 px-4 py-2.5 rounded-xl shadow-xs">
                 <span className="text-slate-400 block text-[9px] font-bold uppercase tracking-wider">Gross Sales</span>
                 <span className="font-extrabold text-slate-950 text-sm">£{stats.totalSales.toFixed(2)}</span>
@@ -1468,36 +1619,72 @@ export default function AdminDashboard({
                             Set as Homepage
                           </button>
                         )}
-                        <button
-                          onClick={() => setSelectedBuilderPageId(page.id)}
-                          className="bg-teal-50 text-teal-800 hover:bg-teal-100 font-extrabold py-1.5 px-3 rounded-lg border border-teal-100 flex items-center gap-1 cursor-pointer"
-                        >
-                          <Settings className="h-3.5 w-3.5" /> Customize Layout
-                        </button>
-                        <button
-                          onClick={() => handleDuplicatePage(page)}
-                          className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold py-1.5 px-3 rounded-lg border border-slate-200 cursor-pointer"
-                        >
-                          Duplicate
-                        </button>
-                        <button
-                          onClick={() => handlePreviewPage(page)}
-                          className="bg-sky-50 text-sky-800 hover:bg-sky-100 font-extrabold py-1.5 px-3 rounded-lg border border-sky-100 flex items-center gap-1 cursor-pointer"
-                        >
-                          <Eye className="h-3.5 w-3.5" /> Preview
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Are you sure you want to permanently delete "${page.title}"?`)) {
-                              const updated = localPages.filter(p => p.id !== page.id);
-                              setLocalPages(updated);
-                              onUpdateCustomPages(updated);
-                            }
-                          }}
-                          className="text-red-600 hover:text-white hover:bg-red-600 font-extrabold py-1.5 px-3 border border-red-200 rounded-lg cursor-pointer transition-all"
-                        >
-                          Delete
-                        </button>
+                        {/* Customize Layout (Settings Icon) */}
+                        <div className="relative group/tooltip">
+                          <button
+                            onClick={() => setSelectedBuilderPageId(page.id)}
+                            className="p-2.5 bg-teal-50 hover:bg-teal-100 hover:scale-105 text-teal-800 border border-teal-150 rounded-xl transition-all cursor-pointer flex items-center justify-center animate-hover"
+                            aria-label="Customize Layout"
+                          >
+                            <Settings className="h-4.5 w-4.5" />
+                          </button>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                            Customize Layout
+                          </div>
+                        </div>
+
+                        {/* Duplicate (Duplicate Icon) */}
+                        <div className="relative group/tooltip">
+                          <button
+                            onClick={() => handleDuplicatePage(page)}
+                            className="p-2.5 bg-slate-100 hover:bg-slate-200 hover:scale-105 text-slate-700 border border-slate-200 rounded-xl transition-all cursor-pointer flex items-center justify-center animate-hover"
+                            aria-label="Duplicate"
+                          >
+                            <Clipboard className="h-4.5 w-4.5" />
+                          </button>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#1a1c1d] text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                            Duplicate Page
+                          </div>
+                        </div>
+
+                        {/* Preview (Eye/Preview Icon) */}
+                        <div className="relative group/tooltip">
+                          <button
+                            onClick={() => handlePreviewPage(page)}
+                            className="p-2.5 bg-sky-50 hover:bg-sky-100 hover:scale-105 text-sky-800 border border-sky-150 rounded-xl transition-all cursor-pointer flex items-center justify-center animate-hover"
+                            aria-label="Preview"
+                          >
+                            <Eye className="h-4.5 w-4.5" />
+                          </button>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                            Preview Page
+                          </div>
+                        </div>
+
+                        {/* Delete (Trash Icon - disable if active homepage for safety) */}
+                        <div className="relative group/tooltip">
+                          <button
+                            disabled={page.isHomepage}
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to permanently delete "${page.title}"?`)) {
+                                const updated = localPages.filter(p => p.id !== page.id);
+                                setLocalPages(updated);
+                                onUpdateCustomPages(updated);
+                              }
+                            }}
+                            className={`p-2.5 border rounded-xl transition-all flex items-center justify-center ${
+                              page.isHomepage
+                                ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed opacity-50'
+                                : 'bg-red-50 text-red-600 hover:text-white hover:bg-red-600 hover:scale-105 border-red-150 cursor-pointer'
+                            }`}
+                            aria-label="Delete"
+                          >
+                            <Trash2 className="h-4.5 w-4.5" />
+                          </button>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                            {page.isHomepage ? 'Homepage Cannot Be Deleted' : 'Delete Page'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1584,8 +1771,7 @@ export default function AdminDashboard({
                       <button
                         onClick={() => {
                           if (confirm("Revert layout to the last saved state?")) {
-                            setLocalPages(customPages);
-                            setHasUnsavedChanges(false);
+                            handleGlobalDiscard();
                             setSelectedBuilderSectionId(null);
                           }
                         }}
@@ -1595,10 +1781,7 @@ export default function AdminDashboard({
                       </button>
                     )}
                     <button
-                      onClick={() => {
-                        onUpdateCustomPages(localPages);
-                        setHasUnsavedChanges(false);
-                      }}
+                      onClick={handleGlobalSave}
                       className="bg-[#008060] hover:bg-[#006e52] text-white font-bold text-[10px] py-1.5 px-3.5 rounded-lg flex items-center gap-1.5 cursor-pointer uppercase tracking-wider transition shadow-sm"
                     >
                       <Save className="h-3.5 w-3.5" />
