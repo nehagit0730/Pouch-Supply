@@ -8,6 +8,12 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Logging middleware to inspect all incoming traffic
+  app.use((req, res, next) => {
+    console.log(`[Server Logging] ${req.method} ${req.url} | headers: ${JSON.stringify(req.headers['accept'] || '')}`);
+    next();
+  });
+
   // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
@@ -15,9 +21,10 @@ async function startServer() {
 
   // Vite middleware for development or static serving for production
   if (process.env.NODE_ENV !== "production") {
+    // Using "custom" appType so we can explicitly handle SPA fallback ourselves without Vite intercepting and returning 404s
     const vite = await createViteServer({
       server: { middlewareMode: true },
-      appType: "spa",
+      appType: "custom",
     });
     app.use(vite.middlewares);
 
@@ -40,9 +47,25 @@ async function startServer() {
     });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
+    console.log(`[Production Setup] Static directory: ${distPath}`);
     app.use(express.static(distPath));
+    
+    // Fallback all other production requests to index.html to support SPA routing
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      const url = req.originalUrl;
+      const lastSegment = url.split('/').pop() || '';
+      if (url.startsWith("/api") || lastSegment.includes(".")) {
+        return res.status(404).send("API or File Asset Not Found");
+      }
+      
+      const indexPath = path.join(distPath, 'index.html');
+      console.log(`[Production Fallback] Sending index.html for request: ${req.url}`);
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          console.error(`[Production Fallback] Error sending index.html:`, err);
+          res.status(500).send("Internal Server Error: Missing compiled static resources.");
+        }
+      });
     });
   }
 
