@@ -94,6 +94,13 @@ export interface PageSection {
     marqueeSpeed?: number;
     itemsCount?: number;
     selectedCollectionId?: string;
+    slides?: {
+      title: string;
+      description: string;
+      imageUrl: string;
+      buttonText: string;
+      buttonLink: string;
+    }[];
   };
   blocks?: any[]; // for columns, items, faqs etc.
 }

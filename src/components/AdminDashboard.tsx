@@ -2398,16 +2398,33 @@ export default function AdminDashboard({
                           />
                         )}
 
-                        {/* Width checkbox options */}
-                        <div className="flex items-center gap-2 pt-2">
-                          <input
-                            type="checkbox"
-                            id="builder-fullwidth"
-                            checked={currentlyEditingSection.settings.fullWidth}
-                            onChange={(e) => handleUpdateSectionSettings('fullWidth', e.target.checked)}
-                            className="accent-indigo-600 rounded"
-                          />
-                          <label htmlFor="builder-fullwidth" className="font-bold text-slate-650 text-[10px]">Display Full page width</label>
+                        {/* Width toggle controls - Premium Selector Button Group */}
+                        <div className="space-y-1.5 pt-2">
+                          <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8px]">Section container width</label>
+                          <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200/60">
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateSectionSettings('fullWidth', false)}
+                              className={`text-[9.5px] font-extrabold py-1.5 px-2 rounded-md transition-all cursor-pointer text-center ${
+                                !currentlyEditingSection.settings.fullWidth
+                                  ? 'bg-white text-indigo-650 shadow-xs border border-slate-250/20'
+                                  : 'text-slate-500 hover:text-slate-850'
+                              }`}
+                            >
+                              Page Bounded
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateSectionSettings('fullWidth', true)}
+                              className={`text-[9.5px] font-extrabold py-1.5 px-2 rounded-md transition-all cursor-pointer text-center ${
+                                currentlyEditingSection.settings.fullWidth
+                                  ? 'bg-white text-indigo-650 shadow-xs border border-slate-250/20'
+                                  : 'text-slate-500 hover:text-slate-850'
+                              }`}
+                            >
+                              Edge-to-Edge Wide
+                            </button>
+                          </div>
                         </div>
 
                         {/* Colors setting options */}

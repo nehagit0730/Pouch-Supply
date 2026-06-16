@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CustomPage, PageSection, Product, Collection, Customer } from '../types';
-import { ArrowRight, ShoppingCart, Star, Heart, FileText, Check } from 'lucide-react';
+import { 
+  ArrowRight, ShoppingCart, Star, Heart, FileText, Check, 
+  ChevronDown, ChevronUp, Play, Sparkles, TrendingUp, Plus, Minus, ShieldCheck, Award, Eye, Flame, ArrowUpRight
+} from 'lucide-react';
 import PremiumSlideshow from './PremiumSlideshow';
 
 interface PageRendererProps {
@@ -22,6 +25,9 @@ export default function PageRenderer({
   onToggleWishlist,
   onNavigate
 }: PageRendererProps) {
+  // Safe state for keeping track of active FAQs
+  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
+
   // Safe parsing of custom links or routes
   const handleLinkClick = (link?: string) => {
     if (!link) return;
@@ -38,83 +44,164 @@ export default function PageRenderer({
       const slug = link.replace('/pages/', '');
       onNavigate(`page-${slug}`);
     } else {
-      // Internal custom routing or smooth fallback
       onNavigate('frontend-shop');
     }
   };
 
+  const toggleFaq = (idx: number) => {
+    setOpenFaqIdx(openFaqIdx === idx ? null : idx);
+  };
+
   return (
-    <div className="space-y-12 pb-20">
+    <div className="space-y-16 pb-24 font-sans">
       {page.sections && page.sections.length > 0 ? (
         page.sections.map((sec, idx) => {
           const sStyle = {
             backgroundColor: sec.settings.backgroundColor || '#FFFFFF',
-            color: sec.settings.textColor || '#4a4d50'
+            color: sec.settings.textColor || '#475569'
           };
           
           const isFullBleed = (sec.type === 'Slideshow' || sec.type === 'Image banner') && sec.settings.fullWidth;
           const maxContainerClass = sec.settings.fullWidth ? 'w-full' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
-          const paddingClass = isFullBleed ? 'py-0' : 'py-12 md:py-16';
+          const paddingClass = isFullBleed ? 'py-0' : 'py-16 md:py-24';
 
           return (
             <section
               key={sec.id || idx}
               style={sStyle}
-              className={`${paddingClass} ${sec.settings.fullWidth ? '' : 'rounded-3xl border border-[#e1e3e5]/60 shadow-md my-8 overflow-hidden'}`}
+              className={`${paddingClass} relative transition-all duration-300 ${
+                sec.settings.fullWidth 
+                  ? '' 
+                  : 'rounded-3xl border border-slate-200/60 shadow-xl my-10 mx-4 sm:mx-6 lg:mx-8 overflow-hidden bg-white hover:shadow-2xl'
+              }`}
             >
               <div className={maxContainerClass}>
                 
                 {/* 1. IMAGE BANNER */}
                 {sec.type === 'Image banner' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-                    <div className="space-y-5">
-                      {sec.settings.title && (
-                        <h1 
-                          className="text-4xl font-extrabold tracking-tight leading-tight"
-                          style={{ color: sec.settings.headingColor || '#1a1c1d' }}
-                        >
-                          {sec.settings.title}
-                        </h1>
-                      )}
-                      {sec.settings.description && (
-                        <p className="text-sm leading-relaxed opacity-85">
-                          {sec.settings.description}
-                        </p>
-                      )}
-                      {sec.settings.buttonText && (
-                        <button
-                          onClick={() => handleLinkClick(sec.settings.buttonLink)}
-                          className="bg-[#008060] hover:bg-[#006e52] text-white font-bold text-xs py-3.5 px-8 rounded-xl transition-all shadow-md inline-flex items-center gap-2 cursor-pointer uppercase tracking-wider"
-                        >
-                          <span>{sec.settings.buttonText}</span>
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
-                      )}
+                  sec.settings.fullWidth ? (
+                    /* High-fidelity full-width image banner (Hero style with real-time text overlay protection) */
+                    <div className="relative w-full min-h-[380px] sm:min-h-[480px] md:min-h-[560px] flex items-center overflow-hidden">
+                      {/* Background Image & Overlay */}
+                      <div className="absolute inset-0 z-0">
+                        <img
+                          src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=1400&q=80'}
+                          alt={sec.settings.title || 'Brand Banner'}
+                          className="w-full h-full object-cover origin-center scale-100 hover:scale-102 transition-transform duration-10000"
+                          referrerPolicy="no-referrer"
+                        />
+                        {/* Dual protectant layer */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-transparent sm:block hidden" />
+                        <div className="absolute inset-0 bg-slate-950/80 sm:hidden" />
+                      </div>
+
+                      {/* Content block aligned */}
+                      <div className="max-w-7xl mx-auto w-full px-6 sm:px-12 md:px-16 relative z-10 text-white">
+                        <div className="max-w-2xl space-y-4 sm:space-y-6">
+                          <div className="inline-flex items-center gap-1.5 bg-indigo-600/90 text-white font-extrabold uppercase tracking-widest text-[8px] sm:text-[9px] py-1 px-3 rounded-full border border-indigo-400/30">
+                            <Sparkles className="h-3 w-3 text-amber-300 animate-spin" />
+                            <span>Exclusive Pouch Launch</span>
+                          </div>
+
+                          {sec.settings.title && (
+                            <h1 
+                              className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight leading-none text-white drop-shadow-md"
+                            >
+                              {sec.settings.title}
+                            </h1>
+                          )}
+
+                          {sec.settings.description && (
+                            <p 
+                              className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-lg drop-shadow-xs"
+                            >
+                              {sec.settings.description}
+                            </p>
+                          )}
+
+                          {sec.settings.buttonText && (
+                            <div className="pt-2">
+                              <button
+                                onClick={() => handleLinkClick(sec.settings.buttonLink)}
+                                className="bg-white hover:bg-slate-100 text-slate-950 font-black text-[10px] sm:text-xs py-3.5 px-8 rounded-xl shadow-lg transition-all duration-300 cursor-pointer flex items-center gap-2 uppercase tracking-widest group"
+                              >
+                                <span>{sec.settings.buttonText}</span>
+                                <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <img
-                        src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80'}
-                        alt={sec.settings.title || 'Banner Media'}
-                        className="rounded-2xl border border-[#e1e3e5] shadow-md object-cover h-80 w-full"
-                        referrerPolicy="no-referrer"
-                      />
+                  ) : (
+                    /* High-fidelity boxed image banner (Side-by-side luxurious design with crisp margins) */
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center p-6 sm:p-10 md:p-16">
+                      <div className="space-y-6">
+                        <div className="inline-flex items-center gap-1.5 text-indigo-600 font-extrabold uppercase tracking-widest text-[9px] bg-indigo-50 py-1 px-3 rounded-full">
+                          <Award className="h-3 w-3" />
+                          <span>Guaranteed Freshness</span>
+                        </div>
+
+                        {sec.settings.title && (
+                          <h1 
+                            className="text-3xl sm:text-4xl font-black uppercase tracking-tight leading-tight"
+                            style={{ color: sec.settings.headingColor || '#0F172A' }}
+                          >
+                            {sec.settings.title}
+                          </h1>
+                        )}
+
+                        {sec.settings.description && (
+                          <p className="text-sm leading-relaxed opacity-90 text-slate-600">
+                            {sec.settings.description}
+                          </p>
+                        )}
+
+                        {sec.settings.buttonText && (
+                          <div className="pt-2">
+                            <button
+                              onClick={() => handleLinkClick(sec.settings.buttonLink)}
+                              className="bg-slate-900 hover:bg-slate-850 text-white font-extrabold text-xs py-3.5 px-8 rounded-xl transition-all shadow-md inline-flex items-center gap-2 cursor-pointer uppercase tracking-widest group"
+                            >
+                              <span>{sec.settings.buttonText}</span>
+                              <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="relative group overflow-hidden rounded-2xl border border-slate-200/80 shadow-lg aspect-4/3 md:aspect-square">
+                        <img
+                          src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80'}
+                          alt={sec.settings.title || 'Banner Media'}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-103"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                      </div>
                     </div>
-                  </div>
+                  )
                 )}
 
                 {/* 2. VIDEO BANNER */}
                 {sec.type === 'Video banner' && (
-                  <div className="space-y-6 text-center max-w-3xl mx-auto">
-                    <h2
-                      className="text-2xl font-black tracking-tight"
-                      style={{ color: sec.settings.headingColor || '#1a1c1d' }}
-                    >
-                      {sec.settings.title || 'Watch Brand Highlights'}
-                    </h2>
-                    {sec.settings.description && (
-                      <p className="text-xs leading-relaxed opacity-80">{sec.settings.description}</p>
-                    )}
-                    <div className="relative rounded-2xl overflow-hidden shadow-lg border border-[#e1e3e5] aspect-video bg-[#101112] flex items-center justify-center">
+                  <div className="space-y-8 text-center max-w-4xl mx-auto px-4 sm:px-6">
+                    <div className="space-y-3">
+                      <span className="text-[10px] tracking-widest font-extrabold uppercase text-indigo-600 bg-indigo-50/85 py-1 px-3 rounded-full inline-block">
+                        🎥 Laboratory Showcase
+                      </span>
+                      <h2
+                        className="text-3xl sm:text-4xl font-black tracking-tight uppercase"
+                        style={{ color: sec.settings.headingColor || '#000000' }}
+                      >
+                        {sec.settings.title || 'Watch Brand Highlights'}
+                      </h2>
+                      {sec.settings.description && (
+                        <p className="text-xs sm:text-sm leading-relaxed max-w-2xl mx-auto text-slate-500">{sec.settings.description}</p>
+                      )}
+                    </div>
+
+                    <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white aspect-video bg-neutral-950 flex items-center justify-center max-w-3xl mx-auto group">
                       {sec.settings.videoUrl || sec.settings.videoEmbed ? (
                         <iframe
                           className="w-full h-full"
@@ -123,9 +210,12 @@ export default function PageRenderer({
                           allowFullScreen
                         />
                       ) : (
-                        <div className="text-center space-y-2 p-6">
-                          <span className="text-4xl">🎬</span>
-                          <p className="font-mono text-[11px] text-[#707579]">Simulated Laboratory Batch Video (Configure embed on settings)</p>
+                        <div className="text-center p-12 space-y-4">
+                          <div className="w-16 h-16 rounded-full bg-indigo-600/10 text-indigo-650 flex items-center justify-center mx-auto shadow-md border border-indigo-200">
+                            <Play className="h-7 w-7 animate-pulse fill-indigo-650" />
+                          </div>
+                          <p className="font-mono text-[11px] text-slate-500">Pure Lab Grade Dispersion Quality (Configure URL in settings)</p>
+                          <div className="text-[10px] text-slate-400 bg-slate-50 border border-slate-100 rounded-md py-1 px-3.5 inline-block">Ref: PLG-08206</div>
                         </div>
                       )}
                     </div>
@@ -134,33 +224,46 @@ export default function PageRenderer({
 
                 {/* 3. IMAGE WITH TEXT */}
                 {sec.type === 'Image with text' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-                    <div className="order-2 md:order-1">
-                      <img
-                        src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=800&q=80'}
-                        className="rounded-2xl shadow-sm border object-cover h-80 w-full"
-                        alt=""
-                        referrerPolicy="no-referrer"
-                      />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center px-4 sm:px-6">
+                    <div className="order-2 md:order-1 relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-3xl blur opacity-15 group-hover:opacity-20 transition duration-500" />
+                      <div className="relative h-72 sm:h-96 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-md bg-slate-50">
+                        <img
+                          src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=800&q=80'}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-102"
+                          alt=""
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-5 order-1 md:order-2">
+                    
+                    <div className="space-y-6 order-1 md:order-2">
+                      <div className="inline-flex items-center gap-1.5 bg-sky-50 text-sky-700 font-extrabold uppercase tracking-widest text-[9px] py-1 px-3 rounded-full">
+                        <ShieldCheck className="h-3 w-3" />
+                        <span>Premium Standard Guaranteed</span>
+                      </div>
+                      
                       <h2 
-                        className="text-3xl font-extrabold tracking-tight"
-                        style={{ color: sec.settings.headingColor || '#1a1c1d' }}
+                        className="text-3xl font-black uppercase tracking-tight leading-tight"
+                        style={{ color: sec.settings.headingColor || '#000000' }}
                       >
                         {sec.settings.title || 'Curate your package'}
                       </h2>
-                      <p className="text-sm opacity-85 leading-relaxed">
+                      
+                      <p className="text-sm opacity-90 leading-relaxed text-slate-600">
                         {sec.settings.description || 'Flexible deliveries straight to your shop or door.'}
                       </p>
+
                       {sec.settings.buttonText && (
-                        <button
-                          onClick={() => handleLinkClick(sec.settings.buttonLink)}
-                          className="text-xs text-[#008060] hover:text-[#006e52] font-black inline-flex items-center gap-1 cursor-pointer"
-                        >
-                          <span>{sec.settings.buttonText}</span>
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
+                        <div className="pt-2">
+                          <button
+                            onClick={() => handleLinkClick(sec.settings.buttonLink)}
+                            className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs py-3 px-6 rounded-xl transition-all shadow-md inline-flex items-center gap-2 cursor-pointer uppercase tracking-widest group"
+                          >
+                            <span>{sec.settings.buttonText}</span>
+                            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -168,27 +271,38 @@ export default function PageRenderer({
 
                 {/* 4. TEXT COLUMN WITH IMAGE */}
                 {sec.type === 'Text column with image' && (
-                  <div className="space-y-10">
-                    <div className="text-center max-w-xl mx-auto space-y-2">
+                  <div className="space-y-12 px-4 sm:px-6">
+                    <div className="text-center max-w-2xl mx-auto space-y-3">
+                      <span className="text-[10px] tracking-widest font-black uppercase text-indigo-600 bg-indigo-50/90 py-1 px-3.5 rounded-full inline-block">Our Foundations</span>
                       <h2 
-                        className="text-2xl font-black"
-                        style={{ color: sec.settings.headingColor || '#1a1c1d' }}
+                        className="text-3xl font-black uppercase tracking-tight"
+                        style={{ color: sec.settings.headingColor || '#000000' }}
                       >
                         {sec.settings.title || 'Laboratory Certified Excellence'}
                       </h2>
-                      <p className="text-xs opacity-80">{sec.settings.description}</p>
+                      <p className="text-xs sm:text-sm text-slate-500">{sec.settings.description || 'Scientifically balanced plant extracts providing rich, uniform strength.'}</p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                       {[
-                        { title: 'Global Certified Lab Testing', desc: 'Every tin is sourced strictly from laboratories adhering to strict safety protocols.', img: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=400&q=80' },
-                        { title: 'Preservative Free Aroma Boost', desc: 'Crafted using pure medical-grade nicotine crystals and plant fiber bases.', img: 'https://images.unsplash.com/photo-1550507992-eb63ffee0847?auto=format&fit=crop&w=400&q=80' },
-                        { title: 'Vacuum Sealed Freeze Guard', desc: 'Sealed directly upon production ensuring 100% mint cooling strength is locked.', img: 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&w=400&q=80' }
+                        { title: 'Global Certified Lab Testing', desc: 'Every batch is sourced strictly from laboratory test lines adhering to absolute security and clean protocols.', img: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=400&q=80', badge: 'LAB VERIFIED' },
+                        { title: 'Preservative Free Aroma Boost', desc: 'Crafted using pure food-grade crystalline ingredients, delivering rich natural aromas and smooth fresh locks.', img: 'https://images.unsplash.com/photo-1550507992-eb63ffee0847?auto=format&fit=crop&w=400&q=80', badge: '100% TOBACCO-FREE' },
+                        { title: 'Vacuum Sealed Freeze Guard', desc: 'Sealed instantly into high-density polymer canisters ensuring 100% cooling impact remains intact during shipping.', img: 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&w=400&q=80', badge: 'FRESHNESS LOCK' }
                       ].map((col, cIdx) => (
-                        <div key={cIdx} className="bg-white border rounded-xl overflow-hidden p-4 space-y-3 shadow-xs">
-                          <img src={col.img} className="h-40 w-full object-cover rounded-lg" alt="" referrerPolicy="no-referrer" />
-                          <h4 className="font-bold text-slate-800 text-xs">{col.title}</h4>
-                          <p className="text-[11px] text-slate-400 leading-normal">{col.desc}</p>
+                        <div key={cIdx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden p-4 space-y-4 shadow-sm hover:shadow-xl hover:border-slate-300/60 transition-all group flex flex-col justify-between">
+                          <div className="space-y-3">
+                            <div className="relative h-44 w-full rounded-xl overflow-hidden bg-slate-50">
+                              <img src={col.img} className="h-full w-full object-cover group-hover:scale-102 transition-transform duration-300" alt="" referrerPolicy="no-referrer" />
+                              <span className="absolute bottom-2 left-2 bg-slate-900/90 text-white text-[8px] font-bold py-0.5 px-2 rounded tracking-widest">{col.badge}</span>
+                            </div>
+                            <h4 className="font-extrabold text-slate-800 text-sm">{col.title}</h4>
+                            <p className="text-[11px] text-slate-500 leading-relaxed">{col.desc}</p>
+                          </div>
+                          
+                          <div className="pt-2 border-t border-slate-50 flex items-center justify-between text-[9px] text-slate-450 font-mono">
+                            <span>ISO STANDARDS COMPLIANT</span>
+                            <span className="text-emerald-600 font-bold">✓ RECONSTRUCTED</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -197,47 +311,76 @@ export default function PageRenderer({
 
                 {/* 5. RICH TEXT */}
                 {sec.type === 'Rich text' && (
-                  <div className="text-center max-w-2xl mx-auto space-y-4 py-8">
+                  <div className="text-center max-w-3xl mx-auto space-y-6 py-10 px-4 sm:px-6">
+                    <div className="inline-flex items-center gap-1.5 justify-center py-1 px-3 bg-teal-50 border border-teal-100 text-teal-800 rounded-full text-[9px] tracking-widest uppercase font-extrabold">
+                      <TrendingUp className="h-3 w-3" />
+                      <span>Certified Quality Standard</span>
+                    </div>
+
                     <h2
-                      className="text-3xl font-extrabold tracking-tight"
-                      style={{ color: sec.settings.headingColor || '#1a1c1d' }}
+                      className="text-3xl sm:text-4xl font-black uppercase tracking-tight leading-tight"
+                      style={{ color: sec.settings.headingColor || '#000000' }}
                     >
                       {sec.settings.title || 'Rich editorial showcase'}
                     </h2>
-                    <p className="text-xs leading-relaxed opacity-85">
+                    
+                    <p className="text-xs sm:text-sm leading-relaxed text-slate-500 max-w-2xl mx-auto">
                       {sec.settings.description || 'Craft premium experiences under your own terms.'}
                     </p>
+
                     {sec.settings.buttonText && (
-                      <button
-                        onClick={() => handleLinkClick(sec.settings.buttonLink)}
-                        className="bg-[#008060] hover:bg-[#006e52] text-white text-xs font-bold py-2.5 px-6 rounded-lg transition-colors cursor-pointer"
-                      >
-                        {sec.settings.buttonText}
-                      </button>
+                      <div className="pt-4">
+                        <button
+                          onClick={() => handleLinkClick(sec.settings.buttonLink)}
+                          className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-black py-3.5 px-8 rounded-xl transition-all shadow-md cursor-pointer uppercase tracking-widest"
+                        >
+                          {sec.settings.buttonText}
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
 
                 {/* 6. MARQUEE TEXT */}
                 {sec.type === 'Marquee text' && (
-                  <div className="overflow-hidden bg-[#e3f5e9] py-3 rounded-xl border border-[#c8ebd3] relative text-center">
-                    <div className="whitespace-nowrap inline-flex gap-8 items-center justify-center font-bold text-[#008060] text-[11px] uppercase tracking-widest leading-none">
-                      <span className="flex items-center gap-2">⭐ {sec.settings.title || 'CRISP TOBACCO-FREE POUCHES DISPATCHED DAILY'} ⭐</span>
-                      <span className="flex items-center gap-2">🔥 OFFICIALLY LICENSED EU DISTRIBUTOR 🔥</span>
-                      <span className="flex items-center gap-2">📦 ORDER bulk quantities SAVE UP TO 25% 📦</span>
+                  <div className="overflow-hidden bg-slate-900 py-4.5 rounded-2xl border border-slate-800 relative shadow-inner">
+                    <div className="whitespace-nowrap flex gap-12 items-center justify-center font-mono font-bold text-white text-[10px] tracking-wider leading-none">
+                      <span className="flex items-center gap-2 shrink-0">
+                        <Flame className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /> 
+                        <span>QUALITY LABORATORY PACKED // TOBACCO-FREE</span>
+                      </span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                      <span className="flex items-center gap-2 shrink-0">
+                        ⭐ <span>OFFICIALLY LICENSED IN EUROPE AND UK CORES</span>
+                      </span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                      <span className="flex items-center gap-2 shrink-0">
+                        📦 <span>INSTANT DISPATCH ON BULK PACKS DISCOUNTS APPLIED</span>
+                      </span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                      <span className="flex items-center gap-2 shrink-0 hidden sm:flex">
+                        ✓ <span>VACUUM TESTED POUCHES FOR ABSOLUTE CRISPINESS</span>
+                      </span>
                     </div>
                   </div>
                 )}
 
                 {/* 7. MARQUEE IMAGES */}
                 {sec.type === 'Marquee images' && (
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-center uppercase tracking-wider opacity-75">Visual Can Catalog Highlight</h4>
-                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none justify-center">
-                      {allProducts.slice(0, 5).map(prod => (
-                        <div key={prod.id} className="w-24 shrink-0 bg-white border p-1 rounded-lg text-center">
-                          <img src={prod.image} className="h-16 w-16 object-cover rounded-md mx-auto" alt="" referrerPolicy="no-referrer" />
-                          <p className="text-[9px] font-bold truncate text-slate-800 mt-1">{prod.title.split(' ')[0]}</p>
+                  <div className="space-y-6 px-4">
+                    <div className="flex items-center gap-1.5 justify-center">
+                      <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
+                      <h4 className="text-[10px] font-extrabold text-center uppercase tracking-widest text-slate-400">Fresh Stock Dispatch Reel</h4>
+                    </div>
+
+                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none justify-start sm:justify-center">
+                      {allProducts.slice(0, 6).map(prod => (
+                        <div key={prod.id} className="w-28 shrink-0 bg-white border border-slate-100 p-2 rounded-xl text-center shadow-xs hover:shadow-md transition-shadow group">
+                          <div className="h-20 w-20 bg-slate-50 hover:bg-slate-100 rounded-lg overflow-hidden mx-auto flex items-center justify-center transition-all">
+                            <img src={prod.image} className="h-full w-full object-cover group-hover:scale-105 transition-transform" alt="" referrerPolicy="no-referrer" />
+                          </div>
+                          <p className="text-[9.5px] font-black truncate text-slate-800 mt-2.5">{prod.title.split(' ')[0]}</p>
+                          <p className="text-[8px] font-bold text-slate-400">{prod.vendor}</p>
                         </div>
                       ))}
                     </div>
@@ -246,21 +389,26 @@ export default function PageRenderer({
 
                 {/* 8. LOGO LIST */}
                 {sec.type === 'Logo list' && (
-                  <div className="text-center space-y-6">
-                    <h3 
-                      className="text-xs font-black uppercase tracking-widest"
-                      style={{ color: sec.settings.headingColor || '#1a1c1d' }}
-                    >
-                      {sec.settings.title || 'OFFICIAL RESELLER PARTNERS'}
-                    </h3>
-                    <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-12">
-                      {['77 Pouches', 'CUBA Power', 'CLEW White', 'KILLA Siberian', 'VELO Eucalyptus'].map((logo, lIdx) => (
+                  <div className="text-center space-y-8 px-4">
+                    <div className="space-y-1">
+                      <h3 
+                        className="text-xs font-black uppercase tracking-widest text-slate-400 block"
+                        style={{ color: sec.settings.headingColor || '#94A3B8' }}
+                      >
+                        {sec.settings.title || 'OFFICIAL LAB PARTNER REGISTER'}
+                      </h3>
+                      <p className="text-[10px] text-slate-400">Clinically formulated nicotine lines distributed under licensing agreements</p>
+                    </div>
+
+                    <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6">
+                      {['77 Pouches', 'CUBA Power', 'CLEW White', 'KILLA Siberian', 'VELO Eucalyptus', 'CRYOPOD Freeze'].map((logo, lIdx) => (
                         <div 
                           key={lIdx} 
                           onClick={() => onNavigate('frontend-brands')}
-                          className="bg-white border rounded-xl px-5 py-3 shadow-xs hover:border-[#008060] transition-colors cursor-pointer text-xs font-black tracking-widest text-[#4a4d50]"
+                          className="bg-white border border-slate-150 rounded-xl px-5 py-3 shadow-xs hover:border-slate-400 hover:shadow-md transition-all cursor-pointer text-xs font-extrabold tracking-wider text-slate-700 flex items-center gap-1.5"
                         >
-                          {logo}
+                          <span className="text-indigo-600">●</span>
+                          <span>{logo}</span>
                         </div>
                       ))}
                     </div>
@@ -269,60 +417,72 @@ export default function PageRenderer({
 
                 {/* 9. COLLECTION LIST */}
                 {sec.type === 'Collection list' && (
-                  <div className="space-y-6">
-                    <div className="text-center space-y-1">
+                  <div className="space-y-8 px-4 sm:px-6">
+                    <div className="text-center space-y-2">
                       <h3 
-                        className="text-xs font-black uppercase tracking-widest"
-                        style={{ color: sec.settings.headingColor || '#1a1c1d' }}
+                        className="text-xs font-black uppercase tracking-widest text-[#0F172A]"
+                        style={{ color: sec.settings.headingColor || '#0F172A' }}
                       >
                         {sec.settings.title || 'EXPLORE BRAND COLLECTIONS'}
                       </h3>
                       {sec.settings.description && (
-                        <p className="text-[11px] opacity-75">{sec.settings.description}</p>
+                        <p className="text-xs text-slate-500 max-w-md mx-auto">{sec.settings.description}</p>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
+                    {/* Highly responsive 2-col to 4-col display */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
                       {allCollections.map(col => (
                         <div
                           key={col.id}
                           onClick={() => onNavigate('frontend-shop', col.id)}
-                          className="bg-white border hover:border-[#008060] rounded-xl p-4 text-center cursor-pointer transition-shadow hover:shadow-xs group"
+                          className="bg-white border border-slate-150 hover:border-slate-400 rounded-2xl p-5 text-center cursor-pointer transition-all hover:shadow-lg group flex flex-col justify-between"
                         >
-                          <div className="h-20 bg-slate-50 rounded-lg flex items-center justify-center mb-3">
-                            <span className="text-3xl">🥫</span>
+                          <div className="h-24 bg-slate-50 group-hover:bg-slate-100 rounded-xl flex items-center justify-center mb-4 transition-colors">
+                            <span className="text-4xl transform group-hover:scale-108 transition-transform">🥫</span>
                           </div>
-                          <h4 className="font-bold text-xs text-slate-800 group-hover:text-[#008060] transition-colors">{col.title}</h4>
-                          <p className="text-[10px] text-slate-400 mt-1">{col.productIds.length} Products</p>
+                          <div>
+                            <h4 className="font-extrabold text-xs text-slate-800 group-hover:text-indigo-650 transition-colors uppercase tracking-wide">{col.title}</h4>
+                            <p className="text-[10px] text-slate-400 mt-1 font-mono">{col.productIds.length} FLAVORS</p>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* 10. FEATURED COLLECTION (Fully Interactive Grid!) */}
+                {/* 10. FEATURED COLLECTION (Fully Interactive Masterclass Grid) */}
                 {sec.type === 'Featured collection' && (
-                  <div className="space-y-8">
-                    <div className="flex justify-between items-end pb-3 border-b border-[#e1e3e5]/60">
-                      <div>
+                  <div className="space-y-8 px-4 sm:px-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end pb-4 border-b border-slate-200">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Direct From Laboratories</span>
+                        </div>
                         <h2 
-                          className="text-xl font-bold tracking-tight"
-                          style={{ color: sec.settings.headingColor || '#1a1c1d' }}
+                          className="text-2xl font-black uppercase tracking-tight text-[#0F172A]"
+                          style={{ color: sec.settings.headingColor || '#0f172a' }}
                         >
-                          {sec.settings.title || 'FEATURED BEST SELING PRODUCTS'}
+                          {sec.settings.title || 'FEATURED COLLECTION'}
                         </h2>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {sec.settings.description || 'Premium tins dispatched directly within vacuum dry packs.'}
-                        </p>
+                        {sec.settings.description && (
+                          <p className="text-xs text-slate-500 max-w-xl">
+                            {sec.settings.description}
+                          </p>
+                        )}
                       </div>
+                      
                       <button
                         onClick={() => onNavigate('frontend-shop')}
-                        className="text-xs font-bold text-[#008060] hover:underline cursor-pointer"
+                        className="text-xs font-black text-indigo-600 hover:text-indigo-700 hover:underline cursor-pointer pt-3 sm:pt-0 uppercase tracking-widest flex items-center gap-1.5"
                       >
-                        All Categories →
+                        <span>All Categories</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                       {allProducts
                         .filter(p => p.status === 'Active')
                         .slice(0, sec.settings.itemsCount || 4)
@@ -331,7 +491,7 @@ export default function PageRenderer({
                           return (
                             <div 
                               key={prod.id} 
-                              className="bg-white border rounded-xl overflow-hidden p-3.5 space-y-3.5 group hover:shadow-md transition-shadow relative"
+                              className="bg-white border border-slate-150 rounded-2xl overflow-hidden p-4 space-y-4 group hover:shadow-xl hover:border-slate-300 transition-all relative flex flex-col justify-between"
                             >
                               {/* Wishlist triggers */}
                               <button
@@ -339,40 +499,80 @@ export default function PageRenderer({
                                   e.stopPropagation();
                                   onToggleWishlist(prod.id);
                                 }}
-                                className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-white/90 backdrop-blur-xs border shadow-xs text-slate-400 hover:text-red-500 transition-colors z-10"
+                                className="absolute top-3 right-3 p-2 rounded-full bg-white/90 backdrop-blur-md border border-slate-200 shadow-sm text-slate-400 hover:text-red-500 transition-colors z-10 cursor-pointer"
                               >
                                 <Heart className={`h-4 w-4 ${isWishlisted ? 'text-red-500 fill-red-500' : ''}`} />
                               </button>
 
-                              <div className="h-44 bg-slate-50 rounded-lg overflow-hidden border relative">
-                                <img
-                                  src={prod.image}
-                                  className="h-full w-full object-cover group-hover:scale-102 transition-transform"
-                                  alt=""
-                                  referrerPolicy="no-referrer"
-                                />
-                                <span className="absolute top-2.5 left-2.5 bg-[#1a1c1d] text-white text-[8px] font-bold tracking-widest uppercase py-0.5 px-2 rounded-full">
-                                  {prod.vendor}
-                                </span>
-                              </div>
-
-                              <div className="space-y-1">
-                                <h4 className="font-extrabold text-xs text-slate-800 truncate">{prod.title}</h4>
-                                <div className="flex items-center gap-1.5 pt-0.5">
-                                  <span className="text-xs font-black text-[#008060]">£{prod.price.toFixed(2)}</span>
+                              <div className="space-y-3">
+                                <div className="h-48 bg-slate-50 rounded-xl overflow-hidden border border-slate-100 relative shadow-inner">
+                                  <img
+                                    src={prod.image}
+                                    className="h-full w-full object-cover group-hover:scale-102 transition-transform duration-500"
+                                    alt=""
+                                    referrerPolicy="no-referrer"
+                                  />
+                                  <span className="absolute top-2.5 left-2.5 bg-slate-900 text-white text-[8px] font-black tracking-widest uppercase py-0.5 px-2 rounded-md">
+                                    {prod.vendor}
+                                  </span>
+                                  
                                   {prod.compareAtPrice > prod.price && (
-                                    <span className="text-[10px] text-slate-400 line-through">£{prod.compareAtPrice.toFixed(2)}</span>
+                                    <span className="absolute bottom-2.5 left-2.5 bg-rose-650 text-white text-[8px] font-black tracking-widest uppercase py-0.5 px-2 rounded">
+                                      SALE DISCOUNT
+                                    </span>
                                   )}
+                                </div>
+
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-1 text-[8.5px] font-bold text-slate-400 uppercase tracking-widest">
+                                    <span>Suppled Lab Grade</span>
+                                    <span>•</span>
+                                    <span>Fresh Locks</span>
+                                  </div>
+                                  <h4 className="font-extrabold text-xs text-slate-800 truncate uppercase tracking-tight">{prod.title}</h4>
+                                  
+                                  <div className="flex items-center gap-1 text-amber-500 pb-1">
+                                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                                    <span className="text-[9px] text-slate-400 font-mono ml-1 font-bold">5.0 (48)</span>
+                                  </div>
+
+                                  {/* Beautiful medical specification specs list */}
+                                  <div className="bg-slate-50/70 py-1.5 px-2 rounded-lg border border-slate-100 space-y-1">
+                                    <div className="flex justify-between text-[8px] text-slate-450 font-bold uppercase font-mono">
+                                      <span>Strength Aroma</span>
+                                      <span className="text-slate-800 font-black">X-Strong Freeze</span>
+                                    </div>
+                                    <div className="flex justify-between text-[8px] text-slate-450 font-bold uppercase font-mono">
+                                      <span>Dispatch Type</span>
+                                      <span className="text-indigo-650 font-black">Laboratory Fresh</span>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
 
-                              <button
-                                onClick={() => onAddToCart(prod, 1)}
-                                className="w-full bg-[#1a1c1d] hover:bg-[#008060] text-white text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-1 cursor-pointer transition-colors"
-                              >
-                                <ShoppingCart className="h-3.5 w-3.5" />
-                                <span>Add To Drawer</span>
-                              </button>
+                              <div className="space-y-2 pt-2 border-t border-slate-50">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-wide">Single Tin</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs font-black text-slate-900 font-mono">£{prod.price.toFixed(2)}</span>
+                                    {prod.compareAtPrice > prod.price && (
+                                      <span className="text-[9.5px] text-slate-405 line-through font-mono">£{prod.compareAtPrice.toFixed(2)}</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <button
+                                  onClick={() => onAddToCart(prod, 1)}
+                                  className="w-full bg-slate-900 hover:bg-indigo-600 text-white text-[10px] font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-colors uppercase tracking-widest shadow-xs"
+                                >
+                                  <ShoppingCart className="h-3.5 w-3.5" />
+                                  <span>Add To Drawer</span>
+                                </button>
+                              </div>
                             </div>
                           );
                         })}
@@ -382,50 +582,83 @@ export default function PageRenderer({
 
                 {/* 11. IMAGES GALLERY */}
                 {sec.type === 'Images gallery' && (
-                  <div className="space-y-6">
-                    <h3 
-                      className="text-center text-xs font-bold uppercase tracking-wider"
-                      style={{ color: sec.settings.headingColor || '#1a1c1d' }}
-                    >
-                      {sec.settings.title || 'Laboratory & Dispatch Facility Gallery'}
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-8 px-4 sm:px-6">
+                    <div className="text-center space-y-2">
+                      <span className="text-[10px] tracking-widest font-black uppercase text-indigo-600 bg-indigo-50/90 py-1 px-3.5 rounded-full inline-block">Visual Verification</span>
+                      <h3 
+                        className="text-center text-2xl font-black uppercase tracking-tight text-[#0F172A]"
+                        style={{ color: sec.settings.headingColor || '#0F172A' }}
+                      >
+                        {sec.settings.title || 'Laboratory & Dispatch Facility Gallery'}
+                      </h3>
+                      <p className="text-xs text-slate-500 max-w-md mx-auto">Inspected clean-room assembly lines yielding high-density plant-fiber purity.</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                       {[
                         'https://images.unsplash.com/photo-1543257580-7269da773bf5?auto=format&fit=crop&w=400&q=80',
                         'https://images.unsplash.com/photo-1589984662646-e7b2e4962f18?auto=format&fit=crop&w=400&q=80',
                         'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=400&q=80',
                         'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&w=400&q=80'
                       ].map((imgUrl, galIdx) => (
-                        <div key={galIdx} className="h-40 rounded-xl overflow-hidden border">
-                          <img src={imgUrl} className="h-full w-full object-cover hover:scale-103 transition-transform" alt="" referrerPolicy="no-referrer" />
+                        <div key={galIdx} className="h-44 rounded-2xl overflow-hidden border border-slate-150 shadow-sm relative group bg-slate-50">
+                          <img src={imgUrl} className="h-full w-full object-cover hover:scale-103 transition-transform duration-500" alt="" referrerPolicy="no-referrer" />
+                          <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="bg-white/90 backdrop-blur-xs text-[9px] font-black uppercase tracking-widest py-1 px-3.5 text-slate-900 rounded-lg shadow-sm">View Facility</span>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* 12. FAQS */}
+                {/* 12. FAQS (Interactive premium Toggles) */}
                 {sec.type === 'FAQs' && (
-                  <div className="max-w-3xl mx-auto space-y-6">
-                    <h2 
-                      className="text-center text-2xl font-black"
-                      style={{ color: sec.settings.headingColor || '#1a1c1d' }}
-                    >
-                      {sec.settings.title || 'Frequently Asked Questions'}
-                    </h2>
+                  <div className="max-w-3xl mx-auto space-y-8 px-4 sm:px-6">
+                    <div className="text-center space-y-2">
+                      <span className="text-[10px] tracking-widest font-black uppercase text-indigo-600 bg-indigo-50/90 py-1 px-3.5 rounded-full inline-block">Answered Live</span>
+                      <h2 
+                        className="text-3xl font-black uppercase tracking-tight text-[#0F172A]"
+                        style={{ color: sec.settings.headingColor || '#0F172A' }}
+                      >
+                        {sec.settings.title || 'Frequently Asked Questions'}
+                      </h2>
+                      <p className="text-xs text-slate-500">Instant validation regarding formulation standards, tracking, and deliveries.</p>
+                    </div>
+
                     <div className="space-y-4">
                       {[
-                        { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate free tracking details emailed instantly upon fulfillment.' },
-                        { q: 'Are these pouches 100% tobacco-free?', a: 'Under all current EU & UK reseller regulations, our catalog consists strictly of tobacco-free plant fiber pouch variations.' },
-                        { q: 'How long do subscriptions repeat?', a: 'Your customized orders renew automatically at your preferred week schedules. Pause, skip, edit canister flavors, or cancel anytime for free.' }
-                      ].map((faq, fIdx) => (
-                        <div key={fIdx} className="bg-white border rounded-xl p-5 space-y-1.5 shadow-xs">
-                          <p className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
-                            <span className="text-[#008060]">Q:</span> {faq.q}
-                          </p>
-                          <p className="text-[11px] text-[#4a4d50] leading-relaxed pl-4">{faq.a}</p>
-                        </div>
-                      ))}
+                        { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon fulfillment lines dispatch.' },
+                        { q: 'Are these pouches 100% tobacco-free?', a: 'Under all current EU & UK reseller regulations, our catalog consists strictly of plant-fiber pouch variants utilizing medical crystalline formats.' },
+                        { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific week layouts. Pause, skip custom flavors, or cancel anytime for free in the account dashboard.' },
+                        { q: 'Where are the canisters formulated?', a: 'Formulated in certified European laboratories under strict vacuum sterile protocols, ensuring consistent aroma and maximum flavor lock.' }
+                      ].map((faq, fIdx) => {
+                        const isChosen = openFaqIdx === fIdx;
+                        return (
+                          <div 
+                            key={fIdx} 
+                            className="bg-white border border-slate-150 rounded-2xl p-4.5 sm:p-5 transition-all shadow-xs cursor-pointer hover:border-slate-300"
+                            onClick={() => toggleFaq(fIdx)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-extrabold text-xs sm:text-xs text-slate-800 flex items-center gap-2 pr-4">
+                                <span className={isChosen ? 'text-indigo-600 font-black' : 'text-slate-400 font-bold'}>Q:</span> 
+                                <span>{faq.q}</span>
+                              </span>
+                              <div className="shrink-0 p-1 bg-slate-50 rounded-lg text-slate-500 border border-slate-100 group">
+                                {isChosen ? <ChevronUp className="h-3.5 w-3.5 text-indigo-650" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                              </div>
+                            </div>
+                            
+                            {/* Smooth accordion expanded logic */}
+                            <div className={`transition-all duration-300 overflow-hidden ${isChosen ? 'max-h-32 mt-3 opacity-100 border-t border-slate-50 pt-3' : 'max-h-0 opacity-0'}`}>
+                              <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed pl-2">
+                                {faq.a}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -447,10 +680,14 @@ export default function PageRenderer({
           );
         })
       ) : (
-        <div className="text-center py-20 bg-white border rounded-2xl max-w-md mx-auto">
-          <FileText className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-          <h2 className="text-sm font-bold text-slate-700">Page Empty</h2>
-          <p className="text-xs text-slate-400 mt-1">This builder page currently template has no sections.</p>
+        <div className="text-center py-24 bg-white border border-slate-150 rounded-3xl max-w-md mx-auto shadow-sm p-6 space-y-4">
+          <div className="h-14 w-14 rounded-full bg-slate-50 border text-slate-300 flex items-center justify-center mx-auto">
+            <FileText className="h-6 w-6" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-xs font-black uppercase text-slate-700 tracking-wider">No Active Page Sections</h2>
+            <p className="text-[10px] text-slate-400 leading-relaxed">This custom canvas currently contains no sections. Create or drag new sections inside the admin editor.</p>
+          </div>
         </div>
       )}
     </div>
