@@ -1,6 +1,7 @@
 import React from 'react';
 import { CustomPage, PageSection, Product, Collection, Customer } from '../types';
 import { ArrowRight, ShoppingCart, Star, Heart, FileText, Check } from 'lucide-react';
+import PremiumSlideshow from './PremiumSlideshow';
 
 interface PageRendererProps {
   page: CustomPage;
@@ -51,13 +52,15 @@ export default function PageRenderer({
             color: sec.settings.textColor || '#4a4d50'
           };
           
+          const isFullBleed = (sec.type === 'Slideshow' || sec.type === 'Image banner') && sec.settings.fullWidth;
           const maxContainerClass = sec.settings.fullWidth ? 'w-full' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
+          const paddingClass = isFullBleed ? 'py-0' : 'py-12 md:py-16';
 
           return (
             <section
               key={sec.id || idx}
               style={sStyle}
-              className={`py-12 md:py-16 ${sec.settings.fullWidth ? '' : 'rounded-2xl border border-[#e1e3e5]/60 shadow-xs'}`}
+              className={`${paddingClass} ${sec.settings.fullWidth ? '' : 'rounded-3xl border border-[#e1e3e5]/60 shadow-md my-8 overflow-hidden'}`}
             >
               <div className={maxContainerClass}>
                 
@@ -425,6 +428,18 @@ export default function PageRenderer({
                       ))}
                     </div>
                   </div>
+                )}
+
+                {/* 13. SLIDESHOW */}
+                {sec.type === 'Slideshow' && (
+                  <PremiumSlideshow
+                    slides={sec.settings.slides}
+                    fullWidth={sec.settings.fullWidth}
+                    backgroundColor={sec.settings.backgroundColor}
+                    headingColor={sec.settings.headingColor}
+                    textColor={sec.settings.textColor}
+                    onLinkClick={handleLinkClick}
+                  />
                 )}
 
               </div>

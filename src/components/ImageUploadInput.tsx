@@ -1,0 +1,149 @@
+import React, { useState, useRef } from 'react';
+import { Upload, X, Image as ImageIcon } from 'lucide-react';
+
+interface ImageUploadInputProps {
+  label: string;
+  value: string;
+  onChange: (base64OrLink: string) => void;
+  placeholder?: string;
+  className?: string;
+}
+
+export default function ImageUploadInput({
+  label,
+  value,
+  onChange,
+  placeholder = 'Or enter image URL link...',
+  className = ''
+}: ImageUploadInputProps) {
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const processFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Only image files are permitted (png, jpg, jpeg, webp, svg)!');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        onChange(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className={`space-y-1.5 text-left font-sans ${className}`}>
+      <label className="block text-slate-600 font-bold uppercase tracking-wider text-[9px]">
+        {label}
+      </label>
+      
+      <div
+        onDragEnter={handleDrag}
+        onDragOver={handleDrag}
+        onDragLeave={handleDrag}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`border border-dashed rounded-xl p-3 text-center transition-all relative flex flex-col items-center justify-center min-h-[96px] cursor-pointer group ${
+          dragActive 
+            ? 'border-indigo-600 bg-indigo-50/45' 
+            : value 
+              ? 'border-slate-200 bg-slate-50/30' 
+              : 'border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-400'
+        }`}
+      >
+        {value ? (
+          <div className="space-y-2 w-full flex flex-col items-center relative py-1">
+            <div className="relative h-16 w-16 rounded-md border border-slate-150 overflow-hidden bg-white flex items-center justify-center shadow-xs">
+              <img 
+                src={value} 
+                className="h-full w-full object-cover" 
+                alt="Upload thumbnail" 
+                referrerPolicy="no-referrer"
+              />
+              <button
+                type="button"
+                onClick={handleClear}
+                className="absolute -top-1.5 -right-1.5 bg-rose-650 hover:bg-rose-700 text-white rounded-full p-1 shadow-sm transition-all z-10 cursor-pointer"
+                title="Remove image"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+            
+            <p className="text-[9px] text-slate-450 font-mono truncate max-w-full text-center px-4">
+              {value.startsWith('data:') ? 'Custom Uploaded Base64 Data' : value}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-1.5 py-1">
+            <div className="mx-auto w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-650 transition-colors">
+              <Upload className="h-4 w-4" />
+            </div>
+            <div className="text-[10px] font-semibold text-slate-700">
+              Drag file here or <span className="text-indigo-650 font-bold group-hover:underline">browse</span>
+            </div>
+            <p className="text-[8px] text-slate-400">PNG, JPG, WEBP, SVG under 5MB</p>
+          </div>
+        )}
+        
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </div>
+
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+          <ImageIcon className="h-3 w-3" />
+        </div>
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={value.startsWith('data:') ? '' : value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full text-[10px] pl-7 pr-2 py-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium"
+        />
+      </div>
+    </div>
+  );
+}

@@ -6,6 +6,7 @@ import {
   Trash2, Filter, Save, Sparkles, Building, Settings, Image as ImageIcon, 
   X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw
 } from 'lucide-react';
+import ImageUploadInput from './ImageUploadInput';
 
 interface AdminDashboardProps {
   products: Product[];
@@ -216,6 +217,7 @@ export default function AdminDashboard({
   const [newPageForm, setNewPageForm] = useState({ title: '', slug: '' });
   const [selectedBuilderPageId, setSelectedBuilderPageId] = useState<string | null>(null);
   const [selectedBuilderSectionId, setSelectedBuilderSectionId] = useState<string | null>(null);
+  const [activeSlideEditIndex, setActiveSlideEditIndex] = useState<number>(0);
 
   // Draft page & collection builder custom states
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
@@ -501,11 +503,15 @@ export default function AdminDashboard({
 
   const handleAddSectionToPage = (sectionType: PageSection['type']) => {
     if (!selectedBuilderPageId) return;
+    
+    // Banner and Slideshow should be full width by default!
+    const isFullWidthByDefault = sectionType === 'Image banner' || sectionType === 'Slideshow';
+    
     const newSection: PageSection = {
       id: `sec-${Date.now()}`,
       type: sectionType,
       settings: {
-        fullWidth: false,
+        fullWidth: isFullWidthByDefault,
         backgroundColor: '#FFFFFF',
         headingColor: '#1E293B',
         textColor: '#64748B',
@@ -513,7 +519,24 @@ export default function AdminDashboard({
         description: 'Edit option elements inside options sidebar',
         buttonText: 'Shop New Packs',
         buttonLink: '#',
-        marqueeSpeed: 3
+        marqueeSpeed: 3,
+        imageUrl: sectionType === 'Image banner' ? 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80' : undefined,
+        slides: sectionType === 'Slideshow' ? [
+          {
+            title: 'Precision-Engineered Pouch Purity',
+            description: 'Sourced directly from certified laboratories utilizing medical-grade plant fiber and vacuum-fresh locks.',
+            imageUrl: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=1200&q=80',
+            buttonText: 'View Laboratory Journal',
+            buttonLink: 'blogs'
+          },
+          {
+            title: 'Extreme Mint Cryo Freeze',
+            description: 'Sub-zero locking technology delivering an immediate, absolute sensory refreshing experience.',
+            imageUrl: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=1200&q=80',
+            buttonText: 'Explore Sub-Zero Bundles',
+            buttonLink: 'frontend-shop'
+          }
+        ] : undefined
       }
     };
 
@@ -1648,17 +1671,11 @@ export default function AdminDashboard({
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">High-Res Canister Image link</label>
-                      <input
-                        id="prod-form-img-url"
-                        type="text"
-                        placeholder="https://images.unsplash.com/..."
-                        value={newProductForm.image}
-                        onChange={(e) => setNewProductForm({ ...newProductForm, image: e.target.value })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                      />
-                    </div>
+                    <ImageUploadInput
+                      label="High-Res Canister Image"
+                      value={newProductForm.image || ''}
+                      onChange={(base64) => setNewProductForm({ ...newProductForm, image: base64 })}
+                    />
 
                     <button
                       type="submit"
@@ -1965,7 +1982,7 @@ export default function AdminDashboard({
                       <label className="text-[10px] font-bold text-slate-400 block uppercase tracking-wide mb-2">Add New Module Section</label>
                       <div className="grid grid-cols-1 gap-1.5">
                         {[
-                          'Image banner', 'Video banner', 'Rich text', 'Marquee text', 'Logo list', 'Collection list', 'Featured collection', 'FAQs'
+                          'Image banner', 'Slideshow', 'Video banner', 'Rich text', 'Marquee text', 'Logo list', 'Collection list', 'Featured collection', 'FAQs'
                         ].map(type => (
                           <button
                             key={type}
@@ -2099,6 +2116,27 @@ export default function AdminDashboard({
                                 </div>
                               )}
 
+                              {/* SLIDESHOW */}
+                              {sec.type === 'Slideshow' && (
+                                <div className="py-5 text-center space-y-3 relative overflow-hidden rounded-lg bg-indigo-950/90 text-white border min-h-[140px] flex flex-col justify-center items-center">
+                                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/35 z-0" />
+                                  <div className="relative z-10 p-3 space-y-1.5">
+                                    <span className="text-[8px] tracking-widest font-bold uppercase bg-indigo-600/90 py-0.5 px-2 rounded-full inline-block">Premium Slideshow Slider</span>
+                                    <h4 className="text-sm font-black uppercase text-white">
+                                      {sec.settings.slides?.[0]?.title || sec.settings.title || 'Precision-Engineered Purity'}
+                                    </h4>
+                                    <p className="text-[10px] text-slate-300 max-w-xs mx-auto truncate">
+                                      {sec.settings.slides?.[0]?.description || 'Direct laboratory dispatch. Sourced from certified facilities.'}
+                                    </p>
+                                    <div className="flex gap-1.5 justify-center pt-1.5">
+                                      {(sec.settings.slides || [1, 2]).map((_, sIdx) => (
+                                        <span key={sIdx} className={`h-1.5 w-1.5 rounded-full ${sIdx === 0 ? 'bg-white' : 'bg-white/40'}`} />
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
                               {/* LOGO LIST */}
                               {sec.type === 'Logo list' && (
                                 <div className="py-4 text-center space-y-3">
@@ -2169,8 +2207,138 @@ export default function AdminDashboard({
                           <span className="text-[9px] text-slate-400 font-mono">ID: {currentlyEditingSection.id.substring(4, 8)}</span>
                         </div>
 
+                        {/* If it is a Slideshow section */}
+                        {currentlyEditingSection.type === 'Slideshow' && (
+                          <div className="space-y-4 border-b border-dashed border-slate-100 pb-3">
+                            <span className="block text-slate-600 font-bold uppercase tracking-wider text-[9px]">Slides list ({(currentlyEditingSection.settings.slides || []).length})</span>
+                            <div className="flex flex-wrap gap-1">
+                              {(currentlyEditingSection.settings.slides || []).map((_, sIdx) => (
+                                <button
+                                  key={sIdx}
+                                  onClick={() => setActiveSlideEditIndex(sIdx)}
+                                  className={`text-[9.5px] font-black px-2 py-1 rounded cursor-pointer transition-all ${
+                                    activeSlideEditIndex === sIdx
+                                      ? 'bg-indigo-600 text-white shadow-xs'
+                                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                                  }`}
+                                >
+                                  Slide {sIdx + 1}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => {
+                                  const list = currentlyEditingSection.settings.slides || [];
+                                  const newSlide = {
+                                    title: 'Precision-Engineered Purity',
+                                    description: 'Direct laboratory dispatch. Clinically tested 100% tobacco-free.',
+                                    imageUrl: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=805&q=80',
+                                    buttonText: 'Purchase Packs',
+                                    buttonLink: 'frontend-shop'
+                                  };
+                                  handleUpdateSectionSettings('slides', [...list, newSlide]);
+                                  setActiveSlideEditIndex(list.length);
+                                }}
+                                className="text-[9.5px] font-black px-2 py-1 rounded bg-teal-50 border border-teal-200 text-teal-700 hover:bg-teal-100 cursor-pointer"
+                              >
+                                + Add Slide
+                              </button>
+                            </div>
+
+                            {/* Active Slide Form Fields */}
+                            {(currentlyEditingSection.settings.slides || []).length > 0 && (
+                              <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-200/60 space-y-3 mt-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[9px] font-black text-slate-500 uppercase">Editing Slide {activeSlideEditIndex + 1} Settings</span>
+                                  {(currentlyEditingSection.settings.slides || []).length > 1 && (
+                                    <button
+                                      onClick={() => {
+                                        const list = currentlyEditingSection.settings.slides || [];
+                                        const updatedList = list.filter((_, idx) => idx !== activeSlideEditIndex);
+                                        handleUpdateSectionSettings('slides', updatedList);
+                                        setActiveSlideEditIndex(0);
+                                      }}
+                                      className="text-[8px] text-red-600 hover:underline cursor-pointer font-bold uppercase"
+                                    >
+                                      Delete Slide
+                                    </button>
+                                  )}
+                                </div>
+
+                                <div className="space-y-2.5">
+                                  <div>
+                                    <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8px] mb-0.5">Slide Title</label>
+                                    <input
+                                      type="text"
+                                      value={currentlyEditingSection.settings.slides?.[activeSlideEditIndex]?.title || ''}
+                                      onChange={(e) => {
+                                        const list = currentlyEditingSection.settings.slides || [];
+                                        const updatedList = list.map((sl, index) => index === activeSlideEditIndex ? { ...sl, title: e.target.value } : sl);
+                                        handleUpdateSectionSettings('slides', updatedList);
+                                      }}
+                                      className="w-full text-[10px] font-semibold border p-1.5 rounded bg-white focus:outline-none"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8px] mb-0.5">Slide Subtext Description</label>
+                                    <textarea
+                                      rows={2}
+                                      value={currentlyEditingSection.settings.slides?.[activeSlideEditIndex]?.description || ''}
+                                      onChange={(e) => {
+                                        const list = currentlyEditingSection.settings.slides || [];
+                                        const updatedList = list.map((sl, index) => index === activeSlideEditIndex ? { ...sl, description: e.target.value } : sl);
+                                        handleUpdateSectionSettings('slides', updatedList);
+                                      }}
+                                      className="w-full text-[10px] border p-1.5 rounded bg-white focus:outline-none resize-none"
+                                    />
+                                  </div>
+
+                                  <ImageUploadInput
+                                    label="Slide Image asset"
+                                    value={currentlyEditingSection.settings.slides?.[activeSlideEditIndex]?.imageUrl || ''}
+                                    onChange={(base64) => {
+                                      const list = currentlyEditingSection.settings.slides || [];
+                                      const updatedList = list.map((sl, index) => index === activeSlideEditIndex ? { ...sl, imageUrl: base64 } : sl);
+                                      handleUpdateSectionSettings('slides', updatedList);
+                                    }}
+                                  />
+
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8px] mb-0.5">Button text</label>
+                                      <input
+                                        type="text"
+                                        value={currentlyEditingSection.settings.slides?.[activeSlideEditIndex]?.buttonText || ''}
+                                        onChange={(e) => {
+                                          const list = currentlyEditingSection.settings.slides || [];
+                                          const updatedList = list.map((sl, index) => index === activeSlideEditIndex ? { ...sl, buttonText: e.target.value } : sl);
+                                          handleUpdateSectionSettings('slides', updatedList);
+                                        }}
+                                        className="w-full text-[10px] border p-1.5 rounded bg-white focus:outline-none"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8px] mb-0.5">button action link</label>
+                                      <input
+                                        type="text"
+                                        value={currentlyEditingSection.settings.slides?.[activeSlideEditIndex]?.buttonLink || ''}
+                                        onChange={(e) => {
+                                          const list = currentlyEditingSection.settings.slides || [];
+                                          const updatedList = list.map((sl, index) => index === activeSlideEditIndex ? { ...sl, buttonLink: e.target.value } : sl);
+                                          handleUpdateSectionSettings('slides', updatedList);
+                                        }}
+                                        className="w-full text-[10px] border p-1.5 rounded bg-white focus:outline-none"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {/* Title text input options */}
-                        {currentlyEditingSection.settings.title !== undefined && (
+                        {currentlyEditingSection.settings.title !== undefined && currentlyEditingSection.type !== 'Slideshow' && (
                           <div>
                             <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">Heading Title Text</label>
                             <input
@@ -2183,7 +2351,7 @@ export default function AdminDashboard({
                         )}
 
                         {/* Description paragraphs input */}
-                        {currentlyEditingSection.settings.description !== undefined && (
+                        {currentlyEditingSection.settings.description !== undefined && currentlyEditingSection.type !== 'Slideshow' && (
                           <div>
                             <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">Body/Info Text</label>
                             <textarea
@@ -2196,7 +2364,7 @@ export default function AdminDashboard({
                         )}
 
                         {/* Button text option */}
-                        {currentlyEditingSection.settings.buttonText !== undefined && (
+                        {currentlyEditingSection.settings.buttonText !== undefined && currentlyEditingSection.type !== 'Slideshow' && (
                           <div>
                             <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">Banner Button Text</label>
                             <input
@@ -2209,7 +2377,7 @@ export default function AdminDashboard({
                         )}
 
                         {/* Action link */}
-                        {currentlyEditingSection.settings.buttonLink !== undefined && (
+                        {currentlyEditingSection.settings.buttonLink !== undefined && currentlyEditingSection.type !== 'Slideshow' && (
                           <div>
                             <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">Button redirect link</label>
                             <input
@@ -2222,19 +2390,12 @@ export default function AdminDashboard({
                         )}
 
                         {/* Image asset url selector */}
-                        {currentlyEditingSection.settings.imageUrl !== undefined && (
-                          <div>
-                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">Cover Image URL</label>
-                            <input
-                              type="text"
-                              placeholder="https://images.unsplash..."
-                              value={currentlyEditingSection.settings.imageUrl}
-                              onChange={(e) => handleUpdateSectionSettings('imageUrl', e.target.value)}
-                              className="w-full text-xs border p-2 rounded bg-slate-50 focus:outline-none"
-                            />
-                            
-                            <p className="text-[10px] text-slate-400 mt-1 inline-block">Use urls from the Files Manager list!</p>
-                          </div>
+                        {currentlyEditingSection.settings.imageUrl !== undefined && currentlyEditingSection.type !== 'Slideshow' && (
+                          <ImageUploadInput
+                            label="Cover Image asset"
+                            value={currentlyEditingSection.settings.imageUrl}
+                            onChange={(base64) => handleUpdateSectionSettings('imageUrl', base64)}
+                          />
                         )}
 
                         {/* Width checkbox options */}
@@ -2966,34 +3127,12 @@ export default function AdminDashboard({
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Cover Image URL</label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="https://images.unsplash.com/..."
-                            value={newBlogForm.image}
-                            onChange={(e) => setNewBlogForm({ ...newBlogForm, image: e.target.value })}
-                            className="w-full border p-2 rounded-lg focus:outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              // Set a premium default pouch placeholder
-                              const randoms = [
-                                'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80',
-                                'https://images.unsplash.com/photo-1518152002797-94ce700236a2?auto=format&fit=crop&w=800&q=80',
-                                'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&w=800&q=80',
-                                'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=800&q=80'
-                              ];
-                              const r = randoms[Math.floor(Math.random() * randoms.length)];
-                              setNewBlogForm({ ...newBlogForm, image: r });
-                            }}
-                            className="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-2 rounded-lg shrink-0 cursor-pointer text-[10px]"
-                          >
-                            Suggest Photo
-                          </button>
-                        </div>
+                      <div className="flex flex-col justify-end">
+                        <ImageUploadInput
+                          label="Cover Image"
+                          value={newBlogForm.image || ''}
+                          onChange={(base64) => setNewBlogForm({ ...newBlogForm, image: base64 })}
+                        />
                       </div>
 
                       <div>
