@@ -7,6 +7,8 @@ import {
   X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
+import CollectionEditor from './CollectionEditor';
+import ProductEditor from './ProductEditor';
 
 interface AdminDashboardProps {
   products: Product[];
@@ -1246,448 +1248,302 @@ export default function AdminDashboard({
         {/* 3. COLLECTIONS BLOCK */}
         {activeTab === 'collections' && (
           <div className="space-y-6">
-            
-            {/* Header action menu */}
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-slate-450 font-bold">List of store collections</span>
-              <button
-                onClick={() => setShowAddCollection(true)}
-                className="bg-slate-900 hover:bg-slate-800 text-white p-2.5 px-4 font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
-              >
-                <Plus className="h-4 w-4" /> Create Collection Box
-              </button>
-            </div>
+            {editingCollection ? (
+              <CollectionEditor
+                collection={editingCollection.id === 'new_temp_draft_col' ? null : editingCollection}
+                allProducts={products}
+                onSave={(savedCol) => {
+                  const cleanedCol: Collection = {
+                    ...savedCol,
+                    id: editingCollection.id === 'new_temp_draft_col' ? savedCol.id : editingCollection.id
+                  };
+                  const exists = collections.some(c => c.id === cleanedCol.id);
+                  let updatedColls;
+                  if (exists) {
+                    updatedColls = collections.map(c => c.id === cleanedCol.id ? cleanedCol : c);
+                  } else {
+                    let finalId = cleanedCol.id;
+                    while (collections.some(c => c.id === finalId)) {
+                      finalId = `${finalId}-${Math.floor(Math.random() * 100)}`;
+                    }
+                    updatedColls = [...collections, { ...cleanedCol, id: finalId }];
+                  }
+                  onUpdateCollections(updatedColls);
+                  setEditingCollection(null);
+                }}
+                onCancel={() => {
+                  setEditingCollection(null);
+                }}
+                onDelete={(deletedId) => {
+                  const updatedColls = collections.filter(c => c.id !== deletedId);
+                  onUpdateCollections(updatedColls);
+                  setEditingCollection(null);
+                }}
+              />
+            ) : (
+              <>
+                {/* Header action menu */}
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-450 font-bold">List of store collections</span>
+                  <button
+                    onClick={() => setEditingCollection({
+                      id: 'new_temp_draft_col',
+                      title: '',
+                      description: '',
+                      type: 'Manual',
+                      image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=500&q=80',
+                      productIds: []
+                    })}
+                    className="bg-slate-900 hover:bg-slate-800 text-white p-2.5 px-4 font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" /> Create Collection Box
+                  </button>
+                </div>
 
-            {/* Collection tiles list wrapper */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {collections.map(col => (
-                <div key={col.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between hover:shadow-xs transition-shadow">
-                  <div>
-                    <img
-                      src={col.image}
-                      alt={col.title}
-                      className="w-full h-36 object-cover rounded-lg border border-slate-100 bg-slate-50 mb-3"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-black text-slate-800 text-xs uppercase tracking-wide">{col.title}</h4>
-                      <span className="text-[10px] text-indigo-600 bg-indigo-50 font-bold py-0.5 px-2 rounded-full border border-indigo-150">
-                        {col.type} Collection
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">{col.description}</p>
-                    {col.productConditions && (
-                      <p className="text-[10px] text-slate-400 mt-2 bg-slate-50 p-2 border rounded font-mono">
-                        Rule: {col.productConditions}
-                      </p>
-                    )}
-                  </div>
+                {/* Collection tiles list wrapper */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {collections.map(col => (
+                    <div key={col.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between hover:shadow-xs transition-shadow">
+                      <div>
+                        <img
+                          src={col.image}
+                          alt={col.title}
+                          className="w-full h-36 object-cover rounded-lg border border-slate-100 bg-slate-50 mb-3"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-black text-slate-800 text-xs uppercase tracking-wide">{col.title}</h4>
+                          <span className="text-[10px] text-indigo-600 bg-indigo-50 font-bold py-0.5 px-2 rounded-full border border-indigo-150">
+                            {col.type} Collection
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">{col.description}</p>
+                        {col.productConditions && (
+                          <p className="text-[10px] text-slate-400 mt-2 bg-slate-50 p-2 border rounded font-mono">
+                            Rule: {col.productConditions}
+                          </p>
+                        )}
+                      </div>
 
-                  <div className="pt-3 border-t border-slate-100 mt-4 flex justify-between items-center text-[11px] gap-2">
-                    <span className="text-slate-400 block">Products: <span className="font-extrabold text-slate-700">{col.id === 'all' ? products.length : col.productIds.length}</span></span>
-                    
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => {
-                          setEditingCollection(col);
-                          setNewCollectionForm(col);
-                          setShowAddCollection(true);
-                        }}
-                        className="text-indigo-600 hover:text-indigo-800 font-extrabold cursor-pointer"
-                        title="Edit collection details"
-                      >
-                        Edit
-                      </button>
-                      <span className="text-slate-200">|</span>
-                      <button
-                        onClick={() => handleDuplicateCollection(col)}
-                        className="text-teal-600 hover:text-teal-850 font-extrabold cursor-pointer"
-                        title="Duplicate collection"
-                      >
-                        Dup
-                      </button>
-                      <span className="text-slate-200">|</span>
-                      <button
-                        onClick={() => handlePreviewCollection(col)}
-                        className="text-sky-650 hover:text-sky-800 font-extrabold cursor-pointer"
-                        title="Preview collection"
-                      >
-                        View
-                      </button>
-                      {col.id !== 'all' && (
-                        <>
+                      <div className="pt-3 border-t border-slate-100 mt-4 flex justify-between items-center text-[11px] gap-2">
+                        <span className="text-slate-400 block">Products: <span className="font-extrabold text-slate-700">{col.id === 'all' ? products.length : col.productIds.length}</span></span>
+                        
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setEditingCollection(col);
+                              setNewCollectionForm(col);
+                            }}
+                            className="text-indigo-600 hover:text-indigo-800 font-extrabold cursor-pointer"
+                            title="Edit collection details"
+                          >
+                            Edit
+                          </button>
                           <span className="text-slate-200">|</span>
                           <button
-                            onClick={() => handleDeleteCollection(col.id)}
-                            className="text-red-500 hover:text-red-700 font-extrabold cursor-pointer"
-                            title="Delete collection"
+                            onClick={() => handleDuplicateCollection(col)}
+                            className="text-teal-600 hover:text-teal-850 font-extrabold cursor-pointer"
+                            title="Duplicate collection"
                           >
-                            Del
+                            Dup
                           </button>
-                        </>
-                      )}
+                          <span className="text-slate-200">|</span>
+                          <button
+                            onClick={() => handlePreviewCollection(col)}
+                            className="text-sky-650 hover:text-sky-800 font-extrabold cursor-pointer"
+                            title="Preview collection"
+                          >
+                            View
+                          </button>
+                          {col.id !== 'all' && (
+                            <>
+                              <span className="text-slate-200">|</span>
+                              <button
+                                onClick={() => handleDeleteCollection(col.id)}
+                                className="text-red-500 hover:text-red-700 font-extrabold cursor-pointer"
+                                title="Delete collection"
+                              >
+                                Del
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-
-            {/* Creation Form Modal side slide */}
-            {showAddCollection && (
-              <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl">
-                  <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
-                    <h3 className="font-extrabold text-slate-800 text-sm">
-                      {editingCollection ? 'Edit Collection Details' : 'Add New Collection Form'}
-                    </h3>
-                    <button 
-                      onClick={() => {
-                        setShowAddCollection(false);
-                        setEditingCollection(null);
-                        setNewCollectionForm({ title: '', description: '', type: 'Manual', image: '', productIds: [] });
-                      }} 
-                      className="text-slate-400 hover:text-slate-650 cursor-pointer text-xs font-bold"
-                    >
-                      Close
-                    </button>
-                  </div>
-
-                  <form onSubmit={handleCreateCollection} className="space-y-4 text-xs">
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Collection Title</label>
-                      <input
-                        id="col-form-title"
-                        type="text"
-                        placeholder="e.g. Nicotine fruit punches"
-                        required
-                        value={newCollectionForm.title}
-                        onChange={(e) => setNewCollectionForm({ ...newCollectionForm, title: e.target.value })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Description</label>
-                      <textarea
-                        id="col-form-desc"
-                        placeholder="e.g. Curated range of sweet berry tins..."
-                        value={newCollectionForm.description}
-                        onChange={(e) => setNewCollectionForm({ ...newCollectionForm, description: e.target.value })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 h-20"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Collection Cover Image Link</label>
-                      <input
-                        id="col-form-img"
-                        type="text"
-                        placeholder="https://images.unsplash.com/..."
-                        value={newCollectionForm.image}
-                        onChange={(e) => setNewCollectionForm({ ...newCollectionForm, image: e.target.value })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Collection Type</label>
-                      <select
-                        id="col-form-type"
-                        value={newCollectionForm.type}
-                        onChange={(e) => setNewCollectionForm({ ...newCollectionForm, type: e.target.value as any })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                      >
-                        <option value="Manual">Manual</option>
-                        <option value="Smart">Smart Rules</option>
-                      </select>
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg cursor-pointer"
-                    >
-                      Save Collection
-                    </button>
-                  </form>
-                </div>
-              </div>
+              </>
             )}
-
           </div>
         )}
 
         {/* 4. PRODUCTS BLOCK */}
         {activeTab === 'products' && (
           <div className="space-y-6">
-            
-            {/* Header menu filter */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-              <div className="relative w-full sm:w-64">
-                <input
-                  type="text"
-                  placeholder="Seach products via titles, vendors..."
-                  value={productQuery}
-                  onChange={(e) => setProductQuery(e.target.value)}
-                  className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
-                />
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
-              </div>
-
-              <button
-                onClick={() => {
+            {editingProduct || showAddProduct ? (
+              <ProductEditor
+                product={editingProduct}
+                allCollections={collections}
+                onCancel={() => {
                   setEditingProduct(null);
-                  setShowAddProduct(true);
+                  setShowAddProduct(false);
                 }}
-                className="bg-slate-900 hover:bg-slate-850 font-bold p-2.5 px-4 rounded-xl text-xs text-white flex items-center gap-1 shadow-xs cursor-pointer"
-              >
-                <Plus className="h-4 w-4" /> Add Product Item
-              </button>
-            </div>
+                onSave={(savedProduct, selectedCollectionIds) => {
+                  const isNew = !products.some(p => p.id === savedProduct.id);
+                  let updatedProducts;
+                  if (isNew) {
+                    updatedProducts = [savedProduct, ...products];
+                  } else {
+                    updatedProducts = products.map(p => p.id === savedProduct.id ? savedProduct : p);
+                  }
+                  onUpdateProducts(updatedProducts);
 
-            {/* Products Inventory Grid table */}
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50/75 border-b border-slate-200 text-[10px] text-slate-450 font-semibold uppercase tracking-widest">
-                      <th className="p-4">Image</th>
-                      <th className="p-4">Product Title</th>
-                      <th className="p-4">Brand</th>
-                      <th className="p-4 text-center">Status</th>
-                      <th className="p-4 text-center">In Stock Inventory</th>
-                      <th className="p-4 text-right">Selling Price</th>
-                      <th className="p-4 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-150/70">
-                    {filteredProductsAdmin.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="text-center py-12 text-slate-400">No products configured yet.</td>
-                      </tr>
-                    ) : (
-                      filteredProductsAdmin.map(prod => (
-                        <tr key={prod.id} className="hover:bg-slate-50/60">
-                          <td className="p-4 shrink-0">
-                            <img
-                              src={prod.image}
-                              alt=""
-                              className="w-10 h-10 object-cover rounded-md bg-slate-50 border border-slate-100"
-                              referrerPolicy="no-referrer"
-                            />
-                          </td>
-                          <td className="p-4 font-bold text-slate-900 leading-normal max-w-xs">{prod.title}</td>
-                          <td className="p-4 font-bold text-indigo-650">{prod.vendor}</td>
-                          <td className="p-4 text-center">
-                            <span className={`inline-block py-0.5 px-2 rounded-full font-black text-[9px] uppercase tracking-wider ${
-                              prod.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-150' : 'bg-slate-100 text-slate-500'
-                            }`}>
-                              {prod.status}
-                            </span>
-                          </td>
-                          <td className="p-4 text-center">
-                            <span className={`font-black text-xs ${prod.inventory <= 15 ? 'text-rose-500' : 'text-slate-800'}`}>
-                              {prod.inventory} units {prod.inventory <= 15 ? '⚠️ low' : ''}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right font-extrabold text-slate-900">£{prod.price.toFixed(2)}</td>
-                          <td className="p-4 text-center text-xs space-x-1.5 whitespace-nowrap">
-                            <button
-                              onClick={() => handleEditProductClick(prod)}
-                              className="hover:text-indigo-600 font-bold cursor-pointer"
-                              title="Edit product"
-                            >
-                              Edit
-                            </button>
-                            <span className="text-slate-350">|</span>
-                            <button
-                              onClick={() => handleDuplicateProduct(prod)}
-                              className="text-teal-650 hover:text-teal-850 font-bold cursor-pointer"
-                              title="Duplicate product"
-                            >
-                              Dup
-                            </button>
-                            <span className="text-slate-350">|</span>
-                            <button
-                              onClick={() => handlePreviewProduct(prod)}
-                              className="text-sky-650 hover:text-sky-850 font-bold cursor-pointer"
-                              title="Preview product"
-                            >
-                              View
-                            </button>
-                            <span className="text-slate-350">|</span>
-                            <button
-                              onClick={() => handleDeleteProduct(prod.id)}
-                              className="text-red-500 hover:text-red-700 font-bold cursor-pointer"
-                              title="Delete product"
-                            >
-                              Del
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                  // Synchronize Collection Memberships
+                  const updatedCollections = collections.map(col => {
+                    const belongs = selectedCollectionIds.includes(col.id);
+                    const alreadyHas = col.productIds.includes(savedProduct.id);
 
-            {/* Add / Edit Product Dynamic Slide block */}
-            {showAddProduct && (
-              <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl border border-slate-205 p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-                  <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
-                    <h3 className="font-extrabold text-slate-800 text-sm">
-                      {editingProduct ? `Edit Product Profile: ${editingProduct.title}` : 'Add New Nicotine / Energy Product Can'}
-                    </h3>
-                    <button
-                      onClick={() => {
-                        setShowAddProduct(false);
-                        setEditingProduct(null);
-                      }}
-                      className="text-slate-400 hover:text-slate-650 cursor-pointer text-xs font-bold"
-                    >
-                      Close Form
-                    </button>
+                    if (belongs && !alreadyHas) {
+                      return { ...col, productIds: [...col.productIds, savedProduct.id] };
+                    } else if (!belongs && alreadyHas) {
+                      return { ...col, productIds: col.productIds.filter(id => id !== savedProduct.id) };
+                    }
+                    return col;
+                  });
+                  onUpdateCollections(updatedCollections);
+
+                  setEditingProduct(null);
+                  setShowAddProduct(false);
+                }}
+                onDelete={(productId) => {
+                  const updated = products.filter(p => p.id !== productId);
+                  onUpdateProducts(updated);
+
+                  // Clean up collection references
+                  const updatedColls = collections.map(c => ({
+                    ...c,
+                    productIds: c.productIds.filter(id => id !== productId)
+                  }));
+                  onUpdateCollections(updatedColls);
+
+                  setEditingProduct(null);
+                  setShowAddProduct(false);
+                }}
+              />
+            ) : (
+              <>
+                {/* Header menu filter */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
+                  <div className="relative w-full sm:w-64">
+                    <input
+                      type="text"
+                      placeholder="Seach products via titles, vendors..."
+                      value={productQuery}
+                      onChange={(e) => setProductQuery(e.target.value)}
+                      className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
+                    />
+                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                   </div>
 
-                  <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Product Title name</label>
-                        <input
-                          id="prod-form-title"
-                          type="text"
-                          required
-                          placeholder="e.g. 77 Cherry Coke 10.4 mg"
-                          value={newProductForm.title}
-                          onChange={(e) => setNewProductForm({ ...newProductForm, title: e.target.value })}
-                          className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Brand (Vendor Partner)</label>
-                        <select
-                          id="prod-form-vendor"
-                          value={newProductForm.vendor}
-                          onChange={(e) => setNewProductForm({ ...newProductForm, vendor: e.target.value })}
-                          className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        >
-                          <option value="77">77</option>
-                          <option value="CUBA">CUBA</option>
-                          <option value="CLEW">CLEW</option>
-                          <option value="KILLA">KILLA</option>
-                          <option value="VELO">VELO</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Product Canister Description</label>
-                      <textarea
-                        id="prod-form-desc"
-                        rows={3}
-                        placeholder="Flavor highlights, cooling crystals, nicotine strength guides..."
-                        value={newProductForm.description}
-                        onChange={(e) => setNewProductForm({ ...newProductForm, description: e.target.value })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 resize-none"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Selling Price (£)</label>
-                        <input
-                          id="prod-form-price"
-                          type="number"
-                          step="0.01"
-                          required
-                          value={newProductForm.price}
-                          onChange={(e) => setNewProductForm({ ...newProductForm, price: parseFloat(e.target.value) })}
-                          className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Compare Price (£)</label>
-                        <input
-                          id="prod-form-compare"
-                          type="number"
-                          step="0.01"
-                          value={newProductForm.compareAtPrice}
-                          onChange={(e) => setNewProductForm({ ...newProductForm, compareAtPrice: parseFloat(e.target.value) })}
-                          className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Category Classification</label>
-                        <select
-                          id="prod-form-cat"
-                          value={newProductForm.category}
-                          onChange={(e) => setNewProductForm({ ...newProductForm, category: e.target.value })}
-                          className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        >
-                          <option value="Vitamins & Supplements">Vitamins & Supplements</option>
-                          <option value="Powdered Beverage Mixes">Powdered Beverage Mixes</option>
-                          <option value="Nicotine Pouches">Nicotine Pouches</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Stock count</label>
-                        <input
-                          id="prod-form-stock"
-                          type="number"
-                          required
-                          value={newProductForm.inventory}
-                          onChange={(e) => setNewProductForm({ ...newProductForm, inventory: parseInt(e.target.value) })}
-                          className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Uniquely Generated SKU</label>
-                        <input
-                          id="prod-form-sku"
-                          type="text"
-                          placeholder="e.g. 77-CHY-COKE"
-                          value={newProductForm.sku}
-                          onChange={(e) => setNewProductForm({ ...newProductForm, sku: e.target.value })}
-                          className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Canister Status</label>
-                        <select
-                          id="prod-form-status"
-                          value={newProductForm.status}
-                          onChange={(e) => setNewProductForm({ ...newProductForm, status: e.target.value as any })}
-                          className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        >
-                          <option value="Active">Active</option>
-                          <option value="Draft">Draft</option>
-                          <option value="Archived">Archived</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <ImageUploadInput
-                      label="High-Res Canister Image"
-                      value={newProductForm.image || ''}
-                      onChange={(base64) => setNewProductForm({ ...newProductForm, image: base64 })}
-                    />
-
-                    <button
-                      type="submit"
-                      className="w-full bg-slate-900 border-slate-900 hover:bg-slate-800 py-3 text-white font-extrabold rounded-lg shadow-sm transition-colors text-xs"
-                    >
-                      {editingProduct ? 'Save Product Profile Changes' : 'Publish Product Canister'}
-                    </button>
-                  </form>
+                  <button
+                    onClick={() => {
+                      setEditingProduct(null);
+                      setShowAddProduct(true);
+                    }}
+                    className="bg-slate-900 hover:bg-slate-850 font-bold p-2.5 px-4 rounded-xl text-xs text-white flex items-center gap-1 shadow-xs cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" /> Add Product Item
+                  </button>
                 </div>
-              </div>
-            )}
 
+                {/* Products Inventory Grid table */}
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50/75 border-b border-slate-200 text-[10px] text-slate-450 font-semibold uppercase tracking-widest">
+                          <th className="p-4">Image</th>
+                          <th className="p-4">Product Title</th>
+                          <th className="p-4">Brand</th>
+                          <th className="p-4 text-center">Status</th>
+                          <th className="p-4 text-center">In Stock Inventory</th>
+                          <th className="p-4 text-right">Selling Price</th>
+                          <th className="p-4 text-center">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-150/70">
+                        {filteredProductsAdmin.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="text-center py-12 text-slate-400">No products configured yet.</td>
+                          </tr>
+                        ) : (
+                          filteredProductsAdmin.map(prod => (
+                            <tr key={prod.id} className="hover:bg-slate-50/60">
+                              <td className="p-4 shrink-0">
+                                <img
+                                  src={prod.image}
+                                  alt=""
+                                  className="w-10 h-10 object-cover rounded-md bg-slate-50 border border-slate-100"
+                                  referrerPolicy="no-referrer"
+                                />
+                              </td>
+                              <td className="p-4 font-bold text-slate-900 leading-normal max-w-xs">{prod.title}</td>
+                              <td className="p-4 font-bold text-indigo-650">{prod.vendor}</td>
+                              <td className="p-4 text-center">
+                                <span className={`inline-block py-0.5 px-2 rounded-full font-black text-[9px] uppercase tracking-wider ${
+                                  prod.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-150' : 'bg-slate-100 text-slate-500'
+                                }}`}>
+                                  {prod.status}
+                                </span>
+                              </td>
+                              <td className="p-4 text-center">
+                                <span className={`font-black text-xs ${prod.inventory <= 15 ? 'text-rose-500' : 'text-slate-800'}`}>
+                                  {prod.inventory} units {prod.inventory <= 15 ? '⚠️ low' : ''}
+                                </span>
+                              </td>
+                              <td className="p-4 text-right font-extrabold text-slate-900">£{prod.price.toFixed(2)}</td>
+                              <td className="p-4 text-center text-xs space-x-1.5 whitespace-nowrap">
+                                <button
+                                  onClick={() => handleEditProductClick(prod)}
+                                  className="hover:text-indigo-600 font-bold cursor-pointer"
+                                  title="Edit product"
+                                >
+                                  Edit
+                                </button>
+                                <span className="text-slate-350">|</span>
+                                <button
+                                  onClick={() => handleDuplicateProduct(prod)}
+                                  className="text-teal-650 hover:text-teal-850 font-bold cursor-pointer"
+                                  title="Duplicate product"
+                                >
+                                  Dup
+                                </button>
+                                <span className="text-slate-350">|</span>
+                                <button
+                                  onClick={() => handlePreviewProduct(prod)}
+                                  className="text-sky-650 hover:text-sky-850 font-bold cursor-pointer"
+                                  title="Preview product"
+                                >
+                                  View
+                                </button>
+                                <span className="text-slate-350">|</span>
+                                <button
+                                  onClick={() => handleDeleteProduct(prod.id)}
+                                  className="text-red-500 hover:text-red-700 font-bold cursor-pointer"
+                                  title="Delete product"
+                                >
+                                  Del
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 

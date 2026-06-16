@@ -1,3 +1,9 @@
+export interface ProductVariant {
+  id: string;
+  name: string; // e.g. "Size", "Strength"
+  values: string[]; // e.g. ["Medium", "Large"]
+}
+
 export interface Product {
   id: string;
   title: string;
@@ -12,6 +18,10 @@ export interface Product {
   image: string;
   weight: number;
   tags: string[];
+  media?: string[]; // Multiple media URLs
+  variants?: ProductVariant[]; // Option list matching Shopify-style variants
+  barcode?: string;
+  weightUnit?: string; // 'g' | 'kg' | 'oz' | 'lb'
 }
 
 export interface Collection {
@@ -22,6 +32,9 @@ export interface Collection {
   image: string;
   productIds: string[];
   productConditions?: string; // string explaining the conditions
+  seoTitle?: string;
+  seoDescription?: string;
+  ogImage?: string;
 }
 
 export interface Order {
