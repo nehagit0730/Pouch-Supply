@@ -69,53 +69,61 @@ export default function AdminDashboard({
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Sync edits wrapper overrides so existing handlers automatically write to drafts
+  // Sync edits wrapper overrides so existing handlers automatically write to drafts and sync to the parent App context immediately
   const onUpdateProducts = (updatedProds: Product[]) => {
     setLocalProducts(updatedProds);
-    setHasUnsavedChanges(true);
-    if (onDirtyChange) onDirtyChange(true);
+    parentOnUpdateProducts(updatedProds);
+    setHasUnsavedChanges(false);
+    if (onDirtyChange) onDirtyChange(false);
   };
 
   const onUpdateCollections = (updatedColls: Collection[]) => {
     setLocalCollections(updatedColls);
-    setHasUnsavedChanges(true);
-    if (onDirtyChange) onDirtyChange(true);
+    parentOnUpdateCollections(updatedColls);
+    setHasUnsavedChanges(false);
+    if (onDirtyChange) onDirtyChange(false);
   };
 
   const onUpdateCustomPages = (updatedPages: CustomPage[]) => {
     setLocalPages(updatedPages);
-    setHasUnsavedChanges(true);
-    if (onDirtyChange) onDirtyChange(true);
+    parentOnUpdateCustomPages(updatedPages);
+    setHasUnsavedChanges(false);
+    if (onDirtyChange) onDirtyChange(false);
   };
 
   const onUpdateDiscounts = (updatedDiscs: Discount[]) => {
     setLocalDiscounts(updatedDiscs);
-    setHasUnsavedChanges(true);
-    if (onDirtyChange) onDirtyChange(true);
+    parentOnUpdateDiscounts(updatedDiscs);
+    setHasUnsavedChanges(false);
+    if (onDirtyChange) onDirtyChange(false);
   };
 
   const onUpdateOrders = (updatedOrders: Order[]) => {
     setLocalOrders(updatedOrders);
-    setHasUnsavedChanges(true);
-    if (onDirtyChange) onDirtyChange(true);
+    parentOnUpdateOrders(updatedOrders);
+    setHasUnsavedChanges(false);
+    if (onDirtyChange) onDirtyChange(false);
   };
 
   const onUpdateFiles = (updatedFiles: FileEntry[]) => {
     setLocalFiles(updatedFiles);
-    setHasUnsavedChanges(true);
-    if (onDirtyChange) onDirtyChange(true);
+    parentOnUpdateFiles(updatedFiles);
+    setHasUnsavedChanges(false);
+    if (onDirtyChange) onDirtyChange(false);
   };
 
   const onUpdateCustomers = (updatedCusts: Customer[]) => {
     setLocalCustomers(updatedCusts);
-    setHasUnsavedChanges(true);
-    if (onDirtyChange) onDirtyChange(true);
+    parentOnUpdateCustomers(updatedCusts);
+    setHasUnsavedChanges(false);
+    if (onDirtyChange) onDirtyChange(false);
   };
 
   const onUpdateBlogs = (updatedBlogs: BlogPost[]) => {
     setLocalBlogs(updatedBlogs);
-    setHasUnsavedChanges(true);
-    if (onDirtyChange) onDirtyChange(true);
+    parentOnUpdateBlogs(updatedBlogs);
+    setHasUnsavedChanges(false);
+    if (onDirtyChange) onDirtyChange(false);
   };
 
   // Global Save & Discard triggers

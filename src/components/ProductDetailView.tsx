@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Product, Customer } from '../types';
 import { ArrowLeft, ShoppingCart, Heart, Shield, RotateCcw, Truck, Check, Sparkles } from 'lucide-react';
 
@@ -21,8 +21,42 @@ export default function ProductDetailView({
   const [addedMessage, setAddedMessage] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
 
+  // Sync active images list and selected image state
+  const mediaImages = product.media && product.media.length > 0 ? product.media : [product.image];
+  const [selectedImage, setSelectedImage] = useState(product.image);
+
+  // State to hold selected variant options, e.g. { "Strength": "Strong", "Size": "Large" }
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setSelectedImage(product.image);
+    
+    // Choose first option value as selected default for each variant option
+    if (product.variants && product.variants.length > 0) {
+      const initial: Record<string, string> = {};
+      product.variants.forEach(v => {
+        if (v.values && v.values.length > 0) {
+          initial[v.name] = v.values[0];
+        }
+      });
+      setSelectedVariants(initial);
+    } else {
+      setSelectedVariants({});
+    }
+  }, [product]);
+
   const handleAddToCartClick = () => {
-    onAddToCart(product, quantity);
+    // Generate selected variants label string, e.g. " (Strength: Strong, Size: Medium)"
+    const variantLabels = Object.entries(selectedVariants)
+      .map(([name, val]) => `${name}: ${val}`)
+      .join(', ');
+    
+    const cartProduct = {
+      ...product,
+      title: variantLabels ? `${product.title} (${variantLabels})` : product.title
+    };
+
+    onAddToCart(cartProduct, quantity);
     setAddedMessage(true);
     setTimeout(() => {
       setAddedMessage(false);
@@ -68,11 +102,11 @@ export default function ProductDetailView({
         {/* Core Product Sandbox */}
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 p-6 sm:p-8 lg:p-10">
           
-          {/* Left Column: Premium Canvas Image Box */}
+          {/* Left Column: Premium Canvas Image Box with Thumbnail Grid */}
           <div className="space-y-4">
             <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden aspect-square flex items-center justify-center p-6 relative group">
               <img
-                src={product.image || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80'}
+                src={selectedImage || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80'}
                 alt={product.title}
                 className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
                 referrerPolicy="no-referrer"
@@ -91,6 +125,26 @@ export default function ProductDetailView({
                 </span>
               )}
             </div>
+
+            {/* Media Image Thumbnails Gallery */}
+            {mediaImages.length > 1 && (
+              <div id="product-media-gallery" className="grid grid-cols-5 gap-2.5">
+                {mediaImages.map((imgUrl, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedImage(imgUrl)}
+                    className={`aspect-square rounded-xl border overflow-hidden p-1 bg-slate-50 relative transition-all ${
+                      selectedImage === imgUrl 
+                        ? 'border-indigo-600 ring-2 ring-indigo-500/10' 
+                        : 'border-slate-200 hover:border-slate-350'
+                    }`}
+                  >
+                    <img src={imgUrl} className="w-full h-full object-cover rounded-lg" alt="" referrerPolicy="no-referrer" />
+                  </button>
+                ))}
+              </div>
+            )}
             
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-center space-y-1">
@@ -144,6 +198,38 @@ export default function ProductDetailView({
                   {product.description || 'No description provided for this premium item canister. Formulated in high precision labs for crystal freeze mouth refreshes.'}
                 </p>
               </div>
+
+              {/* Variants Selector Panel */}
+              {product.variants && product.variants.length > 0 && (
+                <div id="product-variants-section" className="space-y-3.5 pt-3 border-t border-slate-100">
+                  {product.variants.map((v) => (
+                    <div key={v.id} className="space-y-1.5 text-left">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">
+                        Select {v.name}: <span className="text-indigo-600 font-extrabold">{selectedVariants[v.name]}</span>
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {v.values.map((val) => {
+                          const isSelected = selectedVariants[v.name] === val;
+                          return (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => setSelectedVariants(prev => ({ ...prev, [v.name]: val }))}
+                              className={`py-2 px-3.5 rounded-xl font-bold text-xs uppercase tracking-tight transition-all border cursor-pointer ${
+                                isSelected
+                                  ? 'bg-slate-900 border-slate-950 text-white shadow-xs'
+                                  : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-205'
+                              }`}
+                            >
+                                {val}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Addition panel actions */}
@@ -155,6 +241,7 @@ export default function ProductDetailView({
                   <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Quantity:</span>
                   <div className="flex items-center border border-slate-205 rounded-xl bg-slate-50 overflow-hidden">
                     <button
+                      type="button"
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       className="px-3.5 py-2 hover:bg-slate-200 text-slate-600 font-bold transition-colors cursor-pointer select-none"
                     >
@@ -162,6 +249,7 @@ export default function ProductDetailView({
                     </button>
                     <span className="px-5 font-extrabold text-xs text-slate-800 min-w-[40px] text-center">{quantity}</span>
                     <button
+                      type="button"
                       onClick={() => setQuantity(Math.min(product.inventory, quantity + 1))}
                       className="px-3.5 py-2 hover:bg-slate-200 text-slate-600 font-bold transition-colors cursor-pointer select-none"
                     >
@@ -176,6 +264,7 @@ export default function ProductDetailView({
               <div className="flex gap-3">
                 {product.inventory > 0 ? (
                   <button
+                    type="button"
                     onClick={handleAddToCartClick}
                     className="flex-1 bg-[#1a1c1d] hover:bg-black text-white py-3.5 px-6 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-98"
                   >
@@ -192,6 +281,7 @@ export default function ProductDetailView({
                 )}
 
                 <button
+                  type="button"
                   onClick={handleToggleFavorite}
                   className={`p-3.5 rounded-xl border transition-all flex items-center justify-center cursor-pointer ${
                     isFavorite 
