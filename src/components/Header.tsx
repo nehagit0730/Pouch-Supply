@@ -89,6 +89,15 @@ export default function Header({
           >
             All Brands Directory
           </button>
+
+          <button
+            onClick={() => onTabChange('blogs')}
+            className={`text-xs font-black uppercase tracking-widest pb-1 transition-colors hover:text-indigo-600 cursor-pointer ${
+              (currentTab === 'blogs' || currentTab === 'blog-detail') && !isAdminActive ? 'text-indigo-650 border-b-2 border-indigo-600' : 'text-slate-500'
+            }`}
+          >
+            Pouch Journal 📖
+          </button>
         </nav>
 
         {/* Right: Actions block (Dashboard controller, customer logins, basket drawers) */}

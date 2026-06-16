@@ -1,4 +1,4 @@
-import { Product, Collection, Order, FileEntry, Customer, Discount, CustomPage } from './types';
+import { Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, BlogPost } from './types';
 
 export const INITIAL_PRODUCTS: Product[] = [
   // Brand: 77
@@ -735,3 +735,138 @@ export const DEFAULT_PAGES: CustomPage[] = [
     ]
   }
 ];
+
+export const INITIAL_BLOGS: BlogPost[] = [
+  {
+    id: 'b1',
+    title: 'The Science Behind Nicotine Pouches: What\'s Inside Your Canister?',
+    slug: 'science-behind-nicotine-pouches',
+    excerpt: 'Have you ever wondered exactly what goes into a modern, tobacco-free nicotine pouch? We dissect the premium cellulose, cooling crystals, and pharmaceutical-grade ingredients.',
+    content: `Nicotine pouches have witnessed an astronomical rise in global popularity, marking one of the most significant shifts in alternative nicotine delivery systems. But what exactly is contained within these small, discreet, chalk-white pouches? 
+
+Unlike traditional snus, modern pouches are **100% tobacco-free**. Let's break down the exact chemistry and ingredients that power your favorite canister:
+
+### 1. Plant-Based Microcrystalline Cellulose
+The bulk of the pouch is filled with food-grade microcrystalline fiber—typically sourced from eucalyptus or pine tree wood pulp. This cellulose acts as a dry carrier material, absorbing and binding the other components while maintaining a dry bag shell that only activates upon contact with saliva.
+
+### 2. High-Purity Nicotine Salt
+The active nicotine loaded into premium pouches like **77** or **VELO** is of pharmaceutical-grade purity (usually 99.9% pure). It is bonded with dry biological salts (such as bitartrate or hydrochloride) to ensure stability, fast absorption, and long shelf life. Because it's free of dark tobacco leaf organic matter, it doesn't stain teeth or cause bad breath!
+
+### 3. Cooling Crystals & Premium Flavoring
+That legendary "freeze" sensation in popular varieties is caused by cooling agents, natural menthol extracts, and essential oils. Sweet or fruity pouches incorporate powdered flavor carriers that release gradually, ensuring delicious notes such as Cola Cherry, Coffee, or Watermelon persist for up to 45 minutes of use.
+
+### 4. pH Adjusters & Stabilizers
+To ensure the nicotine can be efficiently absorbed trans-mucosally through the gums, the pocket environment must be slightly alkaline. Brands use safe food additives like sodium carbonate or sodium bicarbonate to carefully regulate pH and provide that satisfying "burn" or "kick" that consumers expect.
+
+### Summary
+The magic of modern pouches lies in their simplicity and targeted purity. By isolating nicotine from combustion, smoke, and organic tobacco materials, science has crafted a cleaner way to consume nicotine. Each pouch is a masterpiece of modern chemistry—precise, effective, and convenient.`,
+    image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80',
+    author: 'Dr. Ethan Vance',
+    category: 'Chemistry & Science',
+    status: 'Active',
+    publishedAt: 'Jun 15, 2026',
+    readTime: '4 min read',
+    tags: ['Science', 'Nicotine', 'Purity', 'Active']
+  },
+  {
+    id: 'b2',
+    title: 'Top 5 Strongest Pouches of 2026: The Ultra-Strength Guide',
+    slug: 'top-strongest-pouches-2026',
+    excerpt: 'Searching for the ultimate throat kick? We review and rank this year\'s highest-strength canisters, comparing extreme releases from CUBA, KILLA, and VELO.',
+    content: `For experienced aficionados, standard strength levels just don't cut it. The quest for the strongest kick is a serious endeavor, influenced by moisture, pH levels, and pure nicotine milligrams. 
+
+Whether you're looking for an icy morning booster or a raw energy rush, here are the absolute strongest canisters available in our vendor program, ranked for 2026.
+
+### 1. CUBA Double Fresh (43 mg/g)
+*Absolute King of Freeze.* Packing a massive 43 mg/g of rapid-release nicotine salts, the CUBA Double Fresh canister is not for the faint of heart. It is characterized by an instant, aggressive head-rush and a burning sub-zero menthol sensation that will leave your lips tingling for hours. 
+
+### 2. CUBA Cherry & Banana Hit Series (43 mg/g)
+Who says high strength can't taste amazing? CUBA's dessert and fruit line brings gourmet flavors like creamy yoghurt, cherry, and banana-hit in a powerful 43 mg/g package.
+
+### 3. KILLA Cold Mint (16 mg/g)
+*The Professional's Daily Driver.* While KILLA features 16 mg/g (technically lower in raw milligrams than CUBA), its custom alkalinity buffers trigger a highly bioavailable uptake. The response is swift, sustained, and accompanied by a crisp, sharp spearmint burn.
+
+### 4. VELO Freeze Max (17 mg/g)
+*The Gold Standard of Smoothness.* Designed by British American Tobacco, VELO uses refined synthetic polymers that provide smooth, steady absorption. It lacks the initial spike of CUBA but delivers a long-lasting, deep satisfaction without throat irritation.
+
+### 5. 77 Ghost Onion (20 mg/g)
+*The Avant-Garde Contender.* For those who want to challenge their taste buds, 77's Ghost Onion blend pairs serious 20 mg/g power with a savory, spicy onion-peppery essence. It is a legendary meme canister that surprisingly hits like a freight train.
+
+> **Caution:** High-strength nicotine pouches are exclusively intended for heavy smokers or existing experienced pouch consumers. If you are starting fresh, please begin with lower brackets (such as 5 mg CLEW or 77 Black Tea).`,
+    image: 'https://images.unsplash.com/photo-1518152002797-94ce700236a2?auto=format&fit=crop&w=800&q=80',
+    author: 'Marcus Vance',
+    category: 'Buying Guides',
+    status: 'Active',
+    publishedAt: 'Jun 12, 2026',
+    readTime: '6 min read',
+    tags: ['CUBA', 'KILLA', 'VELO', 'High-Strength', 'Mint']
+  },
+  {
+    id: 'b3',
+    title: 'How to Store Your Pouches for Maximum Freshness',
+    slug: 'pouches-storage-freshness-guide',
+    excerpt: 'Dry pouches vs. slime pouches: how do humidity and temperature impact your nicotine release? The ultimate storage manual for bulk order enthusiasts.',
+    content: `Have you ever popped a pouch only to find that the flavor is weak and the burn is missing? Or perhaps your moist pouches have turned into a sticky, clumped disaster? 
+
+Nicotine pouches are perishable items that are sensitive to environment, air, heat, and moisture. If you are ordering boxes in bulk, proper care is required to preserve that crisp, first-day blast of flavor.
+
+### The Two Pouch Categories: Dry vs. Moist
+- **Dry Pouches (e.g. CLEW 5 mg):** These contain under 20% moisture content. They are highly resilient and can comfortably sit in your pocket for months, only activating when they come in contact with oral moisture.
+- **Moist Pouches (e.g. CUBA or 77 series):** These are pre-hydrated to are around 40-50% moisture. This moisture allows the flavor and nicotine to disperse instantly. However, if they dry out, they become useless.
+
+### Golden Rules for Storage
+
+#### 1. Keep the lid sealed tight!
+Once you crack open a canister, the vacuum seal is broken, allowing dry air to seep in. Always snap the dual utility-lid (where used pouches are stored) and the main cap securely shut after retrieving your pouch.
+
+#### 2. The Refrigerator Hack ❄️
+If you bought a 10-pack bundle, keep the unopened cans in the refrigerator! The chilled, humid environment retains the exact moisture level of pre-hydrated logs, ensuring they stay perfectly soft.
+
+#### 3. Avoid direct sunlight
+Nicotine is UV-sensitive. Leaving your canister on a car dashboard or near windows in summer heat degrades the active nicotine salts, turning white pouches yellow and rendering them stale.
+
+#### Summary
+Treat your premium pouches with care! Keep your active cans sealed, store your bulk reserves in a cool, dark drawer or fridge, and never let them sit in high heat. Your tastebuds—and your wallet—will thank you.`,
+    image: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&w=800&q=80',
+    author: 'Sarah Jenkins',
+    category: 'Tips & Hacks',
+    status: 'Active',
+    publishedAt: 'Jun 10, 2026',
+    readTime: '3 min read',
+    tags: ['Storage', 'Freshness', 'Tips']
+  },
+  {
+    id: 'b4',
+    title: 'Nicotine vs. Caffeine Pouches: The Future of Energy Pockets',
+    slug: 'nicotine-vs-caffeine-pouches-comparison',
+    excerpt: 'The oral pouch tech is expanding. Explore the revolutionary new world of clean energy pouches infused with caffeine, taurine, and high performance vitamins.',
+    content: `For decades, the standard way to get a quick energy boost was an espresso shot or a carbonated energy drink. But a massive paradigm shift is happening in the focus and productivity market. 
+
+Pouch technology is expanding beyond nicotine into the **nootropics & clean energy market**. We compare the traditional nicotine experience with the rising trend of caffeine and vitamin oral pockets.
+
+### The Oral Absorption Advantage
+Both caffeine and nicotine pouches rely on **sublingual & buccal absorption**—meaning the active compounds penetrate directly through the blood vessels in your lips and gums, bypassing the digestive system. 
+- **Faster Onset:** While coffee takes 20-30 minutes to digest, oral pouches deliver a noticeable energy kick in under 5 minutes.
+- **Zero Stomach Irritation:** There's no acidic liquid sloshing around in your stomach, making it a perfect workout companion.
+
+### Nicotine Pouches: Focus & Dopamine
+Nicotine is a powerful central nervous system stimulant that binds to nicotinic acetylcholine receptors. It triggers the release of epinephrine (adrenaline) and dopamine, resulting in increased alertness, sharp cognitive processing, and stress relief. It's the ultimate weapon for professional developers, gamers, and writers demanding high-focus concentration.
+
+### Caffeine & Vitamin Pouches: Physical Drive
+Caffeine pockets are formulated with anhydrous caffeine powder, green tea extracts, taurine, and B-vitamins (such as B12). By blocking adenosine receptors, caffeine eliminates fatigue and provides physical endurance. It's perfect for athletes, drivers, or anyone looking to cut down on sugary energy drink habits.
+
+### Can You Mix the Two?
+Absolutely! Many modern professionals alternate between the two—using caffeine pouches for raw raw physical stamina in the afternoon, and premium low-dose nicotine pouches (like **CLEW**) for deep creative focus sessions.
+
+### The Verdict
+The pocket form factor is clearly here to stay. Whether you prefer the raw, cognitive focus of premium nicotine salts, or the jitter-free physical stamina of caffeine, the future of productivity is dry, paper-thin, and fits snugly under your lip.`,
+    image: 'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=800&q=80',
+    author: 'Liam Chen',
+    category: 'Industry Trends',
+    status: 'Active',
+    publishedAt: 'Jun 05, 2026',
+    readTime: '5 min read',
+    tags: ['Caffeine', 'Energy', 'Innovation', 'Focus']
+  }
+];
+

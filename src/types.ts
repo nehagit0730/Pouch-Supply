@@ -116,3 +116,18 @@ export interface CartItem {
   quantity: number;
   vendor: string;
 }
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  image: string;
+  author: string;
+  category: string;
+  status: 'Active' | 'Draft' | 'Archived';
+  publishedAt: string;
+  readTime: string;
+  tags: string[];
+}

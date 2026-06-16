@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, CartItem 
+  Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, CartItem, BlogPost 
 } from './types';
 import { 
-  INITIAL_PRODUCTS, INITIAL_COLLECTIONS, INITIAL_ORDERS, INITIAL_FILES, INITIAL_CUSTOMERS, INITIAL_DISCOUNTS, DEFAULT_PAGES 
+  INITIAL_PRODUCTS, INITIAL_COLLECTIONS, INITIAL_ORDERS, INITIAL_FILES, INITIAL_CUSTOMERS, INITIAL_DISCOUNTS, DEFAULT_PAGES, INITIAL_BLOGS 
 } from './initialData';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -52,6 +52,15 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_DISCOUNTS;
   });
 
+  const [blogs, setBlogs] = useState<BlogPost[]>(() => {
+    const saved = localStorage.getItem('ps_blogs');
+    return saved ? JSON.parse(saved) : INITIAL_BLOGS;
+  });
+
+  const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null);
+  const [frontendBlogQuery, setFrontendBlogQuery] = useState('');
+  const [selectedFrontCategory, setSelectedFrontCategory] = useState('All');
+
   const [customPages, setCustomPages] = useState<CustomPage[]>(() => {
     const saved = localStorage.getItem('ps_custom_pages');
     const loaded = saved ? JSON.parse(saved) : DEFAULT_PAGES;
@@ -96,6 +105,10 @@ export default function App() {
       url = '/pages/subscribe';
     } else if (tab === 'frontend-account') {
       url = '/pages/account';
+    } else if (tab === 'blogs') {
+      url = '/blogs';
+    } else if (tab === 'blog-detail' && productId) {
+      url = `/blogs/${productId}`;
     } else if (tab === 'product-detail' && productId) {
       url = `/products/${productId}`;
     } else if (tab === 'collection-detail' && collectionId) {
@@ -109,6 +122,9 @@ export default function App() {
     }
     
     setCurrentTab(tab);
+    if (tab === 'blog-detail' && productId) {
+      setSelectedBlogSlug(productId);
+    }
     if (productId !== undefined) {
       setSelectedProductId(productId);
     }
@@ -149,6 +165,14 @@ export default function App() {
       const path = window.location.pathname;
       if (path === '/' || path === '') {
         setCurrentTab('frontend-home');
+        setIsAdminActive(false);
+      } else if (path === '/blogs' || path === '/blogs/') {
+        setCurrentTab('blogs');
+        setIsAdminActive(false);
+      } else if (path.startsWith('/blogs/')) {
+        const slug = path.replace('/blogs/', '');
+        setSelectedBlogSlug(slug);
+        setCurrentTab('blog-detail');
         setIsAdminActive(false);
       } else if (path.startsWith('/pages/')) {
         const slug = path.replace('/pages/', '');
@@ -206,6 +230,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('ps_custom_pages', JSON.stringify(customPages));
   }, [customPages]);
+
+  useEffect(() => {
+    localStorage.setItem('ps_blogs', JSON.stringify(blogs));
+  }, [blogs]);
 
   useEffect(() => {
     localStorage.setItem('ps_cart', JSON.stringify(cartItems));
@@ -437,6 +465,8 @@ export default function App() {
             onUpdateDiscounts={setDiscounts}
             customPages={customPages}
             onUpdateCustomPages={setCustomPages}
+            blogs={blogs}
+            onUpdateBlogs={setBlogs}
             onDirtyChange={setIsAdminDirty}
             adminActionTrigger={adminActionTrigger}
             onAdminActionComplete={(actionHandled) => {
@@ -786,8 +816,406 @@ export default function App() {
               />
             )}
 
+            {/* FRONTEND VIEW - CURATED STORES BLOG/MAGAZINE HUB */}
+            {currentTab === 'blogs' && (() => {
+              const activeBlogs = blogs.filter(b => b.status === 'Active');
+              
+              // Filter active articles by query & category
+              const filteredFrontBlogs = activeBlogs.filter(blog => {
+                const matchesQuery = blog.title.toLowerCase().includes(frontendBlogQuery.toLowerCase()) || 
+                                     blog.excerpt.toLowerCase().includes(frontendBlogQuery.toLowerCase()) ||
+                                     blog.tags.some(t => t.toLowerCase().includes(frontendBlogQuery.toLowerCase()));
+                const matchesCategory = selectedFrontCategory === 'All' || blog.category === selectedFrontCategory;
+                return matchesQuery && matchesCategory;
+              });
+
+              const featuredBlog = activeBlogs[0]; // Take latest active blog as hero header article
+
+              return (
+                <div className="bg-slate-50 min-h-screen">
+                  
+                  {/* Hero Banner Header */}
+                  <div className="bg-slate-900 text-white relative py-16 px-4 overflow-hidden">
+                    <div className="absolute inset-0 opacity-15 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-slate-200 via-slate-900 to-black pointer-events-none" />
+                    <div className="max-w-6xl mx-auto space-y-4 relative z-10 text-center sm:text-left">
+                      <span className="text-[10px] bg-slate-800 text-slate-300 font-extrabold uppercase tracking-widest py-1.5 px-3 rounded-full border border-slate-700">
+                        Editorial & Education
+                      </span>
+                      <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight">The Pouch Science Journal</h1>
+                      <p className="text-slate-400 max-w-lg text-xs sm:text-sm leading-relaxed">
+                        Fascinating breakdowns, organic chemistry, clinical guides, and strategic brand reviews compiled by industry clinicians.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Filter Toolbar & Category Chips */}
+                  <div className="max-w-6xl mx-auto py-8 px-4">
+                    <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-white border p-4 rounded-2xl shadow-xs">
+                      
+                      {/* Search Bar */}
+                      <div className="relative w-full md:w-80">
+                        <input
+                          type="text"
+                          placeholder="Search articles & themes..."
+                          value={frontendBlogQuery}
+                          onChange={(e) => setFrontendBlogQuery(e.target.value)}
+                          className="w-full text-xs p-2.5 pb-2.5 pl-9 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
+                        />
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      </div>
+
+                      {/* Categories chips list */}
+                      <div className="flex flex-wrap gap-1.5 w-full md:w-auto overflow-x-auto scrollbar-none">
+                        {['All', 'Chemistry & Science', 'Buying Guides', 'Tips & Hacks', 'Industry Trends', 'General'].map(cat => (
+                          <button
+                            key={cat}
+                            onClick={() => setSelectedFrontCategory(cat)}
+                            className={`text-[10px] font-black uppercase tracking-wider px-3.5 py-2.5 rounded-full border transition cursor-pointer shrink-0 ${
+                              selectedFrontCategory === cat 
+                                ? 'bg-slate-900 border-slate-900 text-white shadow-xs' 
+                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
+
+                    </div>
+
+                    {/* Featured Article Hero Panel (if matches 'All' or matches its category, and not searching) */}
+                    {featuredBlog && !frontendBlogQuery && selectedFrontCategory === 'All' && (
+                      <div className="mt-10 bg-white border border-slate-150 rounded-3xl overflow-hidden shadow-xs grid grid-cols-1 lg:grid-cols-12 hover:shadow-md transition duration-350 group">
+                        
+                        <div className="lg:col-span-7 h-64 sm:h-96 overflow-hidden relative border-b lg:border-b-0 lg:border-r">
+                          <img 
+                            src={featuredBlog.image} 
+                            alt={featuredBlog.title} 
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103" 
+                          />
+                          <span className="absolute top-4 left-4 bg-slate-900 text-white font-extrabold text-[9px] uppercase px-3 py-1 rounded-full shadow-md tracking-wider">
+                            Latest Article
+                          </span>
+                        </div>
+
+                        <div className="lg:col-span-5 p-6 sm:p-10 flex flex-col justify-between space-y-6 text-left">
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                              <span className="text-[10px] text-slate-400 font-extrabold uppercase bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                                {featuredBlog.category}
+                              </span>
+                              <span className="text-[10px] text-slate-500 font-medium">{featuredBlog.publishedAt}</span>
+                            </div>
+
+                            <h2 
+                              onClick={() => navigateToTab('blog-detail', featuredBlog.slug)}
+                              className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight leading-tight hover:text-indigo-650 transition cursor-pointer"
+                            >
+                              {featuredBlog.title}
+                            </h2>
+
+                            <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">{featuredBlog.excerpt}</p>
+                            
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                              {featuredBlog.tags.map((t, idx) => (
+                                <span key={idx} className="bg-slate-50 text-[10px] text-slate-500 rounded px-2 py-0.5 border">#{t}</span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="pt-6 border-t flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-black text-xs uppercase shadow-sm">
+                                {featuredBlog.author ? featuredBlog.author.charAt(0) : 'A'}
+                              </div>
+                              <div>
+                                <h5 className="text-[11px] font-black text-slate-800">{featuredBlog.author || 'Pouch Science'}</h5>
+                                <p className="text-[9px] text-slate-400">{featuredBlog.readTime || '5 min read'}</p>
+                              </div>
+                            </div>
+
+                            <button 
+                              onClick={() => navigateToTab('blog-detail', featuredBlog.slug)}
+                              className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-black uppercase tracking-wider py-2.5 px-4 rounded-xl cursor-pointer"
+                            >
+                              Read Full Story
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+
+                    {/* Standard Search Results grid */}
+                    <div className="mt-10 space-y-4">
+                      {frontendBlogQuery || selectedFrontCategory !== 'All' ? (
+                        <h3 className="text-xs text-slate-500 font-bold uppercase tracking-widest text-left">
+                          Search found {filteredFrontBlogs.length} articles
+                        </h3>
+                      ) : (
+                        <h3 className="text-xs text-slate-500 font-bold uppercase tracking-widest text-left mt-8 mb-6">
+                          Recent Publications
+                        </h3>
+                      )}
+
+                      {filteredFrontBlogs.length === 0 ? (
+                        <div className="bg-white border rounded-2xl py-16 px-4 text-center space-y-4">
+                          <span className="text-5xl block">🗒️</span>
+                          <h4 className="font-bold text-slate-800 text-sm">No Publications Match Filter Criteria</h4>
+                          <p className="text-slate-400 text-xs max-w-sm mx-auto">Try resetting categories or typing a different keyword to browse our research pouch index.</p>
+                          <button
+                            onClick={() => {
+                              setFrontendBlogQuery('');
+                              setSelectedFrontCategory('All');
+                            }}
+                            className="bg-slate-900 text-white text-[10px] font-black uppercase px-4 py-2.5 rounded-xl cursor-pointer"
+                          >
+                            Reset Filters
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+                          {filteredFrontBlogs.map(blog => (
+                            <div 
+                              key={blog.id} 
+                              className="bg-white border border-slate-150 rounded-2xl overflow-hidden hover:shadow-md transition duration-300 flex flex-col group"
+                            >
+                              <div className="h-48 overflow-hidden relative shrink-0 border-b">
+                                <img 
+                                  src={blog.image} 
+                                  alt={blog.title} 
+                                  referrerPolicy="no-referrer"
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102" 
+                                />
+                                <span className="absolute top-3 left-3 bg-white/95 text-slate-800 font-extrabold text-[9px] uppercase px-2.5 py-0.5 rounded shadow-sm border">
+                                  {blog.category}
+                                </span>
+                              </div>
+
+                              <div className="p-5 flex-1 flex flex-col justify-between space-y-5">
+                                <div className="space-y-2.5">
+                                  <span className="text-[9px] text-slate-400 font-semibold block">{blog.publishedAt}</span>
+                                  
+                                  <h4 
+                                    onClick={() => navigateToTab('blog-detail', blog.slug)}
+                                    className="text-sm font-black text-slate-900 group-hover:text-indigo-650 transition cursor-pointer line-clamp-2 leading-snug uppercase tracking-tight"
+                                  >
+                                    {blog.title}
+                                  </h4>
+
+                                  <p className="text-slate-500 text-xs line-clamp-3 leading-relaxed">{blog.excerpt}</p>
+                                </div>
+
+                                <div className="pt-4 border-t flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-black text-[9px] uppercase border">
+                                      {blog.author ? blog.author.charAt(0) : 'A'}
+                                    </div>
+                                    <div>
+                                      <h5 className="text-[9px] font-bold text-slate-700">{blog.author}</h5>
+                                      <p className="text-[8px] text-slate-400 font-medium">{blog.readTime}</p>
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    onClick={() => navigateToTab('blog-detail', blog.slug)}
+                                    className="text-[10px] font-black text-slate-900 group-hover:text-indigo-650 flex items-center gap-1 transition cursor-pointer"
+                                  >
+                                    Read Article <ArrowRight className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+
+                </div>
+              );
+            })()}
+
+            {/* FRONTEND VIEW - SINGLE EDITORIAL BLOG POST READER */}
+            {currentTab === 'blog-detail' && (() => {
+              const matchedBlog = blogs.find(b => b.slug === selectedBlogSlug);
+              
+              if (!matchedBlog) {
+                return (
+                  <div className="max-w-6xl mx-auto py-24 px-4 text-center space-y-6">
+                    <span className="text-7xl block">📝</span>
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] bg-red-100 text-red-700 font-extrabold py-1 px-3 rounded-full uppercase tracking-widest inline-block">
+                        Error 404 - Article Not Found
+                      </span>
+                      <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Article Not Found</h1>
+                    </div>
+                    <p className="text-slate-500 max-w-sm mx-auto text-xs leading-relaxed">
+                      This specific scientific or buying article does not exist, or has been temporarily unpublished by the store administrators.
+                    </p>
+                    <button
+                      onClick={() => navigateToTab('blogs')}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 px-8 rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-xs"
+                    >
+                      View All Articles
+                    </button>
+                  </div>
+                );
+              }
+
+              // Custom quick markdown paragraphs formatter helper
+              const renderMarkdown = (text: string) => {
+                if (!text) return null;
+                return text.split('\n\n').map((paragraph, index) => {
+                  const trimmed = paragraph.trim();
+                  if (!trimmed) return null;
+
+                  if (trimmed.startsWith('### ')) {
+                    return <h3 key={index} className="text-sm sm:text-base font-black text-slate-900 mt-6 mb-3 uppercase tracking-tight">{trimmed.replace('### ', '')}</h3>;
+                  }
+                  if (trimmed.startsWith('## ')) {
+                    return <h2 key={index} className="text-base sm:text-lg font-black text-slate-900 mt-8 mb-4 uppercase tracking-tight border-b-2 pb-2 border-slate-100">{trimmed.replace('## ', '')}</h2>;
+                  }
+                  if (trimmed.startsWith('# ')) {
+                    return <h1 key={index} className="text-lg sm:text-2xl font-black text-slate-900 mt-10 mb-4 uppercase tracking-tight">{trimmed.replace('# ', '')}</h1>;
+                  }
+                  if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                    const listItems = trimmed.split('\n').map(item => item.replace(/^[-*]\s+/, ''));
+                    return (
+                      <ul key={index} className="list-disc pl-5 my-3 text-slate-650 space-y-1.5">
+                        {listItems.map((item, i) => (
+                          <li key={i} dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>') }} />
+                        ))}
+                      </ul>
+                    );
+                  }
+                  
+                  let cleanHTML = trimmed
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                    
+                  return (
+                    <p 
+                      key={index}
+                      className="mb-4 text-xs sm:text-sm leading-relaxed text-slate-650"
+                      dangerouslySetInnerHTML={{ __html: cleanHTML }}
+                    />
+                  );
+                });
+              };
+
+              // Fetch 3 recent other articles
+              const otherArticles = blogs
+                .filter(b => b.status === 'Active' && b.id !== matchedBlog.id)
+                .slice(0, 3);
+
+              return (
+                <div className="bg-slate-50 min-h-screen py-10 px-4">
+                  <div className="max-w-4xl mx-auto">
+                    
+                    {/* Breadcrumbs */}
+                    <button 
+                      onClick={() => navigateToTab('blogs')}
+                      className="text-slate-500 hover:text-slate-900 text-xs font-bold uppercase tracking-wider mb-8 flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      ← Back to Journal Index
+                    </button>
+
+                    {/* Main White Reader Box Container */}
+                    <article className="bg-white border rounded-3xl overflow-hidden shadow-xs text-left">
+                      
+                      {/* Image cover photo */}
+                      <div className="h-64 sm:h-96 relative w-full">
+                        <img 
+                          src={matchedBlog.image} 
+                          alt={matchedBlog.title} 
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent pointer-events-none" />
+                        <div className="absolute bottom-6 left-6 right-6 text-white text-left">
+                          <span className="text-[9px] bg-indigo-650 text-white font-extrabold uppercase py-1 px-2.5 rounded-md border border-indigo-500 mr-3">
+                            {matchedBlog.category}
+                          </span>
+                          <span className="text-xs text-slate-200 font-medium">{matchedBlog.publishedAt}</span>
+                        </div>
+                      </div>
+
+                      {/* Post Header Meta details */}
+                      <div className="p-6 sm:p-10 pb-4 border-b border-slate-100">
+                        <h1 className="text-xl sm:text-3xl font-black text-slate-900 leading-tight uppercase tracking-tight">
+                          {matchedBlog.title}
+                        </h1>
+
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-6">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-xs uppercase border shadow-xs">
+                              {matchedBlog.author ? matchedBlog.author.charAt(0) : 'A'}
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-black text-slate-800">{matchedBlog.author || 'Store Owner'}</h4>
+                              <p className="text-[9px] text-slate-400">Published Article • {matchedBlog.readTime || '5 min read'}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1">
+                            {matchedBlog.tags.map((t, idx) => (
+                              <span key={idx} className="bg-slate-50 text-[9px] text-slate-500 font-bold px-2 py-0.5 rounded border">#{t}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Excerpt spotlight */}
+                      <div className="mx-6 sm:mx-10 mt-6 p-4 rounded-xl border-l-4 border-slate-900 bg-slate-50 text-xs sm:text-sm text-slate-650 font-medium leading-relaxed">
+                        {matchedBlog.excerpt}
+                      </div>
+
+                      {/* Article Story Box */}
+                      <div className="p-6 sm:p-10 pt-4">
+                        {renderMarkdown(matchedBlog.content)}
+                      </div>
+
+                    </article>
+
+                    {/* Footer Sidebar Relevant articles */}
+                    {otherArticles.length > 0 && (
+                      <div className="mt-14 space-y-6">
+                        <div className="border-b pb-3 flex justify-between items-center text-left">
+                          <h3 className="text-xs text-slate-500 font-black uppercase tracking-widest">More From Pouch Journal</h3>
+                          <button onClick={() => navigateToTab('blogs')} className="text-[10px] text-slate-800 font-black uppercase hover:underline">View All</button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                          {otherArticles.map(blog => (
+                            <div 
+                              key={blog.id} 
+                              onClick={() => navigateToTab('blog-detail', blog.slug)}
+                              className="bg-white border rounded-xl overflow-hidden hover:shadow-sm cursor-pointer transition group"
+                            >
+                              <div className="h-32 overflow-hidden border-b relative">
+                                <img src={blog.image} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102" alt="" referrerPolicy="no-referrer" />
+                              </div>
+                              <div className="p-4 space-y-2">
+                                <span className="text-[9px] text-slate-400 font-bold block">{blog.publishedAt}</span>
+                                <h4 className="text-xs font-black text-slate-800 group-hover:text-indigo-650 truncate uppercase tracking-tight">{blog.title}</h4>
+                                <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">{blog.excerpt}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* FRONTEND VIEW - 404 NOT FOUND FOR NONEXISTENT PAGES */}
-            {!['frontend-home', 'frontend-shop', 'frontend-brands', 'frontend-subscribe', 'frontend-account', 'product-detail', 'collection-detail'].includes(currentTab) && !customPages.some(p => p.slug === currentTab) && (
+            {!['frontend-home', 'frontend-shop', 'frontend-brands', 'frontend-subscribe', 'frontend-account', 'product-detail', 'collection-detail', 'blogs', 'blog-detail'].includes(currentTab) && !customPages.some(p => p.slug === currentTab) && (
               <div className="max-w-6xl mx-auto py-24 px-4 text-center space-y-6">
                 <span className="text-7xl block">🔍</span>
                 <div className="space-y-1.5">
