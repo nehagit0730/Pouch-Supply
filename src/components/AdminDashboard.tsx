@@ -4,11 +4,48 @@ import {
   TrendingUp, BarChart3, Package, Users, Tag, FileCode, HardDrive, Percent, 
   Search, Plus, Eye, CheckCircle2, Clipboard, ArrowUpDown, ChevronRight, 
   Trash2, Filter, Save, Sparkles, Building, Settings, Image as ImageIcon, 
-  X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw
+  X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw,
+  Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass,
+  ChevronDown, ChevronUp, Star, Heart, FileText
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 import CollectionEditor from './CollectionEditor';
 import ProductEditor from './ProductEditor';
+
+export const AVAILABLE_SECTION_TEMPLATES = [
+  { type: 'Image banner', label: 'Image Banner', desc: 'Hero banner with centered headline overlay & CTA buttons', icon: 'ImageIcon' },
+  { type: 'Image with text', label: 'Image with Text', desc: 'Beautifully-aligned structural image with side description', icon: 'Columns' },
+  { type: 'Text column with image', label: 'Text Grid with Images', desc: 'Three-column display grid showing core brand standards', icon: 'Grid' },
+  { type: 'Featured collection', label: 'Featured Products', desc: 'Interactive storefront product card grid with live data', icon: 'ShoppingBag' },
+  { type: 'Collection list', label: 'Collection Grid', desc: 'Display all available categorized nicotine canister series', icon: 'FolderHeart' },
+  { type: 'Slideshow', label: 'Slideshow Slider', desc: 'Smooth horizontal multi-slide sliding carousel banner', icon: 'PlaySquare' },
+  { type: 'Video banner', label: 'Video Showcase', desc: 'Cinematic YouTube player showcasing laboratory workflows', icon: 'Video' },
+  { type: 'Rich text', label: 'Rich Editorial Details', desc: 'Focussed header with spacious text for brand newsletters', icon: 'FileText' },
+  { type: 'Marquee text', label: 'Scrolling News Ribbon', desc: 'Fast, animated horizontal news marquee with key notices', icon: 'Sparkles' },
+  { type: 'Marquee images', label: 'Active Product Reel', desc: 'Dynamic ticker reel demonstrating recently stocked canisters', icon: 'Layers' },
+  { type: 'Logo list', label: 'Clinical Partners Registry', desc: 'Official partnered distributors and reseller banners', icon: 'Award' },
+  { type: 'Images gallery', label: 'Production Facility Gallery', desc: 'Scenic four-column gallery of clean compounding rooms', icon: 'Layout' },
+  { type: 'FAQs', label: 'Accordion FAQs', desc: 'Collapsible answered support questions', icon: 'HelpCircle' }
+] as const;
+
+export const getSectionIcon = (type: string) => {
+  switch (type) {
+    case 'Image banner': return <ImageIcon className="h-4 w-4 text-teal-600" />;
+    case 'Image with text': return <Columns className="h-4 w-4 text-emerald-500" />;
+    case 'Text column with image': return <Grid className="h-4 w-4 text-sky-500" />;
+    case 'Featured collection': return <ShoppingBag className="h-4 w-4 text-indigo-650" />;
+    case 'Collection list': return <FolderHeart className="h-4 w-4 text-purple-600" />;
+    case 'Slideshow': return <PlaySquare className="h-4 w-4 text-blue-500" />;
+    case 'Video banner': return <Video className="h-4 w-4 text-rose-500" />;
+    case 'Rich text': return <FileText className="h-4 w-4 text-slate-500" />;
+    case 'Marquee text': return <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />;
+    case 'Marquee images': return <Layers className="h-4 w-4 text-indigo-500" />;
+    case 'Logo list': return <Award className="h-4 w-4 text-cyan-500" />;
+    case 'Images gallery': return <Layout className="h-4 w-4 text-sky-600" />;
+    case 'FAQs': return <HelpCircle className="h-4 w-4 text-violet-500" />;
+    default: return <FileCode className="h-4 w-4 text-slate-400" />;
+  }
+};
 
 interface AdminDashboardProps {
   products: Product[];
@@ -228,6 +265,7 @@ export default function AdminDashboard({
   const [selectedBuilderPageId, setSelectedBuilderPageId] = useState<string | null>(null);
   const [selectedBuilderSectionId, setSelectedBuilderSectionId] = useState<string | null>(null);
   const [activeSlideEditIndex, setActiveSlideEditIndex] = useState<number>(0);
+  const [moduleSearchQuery, setModuleSearchQuery] = useState('');
 
   // Draft page & collection builder custom states
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
@@ -525,12 +563,28 @@ export default function AdminDashboard({
         backgroundColor: '#FFFFFF',
         headingColor: '#1E293B',
         textColor: '#64748B',
-        title: `Custom ${sectionType}`,
-        description: 'Edit option elements inside options sidebar',
-        buttonText: 'Shop New Packs',
-        buttonLink: '#',
+        title: sectionType === 'Image banner' ? 'Exclusive Pouch Launch' 
+             : sectionType === 'Image with text' ? 'Curate Your Premium Package'
+             : sectionType === 'Text column with image' ? 'Our Laboratory Certified Foundations'
+             : sectionType === 'Featured collection' ? 'Featured Collection Highlights'
+             : sectionType === 'Collection list' ? 'Explore Brand Collections'
+             : sectionType === 'Images gallery' ? 'Laboratory & Dispatch Facility Gallery'
+             : sectionType === 'Marquee text' ? 'FREE PRIOR SHIPPING OVER £40! // 100% TOBACCO-FREE // BULK SAVINGS ACTIVE'
+             : sectionType === 'Marquee images' ? 'Fresh Stock Dispatch Reel'
+             : sectionType === 'Logo list' ? 'Official Lab Partner Register'
+             : sectionType === 'FAQs' ? 'Frequently Answered Questions'
+             : `Custom ${sectionType}`,
+        description: sectionType === 'Image with text' ? 'Our plant-fiber formulations are packed under sterile medical conditions for persistent, smooth boosts.'
+                 : sectionType === 'Text column with image' ? 'Every single canister batch is vacuum-sealed inside high-density polymer tubes guaranteeing pristine flavor locks.'
+                 : sectionType === 'Featured collection' ? 'Sourced cleanly from European chemical compounding centers with direct-to-door courier dispatch.'
+                 : sectionType === 'Collection list' ? 'Select from your favorite pouch strengths, cooling impacts, or specific lab series.'
+                 : sectionType === 'FAQs' ? 'Find quick validations regarding shipping rules, subscriptions, and formulation safety standards.'
+                 : 'Edit option elements inside options sidebar',
+        buttonText: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text') ? 'Purchase Packs' : undefined,
+        buttonLink: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text') ? 'frontend-shop' : undefined,
         marqueeSpeed: 3,
-        imageUrl: sectionType === 'Image banner' ? 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80' : undefined,
+        itemsCount: (sectionType === 'Featured collection' || sectionType === 'Marquee images' || sectionType === 'Collection list') ? 4 : undefined,
+        imageUrl: (sectionType === 'Image banner' || sectionType === 'Image with text') ? 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80' : undefined,
         slides: sectionType === 'Slideshow' ? [
           {
             title: 'Precision-Engineered Pouch Purity',
@@ -1799,64 +1853,117 @@ export default function AdminDashboard({
                       </div>
 
                     {/* Section stacking list */}
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                       {currentlyEditingPage?.sections.map((sec, idx) => (
                         <div 
                           key={sec.id}
                           onClick={() => setSelectedBuilderSectionId(sec.id)}
-                          className={`p-2.5 rounded-lg border text-xs font-bold flex justify-between items-center transition-all cursor-pointer ${
+                          className={`p-2 rounded-xl border text-xs flex justify-between items-center transition-all cursor-pointer ${
                             selectedBuilderSectionId === sec.id 
-                              ? 'border-indigo-650 bg-indigo-50/20 text-slate-800' 
-                              : 'bg-slate-50 hover:bg-slate-100 text-slate-600'
+                              ? 'border-indigo-600 bg-indigo-50/30 text-slate-900 shadow-sm' 
+                              : 'bg-slate-50 border-slate-200/70 hover:bg-slate-100 text-slate-700'
                           }`}
                         >
-                          <div className="truncate pr-2">
-                            <span className="text-[9px] text-indigo-500 block">Section {idx+1}</span>
-                            <span className="truncate">{sec.type}</span>
+                          <div className="flex items-center gap-2 truncate pr-1">
+                            <div className="shrink-0 p-1 bg-white border border-slate-200 rounded-lg shadow-2xs">
+                              {getSectionIcon(sec.type)}
+                            </div>
+                            <div className="truncate text-left font-bold text-slate-800">
+                              <span className="text-[8px] text-slate-400 block font-mono uppercase leading-none mb-0.5">Sec {idx + 1}</span>
+                              <span className="truncate block leading-tight">{sec.type}</span>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-1 shrink-0">
+                          <div className="flex items-center gap-0.5 shrink-0">
                             <button
                               disabled={idx === 0}
+                              type="button"
                               onClick={(e) => { e.stopPropagation(); handleMoveSection(idx, 'up'); }}
-                              className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-700 cursor-pointer disabled:opacity-30"
+                              className="p-1 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-755 cursor-pointer disabled:opacity-30"
                             >
                               <MoveUp className="h-3 w-3" />
                             </button>
                             <button
                               disabled={idx === (currentlyEditingPage.sections.length - 1)}
+                              type="button"
                               onClick={(e) => { e.stopPropagation(); handleMoveSection(idx, 'down'); }}
-                              className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-700 cursor-pointer disabled:opacity-30"
+                              className="p-1 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-755 cursor-pointer disabled:opacity-30"
                             >
                               <MoveDown className="h-3 w-3" />
                             </button>
                             <button
+                              type="button"
                               onClick={(e) => { e.stopPropagation(); handleRemoveSectionFromPage(sec.id); }}
-                              className="p-1 hover:bg-red-100 text-slate-400 hover:text-red-650 rounded cursor-pointer"
+                              className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-lg cursor-pointer"
                             >
                               <Trash2 className="h-3 w-3" />
                             </button>
                           </div>
                         </div>
                       ))}
+                      {(!currentlyEditingPage?.sections || currentlyEditingPage.sections.length === 0) && (
+                        <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl bg-slate-50">
+                          <p className="text-[10px] text-slate-400">No layout modules created yet.</p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Add Section toolbar dropdown */}
-                    <div className="border-t border-slate-100 pt-3">
-                      <label className="text-[10px] font-bold text-slate-400 block uppercase tracking-wide mb-2">Add New Module Section</label>
-                      <div className="grid grid-cols-1 gap-1.5">
-                        {[
-                          'Image banner', 'Slideshow', 'Video banner', 'Rich text', 'Marquee text', 'Logo list', 'Collection list', 'Featured collection', 'FAQs'
-                        ].map(type => (
+                    <div className="border-t border-slate-100 pt-4 space-y-3">
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 block uppercase tracking-wide mb-1.5">Add Layout Module</label>
+                        <div className="relative">
+                          <input 
+                            type="text"
+                            placeholder="Search layout modules..."
+                            value={moduleSearchQuery}
+                            onChange={(e) => setModuleSearchQuery(e.target.value)}
+                            className="w-full text-[11px] p-1.5 pb-2 pl-7 border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650 font-medium"
+                          />
+                          <Search className="absolute left-2.5 top-2.5 h-3 w-3 text-slate-400" />
+                          {moduleSearchQuery && (
+                            <button 
+                              type="button"
+                              onClick={() => setModuleSearchQuery('')}
+                              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-605"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="max-h-[260px] overflow-y-auto pr-1 space-y-1.5 scrollbar-thin">
+                        {AVAILABLE_SECTION_TEMPLATES.filter(item => 
+                          item.label.toLowerCase().includes(moduleSearchQuery.toLowerCase()) ||
+                          item.desc.toLowerCase().includes(moduleSearchQuery.toLowerCase()) ||
+                          item.type.toLowerCase().includes(moduleSearchQuery.toLowerCase())
+                        ).map(item => (
                           <button
-                            key={type}
-                            onClick={() => handleAddSectionToPage(type as any)}
-                            className="text-[10px] text-left p-2 border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 text-slate-700 rounded-lg font-bold cursor-pointer flex items-center justify-between transition-colors"
+                            key={item.type}
+                            type="button"
+                            onClick={() => handleAddSectionToPage(item.type as any)}
+                            className="w-full text-left p-1.5 border border-slate-200 bg-slate-50 hover:bg-indigo-50/40 hover:border-indigo-250 hover:shadow-2xs rounded-xl cursor-pointer flex items-start gap-2.5 transition-all group"
                           >
-                            <span>+ {type} Section</span>
-                            <ChevronRight className="h-3 w-3 text-slate-400" />
+                            <div className="shrink-0 p-1 rounded-lg bg-white border border-slate-200 group-hover:border-indigo-200 transition-colors shadow-2xs">
+                              {getSectionIcon(item.type)}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-extrabold text-slate-800 group-hover:text-indigo-650 transition-colors uppercase tracking-tight">{item.label}</span>
+                                <Plus className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600 shrink-0" />
+                              </div>
+                              <p className="text-[9px] text-slate-450 leading-tight mt-0.5 line-clamp-1">{item.desc}</p>
+                            </div>
                           </button>
                         ))}
+                        {AVAILABLE_SECTION_TEMPLATES.filter(item => 
+                          item.label.toLowerCase().includes(moduleSearchQuery.toLowerCase()) ||
+                          item.desc.toLowerCase().includes(moduleSearchQuery.toLowerCase()) ||
+                          item.type.toLowerCase().includes(moduleSearchQuery.toLowerCase())
+                        ).length === 0 && (
+                          <p className="text-[10px] text-slate-400 text-center py-4">No matching modules found.</p>
+                        )}
                       </div>
                     </div>
 
@@ -1899,152 +2006,378 @@ export default function AdminDashboard({
                             <div 
                               key={sec.id}
                               onClick={() => setSelectedBuilderSectionId(sec.id)}
-                              className={`relative group p-6 rounded-xl border border-slate-100 shadow-inner hover:border-indigo-650 transition-all ${
-                                isFocused ? 'ring-2 ring-indigo-500 border-indigo-500 shadow-md scale-[1.01]' : ''
+                              className={`relative group p-6 rounded-2xl border transition-all cursor-pointer ${
+                                isFocused 
+                                  ? 'ring-2 ring-indigo-600 border-indigo-600 bg-white shadow-md scale-[1.01]' 
+                                  : 'border-slate-200/55 hover:border-slate-400 bg-slate-50/20 hover:bg-white shadow-2xs'
                               }`}
                               style={sStyle}
                             >
+                              {/* Floating action tools overlay */}
+                              <div className="absolute right-3 top-2.5 z-30 opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity bg-slate-900/90 backdrop-blur-md p-1 px-1.5 rounded-lg shadow-lg border border-slate-700">
+                                <button
+                                  disabled={sIdx === 0}
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleMoveSection(sIdx, 'up'); }}
+                                  className="p-1 hover:bg-slate-800 rounded-md text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                                  title="Move Section Up"
+                                >
+                                  <MoveUp className="h-3 w-3" />
+                                </button>
+                                <button
+                                  disabled={sIdx === (currentlyEditingPage.sections.length - 1)}
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleMoveSection(sIdx, 'down'); }}
+                                  className="p-1 hover:bg-slate-800 rounded-md text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                                  title="Move Section Down"
+                                >
+                                  <MoveDown className="h-3 w-3" />
+                                </button>
+                                <div className="w-px h-3 bg-slate-700 mx-0.5" />
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleRemoveSectionFromPage(sec.id); }}
+                                  className="p-1 hover:bg-red-950 rounded-md text-slate-400 hover:text-red-500 cursor-pointer"
+                                  title="Remove Section"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              </div>
+
                               {/* Overlay tag indicator */}
-                              <span className="absolute top-2.5 right-2.5 bg-slate-900 text-white text-[8px] font-black tracking-widest uppercase py-0.5 px-1.5 rounded-md pointer-events-none opacity-60">
+                              <span className="absolute top-2.5 left-3 bg-slate-900 text-white text-[8px] font-black tracking-widest uppercase py-0.5 px-1.5 rounded-md pointer-events-none opacity-80">
                                 {sec.type} {isFocused ? '• EDITING' : ''}
                               </span>
 
                               {/* Different visual layouts */}
-                              
-                              {/* IMAGE BANNER */}
-                              {sec.type === 'Image banner' && (
-                                <div className="text-center space-y-3 py-6">
-                                  <div className="relative h-28 w-full rounded-lg bg-slate-100 overflow-hidden border">
-                                    <img 
-                                      src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80'} 
-                                      className="h-full w-full object-cover" 
-                                      alt="" 
-                                      referrerPolicy="no-referrer"
-                                    />
-                                    <div className="absolute inset-0 bg-black/30" />
+                              <div className="pt-3">
+                                
+                                {/* 1. IMAGE BANNER */}
+                                {sec.type === 'Image banner' && (
+                                  <div className="text-center space-y-3 py-4">
+                                    <div className="relative h-28 w-full rounded-xl bg-slate-100 overflow-hidden border">
+                                      <img 
+                                        src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80'} 
+                                        className="h-full w-full object-cover" 
+                                        alt="" 
+                                        referrerPolicy="no-referrer"
+                                      />
+                                      <div className="absolute inset-0 bg-black/40" />
+                                    </div>
+                                    <h3 className="text-sm font-black uppercase" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                      {sec.settings.title || 'Exclusive Pouch Launch'}
+                                    </h3>
+                                    <p className="text-[10px] leading-relaxed max-w-sm mx-auto text-slate-500">{sec.settings.description || 'Banner details...'}</p>
+                                    {sec.settings.buttonText && (
+                                      <button type="button" className="bg-slate-900 text-white font-extrabold text-[8px] py-1 px-3.5 rounded-md uppercase tracking-wider">
+                                        {sec.settings.buttonText}
+                                      </button>
+                                    )}
                                   </div>
-                                  <h3 className="text-lg font-black" style={{ color: sec.settings.headingColor || '#1E293B' }}>
-                                    {sec.settings.title || 'Click to change Heading Title'}
-                                  </h3>
-                                  <p className="text-xs leading-relaxed max-w-sm mx-auto">{sec.settings.description || 'Banner details...'}</p>
-                                  {sec.settings.buttonText && (
-                                    <button className="bg-slate-900 text-white font-extrabold text-[10px] py-1.5 px-4 rounded-md uppercase tracking-wider">
-                                      {sec.settings.buttonText}
-                                    </button>
-                                  )}
-                                </div>
-                              )}
+                                )}
 
-                              {/* VIDEO BANNER */}
-                              {sec.type === 'Video banner' && (
-                                <div className="text-center space-y-3 py-4">
-                                  <div className="relative h-28 w-full rounded-lg bg-indigo-950 flex items-center justify-center border text-white font-black text-xs uppercase tracking-widest">
-                                    🎬 Active YouTube Embed / MP4 Player Simulated
+                                {/* 2. IMAGE WITH TEXT */}
+                                {sec.type === 'Image with text' && (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center py-4 text-left">
+                                    <div className="h-28 w-full rounded-xl bg-slate-50 border overflow-hidden relative shadow-inner">
+                                      <img 
+                                        src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=800&q=80'} 
+                                        className="h-full w-full object-cover" 
+                                        alt="" 
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <h4 className="font-extrabold text-xs" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                        {sec.settings.title || 'Curate Your Premium Package'}
+                                      </h4>
+                                      <p className="text-[9.5px] text-slate-500 leading-snug line-clamp-3">{sec.settings.description}</p>
+                                      {sec.settings.buttonText && (
+                                        <span className="inline-block bg-slate-950 text-white font-black text-[8px] py-1 px-3 rounded-lg uppercase tracking-wide">
+                                          {sec.settings.buttonText}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
-                                  <p className="font-extrabold text-xs" style={{ color: sec.settings.headingColor || '#1E293B' }}>
-                                    {sec.settings.title || 'Video highlights'}
-                                  </p>
-                                </div>
-                              )}
+                                )}
 
-                              {/* MARQUEE TEXT */}
-                              {sec.type === 'Marquee text' && (
-                                <div className="overflow-hidden bg-indigo-10/40 p-3 rounded border text-center relative">
-                                  <p className="animate-pulse flex items-center justify-center gap-1.5 font-bold text-indigo-700 text-[10px] uppercase tracking-widest">
-                                    <span>⚡ {sec.settings.title || 'FREE PRIORITY SHIPPING OVER £40!'} ⚡</span>
-                                    <span>{sec.settings.title || 'FREE PRIORITY SHIPPING OVER £40!'}</span>
-                                  </p>
-                                </div>
-                              )}
-
-                              {/* RICH TEXT */}
-                              {sec.type === 'Rich text' && (
-                                <div className="text-center space-y-2 py-4">
-                                  <h3 className="text-sm font-black" style={{ color: sec.settings.headingColor || '#1E293B' }}>
-                                    {sec.settings.title}
-                                  </h3>
-                                  <p className="text-xs leading-relaxed max-w-sm mx-auto">{sec.settings.description}</p>
-                                </div>
-                              )}
-
-                              {/* FAQS */}
-                              {sec.type === 'FAQs' && (
-                                <div className="space-y-2.5 py-4 text-[11px] leading-normal font-sans">
-                                  <h3 className="text-xs font-black uppercase text-center mb-2" style={{ color: sec.settings.headingColor || '#1E293B' }}>
-                                    {sec.settings.title || 'Frequently Asked Questions'}
-                                  </h3>
-                                  <div className="bg-slate-50 p-2.5 rounded border border-slate-150">
-                                    <p className="font-bold text-slate-800">Q: When does shipping dispatch? </p>
-                                    <p className="text-slate-500 mt-1">A: Standard couriers dispatch every weekday at 10 am GMT.</p>
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* SLIDESHOW */}
-                              {sec.type === 'Slideshow' && (
-                                <div className="py-5 text-center space-y-3 relative overflow-hidden rounded-lg bg-indigo-950/90 text-white border min-h-[140px] flex flex-col justify-center items-center">
-                                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/35 z-0" />
-                                  <div className="relative z-10 p-3 space-y-1.5">
-                                    <span className="text-[8px] tracking-widest font-bold uppercase bg-indigo-600/90 py-0.5 px-2 rounded-full inline-block">Premium Slideshow Slider</span>
-                                    <h4 className="text-sm font-black uppercase text-white">
-                                      {sec.settings.slides?.[0]?.title || sec.settings.title || 'Precision-Engineered Purity'}
+                                {/* 3. TEXT COLUMN WITH IMAGE */}
+                                {sec.type === 'Text column with image' && (
+                                  <div className="space-y-3 py-4 text-center">
+                                    <h4 className="font-extrabold text-xs uppercase tracking-tight" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                      {sec.settings.title || 'Our Laboratory Certified Foundations'}
                                     </h4>
-                                    <p className="text-[10px] text-slate-300 max-w-xs mx-auto truncate">
-                                      {sec.settings.slides?.[0]?.description || 'Direct laboratory dispatch. Sourced from certified facilities.'}
-                                    </p>
-                                    <div className="flex gap-1.5 justify-center pt-1.5">
-                                      {(sec.settings.slides || [1, 2]).map((_, sIdx) => (
-                                        <span key={sIdx} className={`h-1.5 w-1.5 rounded-full ${sIdx === 0 ? 'bg-white' : 'bg-white/40'}`} />
+                                    <p className="text-[9.5px] text-slate-450 max-w-md mx-auto leading-snug">{sec.settings.description}</p>
+                                    <div className="grid grid-cols-3 gap-2 pt-2">
+                                      {[
+                                        { label: 'Global Testing', badge: 'LAB VERIFIED', img: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=150&q=80' },
+                                        { label: 'Aroma Boost', badge: '100% FREE', img: 'https://images.unsplash.com/photo-1550507992-eb63ffee0847?auto=format&fit=crop&w=150&q=80' },
+                                        { label: 'Vacuum Sealed', badge: 'FRESH LOCK', img: 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&w=150&q=80' }
+                                      ].map((col, cIdx) => (
+                                        <div key={cIdx} className="bg-slate-50 border border-slate-200/60 rounded-xl p-2 text-center text-[9px] hover:shadow-2xs transition-shadow">
+                                          <div className="h-10 bg-slate-200 min-w-full rounded-md mb-1 bg-cover bg-center overflow-hidden">
+                                            <img src={col.img} className="h-full w-full object-cover" alt="" referrerPolicy="no-referrer" />
+                                          </div>
+                                          <span className="font-extrabold text-slate-800 leading-tight block truncate text-[8.5px]">{col.label}</span>
+                                          <span className="text-[7px] text-indigo-700 bg-indigo-50 border border-indigo-100 rounded px-1 inline-block mt-0.5 tracking-wider font-extrabold font-mono uppercase">{col.badge}</span>
+                                        </div>
                                       ))}
                                     </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
 
-                              {/* LOGO LIST */}
-                              {sec.type === 'Logo list' && (
-                                <div className="py-4 text-center space-y-3">
-                                  <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: sec.settings.headingColor || '#1E293B' }}>
-                                    {sec.settings.title || 'Official Partners'}
-                                  </p>
-                                  <div className="flex gap-2.5 justify-center flex-wrap">
-                                    {['77', 'CUBA', 'CLEW', 'KILLA'].map(logo => (
-                                      <span key={logo} className="bg-slate-200 text-slate-600 font-extrabold text-[10px] py-1 px-3 rounded">
-                                        {logo}
-                                      </span>
-                                    ))}
+                                {/* 4. VIDEO BANNER */}
+                                {sec.type === 'Video banner' && (
+                                  <div className="text-center space-y-2 py-3">
+                                    <div className="relative h-28 w-full rounded-xl bg-slate-900 flex flex-col items-center justify-center border text-white font-mono text-[9px] uppercase tracking-widest gap-1 p-4 shadow-inner">
+                                      <PlaySquare className="h-6 w-6 text-indigo-400 animate-pulse" />
+                                      <span className="text-white font-extrabold">Active YouTube Video Simulated</span>
+                                      {sec.settings.videoUrl ? (
+                                        <span className="text-slate-400 font-normal text-[8px] max-w-xs truncate">Source: Youtube (ID: {sec.settings.videoUrl})</span>
+                                      ) : (
+                                        <span className="text-slate-500 font-normal text-[8px]">Using standard laboratory playlist loop template</span>
+                                      )}
+                                    </div>
+                                    <p className="font-extrabold text-xs text-slate-700" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                      {sec.settings.title || 'Laboratory Showcase Highlights'}
+                                    </p>
                                   </div>
-                                </div>
-                              )}
+                                )}
 
-                              {/* COLLECTION LIST */}
-                              {sec.type === 'Collection list' && (
-                                <div className="py-4 text-center space-y-3">
-                                  <p className="text-[10px] font-black uppercase" style={{ color: sec.settings.headingColor || '#1E293B' }}>
-                                    {sec.settings.title || 'Our Popular collections'}
-                                  </p>
-                                  <div className="flex gap-2 justify-center">
-                                    {collections.slice(1, 4).map(c => (
-                                      <span key={c.id} className="border bg-white text-[9px] font-bold p-1 px-2.5 rounded shadow-xs text-indigo-650">
-                                        {c.title}
-                                      </span>
-                                    ))}
+                                {/* 5. RICH TEXT */}
+                                {sec.type === 'Rich text' && (
+                                  <div className="text-center space-y-2 py-4">
+                                    <h3 className="text-sm font-black uppercase" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                      {sec.settings.title || 'Editorial Showcase'}
+                                    </h3>
+                                    <p className="text-[10px] leading-relaxed max-w-sm mx-auto text-slate-500 font-medium">{sec.settings.description || 'Craft premium experiences under your own terms.'}</p>
                                   </div>
-                                </div>
-                              )}
+                                )}
 
-                              {/* FEATURED COLLECTION */}
-                              {sec.type === 'Featured collection' && (
-                                <div className="py-4 text-center space-y-3">
-                                  <p className="text-[10px] font-black uppercase" style={{ color: sec.settings.headingColor || '#1E293B' }}>
-                                    {sec.settings.title || 'Featured Collection Highlights'}
-                                  </p>
-                                  <div className="bg-indigo-50/20 border border-dashed border-indigo-200 p-4 rounded-lg flex items-center justify-center gap-1 md:gap-3">
-                                    <span className="text-[9px] font-bold bg-white border p-1 rounded">Visual Can canister mockup</span>
-                                    <span className="text-[9px] font-bold bg-white border p-1 rounded">Watermelon 5mg</span>
+                                {/* 6. MARQUEE TEXT */}
+                                {sec.type === 'Marquee text' && (
+                                  <div className="overflow-hidden bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-center relative shadow-inner">
+                                    <p className="animate-pulse flex items-center justify-center gap-1.5 font-bold text-teal-400 text-[8.5px] uppercase tracking-widest font-mono">
+                                      <span>⚡ {sec.settings.title || 'FREE PRIORITY SHIPPING OVER £40!'} ⚡</span>
+                                    </p>
                                   </div>
-                                </div>
-                              )}
+                                )}
+
+                                {/* 7. MARQUEE IMAGES */}
+                                {sec.type === 'Marquee images' && (
+                                  <div className="space-y-2 py-3 text-center">
+                                    <p className="text-[9.5px] font-black tracking-widest uppercase text-slate-400">
+                                      🎬 {sec.settings.title || 'Fresh Stock Dispatch Reel'} 🎬
+                                    </p>
+                                    <div className="flex gap-2 overflow-x-auto py-2 justify-center">
+                                      {localProducts.slice(0, Math.min(sec.settings.itemsCount || 5, 5)).map(prod => (
+                                        <div key={prod.id} className="w-14 shrink-0 bg-white border border-slate-200/70 p-1.5 rounded-lg text-[8px] text-center shadow-3xs flex flex-col justify-between">
+                                          <img src={prod.image} className="h-8 w-8 object-cover mx-auto rounded-md shadow-inner" alt="" referrerPolicy="no-referrer" />
+                                          <p className="truncate font-extrabold text-slate-700 mt-1">{prod.title.split(' ')[0]}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 8. LOGO LIST */}
+                                {sec.type === 'Logo list' && (
+                                  <div className="py-4 text-center space-y-3">
+                                    <p className="text-[9px] font-bold uppercase tracking-widest text-[#94A3B8]" style={{ color: sec.settings.headingColor || '#94A3B8' }}>
+                                      {sec.settings.title || 'OFFICIAL LAB PARTNER REGISTER'}
+                                    </p>
+                                    <div className="flex gap-2 justify-center flex-wrap">
+                                      {['77 Pouches', 'CUBA Power', 'CLEW White', 'KILLA Siberian'].map(logo => (
+                                        <span key={logo} className="border border-slate-200 bg-white text-slate-700 font-extrabold text-[8.5px] py-1 px-2.5 rounded-lg shadow-3xs flex items-center gap-1 leading-none">
+                                          <span className="text-indigo-600">●</span>
+                                          <span>{logo}</span>
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 9. COLLECTION LIST */}
+                                {sec.type === 'Collection list' && (
+                                  <div className="py-4 space-y-3">
+                                    <div className="text-center font-black uppercase text-[10px] text-slate-700 border-b pb-1">
+                                      {sec.settings.title || 'Explore Brand Collections'}
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-2">
+                                      {localCollections.slice(0, Math.min(sec.settings.itemsCount || 4, 4)).map(c => (
+                                        <div key={c.id} className="bg-white border text-center p-2 rounded-xl shadow-3xs">
+                                          <div className="h-8 bg-slate-50 rounded-lg flex items-center justify-center text-sm mb-1">🥫</div>
+                                          <h5 className="text-[8.5px] font-black uppercase text-slate-800 truncate leading-none">{c.title}</h5>
+                                          <span className="text-[7px] font-bold text-indigo-600 tracking-wider block mt-1 uppercase leading-none font-mono">{c.productIds.length} FLAVORS</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 10. FEATURED COLLECTION (Fully interactive template preview grid) */}
+                                {sec.type === 'Featured collection' && (() => {
+                                  const selectedColl = localCollections.find(c => c.id === sec.settings.selectedCollectionId);
+                                  const displayedProducts = localProducts
+                                    .filter(p => !sec.settings.selectedCollectionId || selectedColl?.productIds.includes(p.id))
+                                    .slice(0, Math.min(sec.settings.itemsCount || 3, 3));
+
+                                  return (
+                                    <div className="py-4 space-y-3 text-center">
+                                      <div className="flex justify-between items-end border-b border-slate-100 pb-1">
+                                        <div className="text-left">
+                                          <span className="text-[7.5px] font-bold uppercase text-slate-400">Live Storefront Grid Demonstration</span>
+                                          <h4 className="text-[10px] font-black uppercase text-slate-800" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                            {sec.settings.title || 'Featured Collection Highlights'}
+                                          </h4>
+                                        </div>
+                                        <span className="text-[8px] text-indigo-700 font-extrabold uppercase font-mono bg-indigo-50/70 border border-indigo-100 rounded px-1.5 py-0.5 max-w-[120px] truncate">
+                                          Series: {selectedColl?.title || 'All Active'}
+                                        </span>
+                                      </div>
+
+                                      {displayedProducts.length === 0 ? (
+                                        <div className="bg-slate-50 border border-dashed rounded-lg p-5 text-center text-[9px] text-slate-400">
+                                          No active products are categorized in selected collection profile. Create products inside product tab first.
+                                        </div>
+                                      ) : (
+                                        <div className="grid grid-cols-3 gap-2">
+                                          {displayedProducts.map(p => (
+                                            <div key={p.id} className="bg-white border text-left p-2 rounded-xl space-y-1 block relative overflow-hidden shadow-3xs flex flex-col justify-between">
+                                              <div>
+                                                <div className="h-14 bg-slate-50 rounded-lg overflow-hidden border border-slate-150 relative">
+                                                  <img src={p.image} className="h-full w-full object-cover" alt="" referrerPolicy="no-referrer" />
+                                                </div>
+                                                <p className="text-[9px] text-slate-800 font-extrabold truncate mt-1 leading-snug">{p.title}</p>
+                                                <div className="flex gap-0.5 text-amber-500 text-[6px]">★★★★★</div>
+                                              </div>
+                                              <div className="flex justify-between items-center pt-1 border-t border-slate-100 mt-1 leading-none">
+                                                <span className="text-[9px] font-extrabold text-slate-900 font-mono">£{p.price.toFixed(2)}</span>
+                                                <span className="text-[6.5px] font-black text-indigo-700 tracking-wider">ADD</span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
+
+                                {/* 11. IMAGES GALLERY */}
+                                {sec.type === 'Images gallery' && (
+                                  <div className="space-y-3 py-4 text-center">
+                                    <h4 className="font-extrabold text-xs uppercase" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                      {sec.settings.title || 'Laboratory & Dispatch Facility Gallery'}
+                                    </h4>
+                                    <div className="grid grid-cols-4 gap-2">
+                                      {[
+                                        'https://images.unsplash.com/photo-1543257580-7269da773bf5?auto=format&fit=crop&w=200&q=80',
+                                        'https://images.unsplash.com/photo-1589984662646-e7b2e4962f18?auto=format&fit=crop&w=200&q=80',
+                                        'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=200&q=80',
+                                        'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&w=200&q=80'
+                                      ].map((url, galIdx) => (
+                                        <div key={galIdx} className="h-10 rounded-lg bg-slate-50 border overflow-hidden">
+                                          <img src={url} className="h-full w-full object-cover" alt="" referrerPolicy="no-referrer" />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 12. FAQS */}
+                                {sec.type === 'FAQs' && (
+                                  <div className="space-y-2 py-3 font-sans">
+                                    <h3 className="text-xs font-black uppercase text-center mb-1.5" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                      {sec.settings.title || 'Frequently Answered Questions'}
+                                    </h3>
+                                    <div className="space-y-1.5 text-[9.5px]">
+                                      {[
+                                        { q: 'Is delivery fully tracked?', a: 'Yes, royal mail tracking lines generate instantly email alerts.' },
+                                        { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' }
+                                      ].map((faq, fIdx) => (
+                                        <div key={fIdx} className="bg-slate-50 p-2 rounded-xl border border-slate-200/90 leading-snug">
+                                          <div className="font-extrabold text-slate-800 flex justify-between items-center">
+                                            <span>Q: {faq.q}</span>
+                                            <ChevronDown className="h-3 w-3 text-slate-400 shrink-0" />
+                                          </div>
+                                          <p className="text-slate-500 mt-1 pt-1 border-t border-slate-100 text-[8.5px]">A: {faq.a}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 13. SLIDESHOW */}
+                                {sec.type === 'Slideshow' && (
+                                  <div className="py-5 text-center space-y-3 relative overflow-hidden rounded-xl bg-slate-900 border min-h-[140px] flex flex-col justify-center items-center select-none text-white shadow-md">
+                                    {/* background cover Image */}
+                                    <div className="absolute inset-0 z-0">
+                                      <img 
+                                        src={sec.settings.slides?.[activeSlideEditIndex]?.imageUrl || sec.settings.imageUrl || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80'} 
+                                        className="w-full h-full object-cover opacity-50" 
+                                        alt="" 
+                                        referrerPolicy="no-referrer"
+                                      />
+                                      <div className="absolute inset-0 bg-black/45" />
+                                    </div>
+
+                                    {/* Content inside slide */}
+                                    <div className="relative z-10 p-2 space-y-1.5 w-full">
+                                      {/* Visual Arrow toggles synced */}
+                                      <div className="flex justify-between items-center px-2.5 absolute top-1/2 left-0 right-0 -translate-y-1/2 z-20">
+                                        <button 
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const count = (sec.settings.slides || []).length;
+                                            if (count > 0) {
+                                              setActiveSlideEditIndex((activeSlideEditIndex - 1 + count) % count);
+                                            }
+                                          }}
+                                          className="p-1 bg-white/10 hover:bg-white/30 text-white rounded-full text-[9px] font-extrabold cursor-pointer border border-white/10 shadow"
+                                        >
+                                          ←
+                                        </button>
+                                        <button 
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const count = (sec.settings.slides || []).length;
+                                            if (count > 0) {
+                                              setActiveSlideEditIndex((activeSlideEditIndex + 1) % count);
+                                            }
+                                          }}
+                                          className="p-1 bg-white/10 hover:bg-white/30 text-white rounded-full text-[9px] font-extrabold cursor-pointer border border-white/10 shadow"
+                                        >
+                                          →
+                                        </button>
+                                      </div>
+
+                                      <span className="text-[7.5px] tracking-widest font-black uppercase bg-indigo-600/95 text-white py-0.5 px-2 rounded-full inline-block leading-none">Slideshow [Active Slide {activeSlideEditIndex + 1}]</span>
+                                      <h4 className="text-xs font-black uppercase text-white px-5 leading-tight">
+                                        {sec.settings.slides?.[activeSlideEditIndex]?.title || sec.settings.title || 'Precision-Engineered Purity'}
+                                      </h4>
+                                      <p className="text-[9.5px] text-slate-350 max-w-xs mx-auto truncate px-5">
+                                        {sec.settings.slides?.[activeSlideEditIndex]?.description || 'Direct laboratory dispatch. Sourced from certified facilities.'}
+                                      </p>
+                                      <div className="flex gap-1.5 justify-center pt-1 z-10 relative">
+                                        {(sec.settings.slides || [1, 2]).map((_, slId) => (
+                                          <button
+                                            key={slId}
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setActiveSlideEditIndex(slId);
+                                            }}
+                                            className={`h-2 w-2 rounded-full transition-all border ${slId === activeSlideEditIndex ? 'bg-white border-white scale-110 shadow-sm' : 'bg-white/30 border-transparent'}`}
+                                          />
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                              </div>
 
                             </div>
                           );
@@ -2250,6 +2583,90 @@ export default function AdminDashboard({
                               onChange={(e) => handleUpdateSectionSettings('buttonLink', e.target.value)}
                               className="w-full text-xs border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1"
                             />
+                          </div>
+                        )}
+
+                        {/* CUSTOM COLLECTION PICKER FOR FEATURED COLLECTION */}
+                        {currentlyEditingSection.type === 'Featured collection' && (
+                          <div className="space-y-3 pt-1">
+                            <div>
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">Target Product Collection</label>
+                              <select
+                                value={currentlyEditingSection.settings.selectedCollectionId || ''}
+                                onChange={(e) => handleUpdateSectionSettings('selectedCollectionId', e.target.value)}
+                                className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650 cursor-pointer"
+                              >
+                                <option value="">-- All Active Products (De-categorized) --</option>
+                                {collections.map(c => (
+                                  <option key={c.id} value={c.id}>{c.title}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px]">Products To Display</label>
+                                <span className="font-mono text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1.5 rounded">{currentlyEditingSection.settings.itemsCount || 3} items</span>
+                              </div>
+                              <input 
+                                type="range" 
+                                min={2} 
+                                max={12} 
+                                value={currentlyEditingSection.settings.itemsCount || 3}
+                                onChange={(e) => handleUpdateSectionSettings('itemsCount', parseInt(e.target.value))}
+                                className="w-full h-1 text-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 bg-slate-200"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* CUSTOM COLLECTION LIST COUNTER LIMIT */}
+                        {currentlyEditingSection.type === 'Collection list' && (
+                          <div>
+                            <div className="flex justify-between items-center mb-1">
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px]">Collections To Display</label>
+                              <span className="font-mono text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1.5 rounded">{currentlyEditingSection.settings.itemsCount || 4} categories</span>
+                            </div>
+                            <input 
+                              type="range" 
+                              min={1} 
+                              max={6} 
+                              value={currentlyEditingSection.settings.itemsCount || 4}
+                              onChange={(e) => handleUpdateSectionSettings('itemsCount', parseInt(e.target.value))}
+                              className="w-full h-1 text-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 bg-slate-200"
+                            />
+                          </div>
+                        )}
+
+                        {/* CUSTOM MARQUEE IMAGES COUNTER LIMIT */}
+                        {currentlyEditingSection.type === 'Marquee images' && (
+                          <div>
+                            <div className="flex justify-between items-center mb-1">
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px]">Images Carousel Limit</label>
+                              <span className="font-mono text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1.5 rounded">{currentlyEditingSection.settings.itemsCount || 5} slide items</span>
+                            </div>
+                            <input 
+                              type="range" 
+                              min={3} 
+                              max={10} 
+                              value={currentlyEditingSection.settings.itemsCount || 5}
+                              onChange={(e) => handleUpdateSectionSettings('itemsCount', parseInt(e.target.value))}
+                              className="w-full h-1 text-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 bg-slate-200"
+                            />
+                          </div>
+                        )}
+
+                        {/* CUSTOM VIDEO BANNER LINK SOURCE CODE */}
+                        {currentlyEditingSection.type === 'Video banner' && (
+                          <div>
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">YouTube Video ID / URL Resource</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. dQw4w9WgXcQ"
+                              value={currentlyEditingSection.settings.videoUrl || ''}
+                              onChange={(e) => handleUpdateSectionSettings('videoUrl', e.target.value)}
+                              className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
+                            />
+                            <p className="text-[8.5px] text-slate-400 mt-1">Provide the Youtube 11-character video ID to loop laboratory showcase media.</p>
                           </div>
                         )}
 
