@@ -165,6 +165,11 @@ export default function App() {
   // Synchronize path and load links successfully in iframe/new tab
   useEffect(() => {
     const handleLocationChange = () => {
+      if (isAdminActive) {
+        // If we are currently in admin mode, do NOT let collection/product
+        // updates trigger frontend tab changes or deactivate admin mode!
+        return;
+      }
       const path = window.location.pathname;
       if (path === '/' || path === '') {
         setCurrentTab('frontend-home');
@@ -203,7 +208,7 @@ export default function App() {
     handleLocationChange();
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
-  }, [collections]);
+  }, [collections, isAdminActive]);
 
   // --- Write to LocalStorage on Changes ---
   useEffect(() => {
