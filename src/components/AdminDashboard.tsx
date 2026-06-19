@@ -67,6 +67,7 @@ interface AdminDashboardProps {
   onDirtyChange?: (dirty: boolean) => void;
   adminActionTrigger?: { action: 'save' | 'discard'; timestamp: number } | null;
   onAdminActionComplete?: (action: 'save' | 'discard') => void;
+  onExitAdmin?: () => void;
 }
 
 type SidebarTab = 'analytics' | 'orders' | 'collections' | 'products' | 'pages' | 'blogs' | 'files' | 'customers' | 'discounts';
@@ -90,7 +91,8 @@ export default function AdminDashboard({
   onUpdateBlogs: parentOnUpdateBlogs,
   onDirtyChange,
   adminActionTrigger,
-  onAdminActionComplete
+  onAdminActionComplete,
+  onExitAdmin
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<SidebarTab>('analytics');
 
@@ -950,6 +952,18 @@ export default function AdminDashboard({
                 );
               })}
             </nav>
+
+            {/* View Online Store main button */}
+            {onExitAdmin && (
+              <button
+                type="button"
+                onClick={onExitAdmin}
+                className="mt-4 w-full flex items-center justify-center gap-2 bg-[#008060] hover:bg-[#006e52] px-3.5 py-2.5 rounded-xl text-white font-black text-[11px] uppercase tracking-wider shadow-sm transition-colors cursor-pointer select-none"
+              >
+                <Globe className="h-4 w-4 shrink-0" />
+                <span>View Online Store</span>
+              </button>
+            )}
           </div>
 
           {/* Foot of sidebar */}
@@ -1009,6 +1023,19 @@ export default function AdminDashboard({
                   title="Discard All Draft Changes"
                 >
                   Discard
+                </button>
+              )}
+
+              {/* View Online Store Button */}
+              {onExitAdmin && (
+                <button
+                  type="button"
+                  onClick={onExitAdmin}
+                  className="py-2.5 px-4 bg-white hover:bg-slate-150 text-[#008060] border border-slate-250 hover:border-slate-350 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all shadow-xs cursor-pointer select-none"
+                  title="Return to Customer Online Store"
+                >
+                  <Globe className="h-4 w-4 shrink-0 text-[#008060]" />
+                  <span>View Online Store</span>
                 </button>
               )}
 

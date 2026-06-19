@@ -429,37 +429,39 @@ export default function App() {
     <div className="min-h-screen bg-[#f6f6f7] text-slate-800 flex flex-col font-sans">
       
       {/* Universal header layout */}
-      <Header
-        currentTab={currentTab}
-        onTabChange={(tab) => {
-          if (isAdminDirty) {
-            setPendingNavAction({ type: 'change-tab', payload: tab });
-            setShowUnsavedModal(true);
-          } else {
-            navigateToTab(tab);
-          }
-        }}
-        loggedInCustomer={loggedInCustomer}
-        cartItems={cartItems}
-        onOpenCart={() => setCartOpen(true)}
-        onOpenCustomer={() => {
-          setCustomerDrawerTab('orders');
-          setCustomerDrawerOpen(true);
-        }}
-        onOpenWishlist={() => {
-          setCustomerDrawerTab('wishlist');
-          setCustomerDrawerOpen(true);
-        }}
-        onOpenAdmin={() => {
-          if (isAdminActive && isAdminDirty) {
-            setPendingNavAction({ type: 'toggle-admin' });
-            setShowUnsavedModal(true);
-          } else {
-            setIsAdminActive(!isAdminActive);
-          }
-        }}
-        isAdminActive={isAdminActive}
-      />
+      {!isAdminActive && (
+        <Header
+          currentTab={currentTab}
+          onTabChange={(tab) => {
+            if (isAdminDirty) {
+              setPendingNavAction({ type: 'change-tab', payload: tab });
+              setShowUnsavedModal(true);
+            } else {
+              navigateToTab(tab);
+            }
+          }}
+          loggedInCustomer={loggedInCustomer}
+          cartItems={cartItems}
+          onOpenCart={() => setCartOpen(true)}
+          onOpenCustomer={() => {
+            setCustomerDrawerTab('orders');
+            setCustomerDrawerOpen(true);
+          }}
+          onOpenWishlist={() => {
+            setCustomerDrawerTab('wishlist');
+            setCustomerDrawerOpen(true);
+          }}
+          onOpenAdmin={() => {
+            if (isAdminActive && isAdminDirty) {
+              setPendingNavAction({ type: 'toggle-admin' });
+              setShowUnsavedModal(true);
+            } else {
+              setIsAdminActive(!isAdminActive);
+            }
+          }}
+          isAdminActive={isAdminActive}
+        />
+      )}
 
       {/* Primary view content sandbox */}
       <main className="flex-1">
@@ -498,6 +500,14 @@ export default function App() {
                   navigateToTab(tab);
                 }
                 setPendingNavAction(null);
+              }
+            }}
+            onExitAdmin={() => {
+              if (isAdminDirty) {
+                setPendingNavAction({ type: 'toggle-admin' });
+                setShowUnsavedModal(true);
+              } else {
+                setIsAdminActive(false);
               }
             }}
           />
