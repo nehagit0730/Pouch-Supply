@@ -415,41 +415,56 @@ export default function PageRenderer({
                   </div>
                 )}
 
-                {/* 9. COLLECTION LIST */}
-                {sec.type === 'Collection list' && (
-                  <div className="space-y-8 px-4 sm:px-6">
-                    <div className="text-center space-y-2">
-                      <h3 
-                        className="text-xs font-black uppercase tracking-widest text-[#0F172A]"
-                        style={{ color: sec.settings.headingColor || '#0F172A' }}
-                      >
-                        {sec.settings.title || 'EXPLORE BRAND COLLECTIONS'}
-                      </h3>
-                      {sec.settings.description && (
-                        <p className="text-xs text-slate-500 max-w-md mx-auto">{sec.settings.description}</p>
-                      )}
-                    </div>
-
-                    {/* Highly responsive 2-col to 4-col display */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-                      {allCollections.map(col => (
-                        <div
-                          key={col.id}
-                          onClick={() => onNavigate('frontend-shop', col.id)}
-                          className="bg-white border border-slate-150 hover:border-slate-400 rounded-2xl p-5 text-center cursor-pointer transition-all hover:shadow-lg group flex flex-col justify-between"
-                        >
-                          <div className="h-24 bg-slate-50 group-hover:bg-slate-100 rounded-xl flex items-center justify-center mb-4 transition-colors">
-                            <span className="text-4xl transform group-hover:scale-108 transition-transform">🥫</span>
-                          </div>
-                          <div>
-                            <h4 className="font-extrabold text-xs text-slate-800 group-hover:text-indigo-650 transition-colors uppercase tracking-wide">{col.title}</h4>
-                            <p className="text-[10px] text-slate-400 mt-1 font-mono">{col.productIds.length} FLAVORS</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                 {/* 9. COLLECTION LIST */}
+                 {sec.type === 'Collection list' && (() => {
+                   const filteredCollections = sec.settings.selectedCollectionIds && sec.settings.selectedCollectionIds.length > 0
+                     ? allCollections.filter(col => sec.settings.selectedCollectionIds!.includes(col.id))
+                     : allCollections.slice(0, Math.min(sec.settings.itemsCount || 4, allCollections.length));
+ 
+                   return (
+                     <div className="space-y-8 px-4 sm:px-6">
+                       <div className="text-center space-y-2">
+                         <h3 
+                           className="text-xs font-black uppercase tracking-widest text-[#0F172A]"
+                           style={{ color: sec.settings.headingColor || '#0F172A' }}
+                         >
+                           {sec.settings.title || 'EXPLORE BRAND COLLECTIONS'}
+                         </h3>
+                         {sec.settings.description && (
+                           <p className="text-xs text-slate-500 max-w-md mx-auto">{sec.settings.description}</p>
+                         )}
+                       </div>
+ 
+                       {/* Highly responsive 2-col to 4-col display */}
+                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+                         {filteredCollections.map(col => (
+                           <div
+                             key={col.id}
+                             onClick={() => onNavigate('frontend-shop', col.id)}
+                             className="bg-white border border-slate-150 hover:border-slate-400 rounded-2xl p-5 text-center cursor-pointer transition-all hover:shadow-lg group flex flex-col justify-between overflow-hidden"
+                           >
+                             <div className="h-24 bg-slate-50 group-hover:bg-slate-100 rounded-xl flex items-center justify-center mb-4 transition-colors overflow-hidden relative">
+                               {col.image ? (
+                                 <img 
+                                   src={col.image} 
+                                   className="h-full w-full object-cover transform group-hover:scale-105 transition-transform" 
+                                   alt={col.title}
+                                   referrerPolicy="no-referrer"
+                                 />
+                               ) : (
+                                 <span className="text-4xl transform group-hover:scale-108 transition-transform">🥫</span>
+                               )}
+                             </div>
+                             <div>
+                               <h4 className="font-extrabold text-xs text-slate-800 group-hover:text-indigo-650 transition-colors uppercase tracking-wide truncate">{col.title}</h4>
+                               <p className="text-[10px] text-slate-400 mt-1 font-mono">{col.productIds.length} FLAVORS</p>
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   );
+                 })()}
 
                 {/* 10. FEATURED COLLECTION (Fully Interactive Masterclass Grid) */}
                 {sec.type === 'Featured collection' && (

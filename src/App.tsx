@@ -12,6 +12,7 @@ import SubscriptionBuilder from './components/SubscriptionBuilder';
 import BrandList from './components/BrandList';
 import CustomerAccount from './components/CustomerAccount';
 import CartDrawer from './components/CartDrawer';
+import CustomerDrawer from './components/CustomerDrawer';
 import AdminDashboard from './components/AdminDashboard';
 import PageRenderer from './components/PageRenderer';
 import ProductDetailView from './components/ProductDetailView';
@@ -90,6 +91,8 @@ export default function App() {
   const [activeCollectionId, setActiveCollectionId] = useState<string>('all');
   const [isAdminActive, setIsAdminActive] = useState<boolean>(false);
   const [cartOpen, setCartOpen] = useState<boolean>(false);
+  const [customerDrawerOpen, setCustomerDrawerOpen] = useState<boolean>(false);
+  const [customerDrawerTab, setCustomerDrawerTab] = useState<'orders' | 'addresses' | 'wishlist'>('orders');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   // Unified SPA navigation helper mapping state shifts to matching browser URLs
@@ -434,6 +437,14 @@ export default function App() {
         loggedInCustomer={loggedInCustomer}
         cartItems={cartItems}
         onOpenCart={() => setCartOpen(true)}
+        onOpenCustomer={() => {
+          setCustomerDrawerTab('orders');
+          setCustomerDrawerOpen(true);
+        }}
+        onOpenWishlist={() => {
+          setCustomerDrawerTab('wishlist');
+          setCustomerDrawerOpen(true);
+        }}
         onOpenAdmin={() => {
           if (isAdminActive && isAdminDirty) {
             setPendingNavAction({ type: 'toggle-admin' });
@@ -1256,6 +1267,24 @@ export default function App() {
         onRemoveItem={handleRemoveCartItem}
         activeDiscounts={discounts}
         onTriggerCheckout={handleTriggerCheckout}
+      />
+
+      {/* Global Customer Dashboard slide out drawer panel */}
+      <CustomerDrawer
+        isOpen={customerDrawerOpen}
+        onClose={() => setCustomerDrawerOpen(false)}
+        customers={customers}
+        loggedInCustomer={loggedInCustomer}
+        onLogin={handleCustomerLogin}
+        onLogout={handleCustomerLogout}
+        onUpdateWishlist={handleUpdateWishlistAction}
+        onAddToCart={handleAddToCart}
+        allProducts={products}
+        orders={orders}
+        onAddAddress={handleAddAddress}
+        onRemoveAddress={handleRemoveAddress}
+        onOpenCart={() => setCartOpen(true)}
+        initialTab={customerDrawerTab}
       />
 
       {/* Checkout Successful Modal */}

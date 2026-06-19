@@ -8,6 +8,8 @@ interface HeaderProps {
   loggedInCustomer: Customer | null;
   cartItems: CartItem[];
   onOpenCart: () => void;
+  onOpenCustomer: () => void;
+  onOpenWishlist: () => void;
   onOpenAdmin: () => void;
   isAdminActive: boolean;
 }
@@ -18,6 +20,8 @@ export default function Header({
   loggedInCustomer,
   cartItems,
   onOpenCart,
+  onOpenCustomer,
+  onOpenWishlist,
   onOpenAdmin,
   isAdminActive
 }: HeaderProps) {
@@ -118,31 +122,30 @@ export default function Header({
 
           <span className="h-5 w-px bg-slate-200 hidden sm:block" />
 
-          {/* Customer accounts entry */}
-          <button
-            onClick={() => onTabChange('frontend-account')}
-            className={`flex items-center gap-1.5 text-xs font-bold transition-all hover:text-indigo-600 cursor-pointer ${
-              currentTab === 'frontend-account' && !isAdminActive ? 'text-indigo-650' : 'text-slate-600'
-            }`}
-          >
-            <User className="h-4.5 w-4.5 text-slate-500 shrink-0" />
-            <span className="hidden sm:inline-block truncate max-w-[80px]">
-              {loggedInCustomer ? loggedInCustomer.name.split(' ')[0] : 'Sign In'}
-            </span>
-          </button>
-
           {/* Wishlist Link bubble */}
           <button
-            onClick={() => onTabChange('frontend-account')}
+            onClick={onOpenWishlist}
             className="relative p-2.5 rounded-full hover:bg-slate-100 text-slate-600 cursor-pointer transition-colors"
-            title="View Wishlist (Login needed)"
+            title="View Wishlist"
           >
             <Heart className="h-4.5 w-4.5 text-slate-500" />
             {wishlistCount > 0 && (
-              <span className="absolute top-0 right-0 h-4.5 min-w-4.5 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1">
+              <span className="absolute top-0 right-0 h-4.5 min-w-4.5 bg-red-400 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1">
                 {wishlistCount}
               </span>
             )}
+          </button>
+
+          {/* Customer accounts entry - PLACED DIRECTLY NEXT TO THE CART ICON */}
+          <button
+            onClick={onOpenCustomer}
+            className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-xl border border-slate-200/80 bg-slate-50 hover:bg-slate-100 transition-all hover:border-slate-350 cursor-pointer max-w-[130px]"
+            title="Customer Account Dashboard"
+          >
+            <User className="h-4.5 w-4.5 text-slate-600 shrink-0" />
+            <span className="text-[11px] font-bold text-slate-700 truncate">
+              {loggedInCustomer ? loggedInCustomer.name.split(' ')[0] : 'Log In'}
+            </span>
           </button>
 
           {/* Cart Drawer triggers */}

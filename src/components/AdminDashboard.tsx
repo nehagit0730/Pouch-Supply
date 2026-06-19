@@ -2198,22 +2198,45 @@ export default function AdminDashboard({
                                 )}
 
                                 {/* 9. COLLECTION LIST */}
-                                {sec.type === 'Collection list' && (
-                                  <div className="py-4 space-y-3">
-                                    <div className="text-center font-black uppercase text-[10px] text-slate-700 border-b pb-1">
-                                      {sec.settings.title || 'Explore Brand Collections'}
-                                    </div>
-                                    <div className="grid grid-cols-4 gap-2">
-                                      {localCollections.slice(0, Math.min(sec.settings.itemsCount || 4, 4)).map(c => (
-                                        <div key={c.id} className="bg-white border text-center p-2 rounded-xl shadow-3xs">
-                                          <div className="h-8 bg-slate-50 rounded-lg flex items-center justify-center text-sm mb-1">🥫</div>
-                                          <h5 className="text-[8.5px] font-black uppercase text-slate-800 truncate leading-none">{c.title}</h5>
-                                          <span className="text-[7px] font-bold text-indigo-600 tracking-wider block mt-1 uppercase leading-none font-mono">{c.productIds.length} FLAVORS</span>
+                                {sec.type === 'Collection list' && (() => {
+                                  const filteredLocal = sec.settings.selectedCollectionIds && sec.settings.selectedCollectionIds.length > 0
+                                    ? localCollections.filter(c => sec.settings.selectedCollectionIds!.includes(c.id))
+                                    : localCollections.slice(0, Math.min(sec.settings.itemsCount || 4, 4));
+
+                                  return (
+                                    <div className="py-4 space-y-3">
+                                      <div className="text-center font-black uppercase text-[10px] text-slate-700 border-b pb-1">
+                                        {sec.settings.title || 'Explore Brand Collections'}
+                                      </div>
+                                      {filteredLocal.length === 0 ? (
+                                        <div className="text-center py-4 text-[10px] text-slate-400 border border-dashed rounded-xl bg-slate-50">
+                                          No collections selected. Use layout editor to choose.
                                         </div>
-                                      ))}
+                                      ) : (
+                                        <div className="grid grid-cols-4 gap-2">
+                                          {filteredLocal.map(c => (
+                                            <div key={c.id} className="bg-white border text-center p-2 rounded-xl shadow-3xs overflow-hidden">
+                                              <div className="h-10 bg-slate-50 rounded-lg flex items-center justify-center text-sm mb-1 overflow-hidden relative border border-slate-100">
+                                                {c.image ? (
+                                                  <img 
+                                                    src={c.image} 
+                                                    className="h-full w-full object-cover" 
+                                                    alt={c.title} 
+                                                    referrerPolicy="no-referrer"
+                                                  />
+                                                ) : (
+                                                  <span>🥫</span>
+                                                )}
+                                              </div>
+                                              <h5 className="text-[8.5px] font-black uppercase text-slate-800 truncate leading-none">{c.title}</h5>
+                                              <span className="text-[7px] font-bold text-indigo-600 tracking-wider block mt-1 uppercase leading-none font-mono">{c.productIds.length} FLAVORS</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
                                     </div>
-                                  </div>
-                                )}
+                                  );
+                                })()}
 
                                 {/* 10. FEATURED COLLECTION (Fully interactive template preview grid) */}
                                 {sec.type === 'Featured collection' && (() => {
@@ -2621,19 +2644,57 @@ export default function AdminDashboard({
 
                         {/* CUSTOM COLLECTION LIST COUNTER LIMIT */}
                         {currentlyEditingSection.type === 'Collection list' && (
-                          <div>
-                            <div className="flex justify-between items-center mb-1">
-                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px]">Collections To Display</label>
-                              <span className="font-mono text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1.5 rounded">{currentlyEditingSection.settings.itemsCount || 4} categories</span>
+                          <div className="space-y-4">
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px]">Collections To Display</label>
+                                <span className="font-mono text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1.5 rounded">{currentlyEditingSection.settings.itemsCount || 4} categories</span>
+                              </div>
+                              <input 
+                                type="range" 
+                                min={1} 
+                                max={12} 
+                                value={currentlyEditingSection.settings.itemsCount || 4}
+                                onChange={(e) => handleUpdateSectionSettings('itemsCount', parseInt(e.target.value))}
+                                className="w-full h-1 text-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 bg-slate-200"
+                              />
                             </div>
-                            <input 
-                              type="range" 
-                              min={1} 
-                              max={6} 
-                              value={currentlyEditingSection.settings.itemsCount || 4}
-                              onChange={(e) => handleUpdateSectionSettings('itemsCount', parseInt(e.target.value))}
-                              className="w-full h-1 text-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 bg-slate-200"
-                            />
+
+                            <div className="pt-3 border-t border-slate-100">
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1.5">Selected Collections</label>
+                              <div className="space-y-1.5 max-h-[160px] overflow-y-auto border border-slate-200 p-2.5 rounded-xl bg-slate-50 shadow-inner scrollbar-thin">
+                                {collections.map(c => {
+                                  const selectedIds = currentlyEditingSection.settings.selectedCollectionIds || [];
+                                  const isSelected = selectedIds.includes(c.id);
+                                  return (
+                                    <label key={c.id} className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer hover:text-slate-900 transition-colors py-0.5">
+                                      <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={() => {
+                                          let updatedIds;
+                                          if (isSelected) {
+                                            updatedIds = selectedIds.filter(id => id !== c.id);
+                                          } else {
+                                            updatedIds = [...selectedIds, c.id];
+                                          }
+                                          handleUpdateSectionSettings('selectedCollectionIds', updatedIds);
+                                        }}
+                                        className="rounded border-slate-300 text-indigo-650 focus:ring-indigo-500 h-3.5 w-3.5 cursor-pointer"
+                                      />
+                                      <span className="truncate flex-1 text-[11px] leading-none">{c.title}</span>
+                                      {c.image && (
+                                        <img src={c.image} className="w-5 h-5 rounded object-cover border border-slate-200 shrink-0" alt="" referrerPolicy="no-referrer" />
+                                      )}
+                                    </label>
+                                  );
+                                })}
+                                {collections.length === 0 && (
+                                  <p className="text-[10px] text-slate-400 text-center py-2">No collections registered.</p>
+                                )}
+                              </div>
+                              <p className="text-[8.5px] text-slate-400 mt-1.5 leading-tight">By default (if none are selected), the component queries and renders all available database categories up to the listing limit.</p>
+                            </div>
                           </div>
                         )}
 

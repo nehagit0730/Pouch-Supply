@@ -107,6 +107,7 @@ export interface PageSection {
     marqueeSpeed?: number;
     itemsCount?: number;
     selectedCollectionId?: string;
+    selectedCollectionIds?: string[];
     slides?: {
       title: string;
       description: string;
