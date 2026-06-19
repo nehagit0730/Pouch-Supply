@@ -194,9 +194,16 @@ export default function ProductDetailView({
               {/* Description */}
               <div className="space-y-2">
                 <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Description</h3>
-                <p className="text-slate-500 text-xs leading-relaxed font-sans font-medium whitespace-pre-line">
-                  {product.description || 'No description provided for this premium item canister. Formulated in high precision labs for crystal freeze mouth refreshes.'}
-                </p>
+                {product.description ? (
+                  <div 
+                    className="text-slate-600 text-xs leading-relaxed font-sans font-medium space-y-2 prose prose-slate max-w-none break-words"
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
+                ) : (
+                  <p className="text-slate-400 text-xs leading-relaxed font-sans font-medium italic">
+                    No description provided for this premium item canister. Formulated in high precision labs for crystal freeze mouth refreshes.
+                  </p>
+                )}
               </div>
 
               {/* Variants Selector Panel */}

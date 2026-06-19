@@ -152,8 +152,81 @@ export default function ProductEditor({
     const val = e.target.value;
     setDescription(val);
     if (!seoDescription || seoDescription === description) {
-      setSeoDescription(val.slice(0, 155));
+      setSeoDescription(val.replace(/<[^>]*>/g, '').slice(0, 155));
     }
+  };
+
+  const applyFormatting = (style: 'bold' | 'italic' | 'underline' | 'strikethrough' | 'paragraph' | 'code' | 'link' | 'image' | 'video' | 'space') => {
+    const textarea = document.getElementById('prod-edit-desc') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selectedText = text.substring(start, end);
+
+    let replacement = '';
+    
+    switch (style) {
+      case 'bold':
+        replacement = `<strong>${selectedText || 'bold text'}</strong>`;
+        break;
+      case 'italic':
+        replacement = `<em>${selectedText || 'italic text'}</em>`;
+        break;
+      case 'underline':
+        replacement = `<u>${selectedText || 'underlined text'}</u>`;
+        break;
+      case 'strikethrough':
+        replacement = `<s>${selectedText || 'strikethrough text'}</s>`;
+        break;
+      case 'paragraph':
+        replacement = `<p>${selectedText || 'Paragraph content'}</p>`;
+        break;
+      case 'code':
+        replacement = `<code>${selectedText || 'const x = code;'}</code>`;
+        break;
+      case 'space':
+        replacement = selectedText ? `&nbsp;${selectedText}&nbsp;` : '&nbsp;';
+        break;
+      case 'link': {
+        const url = prompt('Enter the redirect URL:', 'https://');
+        if (url === null) return;
+        const linkText = selectedText || prompt('Enter the link text:', 'click here') || 'Web Link';
+        replacement = `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-indigo-650 hover:underline font-bold">${linkText}</a>`;
+        break;
+      }
+      case 'image': {
+        const url = prompt('Enter the Image URL:', 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500');
+        if (!url) return;
+        const alt = prompt('Enter alt text for image:', 'Merchandise detail') || 'Product image';
+        replacement = `<div class="my-4 flex justify-center"><img src="${url}" alt="${alt}" class="rounded-xl border border-slate-150 max-h-72 object-contain" style="max-height: 288px;" /></div>`;
+        break;
+      }
+      case 'video': {
+        const url = prompt('Enter YouTube Embed URL or Video URL:', 'https://www.youtube.com/embed/');
+        if (!url) return;
+        replacement = `<div class="aspect-video w-full max-w-lg mx-auto bg-slate-900 rounded-xl overflow-hidden shadow-md my-4 border border-slate-205 leading-none"><iframe src="${url}" class="w-full h-full" frameborder="0" allowfullscreen></iframe></div>`;
+        break;
+      }
+      default:
+        return;
+    }
+
+    const newText = text.substring(0, start) + replacement + text.substring(end);
+    setDescription(newText);
+    
+    // Auto sync SEO preview
+    if (!seoDescription || seoDescription === description.replace(/<[^>]*>/g, '').slice(0, 155)) {
+      setSeoDescription(newText.replace(/<[^>]*>/g, '').slice(0, 155));
+    }
+
+    // Return focus and restore selection
+    setTimeout(() => {
+      textarea.focus();
+      const newSelectionStart = start + replacement.length;
+      textarea.setSelectionRange(newSelectionStart, newSelectionStart);
+    }, 50);
   };
 
   // Add Tags
@@ -384,28 +457,114 @@ export default function ProductEditor({
                 Product Description
               </label>
               
-              {/* Rich-Text mock toolbar layout to perfectly resemble Shopify's administrative editor interface */}
-              <div className="border border-slate-250 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#008060]/20 focus-within:border-[#008060] transition-all bg-white">
-                <div className="bg-slate-50 border-b border-slate-200 p-2 flex flex-wrap gap-1 px-3.5 select-none text-slate-500">
-                  <span className="text-[10px] hover:bg-slate-200 px-1.5 py-0.5 rounded font-black cursor-pointer font-sans" title="Formatting presets">Paragraph ▾</span>
-                  <div className="h-4.5 w-[1px] bg-slate-300 mx-1 align-middle self-center" />
-                  <span className="font-extrabold hover:bg-slate-250 px-1.5 py-0.5 rounded text-xs cursor-pointer" title="Bold text">B</span>
-                  <span className="italic hover:bg-slate-250 px-1.5 py-1 rounded text-xs cursor-pointer font-serif" title="Italic text">I</span>
-                  <span className="underline hover:bg-slate-250 px-1.5 py-1 rounded text-xs cursor-pointer" title="Underline text">U</span>
-                  <span className="line-through hover:bg-slate-200 px-1.5 py-1 rounded text-xs cursor-pointer font-sans" title="Strikethrough">S ▾</span>
-                  <div className="h-4.5 w-[1px] bg-slate-300 mx-1 align-middle self-center" />
-                  <span className="hover:bg-slate-200 px-1.5 py-0.5 rounded text-[11px] font-mono cursor-pointer" title="Insert Monospace inline code">&lt;&gt;</span>
-                  <span className="hover:bg-slate-200 px-1.5 py-0.5 rounded text-xs cursor-pointer" title="Add web redirection link">🔗</span>
-                  <span className="hover:bg-slate-200 px-1.5 py-0.5 rounded text-xs cursor-pointer" title="Insert media image">🖼️</span>
-                  <span className="hover:bg-slate-200 px-1.5 py-0.5 rounded text-xs cursor-pointer" title="Insert YouTube video clip">🎥</span>
+              {/* Fully Working Shopify-style Rich-Text Toolbar connected with formatting states */}
+              <div className="border border-slate-250 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#008060]/20 focus-within:border-[#008060] transition-all bg-white mb-3">
+                <div className="bg-slate-50 border-b border-slate-200 p-2 flex flex-wrap gap-1 px-3.5 select-none text-slate-500 items-center">
+                  <button 
+                    type="button" 
+                    onClick={() => applyFormatting('paragraph')}
+                    className="text-[10px] hover:bg-slate-200 px-2 py-1 rounded font-black cursor-pointer font-sans" 
+                    title="Formatting paragraph block"
+                  >
+                    Paragraph ▾
+                  </button>
+                  <div className="h-4 w-[1px] bg-slate-300 mx-1" />
+                  <button 
+                    type="button" 
+                    onClick={() => applyFormatting('bold')}
+                    className="font-extrabold hover:bg-slate-200 px-2 py-0.5 rounded text-xs cursor-pointer text-slate-700" 
+                    title="Bold text"
+                  >
+                    B
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => applyFormatting('italic')}
+                    className="italic hover:bg-slate-200 px-2 py-0.5 rounded text-xs cursor-pointer font-serif text-slate-705" 
+                    title="Italic text"
+                  >
+                    I
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => applyFormatting('underline')}
+                    className="underline hover:bg-slate-200 px-2 py-0.5 rounded text-xs cursor-pointer text-slate-705" 
+                    title="Underline text"
+                  >
+                    U
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => applyFormatting('strikethrough')}
+                    className="line-through hover:bg-slate-200 px-2 py-0.5 rounded text-xs cursor-pointer text-slate-705" 
+                    title="Strikethrough"
+                  >
+                    S
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => applyFormatting('space')}
+                    className="hover:bg-slate-200 px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer text-slate-700" 
+                    title="Insert inline spacing / HTML spacer"
+                  >
+                    Space ⤾
+                  </button>
+                  <div className="h-4 w-[1px] bg-slate-300 mx-1" />
+                  <button 
+                    type="button" 
+                    onClick={() => applyFormatting('code')}
+                    className="hover:bg-slate-200 px-2 py-0.5 rounded text-[10px] font-mono cursor-pointer text-slate-700" 
+                    title="Insert Code element (&lt;code&gt;)"
+                  >
+                    &lt;/&gt; Code
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => applyFormatting('link')}
+                    className="hover:bg-slate-200 px-2 py-0.5 rounded text-xs cursor-pointer text-slate-700 flex items-center gap-0.5" 
+                    title="Insert Redirect URL Link"
+                  >
+                    <span>🔗</span> <span className="text-[10px] font-bold">Link</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => applyFormatting('image')}
+                    className="hover:bg-slate-200 px-2 py-0.5 rounded text-xs cursor-pointer text-slate-700 flex items-center gap-0.5" 
+                    title="Insert Image Graphic"
+                  >
+                    <span>🖼️</span> <span className="text-[10px] font-bold">Image</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => applyFormatting('video')}
+                    className="hover:bg-slate-200 px-2 py-0.5 rounded text-xs cursor-pointer text-slate-700 flex items-center gap-0.5" 
+                    title="Insert YouTube Embed block"
+                  >
+                    <span>🎥</span> <span className="text-[10px] font-bold">Video</span>
+                  </button>
                 </div>
                 <textarea
                   id="prod-edit-desc"
                   placeholder="Insert premium copy highlights. Formulate sensory properties, strength levels, pouch size, and flavor releases..."
                   value={description}
                   onChange={handleDescriptionChange}
-                  className="w-full text-xs font-medium px-4 py-3 bg-white focus:outline-none h-44 resize-y leading-relaxed text-slate-750"
+                  className="w-full text-xs font-semibold px-4 py-3 bg-white focus:outline-none h-44 resize-y leading-relaxed text-slate-750"
                 />
+              </div>
+
+              {/* Dynamic live HTML preview canvas under Description box */}
+              <div className="bg-slate-50 border border-slate-200 px-4 py-3 rounded-xl">
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">
+                  Live Description Document Rendering:
+                </span>
+                {description.trim() ? (
+                  <div 
+                    className="text-xs text-slate-650 font-semibold leading-relaxed space-y-2 prose prose-stone max-w-none break-words"
+                    dangerouslySetInnerHTML={{ __html: description }}
+                  />
+                ) : (
+                  <p className="text-[10px] text-slate-400 italic font-medium">Description block is currently empty. Utilize the formatting tools above to design rich layouts.</p>
+                )}
               </div>
             </div>
           </div>

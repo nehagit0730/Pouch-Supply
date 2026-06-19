@@ -140,7 +140,7 @@ export default function SubscriptionBuilder({ allProducts, onAddSubToCart }: Sub
                       <div>
                         <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase block">{prod.vendor}</span>
                         <h4 className="text-xs font-extrabold text-slate-800 leading-snug line-clamp-2">{prod.title}</h4>
-                        <p className="text-[11px] text-slate-400 mt-1 pb-2 line-clamp-2">{prod.description}</p>
+                        <p className="text-[11px] text-slate-400 mt-1 pb-2 line-clamp-2">{(prod.description || '').replace(/<[^>]*>/g, '')}</p>
                       </div>
 
                       <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 mt-auto">
