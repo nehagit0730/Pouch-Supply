@@ -718,18 +718,33 @@ export const DEFAULT_PAGES: CustomPage[] = [
     title: 'All Brands Directory',
     slug: 'brands',
     visibility: 'Visible',
-    updatedAt: 'Jun 8, 2026',
+    updatedAt: 'Jun 19, 2026',
     sections: [
       {
         id: 's2',
-        type: 'Logo list',
+        type: 'Brand list',
         settings: {
           fullWidth: false,
-          backgroundColor: '#F8FAFC',
+          backgroundColor: '#FFFFFF',
           headingColor: '#0F172A',
-          textColor: '#334155',
-          title: 'Official Partners & Brands',
-          description: 'Explore curated collection boxes from premium high-grade nicotine/energy pouch producers.'
+          textColor: '#475569',
+          title: 'Official Brands Matrix',
+          description: 'Curated premium compounding canisters sourced directly from European formulation laboratories.',
+          brandItems: [
+            { imageUrl: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: '77 Nicotine' },
+            { imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Clew Pouches' },
+            { imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Cuba Black' },
+            { imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Maggie Original' },
+            { imageUrl: 'https://images.unsplash.com/photo-1498084393753-b411b2d26b34?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Nordic Spirit' },
+            { imageUrl: 'https://images.unsplash.com/photo-1511688868355-7216a2131f33?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'XQS Sweden' },
+            { imageUrl: 'https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'ZYN Mint' },
+            { imageUrl: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Pablo Strong' },
+            { imageUrl: 'https://images.unsplash.com/photo-1547891654-e66ed7edd96c?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Killa Double' },
+            { imageUrl: 'https://images.unsplash.com/photo-1505156868547-9b49f4df4e04?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Fumi Fresh' },
+            { imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Velo Active' },
+            { imageUrl: 'https://images.unsplash.com/photo-1483168527879-c66136b56105?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'White Fox' },
+            { imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Snü Fruity' }
+          ]
         }
       }
     ]

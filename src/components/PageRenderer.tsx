@@ -771,44 +771,73 @@ export default function PageRenderer({
 
                 {/* 15. BRAND LIST */}
                 {sec.type === 'Brand list' && (
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 py-4">
-                    <div className="text-center space-y-2">
-                      <span className="text-[10px] tracking-widest font-black uppercase text-white bg-indigo-600/90 py-1 px-3.5 rounded-full inline-block font-mono">Our Distribution Partners</span>
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-10 py-12">
+                    <div className="text-center space-y-3">
+                      <span className="text-[10px] tracking-widest font-black uppercase text-indigo-650 bg-indigo-50 px-3 py-1 rounded-full inline-block font-sans">
+                        Compounding Series Catalog
+                      </span>
                       <h2 
-                        className="text-3xl font-black uppercase tracking-tight text-slate-900"
-                        style={{ color: sec.settings.headingColor || '#0F172A' }}
+                        className="text-3xl md:text-4xl font-extrabold uppercase tracking-tight text-slate-900"
+                        style={{ color: sec.settings.headingColor || '#0C1017' }}
                       >
-                        {sec.settings.title || 'Shop Premium Brand Partners'}
+                        {sec.settings.title || 'Official Brands Directory'}
                       </h2>
                       {sec.settings.description && (
-                        <p className="text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">{sec.settings.description}</p>
+                        <p className="text-slate-500 max-w-2xl mx-auto text-xs sm:text-sm leading-relaxed">{sec.settings.description}</p>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">
                       {(sec.settings.brandItems || []).map((b, bidx) => (
                         <div 
                           key={bidx} 
                           onClick={() => handleLinkClick(b.linkUrl)}
-                          className="bg-white border border-slate-200 hover:border-indigo-650 hover:shadow-md rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:-translate-y-0.5 group min-h-[140px]"
+                          className="aspect-square relative rounded-2xl md:rounded-[24px] overflow-hidden group cursor-pointer border border-slate-100 bg-[#FAF9F5] shadow-[0_4px_24px_rgba(0,0,0,0.02)] transition-all duration-500 hover:shadow-[0_20px_48px_rgba(0,0,0,0.10)] hover:-translate-y-1.5 flex flex-col justify-end"
                         >
-                          <div className="h-16 w-full flex items-center justify-center mb-3">
-                            {b.imageUrl ? (
-                              <img 
-                                src={b.imageUrl} 
-                                className="max-h-full max-w-full object-contain filter group-hover:brightness-105 transition-all duration-300 rounded" 
-                                alt={b.title} 
-                                referrerPolicy="no-referrer"
-                              />
-                            ) : (
-                              <div className="h-12 w-12 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center text-slate-350">
-                                <Layers className="h-5 w-5" />
-                              </div>
-                            )}
+                          {/* Image Layer */}
+                          {b.imageUrl ? (
+                            <img 
+                              src={b.imageUrl} 
+                              className="absolute inset-0 w-full h-full object-cover group-hover:scale-106 transition-transform duration-700 ease-out" 
+                              alt={b.title} 
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="absolute inset-0 bg-gradient-to-tr from-slate-100 to-slate-200 flex items-center justify-center">
+                              <Layers className="h-8 w-8 text-slate-300" />
+                            </div>
+                          )}
+
+                          {/* Gradient Overlay Layer */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent opacity-90 group-hover:opacity-95 transition-opacity duration-300" />
+
+                          {/* Top Tag or Badge */}
+                          <div className="absolute top-4 left-4 bg-black/30 backdrop-blur-md border border-white/10 text-[8px] font-black tracking-widest text-white px-2.5 py-1 rounded-lg uppercase leading-none shadow-sm">
+                            {(bidx % 3 === 0) ? 'SWEDISH LABS' : (bidx % 3 === 1) ? 'AWARD NOMINEE' : 'EXCLUSIVE DEPOT'}
                           </div>
-                          <span className="text-xs font-black uppercase tracking-widest text-[#1E293B] group-hover:text-indigo-650 transition-colors truncate max-w-full block">
-                            {b.title || 'Brand'}
-                          </span>
+
+                          {/* Active Hover Arrow Accent */}
+                          <div className="absolute top-4 right-4 bg-white text-slate-900 rounded-full p-1.5 opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 shadow-md">
+                            <ArrowRight className="h-3 w-3" />
+                          </div>
+
+                          {/* Text Content Block */}
+                          <div className="p-5 sm:p-6 relative z-10 translate-y-1 group-hover:translate-y-0 transition-transform duration-500 ease-out">
+                            <span className="block text-[9px] font-bold text-indigo-400 uppercase tracking-widest font-mono mb-1">
+                              Collection #{bidx + 1}
+                            </span>
+                            <h3 className="text-lg sm:text-xl md:text-2xl font-black text-white leading-tight uppercase font-sans tracking-tight">
+                              {b.title || 'Brand'}
+                            </h3>
+                            
+                            <div className="h-0 group-hover:h-5 opacity-0 group-hover:opacity-100 overflow-hidden transition-all duration-500 ease-out mt-1">
+                              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                                Explore collection 
+                                <span className="inline-block group-hover:translate-x-1 transition-transform">→</span>
+                              </span>
+                            </div>
+                          </div>
+
                         </div>
                       ))}
                     </div>

@@ -593,9 +593,19 @@ export default function AdminDashboard({
         columnsDesktop: sectionType === 'Blog post' ? 3 : undefined,
         columnsMobile: sectionType === 'Blog post' ? 1 : undefined,
         brandItems: sectionType === 'Brand list' ? [
-          { imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=150&q=80', linkUrl: 'frontend-shop', title: '77 Slim' },
-          { imageUrl: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=150&q=80', linkUrl: 'frontend-shop', title: 'Cuba Black' },
-          { imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=150&q=80', linkUrl: 'frontend-shop', title: 'Velo Ice' }
+          { imageUrl: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: '77 Nicotine' },
+          { imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Clew Pouches' },
+          { imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Cuba Black' },
+          { imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Maggie Original' },
+          { imageUrl: 'https://images.unsplash.com/photo-1498084393753-b411b2d26b34?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Nordic Spirit' },
+          { imageUrl: 'https://images.unsplash.com/photo-1511688868355-7216a2131f33?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'XQS Sweden' },
+          { imageUrl: 'https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'ZYN Mint' },
+          { imageUrl: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Pablo Strong' },
+          { imageUrl: 'https://images.unsplash.com/photo-1547891654-e66ed7edd96c?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Killa Double' },
+          { imageUrl: 'https://images.unsplash.com/photo-1505156868547-9b49f4df4e04?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Fumi Fresh' },
+          { imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Velo Active' },
+          { imageUrl: 'https://images.unsplash.com/photo-1483168527879-c66136b56105?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'White Fox' },
+          { imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Snü Fruity' }
         ] : undefined,
         buttonText: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text') ? 'Purchase Packs' : undefined,
         buttonLink: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text') ? 'frontend-shop' : undefined,
@@ -2477,28 +2487,32 @@ export default function AdminDashboard({
 
                                 {/* 15. BRAND LIST */}
                                 {sec.type === 'Brand list' && (
-                                  <div className="py-4 space-y-3 font-sans">
+                                  <div className="py-6 space-y-4 font-sans">
                                     <div className="text-center">
-                                      <h3 className="text-xs font-black uppercase tracking-tight text-slate-850" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                      <h3 className="text-sm font-extrabold uppercase tracking-tight text-slate-850" style={{ color: sec.settings.headingColor || '#1E293B' }}>
                                         {sec.settings.title || 'Shop Premium Brands'}
                                       </h3>
                                       {sec.settings.description && (
-                                        <p className="text-[9px] text-slate-400 mt-0.5">{sec.settings.description}</p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5 max-w-md mx-auto">{sec.settings.description}</p>
                                       )}
                                     </div>
-                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                       {(sec.settings.brandItems || []).map((b, bidx) => (
-                                        <div key={bidx} className="bg-white border hover:border-indigo-150 rounded-xl p-2 flex flex-col items-center justify-center text-center shadow-xs cursor-pointer transition-all">
+                                        <div key={bidx} className="aspect-square relative rounded-xl overflow-hidden group shadow-xs cursor-pointer border border-slate-100 flex flex-col justify-end">
                                           {b.imageUrl ? (
-                                            <img src={b.imageUrl} className="h-10 w-full object-contain mb-1 rounded" alt="" referrerPolicy="no-referrer" />
+                                            <img src={b.imageUrl} className="absolute inset-0 w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
                                           ) : (
-                                            <div className="h-10 w-full bg-slate-100 rounded mb-1 flex items-center justify-center text-slate-400 font-bold text-[8px]">No Logo</div>
+                                            <div className="absolute inset-0 bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-[10px]">No Image</div>
                                           )}
-                                          <span className="text-[8px] font-black uppercase tracking-wider text-slate-600 truncate max-w-full">{b.title || 'Brand'}</span>
+                                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                                          <div className="p-2 relative z-10">
+                                            <span className="block text-[7px] font-bold text-indigo-400 leading-none mb-0.5">BRAND #{bidx + 1}</span>
+                                            <span className="block text-[10px] font-black uppercase text-white truncate max-w-full leading-tight">{b.title || 'Brand'}</span>
+                                          </div>
                                         </div>
                                       ))}
                                       {(sec.settings.brandItems || []).length === 0 && (
-                                        <p className="text-[9px] text-slate-400 text-center py-2 col-span-full">No brand items added yet.</p>
+                                        <p className="text-[10px] text-slate-400 text-center py-4 col-span-full italic">No brand items added yet.</p>
                                       )}
                                     </div>
                                   </div>
