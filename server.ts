@@ -1,12 +1,15 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
+import { fetchResource, saveResource } from "./serverDb";
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  // Set limits for payload uploads since products or media arrays can be large
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
   // Logging middleware to inspect all incoming traffic
   app.use((req, res, next) => {
@@ -17,6 +20,46 @@ async function startServer() {
   // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // Explicit mappings for all storefront and admin entities to keep the database and frontend fully synced
+  const endpoints = [
+    { name: "products", path: "/api/products" },
+    { name: "collections", path: "/api/collections" },
+    { name: "orders", path: "/api/orders" },
+    { name: "files", path: "/api/files" },
+    { name: "customers", path: "/api/customers" },
+    { name: "discounts", path: "/api/discounts" },
+    { name: "customPages", path: "/api/custompages" },
+    { name: "blogs", path: "/api/blogs" }
+  ];
+
+  endpoints.forEach(({ name, path: routePath }) => {
+    // Read route
+    app.get(routePath, async (req, res) => {
+      try {
+        const data = await fetchResource(name);
+        res.json(data);
+      } catch (err: any) {
+        console.error(`[API Server] Error routing GET for ${name}:`, err);
+        res.status(500).json({ error: err.message || "Failed to fetch resource" });
+      }
+    });
+
+    // Write/Sync route
+    app.post(routePath, async (req, res) => {
+      try {
+        const payload = req.body;
+        if (!Array.isArray(payload)) {
+          return res.status(400).json({ error: "API expects schema to be an array of documents" });
+        }
+        const updated = await saveResource(name, payload);
+        res.json(updated);
+      } catch (err: any) {
+        console.error(`[API Server] Error routing POST for ${name}:`, err);
+        res.status(500).json({ error: err.message || "Failed to persist resource" });
+      }
+    });
   });
 
   // Vite middleware for development or static serving for production

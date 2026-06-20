@@ -87,8 +87,48 @@ export default function App() {
 
   const [loggedInCustomer, setLoggedInCustomer] = useState<Customer | null>(() => {
     const saved = localStorage.getItem('ps_logged_in_customer');
-    return saved ? JSON.parse(saved) : INITIAL_CUSTOMERS[3]; // Pre-login with Demo Customer "Kayla Canty" for immediate full capability!
+    return saved ? JSON.parse(saved) : INITIAL_CUSTOMERS[3]; // Keep Kayla Canty logged in
   });
+
+  const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
+
+  // Load all central database arrays on mount
+  useEffect(() => {
+    async function loadDataFromDb() {
+      try {
+        console.log("[State Loader] Fetching store data from MongoDB Atlas database...");
+        const [
+          prodsRes, collsRes, ordersRes, filesRes,
+          custsRes, discsRes, pagesRes, blogsRes
+        ] = await Promise.all([
+          fetch('/api/products').then(r => r.ok ? r.json() : null),
+          fetch('/api/collections').then(r => r.ok ? r.json() : null),
+          fetch('/api/orders').then(r => r.ok ? r.json() : null),
+          fetch('/api/files').then(r => r.ok ? r.json() : null),
+          fetch('/api/customers').then(r => r.ok ? r.json() : null),
+          fetch('/api/discounts').then(r => r.ok ? r.json() : null),
+          fetch('/api/custompages').then(r => r.ok ? r.json() : null),
+          fetch('/api/blogs').then(r => r.ok ? r.json() : null),
+        ]);
+
+        if (Array.isArray(prodsRes) && prodsRes.length > 0) setProducts(prodsRes);
+        if (Array.isArray(collsRes) && collsRes.length > 0) setCollections(collsRes);
+        if (Array.isArray(ordersRes) && ordersRes.length > 0) setOrders(ordersRes);
+        if (Array.isArray(filesRes) && filesRes.length > 0) setFiles(filesRes);
+        if (Array.isArray(custsRes) && custsRes.length > 0) setCustomers(custsRes);
+        if (Array.isArray(discsRes) && discsRes.length > 0) setDiscounts(discsRes);
+        if (Array.isArray(pagesRes) && pagesRes.length > 0) setCustomPages(pagesRes);
+        if (Array.isArray(blogsRes) && blogsRes.length > 0) setBlogs(blogsRes);
+
+        console.log("[State Loader] Store data updated from MongoDB.");
+      } catch (err) {
+        console.error("[State Loader] Failed to connect to backend MongoDB API. Using local backup state.", err);
+      } finally {
+        setIsInitialLoadDone(true);
+      }
+    }
+    loadDataFromDb();
+  }, []);
 
   // App Routing Navigation
   const [currentTab, setCurrentTab] = useState<string>('frontend-home');
@@ -117,9 +157,11 @@ export default function App() {
     } else if (tab === 'blog-detail' && productId) {
       url = `/blogs/${productId}`;
     } else if (tab === 'product-detail' && productId) {
-      url = `/products/${productId}`;
+      const prod = products.find(p => p.id === productId || p.slug === productId);
+      url = `/products/${prod?.slug || productId}`;
     } else if (tab === 'collection-detail' && collectionId) {
-      url = `/collections/${collectionId}`;
+      const col = collections.find(c => c.id === collectionId || c.slug === collectionId);
+      url = `/collections/${col?.slug || collectionId}`;
     } else {
       url = `/pages/${tab}`;
     }
@@ -214,38 +256,94 @@ export default function App() {
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, [collections, isAdminActive]);
 
-  // --- Write to LocalStorage on Changes ---
+  // --- Write to LocalStorage AND MongoDB Database on Changes ---
   useEffect(() => {
     localStorage.setItem('ps_products', JSON.stringify(products));
-  }, [products]);
+    if (isInitialLoadDone) {
+      fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(products)
+      }).catch(err => console.error("Error syncing products to DB:", err));
+    }
+  }, [products, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_collections', JSON.stringify(collections));
-  }, [collections]);
+    if (isInitialLoadDone) {
+      fetch('/api/collections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(collections)
+      }).catch(err => console.error("Error syncing collections to DB:", err));
+    }
+  }, [collections, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_orders', JSON.stringify(orders));
-  }, [orders]);
+    if (isInitialLoadDone) {
+      fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orders)
+      }).catch(err => console.error("Error syncing orders to DB:", err));
+    }
+  }, [orders, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_files', JSON.stringify(files));
-  }, [files]);
+    if (isInitialLoadDone) {
+      fetch('/api/files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(files)
+      }).catch(err => console.error("Error syncing files to DB:", err));
+    }
+  }, [files, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_customers', JSON.stringify(customers));
-  }, [customers]);
+    if (isInitialLoadDone) {
+      fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(customers)
+      }).catch(err => console.error("Error syncing customers to DB:", err));
+    }
+  }, [customers, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_discounts', JSON.stringify(discounts));
-  }, [discounts]);
+    if (isInitialLoadDone) {
+      fetch('/api/discounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(discounts)
+      }).catch(err => console.error("Error syncing discounts to DB:", err));
+    }
+  }, [discounts, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_custom_pages', JSON.stringify(customPages));
-  }, [customPages]);
+    if (isInitialLoadDone) {
+      fetch('/api/custompages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(customPages)
+      }).catch(err => console.error("Error syncing custom pages to DB:", err));
+    }
+  }, [customPages, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_blogs', JSON.stringify(blogs));
-  }, [blogs]);
+    if (isInitialLoadDone) {
+      fetch('/api/blogs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(blogs)
+      }).catch(err => console.error("Error syncing blogs to DB:", err));
+    }
+  }, [blogs, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_cart', JSON.stringify(cartItems));
@@ -720,7 +818,7 @@ export default function App() {
 
             {/* FRONTEND VIEW - PRODUCT DETAIL PAGE */}
             {currentTab === 'product-detail' && (() => {
-              const matchedProduct = products.find(p => p.id === selectedProductId || slugify(p.title) === selectedProductId);
+              const matchedProduct = products.find(p => p.id === selectedProductId || p.slug === selectedProductId || slugify(p.title) === selectedProductId);
               if (!matchedProduct) {
                 return (
                   <div className="max-w-6xl mx-auto py-24 px-4 text-center space-y-6">
@@ -764,7 +862,7 @@ export default function App() {
 
             {/* FRONTEND VIEW - COLLECTION DETAIL PAGE */}
             {currentTab === 'collection-detail' && (() => {
-              const matchedCollection = collections.find(c => c.id === activeCollectionId || slugify(c.title) === activeCollectionId);
+              const matchedCollection = collections.find(c => c.id === activeCollectionId || c.slug === activeCollectionId || slugify(c.title) === activeCollectionId);
               if (!matchedCollection) {
                 return (
                   <div className="max-w-6xl mx-auto py-24 px-4 text-center space-y-6">

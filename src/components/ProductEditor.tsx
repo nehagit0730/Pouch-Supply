@@ -84,9 +84,9 @@ export default function ProductEditor({
       setTags(product.tags || []);
       setMediaList(product.media || (product.image ? [product.image] : []));
       setVariantsList(product.variants || []);
-      setCustomSlug(product.id || '');
-      setSeoTitle(product.title || '');
-      setSeoDescription(product.description.slice(0, 155) || '');
+      setCustomSlug(product.slug || product.id || '');
+      setSeoTitle(product.seoTitle || product.title || '');
+      setSeoDescription(product.seoDescription || product.description.slice(0, 155) || '');
 
       // Locate collection memberships on creation mapping
       const currentMemberships = allCollections
@@ -349,7 +349,10 @@ export default function ProductEditor({
       weightUnit: weightUnit,
       tags: tags,
       media: mediaList,
-      variants: variantsList.filter(v => v.name.trim() !== '') // keep only valid options with a name
+      variants: variantsList.filter(v => v.name.trim() !== ''), // keep only valid options with a name
+      slug: finalSlug,
+      seoTitle: seoTitle.trim() || title.trim(),
+      seoDescription: seoDescription.trim() || description.trim().slice(0, 155)
     };
 
     onSave(cleanProduct, selectedColIds);

@@ -338,7 +338,7 @@ export default function ProductsGrid({
                     {/* Image visual wrapper */}
                     <div 
                       onClick={() => {
-                        window.history.pushState({}, '', `/products/${prod.id}`);
+                        window.history.pushState({}, '', `/products/${prod.slug || prod.id}`);
                         window.dispatchEvent(new Event('popstate'));
                       }}
                       className="relative mb-4 overflow-hidden rounded-xl bg-slate-50 border border-slate-100 cursor-pointer"
@@ -372,7 +372,7 @@ export default function ProductsGrid({
                         {/* Main Title heading line */}
                         <h4 
                           onClick={() => {
-                            window.history.pushState({}, '', `/products/${prod.id}`);
+                            window.history.pushState({}, '', `/products/${prod.slug || prod.id}`);
                             window.dispatchEvent(new Event('popstate'));
                           }}
                           className="text-xs font-extrabold text-slate-800 leading-normal tracking-tight hover:text-indigo-600 transition-colors cursor-pointer"

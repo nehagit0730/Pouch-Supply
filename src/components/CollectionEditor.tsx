@@ -58,7 +58,7 @@ export default function CollectionEditor({
       setImage(collection.image || '');
       setProductIds(collection.productIds || []);
       setProductConditions(collection.productConditions || '');
-      setCustomSlug(collection.id || '');
+      setCustomSlug(collection.slug || collection.id || '');
       setSeoTitle(collection.seoTitle || collection.title || '');
       setSeoDescription(collection.seoDescription || collection.description || '');
       setOgImage(collection.ogImage || collection.image || '');
@@ -187,6 +187,7 @@ export default function CollectionEditor({
       image: image || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=500&q=80',
       productIds: productIds,
       productConditions: productConditions || undefined,
+      slug: finalSlug,
       seoTitle: seoTitle.trim() || undefined,
       seoDescription: seoDescription.trim() || undefined,
       ogImage: ogImage.trim() || undefined

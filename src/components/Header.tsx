@@ -94,7 +94,7 @@ export default function Header({
                       <div
                         key={p.id}
                         onClick={() => {
-                          onNavigateDetail?.('product-detail', p.id);
+                          onNavigateDetail?.('product-detail', p.slug || p.id);
                           setIsSearchOpen(false);
                           setSearchQuery('');
                         }}
@@ -129,7 +129,7 @@ export default function Header({
                       <div
                         key={c.id}
                         onClick={() => {
-                          onNavigateDetail?.('collection-detail', undefined, c.id);
+                          onNavigateDetail?.('collection-detail', undefined, c.slug || c.id);
                           setIsSearchOpen(false);
                           setSearchQuery('');
                         }}

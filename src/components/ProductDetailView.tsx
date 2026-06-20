@@ -346,8 +346,8 @@ export default function ProductDetailView({
                   key={rel.id}
                   onClick={() => {
                     setQuantity(1);
-                    window.history.pushState({}, '', `/products/${rel.id}`);
-                    onNavigate('product-detail', rel.id);
+                    window.history.pushState({}, '', `/products/${rel.slug || rel.id}`);
+                    onNavigate('product-detail', rel.slug || rel.id);
                   }}
                   className="bg-white border border-slate-200 hover:border-slate-350 p-4 rounded-xl space-y-3 cursor-pointer group hover:shadow-md transition-all text-center flex flex-col justify-between"
                 >

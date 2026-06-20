@@ -160,8 +160,8 @@ export default function CollectionDetailView({
               <div 
                 key={prod.id} 
                 onClick={() => {
-                  window.history.pushState({}, '', `/products/${prod.id}`);
-                  onNavigate('product-detail', prod.id);
+                  window.history.pushState({}, '', `/products/${prod.slug || prod.id}`);
+                  onNavigate('product-detail', prod.slug || prod.id);
                 }}
                 className="bg-white border hover:border-slate-350 p-4 rounded-xl space-y-4 cursor-pointer group hover:shadow-md transition-all flex flex-col justify-between"
               >

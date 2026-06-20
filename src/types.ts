@@ -22,6 +22,9 @@ export interface Product {
   variants?: ProductVariant[]; // Option list matching Shopify-style variants
   barcode?: string;
   weightUnit?: string; // 'g' | 'kg' | 'oz' | 'lb'
+  slug?: string;
+  seoTitle?: string;
+  seoDescription?: string;
 }
 
 export interface Collection {
@@ -32,6 +35,7 @@ export interface Collection {
   image: string;
   productIds: string[];
   productConditions?: string; // string explaining the conditions
+  slug?: string;
   seoTitle?: string;
   seoDescription?: string;
   ogImage?: string;
