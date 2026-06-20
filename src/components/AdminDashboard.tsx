@@ -6,7 +6,7 @@ import {
   Trash2, Filter, Save, Sparkles, Building, Settings, Image as ImageIcon, 
   X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw,
   Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass,
-  ChevronDown, ChevronUp, Star, Heart, FileText
+  ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 import CollectionEditor from './CollectionEditor';
@@ -25,7 +25,9 @@ export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'Marquee images', label: 'Active Product Reel', desc: 'Dynamic ticker reel demonstrating recently stocked canisters', icon: 'Layers' },
   { type: 'Logo list', label: 'Clinical Partners Registry', desc: 'Official partnered distributors and reseller banners', icon: 'Award' },
   { type: 'Images gallery', label: 'Production Facility Gallery', desc: 'Scenic four-column gallery of clean compounding rooms', icon: 'Layout' },
-  { type: 'FAQs', label: 'Accordion FAQs', desc: 'Collapsible answered support questions', icon: 'HelpCircle' }
+  { type: 'FAQs', label: 'Accordion FAQs', desc: 'Collapsible answered support questions', icon: 'HelpCircle' },
+  { type: 'Blog post', label: 'Blog Posts Grid', desc: 'Display a beautiful list/grid of live Pouch Journal articles with columns control', icon: 'BookOpen' },
+  { type: 'Brand list', label: 'Brand List with Images', desc: 'Scenic brand logo matrix with interactive links to collections', icon: 'LayoutGrid' }
 ] as const;
 
 export const getSectionIcon = (type: string) => {
@@ -43,6 +45,8 @@ export const getSectionIcon = (type: string) => {
     case 'Logo list': return <Award className="h-4 w-4 text-cyan-500" />;
     case 'Images gallery': return <Layout className="h-4 w-4 text-sky-600" />;
     case 'FAQs': return <HelpCircle className="h-4 w-4 text-violet-500" />;
+    case 'Blog post': return <BookOpen className="h-4 w-4 text-orange-600" />;
+    case 'Brand list': return <LayoutGrid className="h-4 w-4 text-pink-500" />;
     default: return <FileCode className="h-4 w-4 text-slate-400" />;
   }
 };
@@ -575,13 +579,24 @@ export default function AdminDashboard({
              : sectionType === 'Marquee images' ? 'Fresh Stock Dispatch Reel'
              : sectionType === 'Logo list' ? 'Official Lab Partner Register'
              : sectionType === 'FAQs' ? 'Frequently Answered Questions'
+             : sectionType === 'Blog post' ? 'Latest From Our Journal'
+             : sectionType === 'Brand list' ? 'Shop Premium Brands'
              : `Custom ${sectionType}`,
         description: sectionType === 'Image with text' ? 'Our plant-fiber formulations are packed under sterile medical conditions for persistent, smooth boosts.'
                  : sectionType === 'Text column with image' ? 'Every single canister batch is vacuum-sealed inside high-density polymer tubes guaranteeing pristine flavor locks.'
                  : sectionType === 'Featured collection' ? 'Sourced cleanly from European chemical compounding centers with direct-to-door courier dispatch.'
                  : sectionType === 'Collection list' ? 'Select from your favorite pouch strengths, cooling impacts, or specific lab series.'
                  : sectionType === 'FAQs' ? 'Find quick validations regarding shipping rules, subscriptions, and formulation safety standards.'
+                 : sectionType === 'Blog post' ? 'Scientific reports, dosage guides, and news bulletins straight from Scandinavia.'
+                 : sectionType === 'Brand list' ? 'Check our collection of premium, laboratory-certified brand canisters.'
                  : 'Edit option elements inside options sidebar',
+        columnsDesktop: sectionType === 'Blog post' ? 3 : undefined,
+        columnsMobile: sectionType === 'Blog post' ? 1 : undefined,
+        brandItems: sectionType === 'Brand list' ? [
+          { imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=150&q=80', linkUrl: 'frontend-shop', title: '77 Slim' },
+          { imageUrl: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=150&q=80', linkUrl: 'frontend-shop', title: 'Cuba Black' },
+          { imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=150&q=80', linkUrl: 'frontend-shop', title: 'Velo Ice' }
+        ] : undefined,
         buttonText: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text') ? 'Purchase Packs' : undefined,
         buttonLink: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text') ? 'frontend-shop' : undefined,
         marqueeSpeed: 3,
@@ -2427,6 +2442,68 @@ export default function AdminDashboard({
                                   </div>
                                 )}
 
+                                {/* 14. BLOG POST */}
+                                {sec.type === 'Blog post' && (
+                                  <div className="py-4 space-y-3 font-sans">
+                                    <div className="text-center">
+                                      <h3 className="text-xs font-black uppercase tracking-tight text-slate-850" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                        {sec.settings.title || 'Latest From Our Journal'}
+                                      </h3>
+                                      {sec.settings.description && (
+                                        <p className="text-[9px] text-slate-400 mt-0.5">{sec.settings.description}</p>
+                                      )}
+                                    </div>
+                                    <div className="grid gap-2" style={{
+                                      gridTemplateColumns: `repeat(${sec.settings.columnsDesktop || 3}, minmax(0, 1fr))`
+                                    }}>
+                                      {(blogs && blogs.length > 0 ? blogs.slice(0, sec.settings.columnsDesktop || 3) : [
+                                        { id: '1', title: 'Swedish Pouch Manufacturing Regulations', category: 'Standards', date: 'June 19, 2026', image: 'https://images.unsplash.com/photo-1543257580-7269da773bf5?auto=format&fit=crop&w=200&q=80' },
+                                        { id: '2', title: 'Why Sterile Medical Fiber is Better', category: 'Science', date: 'June 18, 2026', image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=200&q=80' },
+                                        { id: '3', title: 'Understanding Nicotine Salt Deliveries', category: 'Formulas', date: 'June 17, 2026', image: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=200&q=80' }
+                                      ].slice(0, sec.settings.columnsDesktop || 3)).map((item, bidx) => (
+                                        <div key={item.id || bidx} className="bg-white border rounded-lg p-2 flex flex-col justify-between shadow-xs text-left">
+                                          {item.image && (
+                                            <img src={item.image} className="h-16 w-full object-cover rounded-md mb-1.5" alt="" referrerPolicy="no-referrer" />
+                                          )}
+                                          <div>
+                                            <span className="text-[7.5px] uppercase text-indigo-650 font-extrabold tracking-widest">{item.category || 'Article'}</span>
+                                            <h4 className="font-extrabold text-[9.5px] leading-tight text-slate-850 line-clamp-2 mt-0.5">{item.title}</h4>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 15. BRAND LIST */}
+                                {sec.type === 'Brand list' && (
+                                  <div className="py-4 space-y-3 font-sans">
+                                    <div className="text-center">
+                                      <h3 className="text-xs font-black uppercase tracking-tight text-slate-850" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                        {sec.settings.title || 'Shop Premium Brands'}
+                                      </h3>
+                                      {sec.settings.description && (
+                                        <p className="text-[9px] text-slate-400 mt-0.5">{sec.settings.description}</p>
+                                      )}
+                                    </div>
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                      {(sec.settings.brandItems || []).map((b, bidx) => (
+                                        <div key={bidx} className="bg-white border hover:border-indigo-150 rounded-xl p-2 flex flex-col items-center justify-center text-center shadow-xs cursor-pointer transition-all">
+                                          {b.imageUrl ? (
+                                            <img src={b.imageUrl} className="h-10 w-full object-contain mb-1 rounded" alt="" referrerPolicy="no-referrer" />
+                                          ) : (
+                                            <div className="h-10 w-full bg-slate-100 rounded mb-1 flex items-center justify-center text-slate-400 font-bold text-[8px]">No Logo</div>
+                                          )}
+                                          <span className="text-[8px] font-black uppercase tracking-wider text-slate-600 truncate max-w-full">{b.title || 'Brand'}</span>
+                                        </div>
+                                      ))}
+                                      {(sec.settings.brandItems || []).length === 0 && (
+                                        <p className="text-[9px] text-slate-400 text-center py-2 col-span-full">No brand items added yet.</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
                               </div>
 
                             </div>
@@ -2755,6 +2832,120 @@ export default function AdminDashboard({
                               className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
                             />
                             <p className="text-[8.5px] text-slate-400 mt-1">Provide the Youtube 11-character video ID to loop laboratory showcase media.</p>
+                          </div>
+                        )}
+
+                        {/* BLOG POST EDITING SETTINGS */}
+                        {currentlyEditingSection.type === 'Blog post' && (
+                          <div className="space-y-3 pt-1">
+                            <div>
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">Columns in Desktop</label>
+                              <select
+                                value={currentlyEditingSection.settings.columnsDesktop || 3}
+                                onChange={(e) => handleUpdateSectionSettings('columnsDesktop', parseInt(e.target.value))}
+                                className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650 cursor-pointer"
+                              >
+                                <option value={1}>1 Column</option>
+                                <option value={2}>2 Columns</option>
+                                <option value={3}>3 Columns</option>
+                                <option value={4}>4 Columns</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">Columns in Mobile</label>
+                              <select
+                                value={currentlyEditingSection.settings.columnsMobile || 1}
+                                onChange={(e) => handleUpdateSectionSettings('columnsMobile', parseInt(e.target.value))}
+                                className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650 cursor-pointer"
+                              >
+                                <option value={1}>1 Column</option>
+                                <option value={2}>2 Columns</option>
+                              </select>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* BRAND LIST EDITING SETTINGS */}
+                        {currentlyEditingSection.type === 'Brand list' && (
+                          <div className="space-y-4 pt-1">
+                            <div className="flex justify-between items-center">
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Brand Logos Matrix</label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const list = currentlyEditingSection.settings.brandItems || [];
+                                  const updated = [...list, { imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=150&q=80', linkUrl: 'frontend-shop', title: 'New Brand' }];
+                                  handleUpdateSectionSettings('brandItems', updated);
+                                }}
+                                className="text-[9px] bg-indigo-50 text-indigo-700 hover:bg-indigo-100 p-1 px-2 rounded-md font-bold transition-all cursor-pointer uppercase tracking-wider"
+                              >
+                                + Add Brand
+                              </button>
+                            </div>
+
+                            <div className="space-y-3 max-h-[250px] overflow-y-auto pr-1 scrollbar-thin">
+                              {(currentlyEditingSection.settings.brandItems || []).map((b, idx) => (
+                                <div key={idx} className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg space-y-2 relative">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const list = [...(currentlyEditingSection.settings.brandItems || [])];
+                                      list.splice(idx, 1);
+                                      handleUpdateSectionSettings('brandItems', list);
+                                    }}
+                                    className="absolute top-1.5 right-1.5 text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
+                                    title="Delete Brand Logo"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+
+                                  <div className="text-[9px] font-black uppercase text-indigo-650 mb-1">Brand #{idx + 1}</div>
+
+                                  <div>
+                                    <label className="block text-[8px] font-bold text-slate-405 uppercase mb-0.5">Brand Name</label>
+                                    <input
+                                      type="text"
+                                      value={b.title || ''}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.brandItems || [])];
+                                        list[idx] = { ...list[idx], title: e.target.value };
+                                        handleUpdateSectionSettings('brandItems', list);
+                                      }}
+                                      className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none"
+                                      placeholder="e.g. VELO Freeze"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[8px] font-bold text-slate-405 uppercase mb-0.5">Redirect Link (URL/Slug)</label>
+                                    <input
+                                      type="text"
+                                      value={b.linkUrl || ''}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.brandItems || [])];
+                                        list[idx] = { ...list[idx], linkUrl: e.target.value };
+                                        handleUpdateSectionSettings('brandItems', list);
+                                      }}
+                                      className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none font-mono"
+                                      placeholder="e.g. frontend-shop / collections /pages/brands"
+                                    />
+                                  </div>
+
+                                  <ImageUploadInput
+                                    label="Upload Brand Logo Asset"
+                                    value={b.imageUrl}
+                                    onChange={(base64) => {
+                                      const list = [...(currentlyEditingSection.settings.brandItems || [])];
+                                      list[idx] = { ...list[idx], imageUrl: base64 };
+                                      handleUpdateSectionSettings('brandItems', list);
+                                    }}
+                                  />
+                                </div>
+                              ))}
+                              {(currentlyEditingSection.settings.brandItems || []).length === 0 && (
+                                <p className="text-[10px] text-slate-400 text-center py-4">No brands in the list. Click "+ Add Brand" above.</p>
+                              )}
+                            </div>
                           </div>
                         )}
 

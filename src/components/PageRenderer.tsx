@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { CustomPage, PageSection, Product, Collection, Customer } from '../types';
+import { CustomPage, PageSection, Product, Collection, Customer, BlogPost } from '../types';
 import { 
   ArrowRight, ShoppingCart, Star, Heart, FileText, Check, 
-  ChevronDown, ChevronUp, Play, Sparkles, TrendingUp, Plus, Minus, ShieldCheck, Award, Eye, Flame, ArrowUpRight
+  ChevronDown, ChevronUp, Play, Sparkles, TrendingUp, Plus, Minus, ShieldCheck, Award, Eye, Flame, ArrowUpRight, BookOpen, Layers
 } from 'lucide-react';
 import PremiumSlideshow from './PremiumSlideshow';
 
@@ -14,6 +14,7 @@ interface PageRendererProps {
   onAddToCart: (product: Product, qty: number) => void;
   onToggleWishlist: (productId: string) => void;
   onNavigate: (tab: string, arg?: string) => void; // for shop, subscribe etc.
+  allBlogs?: BlogPost[];
 }
 
 export default function PageRenderer({
@@ -23,7 +24,8 @@ export default function PageRenderer({
   loggedInCustomer,
   onAddToCart,
   onToggleWishlist,
-  onNavigate
+  onNavigate,
+  allBlogs = []
 }: PageRendererProps) {
   // Safe state for keeping track of active FAQs
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
@@ -585,7 +587,7 @@ export default function PageRenderer({
                                   className="w-full bg-slate-900 hover:bg-indigo-600 text-white text-[10px] font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-colors uppercase tracking-widest shadow-xs"
                                 >
                                   <ShoppingCart className="h-3.5 w-3.5" />
-                                  <span>Add To Drawer</span>
+                                  <span>Add to Cart</span>
                                 </button>
                               </div>
                             </div>
@@ -688,6 +690,129 @@ export default function PageRenderer({
                     textColor={sec.settings.textColor}
                     onLinkClick={handleLinkClick}
                   />
+                )}
+
+                {/* 14. BLOG POST */}
+                {sec.type === 'Blog post' && (() => {
+                  const desktopCols = sec.settings.columnsDesktop || 3;
+                  const mobileCols = sec.settings.columnsMobile || 1;
+                  const desktopColsClass = desktopCols === 1 ? 'lg:grid-cols-1' : desktopCols === 2 ? 'lg:grid-cols-2' : desktopCols === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4';
+                  const mobileColsClass = mobileCols === 1 ? 'grid-cols-1' : 'grid-cols-2';
+
+                  // retrieve active articles or fallbacks
+                  const activeBlogs = allBlogs && allBlogs.length > 0
+                    ? allBlogs.filter(b => b.status === 'Active')
+                    : [];
+
+                  const displayBlogs = activeBlogs.length > 0 
+                    ? activeBlogs 
+                    : [
+                        { id: '1', title: 'Swedish Pouch Manufacturing Regulations', category: 'Standards', date: 'June 19, 2026', image: 'https://images.unsplash.com/photo-1543257580-7269da773bf5?auto=format&fit=crop&w=400&q=80', excerpt: 'Behind the clinical clean rooms compounding sterile medical fiber pouches under modern Scandinavian compliance.', author: 'Dr. Anders' },
+                        { id: '2', title: 'Why Sterile Medical Fiber is Better', category: 'Science', date: 'June 18, 2026', image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=400&q=80', excerpt: 'Traditional pouches use coarse paper. Our laboratory leverages vacuum plant cellulose fibers for smooth flavor dispersion.', author: 'Sara Storm' },
+                        { id: '3', title: 'Understanding Nicotine Salt Deliveries', category: 'Formulas', date: 'June 17, 2026', image: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=400&q=80', excerpt: 'An in-depth breakdown of molecular compounding and how sub-zero cooling agents trigger persistent fresh releases.', author: 'Nils Vance' }
+                      ];
+
+                  return (
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 py-4">
+                      <div className="text-center space-y-2">
+                        <span className="text-[10px] tracking-widest font-black uppercase text-white bg-indigo-600/90 py-1 px-3.5 rounded-full inline-block">Pouch Journal</span>
+                        <h2 
+                          className="text-3xl font-black uppercase tracking-tight text-slate-900"
+                          style={{ color: sec.settings.headingColor || '#0F172A' }}
+                        >
+                          {sec.settings.title || 'Latest From Our Journal'}
+                        </h2>
+                        {sec.settings.description && (
+                          <p className="text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">{sec.settings.description}</p>
+                        )}
+                      </div>
+
+                      <div className={`grid ${mobileColsClass} sm:grid-cols-2 ${desktopColsClass} gap-6`}>
+                        {displayBlogs.map((b, idx) => (
+                          <article 
+                            key={b.id || idx}
+                            onClick={() => b.slug ? onNavigate('blog-detail', b.slug) : onNavigate('blogs')}
+                            className="group bg-white rounded-2xl overflow-hidden border border-slate-150 p-2 hover:border-slate-350 cursor-pointer transition-all flex flex-col h-full"
+                          >
+                            <div className="aspect-video w-full rounded-xl overflow-hidden bg-slate-50 relative">
+                              <img 
+                                src={b.image || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=400&q=80'} 
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                alt=""
+                                referrerPolicy="no-referrer"
+                              />
+                              <div className="absolute top-2.5 left-2.5 bg-white/95 backdrop-blur-xs text-[9px] font-black uppercase px-2.5 py-1 rounded-md text-indigo-650 border border-slate-100 shadow-sm">
+                                {b.category || 'Article'}
+                              </div>
+                            </div>
+                            <div className="p-3.5 flex flex-col justify-between flex-1 space-y-3">
+                              <div className="space-y-1.5">
+                                <span className="text-[10px] font-bold text-slate-400">{b.date}</span>
+                                <h3 className="font-extrabold text-base text-slate-850 group-hover:text-indigo-650 transition-colors line-clamp-2 leading-tight">
+                                  {b.title}
+                                </h3>
+                                {b.excerpt && (
+                                  <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed">
+                                    {b.excerpt}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-850 group-hover:translate-x-1 transition-transform">
+                                <span>Read Article</span>
+                                <ArrowRight className="h-4 w-4" />
+                              </div>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* 15. BRAND LIST */}
+                {sec.type === 'Brand list' && (
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 py-4">
+                    <div className="text-center space-y-2">
+                      <span className="text-[10px] tracking-widest font-black uppercase text-white bg-indigo-600/90 py-1 px-3.5 rounded-full inline-block font-mono">Our Distribution Partners</span>
+                      <h2 
+                        className="text-3xl font-black uppercase tracking-tight text-slate-900"
+                        style={{ color: sec.settings.headingColor || '#0F172A' }}
+                      >
+                        {sec.settings.title || 'Shop Premium Brand Partners'}
+                      </h2>
+                      {sec.settings.description && (
+                        <p className="text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">{sec.settings.description}</p>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                      {(sec.settings.brandItems || []).map((b, bidx) => (
+                        <div 
+                          key={bidx} 
+                          onClick={() => handleLinkClick(b.linkUrl)}
+                          className="bg-white border border-slate-200 hover:border-indigo-650 hover:shadow-md rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:-translate-y-0.5 group min-h-[140px]"
+                        >
+                          <div className="h-16 w-full flex items-center justify-center mb-3">
+                            {b.imageUrl ? (
+                              <img 
+                                src={b.imageUrl} 
+                                className="max-h-full max-w-full object-contain filter group-hover:brightness-105 transition-all duration-300 rounded" 
+                                alt={b.title} 
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="h-12 w-12 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center text-slate-350">
+                                <Layers className="h-5 w-5" />
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-xs font-black uppercase tracking-widest text-[#1E293B] group-hover:text-indigo-650 transition-colors truncate max-w-full block">
+                            {b.title || 'Brand'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
 
               </div>

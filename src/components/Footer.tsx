@@ -67,27 +67,26 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* Collections links */}
+        {/* Info links */}
         <div>
-          <h4 className="font-black text-slate-200 uppercase tracking-widest mb-4">Top Brands</h4>
+          <h4 className="font-black text-slate-200 uppercase tracking-widest mb-4">Info</h4>
           <ul className="space-y-2.5 text-slate-400 font-medium">
-            <li className="hover:text-white transition-colors cursor-pointer">77 Nicotine Slim Boxes</li>
-            <li className="hover:text-white transition-colors cursor-pointer">CUBA Heavy Dark Canisters</li>
-            <li className="hover:text-white transition-colors cursor-pointer">CLEW Delicate Fresh White</li>
-            <li className="hover:text-white transition-colors cursor-pointer">KILLA Cold Pepper Frost</li>
-            <li className="hover:text-white transition-colors cursor-pointer">VELO Freeze Eucalyptus</li>
+            <li className="hover:text-white transition-colors cursor-pointer">Strength Guide</li>
+            <li className="hover:text-white transition-colors cursor-pointer">Faq's</li>
+            <li className="hover:text-white transition-colors cursor-pointer">About</li>
+            <li className="hover:text-white transition-colors cursor-pointer">Contact</li>
+            <li className="hover:text-white transition-colors cursor-pointer">Journal</li>
           </ul>
         </div>
 
-        {/* Help Pages */}
+        {/* Policies */}
         <div>
-          <h4 className="font-black text-slate-200 uppercase tracking-widest mb-4">Legal & Support</h4>
+          <h4 className="font-black text-slate-200 uppercase tracking-widest mb-4">Policies</h4>
           <ul className="space-y-2.5 text-slate-400 font-medium">
-            <li className="hover:text-white transition-colors cursor-pointer">Subscription Terms & Rules</li>
-            <li className="hover:text-white transition-colors cursor-pointer">Shipping & Dispatch Schedule</li>
-            <li className="hover:text-white transition-colors cursor-pointer">Age Policy Verification</li>
-            <li className="hover:text-white transition-colors cursor-pointer">Privacy Safeguards Code</li>
-            <li className="hover:text-white transition-colors cursor-pointer">Track My Delivery Parcel</li>
+            <li className="hover:text-white transition-colors cursor-pointer">Privacy Policy</li>
+            <li className="hover:text-white transition-colors cursor-pointer">Shipping Policy</li>
+            <li className="hover:text-white transition-colors cursor-pointer">Refund Policy</li>
+            <li className="hover:text-white transition-colors cursor-pointer">Terms & Conditions</li>
           </ul>
         </div>
 

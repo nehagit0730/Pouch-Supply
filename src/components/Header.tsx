@@ -1,6 +1,6 @@
-import React from 'react';
-import { Customer, CartItem } from '../types';
-import { ShoppingCart, Heart, User, Sparkles, LayoutDashboard, Menu, Store, Phone, HelpCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Customer, CartItem, Product, Collection } from '../types';
+import { ShoppingCart, Heart, User, Sparkles, LayoutDashboard, Menu, Store, Phone, HelpCircle, Search, X } from 'lucide-react';
 
 interface HeaderProps {
   currentTab: string;
@@ -12,6 +12,9 @@ interface HeaderProps {
   onOpenWishlist: () => void;
   onOpenAdmin: () => void;
   isAdminActive: boolean;
+  allProducts?: Product[];
+  allCollections?: Collection[];
+  onNavigateDetail?: (tab: string, productId?: string, collectionId?: string) => void;
 }
 
 export default function Header({
@@ -23,19 +26,130 @@ export default function Header({
   onOpenCustomer,
   onOpenWishlist,
   onOpenAdmin,
-  isAdminActive
+  isAdminActive,
+  allProducts = [],
+  allCollections = [],
+  onNavigateDetail
 }: HeaderProps) {
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const wishlistCount = loggedInCustomer?.wishlist.length || 0;
 
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredProducts = searchQuery.trim() === '' ? [] : allProducts.filter(p => 
+    p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    p.vendor.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  ).slice(0, 5);
+
+  const filteredCollections = searchQuery.trim() === '' ? [] : allCollections.filter(c => 
+    c.title.toLowerCase().includes(searchQuery.toLowerCase())
+  ).slice(0, 3);
+
   return (
-    <header className="border-b border-[#e1e3e5] bg-white">
+    <header className="border-b border-[#e1e3e5] bg-white relative">
       
       {/* Top micro promo bar */}
       <div className="bg-[#1a1c1d] text-white text-[10px] text-center py-2 px-4 uppercase tracking-widest font-bold flex items-center justify-center gap-1.5">
         <Sparkles className="h-3 w-3 text-amber-400" />
         <span>Free Priority Courier Shipping on all bulk orders over £40! Delivery within 2-4 working days</span>
       </div>
+
+      {/* Slide-down Search Overlay */}
+      {isSearchOpen && (
+        <div className="absolute inset-x-0 top-full bg-white border-b border-slate-200 z-50 shadow-xl animate-fade-in font-sans">
+          <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-250 p-3.5 rounded-2xl">
+              <Search className="h-5 w-5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search canisters, series types, strength grades, brand manufacturers..."
+                value={searchQuery}
+                autoFocus
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full text-sm font-semibold bg-transparent focus:outline-none placeholder-slate-400 text-slate-800"
+              />
+              <button
+                onClick={() => {
+                  setIsSearchOpen(false);
+                  setSearchQuery('');
+                }}
+                className="p-1 text-slate-400 hover:text-slate-650 cursor-pointer"
+                title="Close Search"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Results pane */}
+            {searchQuery.trim() !== '' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                
+                {/* Product results */}
+                <div className="md:col-span-2 space-y-3">
+                  <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">Matching Products ({filteredProducts.length})</h4>
+                  <div className="space-y-2">
+                    {filteredProducts.map((p) => (
+                      <div
+                        key={p.id}
+                        onClick={() => {
+                          onNavigateDetail?.('product-detail', p.id);
+                          setIsSearchOpen(false);
+                          setSearchQuery('');
+                        }}
+                        className="flex items-center gap-3 p-2 bg-slate-50 hover:bg-slate-100 rounded-xl cursor-pointer border border-transparent hover:border-slate-200/80 transition-all"
+                      >
+                        {p.image ? (
+                          <img src={p.image} className="w-10 h-10 rounded-lg object-cover border shrink-0" alt="" referrerPolicy="no-referrer" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center shrink-0 text-slate-450 font-bold text-xs font-mono">P</div>
+                        )}
+                        <div className="truncate flex-1">
+                          <span className="block text-[10px] font-extrabold uppercase text-slate-400 leading-none mb-0.5">{p.vendor}</span>
+                          <span className="block text-xs font-black text-slate-755 truncate">{p.title}</span>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-[11px] font-extrabold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">£{p.price.toFixed(2)}</span>
+                          <span className="block text-[8px] font-semibold text-slate-400 mt-0.5">{p.category}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {filteredProducts.length === 0 && (
+                      <p className="text-xs text-slate-450 italic py-2">No products match your search query.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Collection results */}
+                <div className="space-y-3 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6">
+                  <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">Collections ({filteredCollections.length})</h4>
+                  <div className="space-y-2">
+                    {filteredCollections.map((c) => (
+                      <div
+                        key={c.id}
+                        onClick={() => {
+                          onNavigateDetail?.('collection-detail', undefined, c.id);
+                          setIsSearchOpen(false);
+                          setSearchQuery('');
+                        }}
+                        className="p-2.5 bg-slate-50 hover:bg-indigo-50/50 rounded-xl cursor-pointer border border-transparent hover:border-indigo-100 transition-all font-sans"
+                      >
+                        <span className="block text-xs font-black text-slate-755 truncate">{c.title}</span>
+                        <span className="block text-[9px] text-slate-400 line-clamp-1 mt-0.5">{c.description || 'Explore curated series canisters.'}</span>
+                      </div>
+                    ))}
+                    {filteredCollections.length === 0 && (
+                      <p className="text-xs text-slate-450 italic py-2">No categories found.</p>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main navigation menu */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -73,7 +187,7 @@ export default function Header({
               currentTab === 'frontend-subscribe' && !isAdminActive ? 'text-indigo-650 border-b-2 border-indigo-600' : 'text-slate-500'
             }`}
           >
-            Subscribe Builder 📦
+            Subscribe
           </button>
 
           <button
@@ -91,16 +205,16 @@ export default function Header({
               currentTab === 'frontend-brands' && !isAdminActive ? 'text-indigo-650 border-b-2 border-indigo-600' : 'text-slate-500'
             }`}
           >
-            All Brands Directory
+            All Brands
           </button>
 
           <button
-            onClick={() => onTabChange('blogs')}
+            onClick={() => onTabChange('about')}
             className={`text-xs font-black uppercase tracking-widest pb-1 transition-colors hover:text-indigo-600 cursor-pointer ${
-              (currentTab === 'blogs' || currentTab === 'blog-detail') && !isAdminActive ? 'text-indigo-650 border-b-2 border-indigo-600' : 'text-slate-500'
+              currentTab === 'about' && !isAdminActive ? 'text-indigo-650 border-b-2 border-indigo-600' : 'text-slate-500'
             }`}
           >
-            Pouch Journal 📖
+            About
           </button>
         </nav>
 
@@ -121,6 +235,15 @@ export default function Header({
           </button>
 
           <span className="h-5 w-px bg-slate-200 hidden sm:block" />
+
+          {/* Search Trigger Button */}
+          <button
+            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            className={`p-2.5 rounded-full hover:bg-slate-100 cursor-pointer transition-colors ${isSearchOpen ? 'bg-indigo-50 text-indigo-650' : 'text-slate-605'}`}
+            title="Search Website"
+          >
+            <Search className="h-4.5 w-4.5 text-slate-500" />
+          </button>
 
           {/* Wishlist Link bubble */}
           <button

@@ -91,7 +91,7 @@ export interface Discount {
 
 export interface PageSection {
   id: string;
-  type: 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow';
+  type: 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list';
   settings: {
     fullWidth: boolean;
     backgroundColor: string; // hex
@@ -108,6 +108,13 @@ export interface PageSection {
     itemsCount?: number;
     selectedCollectionId?: string;
     selectedCollectionIds?: string[];
+    columnsDesktop?: number;
+    columnsMobile?: number;
+    brandItems?: {
+      imageUrl: string;
+      linkUrl: string;
+      title?: string;
+    }[];
     slides?: {
       title: string;
       description: string;

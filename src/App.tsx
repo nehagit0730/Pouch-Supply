@@ -103,7 +103,7 @@ export default function App() {
     } else if (tab === 'frontend-shop') {
       url = '/collections/all';
     } else if (tab === 'frontend-brands') {
-      url = '/collections/all';
+      url = '/pages/brands';
     } else if (tab === 'frontend-subscribe') {
       url = '/pages/subscribe';
     } else if (tab === 'frontend-account') {
@@ -460,6 +460,9 @@ export default function App() {
             }
           }}
           isAdminActive={isAdminActive}
+          allProducts={products}
+          allCollections={collections}
+          onNavigateDetail={navigateToTab}
         />
       )}
 
@@ -527,6 +530,7 @@ export default function App() {
                     loggedInCustomer={loggedInCustomer}
                     onAddToCart={handleAddToCart} 
                     onToggleWishlist={handleToggleWishlist}
+                    allBlogs={blogs}
                     onNavigate={(target, arg) => {
                       if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
                         navigateToTab(target);
@@ -689,6 +693,7 @@ export default function App() {
                   loggedInCustomer={loggedInCustomer}
                   onAddToCart={handleAddToCart} 
                   onToggleWishlist={handleToggleWishlist}
+                  allBlogs={blogs}
                   onNavigate={(target, arg) => {
                     if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
                       navigateToTab(target);
@@ -818,14 +823,46 @@ export default function App() {
             )}
 
             {/* FRONTEND VIEW - BRANDS DIRECTORY */}
-            {currentTab === 'frontend-brands' && (
-              <BrandList
-                collections={collections}
-                onBrandClick={(colId) => {
-                  navigateToTab('collection-detail', undefined, colId);
-                }}
-              />
-            )}
+            {currentTab === 'frontend-brands' && (() => {
+              const matchedPage = customPages.find(p => p.slug === 'brands');
+              if (matchedPage) {
+                return (
+                  <PageRenderer 
+                    page={matchedPage} 
+                    allProducts={products}
+                    allCollections={collections}
+                    loggedInCustomer={loggedInCustomer}
+                    onAddToCart={handleAddToCart} 
+                    onToggleWishlist={handleToggleWishlist}
+                    allBlogs={blogs}
+                    onNavigate={(target, arg) => {
+                      if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
+                        navigateToTab(target);
+                      } else if (target.startsWith('/pages/') || target.startsWith('page-')) {
+                        const slug = target.replace('/pages/', '').replace('page-', '');
+                        navigateToTab(slug);
+                      } else if (target.startsWith('/collections/') || target.startsWith('collection-')) {
+                        const colId = target.replace('/collections/', '').replace('collection-', '');
+                        navigateToTab('collection-detail', undefined, colId);
+                      } else if (target.startsWith('/products/') || target.startsWith('product-')) {
+                        const prodId = target.replace('/products/', '').replace('product-', '');
+                        navigateToTab('product-detail', prodId);
+                      } else {
+                        navigateToTab(target);
+                      }
+                    }}
+                  />
+                );
+              }
+              return (
+                <BrandList
+                  collections={collections}
+                  onBrandClick={(colId) => {
+                    navigateToTab('collection-detail', undefined, colId);
+                  }}
+                />
+              );
+            })()}
 
             {/* FRONTEND VIEW - CUSTOMER ACCOUNT */}
             {currentTab === 'frontend-account' && (
