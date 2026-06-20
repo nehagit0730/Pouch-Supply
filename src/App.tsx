@@ -15,6 +15,10 @@ import CartDrawer from './components/CartDrawer';
 import CustomerDrawer from './components/CustomerDrawer';
 import AdminDashboard from './components/AdminDashboard';
 import PageRenderer from './components/PageRenderer';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import ShippingPolicy from './components/ShippingPolicy';
+import RefundPolicy from './components/RefundPolicy';
+import TermsConditions from './components/TermsConditions';
 import ProductDetailView from './components/ProductDetailView';
 import CollectionDetailView from './components/CollectionDetailView';
 import { 
@@ -1277,8 +1281,28 @@ export default function App() {
               );
             })()}
 
+            {/* FRONTEND VIEW - PRIVACY POLICY */}
+            {currentTab === 'privacy-policy' && (
+              <PrivacyPolicy onNavigate={navigateToTab} />
+            )}
+
+            {/* FRONTEND VIEW - SHIPPING POLICY */}
+            {currentTab === 'shipping-policy' && (
+              <ShippingPolicy onNavigate={navigateToTab} />
+            )}
+
+            {/* FRONTEND VIEW - REFUND POLICY */}
+            {currentTab === 'refund-policy' && (
+              <RefundPolicy onNavigate={navigateToTab} />
+            )}
+
+            {/* FRONTEND VIEW - TERMS & CONDITIONS */}
+            {currentTab === 'terms-conditions' && (
+              <TermsConditions onNavigate={navigateToTab} />
+            )}
+
             {/* FRONTEND VIEW - 404 NOT FOUND FOR NONEXISTENT PAGES */}
-            {!['frontend-home', 'frontend-shop', 'frontend-brands', 'frontend-subscribe', 'frontend-account', 'product-detail', 'collection-detail', 'blogs', 'blog-detail'].includes(currentTab) && !customPages.some(p => p.slug === currentTab) && (
+            {!['frontend-home', 'frontend-shop', 'frontend-brands', 'frontend-subscribe', 'frontend-account', 'product-detail', 'collection-detail', 'blogs', 'blog-detail', 'privacy-policy', 'shipping-policy', 'refund-policy', 'terms-conditions'].includes(currentTab) && !customPages.some(p => p.slug === currentTab) && (
               <div className="max-w-6xl mx-auto py-24 px-4 text-center space-y-6">
                 <span className="text-7xl block">🔍</span>
                 <div className="space-y-1.5">
@@ -1427,7 +1451,7 @@ export default function App() {
       )}
 
       {/* Universal Footer layout */}
-      <Footer />
+      <Footer onNavigate={navigateToTab} />
 
     </div>
   );

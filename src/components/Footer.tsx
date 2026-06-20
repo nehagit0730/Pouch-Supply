@@ -1,7 +1,11 @@
 import React from 'react';
 import { Mail, ShieldCheck, Truck, RefreshCw, Sparkles, HelpCircle } from 'lucide-react';
 
-export default function Footer() {
+interface FooterProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export default function Footer({ onNavigate }: FooterProps) {
   return (
     <footer id="global-footer" className="bg-slate-900 text-white border-t border-slate-800">
       
@@ -71,11 +75,11 @@ export default function Footer() {
         <div>
           <h4 className="font-black text-slate-200 uppercase tracking-widest mb-4">Info</h4>
           <ul className="space-y-2.5 text-slate-400 font-medium">
-            <li className="hover:text-white transition-colors cursor-pointer">Strength Guide</li>
-            <li className="hover:text-white transition-colors cursor-pointer">Faq's</li>
-            <li className="hover:text-white transition-colors cursor-pointer">About</li>
-            <li className="hover:text-white transition-colors cursor-pointer">Contact</li>
-            <li className="hover:text-white transition-colors cursor-pointer">Journal</li>
+            <li onClick={() => onNavigate?.('strength-guide')} className="hover:text-white transition-colors cursor-pointer">Strength Guide</li>
+            <li onClick={() => onNavigate?.('faqs')} className="hover:text-white transition-colors cursor-pointer">Faq's</li>
+            <li onClick={() => onNavigate?.('about')} className="hover:text-white transition-colors cursor-pointer">About</li>
+            <li onClick={() => onNavigate?.('contact')} className="hover:text-white transition-colors cursor-pointer">Contact</li>
+            <li onClick={() => onNavigate?.('blogs')} className="hover:text-white transition-colors cursor-pointer">Journal</li>
           </ul>
         </div>
 
@@ -83,10 +87,10 @@ export default function Footer() {
         <div>
           <h4 className="font-black text-slate-200 uppercase tracking-widest mb-4">Policies</h4>
           <ul className="space-y-2.5 text-slate-400 font-medium">
-            <li className="hover:text-white transition-colors cursor-pointer">Privacy Policy</li>
-            <li className="hover:text-white transition-colors cursor-pointer">Shipping Policy</li>
-            <li className="hover:text-white transition-colors cursor-pointer">Refund Policy</li>
-            <li className="hover:text-white transition-colors cursor-pointer">Terms & Conditions</li>
+            <li onClick={() => onNavigate?.('privacy-policy')} className="hover:text-white transition-colors cursor-pointer">Privacy Policy</li>
+            <li onClick={() => onNavigate?.('shipping-policy')} className="hover:text-white transition-colors cursor-pointer">Shipping Policy</li>
+            <li onClick={() => onNavigate?.('refund-policy')} className="hover:text-white transition-colors cursor-pointer">Refund Policy</li>
+            <li onClick={() => onNavigate?.('terms-conditions')} className="hover:text-white transition-colors cursor-pointer">Terms & Conditions</li>
           </ul>
         </div>
 
