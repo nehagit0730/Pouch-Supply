@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { fetchResource, saveResource } from "./serverDb";
+import { fetchResource, saveResource, saveUploadedImage, getUploadedImage, getConnectionStatus } from "./serverDb";
 
 async function startServer() {
   const app = express();
@@ -17,9 +17,66 @@ async function startServer() {
     next();
   });
 
+  // API Route: Secure binary/base64 Image Storage
+  app.post("/api/upload", async (req, res) => {
+    try {
+      const { data, filename } = req.body;
+      if (!data) {
+        return res.status(400).json({ error: "Missing data payload for upload." });
+      }
+
+      // Check if it's already a clean base64 dataURI
+      let base64String = data;
+      let mimeType = "image/png";
+
+      if (data.startsWith("data:")) {
+        const matches = data.match(/^data:([^;]+);base64,(.+)$/);
+        if (matches && matches.length === 3) {
+          mimeType = matches[1];
+          base64String = matches[2];
+        }
+      }
+
+      const id = `img-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+      const imageUrl = await saveUploadedImage(id, base64String, mimeType);
+      
+      console.log(`[API Upload] Successfully persisted ${mimeType} image into MongoDB Atlas. ID: ${id}`);
+      res.json({ url: imageUrl, id });
+    } catch (err: any) {
+      console.error("[API Upload] Fail:", err);
+      res.status(500).json({ error: err.message || "Failed to process image upload database insertion" });
+    }
+  });
+
+  // API Route: Image Provider / Streamer
+  app.get("/api/images/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const imgDoc = await getUploadedImage(id);
+      if (!imgDoc) {
+        return res.status(404).send("Image not found");
+      }
+
+      const imgBuffer = Buffer.from(imgDoc.base64Data, "base64");
+      res.writeHead(200, {
+        "Content-Type": imgDoc.mimeType,
+        "Content-Length": imgBuffer.length,
+        "Cache-Control": "public, max-age=31536000" // Persistent browser caching
+      });
+      res.end(imgBuffer);
+    } catch (err: any) {
+      console.error("[API Images] Server error serving asset document:", err);
+      res.status(500).send("Internal server error serving media");
+    }
+  });
+
   // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  app.get("/api/db-status", (req, res) => {
+    res.json(getConnectionStatus());
   });
 
   // Explicit mappings for all storefront and admin entities to keep the database and frontend fully synced

@@ -352,7 +352,9 @@ export default function ProductEditor({
       variants: variantsList.filter(v => v.name.trim() !== ''), // keep only valid options with a name
       slug: finalSlug,
       seoTitle: seoTitle.trim() || title.trim(),
-      seoDescription: seoDescription.trim() || description.trim().slice(0, 155)
+      seoDescription: seoDescription.trim() || description.trim().slice(0, 155),
+      createdAt: product?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     onSave(cleanProduct, selectedColIds);

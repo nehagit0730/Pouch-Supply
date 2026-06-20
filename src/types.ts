@@ -25,6 +25,8 @@ export interface Product {
   slug?: string;
   seoTitle?: string;
   seoDescription?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Collection {
@@ -39,6 +41,8 @@ export interface Collection {
   seoTitle?: string;
   seoDescription?: string;
   ogImage?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Order {

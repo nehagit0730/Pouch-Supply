@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, PageSection, BlogPost } from '../types';
 import { 
   TrendingUp, BarChart3, Package, Users, Tag, FileCode, HardDrive, Percent, 
@@ -99,6 +99,21 @@ export default function AdminDashboard({
   onExitAdmin
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<SidebarTab>('analytics');
+  
+  const [dbStatus, setDbStatus] = useState<{
+    status: 'connected' | 'error' | 'not-configured' | 'pending';
+    error?: string;
+    isSslAlert?: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/db-status')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) setDbStatus(data);
+      })
+      .catch(err => console.error("Error asking DB status:", err));
+  }, []);
 
   // --- Draft State Hooks for unified safe saves ---
   const [localProducts, setLocalProducts] = useState<Product[]>(parentProducts);
@@ -1073,6 +1088,104 @@ export default function AdminDashboard({
                 <span className="font-extrabold text-amber-500 text-sm">{orders.filter(o => o.fulfillmentStatus === 'Unfulfilled').length} Orders</span>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Database Integration & IP Whitelisting Diagnosis Banner */}
+        {dbStatus && (
+          <div className="w-full">
+            {dbStatus.status === 'connected' && (
+              <div className="bg-emerald-50/50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between shadow-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black text-emerald-950 uppercase tracking-wide">Primary Database Active</p>
+                    <p className="text-[10px] text-emerald-700 font-medium font-bold">Successfully synchronized and connected to MongoDB Atlas database.</p>
+                  </div>
+                </div>
+                <span className="text-[9px] font-mono font-bold bg-[#008060] text-white px-2 py-0.5 rounded uppercase tracking-widest">
+                  Live Sync
+                </span>
+              </div>
+            )}
+
+            {dbStatus.status === 'not-configured' && (
+              <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+                <div className="space-y-1">
+                  <p className="text-xs font-black text-amber-950 uppercase tracking-wide flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-amber-600 animate-pulse" />
+                    Offline-Safe Mode Enabled (Memory Cache & LocalStorage)
+                  </p>
+                  <p className="text-[10px] text-amber-800 leading-relaxed max-w-3xl">
+                    Specify <code className="font-mono bg-amber-100/60 px-1 py-0.5 rounded font-bold text-amber-950 font-black">MONGODB_URI</code> in environment secrets to persist layout, images, categories, and inventory securely in MongoDB Atlas database.
+                  </p>
+                </div>
+                <div className="shrink-0">
+                  <span className="text-[9px] font-mono font-black border border-amber-200 bg-amber-50 text-amber-800 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                    Fallback Cache Online
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {dbStatus.status === 'error' && (
+              <div className="bg-pink-50/70 border-2 border-pink-250 rounded-xl p-5 shadow-sm space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-full bg-pink-100 flex items-center justify-center shrink-0">
+                    <EyeOff className="h-4 w-4 text-pink-600" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-black text-pink-950 uppercase tracking-wide">
+                      MongoDB Atlas Connection Whitelist Blocked (SSL Handshake Failed)
+                    </h3>
+                    <p className="text-[11.5px] text-pink-900 leading-relaxed font-bold">
+                      Your database connection attempts threw <code className="font-mono bg-pink-100/80 px-1 py-0.5 rounded text-pink-950 font-black">SSL_TLSV1_ALERT_INTERNAL_ERROR (alert number 80)</code>.
+                      This happens because MongoDB Atlas prevents the container from connecting until its IP address is whitelisted in your cluster.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white/80 border border-pink-200 rounded-xl p-4 space-y-3">
+                  <p className="text-[11px] font-black text-slate-905 uppercase tracking-wide">
+                    👉 Easy 1-Minute Whitelisting Resolution Steps:
+                  </p>
+                  <ol className="text-[10px] text-slate-800 space-y-2 list-decimal list-inside leading-relaxed font-bold">
+                    <li>
+                      Log in to your <a href="https://cloud.mongodb.com" target="_blank" rel="noopener noreferrer" className="text-indigo-650 underline hover:text-indigo-850">MongoDB Atlas Dashboard</a>.
+                    </li>
+                    <li>
+                      In the left sidebar menu under <strong className="text-slate-950 font-extrabold">Security</strong>, click on <strong className="text-slate-950 font-extrabold">Network Access</strong>.
+                    </li>
+                    <li>
+                      Click the <strong className="text-slate-950 bg-slate-100 px-1.5 py-0.5 rounded border">+ Add IP Address</strong> button on the top right.
+                    </li>
+                    <li>
+                      Choose the <span className="text-indigo-750 font-black font-extrabold">ALLOW ACCESS FROM ANYWHERE</span> preset button (this adds <code className="bg-slate-100 px-1 rounded font-mono">0.0.0.0/0</code> representing modern container dynamic clusters) then click <strong className="text-slate-950 font-extrabold">Confirm</strong>.
+                    </li>
+                    <li>
+                      Wait about 60 seconds for MongoDB Atlas to apply the firewall rule, then click below to restart your connection sync!
+                    </li>
+                  </ol>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      window.location.reload();
+                    }}
+                    className="flex items-center gap-2 bg-pink-650 hover:bg-pink-700 bg-indigo-650 hover:bg-indigo-750 transition-colors text-white text-[10px] font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-xs cursor-pointer"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>Retry Sync Connection</span>
+                  </button>
+                  <span className="text-[10px] text-pink-750 font-semibold italic">
+                    (Currently operating safely on full-fidelity backup Server Mode memory cache)
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

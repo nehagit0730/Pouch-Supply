@@ -17,6 +17,7 @@ export default function ImageUploadInput({
   className = ''
 }: ImageUploadInputProps) {
   const [dragActive, setDragActive] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = (file: File) => {
@@ -24,11 +25,36 @@ export default function ImageUploadInput({
       alert('Only image files are permitted (png, jpg, jpeg, webp, svg)!');
       return;
     }
+    setIsUploading(true);
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       if (typeof reader.result === 'string') {
-        onChange(reader.result);
+        try {
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: reader.result })
+          });
+          if (!res.ok) {
+            throw new Error(`Server returned ${res.status}`);
+          }
+          const info = await res.json();
+          if (info.url) {
+            onChange(info.url);
+          } else {
+            onChange(reader.result);
+          }
+        } catch (err) {
+          console.warn('[ImageUpload] API upload failed, falling back to local base64:', err);
+          onChange(reader.result);
+        } finally {
+          setIsUploading(false);
+        }
       }
+    };
+    reader.onerror = () => {
+      alert('Failure reading attachment file.');
+      setIsUploading(false);
     };
     reader.readAsDataURL(file);
   };
@@ -79,16 +105,21 @@ export default function ImageUploadInput({
         onDragOver={handleDrag}
         onDragLeave={handleDrag}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={() => !isUploading && fileInputRef.current?.click()}
         className={`border border-dashed rounded-xl p-3 text-center transition-all relative flex flex-col items-center justify-center min-h-[96px] cursor-pointer group ${
           dragActive 
             ? 'border-indigo-600 bg-indigo-50/45' 
             : value 
               ? 'border-slate-200 bg-slate-50/30' 
               : 'border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-400'
-        }`}
+        } ${isUploading ? 'opacity-70 pointer-events-none' : ''}`}
       >
-        {value ? (
+        {isUploading ? (
+          <div className="space-y-2 py-2 flex flex-col items-center justify-center">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-indigo-600 border-t-transparent"></div>
+            <div className="text-[9px] font-bold text-indigo-650 animate-pulse">Uploading to Atlas database...</div>
+          </div>
+        ) : value ? (
           <div className="space-y-2 w-full flex flex-col items-center relative py-1">
             <div className="relative h-16 w-16 rounded-md border border-slate-150 overflow-hidden bg-white flex items-center justify-center shadow-xs">
               <img 

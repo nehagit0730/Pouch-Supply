@@ -190,7 +190,9 @@ export default function CollectionEditor({
       slug: finalSlug,
       seoTitle: seoTitle.trim() || undefined,
       seoDescription: seoDescription.trim() || undefined,
-      ogImage: ogImage.trim() || undefined
+      ogImage: ogImage.trim() || undefined,
+      createdAt: collection?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     onSave(saved);
