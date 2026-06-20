@@ -111,14 +111,14 @@ export default function App() {
           fetch('/api/blogs').then(r => r.ok ? r.json() : null),
         ]);
 
-        if (Array.isArray(prodsRes) && prodsRes.length > 0) setProducts(prodsRes);
-        if (Array.isArray(collsRes) && collsRes.length > 0) setCollections(collsRes);
-        if (Array.isArray(ordersRes) && ordersRes.length > 0) setOrders(ordersRes);
-        if (Array.isArray(filesRes) && filesRes.length > 0) setFiles(filesRes);
-        if (Array.isArray(custsRes) && custsRes.length > 0) setCustomers(custsRes);
-        if (Array.isArray(discsRes) && discsRes.length > 0) setDiscounts(discsRes);
-        if (Array.isArray(pagesRes) && pagesRes.length > 0) setCustomPages(pagesRes);
-        if (Array.isArray(blogsRes) && blogsRes.length > 0) setBlogs(blogsRes);
+        if (Array.isArray(prodsRes)) setProducts(prodsRes);
+        if (Array.isArray(collsRes)) setCollections(collsRes);
+        if (Array.isArray(ordersRes)) setOrders(ordersRes);
+        if (Array.isArray(filesRes)) setFiles(filesRes);
+        if (Array.isArray(custsRes)) setCustomers(custsRes);
+        if (Array.isArray(discsRes)) setDiscounts(discsRes);
+        if (Array.isArray(pagesRes)) setCustomPages(pagesRes);
+        if (Array.isArray(blogsRes)) setBlogs(blogsRes);
 
         console.log("[State Loader] Store data updated from MongoDB.");
       } catch (err) {
@@ -526,6 +526,23 @@ export default function App() {
     setCartOpen(false);
     setCheckoutSuccessful({ id: orderId, amount: finalTotal });
   };
+
+  if (!isInitialLoadDone) {
+    return (
+      <div className="min-h-screen bg-[#f6f6f7] flex flex-col items-center justify-center p-6" id="app-loading-state">
+        <div className="space-y-4 max-w-md w-full text-center flex flex-col items-center">
+          <div className="h-10 w-10 text-indigo-650 animate-spin border-4 border-[#e1e2e6] border-t-indigo-600 rounded-full mb-1"></div>
+          <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest animate-pulse font-mono">Connecting to Atlas Database...</p>
+          <div className="h-0.5 w-24 bg-slate-200 rounded-full overflow-hidden relative">
+            <div className="absolute top-0 left-0 bottom-0 bg-indigo-600 rounded-full animate-[shimmer_1.5s_infinite]" style={{ width: '40%' }}></div>
+          </div>
+          <p className="text-[10.5px] text-slate-500 font-bold leading-relaxed max-w-xs">
+            Synchronizing live products, collection hierarchies, customer order histories, and inventories...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f6f6f7] text-slate-800 flex flex-col font-sans">
