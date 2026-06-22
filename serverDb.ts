@@ -6,7 +6,7 @@ import {
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
-let isConnecting = false;
+let connectPromise: Promise<Db | null> | null = null;
 
 export interface DbStatus {
   status: 'connected' | 'error' | 'not-configured' | 'pending';
@@ -70,59 +70,62 @@ export async function getDb(): Promise<Db | null> {
   if (db) {
     return db;
   }
-  if (isConnecting) {
-    return null;
+  if (connectPromise) {
+    return connectPromise;
   }
 
-  try {
-    isConnecting = true;
-    console.log("[MongoDB] Attempting lazy-connection to Atlas...");
-    client = new MongoClient(uri, {
-      serverSelectionTimeoutMS: 4000,
-      connectTimeoutMS: 5000,
-      socketTimeoutMS: 30000,
-    });
-    await client.connect();
-    db = client.db();
-    console.log("[MongoDB] Connected to database: ", db.databaseName);
-    await seedIfEmpty(db);
-    lastConnectionStatus = { status: 'connected' };
-    return db;
-  } catch (error: any) {
-    const errorStr = String(error);
-    const isSslAlert = errorStr.includes("ssl3_read_bytes") || errorStr.includes("alert number 80") || errorStr.includes("ERR_SSL_");
-    
-    lastConnectionStatus = {
-      status: 'error',
-      error: errorStr,
-      isSslAlert: isSslAlert
-    };
+  connectPromise = (async () => {
+    try {
+      console.log("[MongoDB] Attempting lazy-connection to Atlas...");
+      client = new MongoClient(uri, {
+        serverSelectionTimeoutMS: 8000,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+      });
+      await client.connect();
+      const connectedDb = client.db();
+      console.log("[MongoDB] Connected to database: ", connectedDb.databaseName);
+      await seedIfEmpty(connectedDb);
+      db = connectedDb;
+      lastConnectionStatus = { status: 'connected' };
+      return db;
+    } catch (error: any) {
+      const errorStr = String(error);
+      const isSslAlert = errorStr.includes("ssl3_read_bytes") || errorStr.includes("alert number 80") || errorStr.includes("ERR_SSL_");
+      
+      lastConnectionStatus = {
+        status: 'error',
+        error: errorStr,
+        isSslAlert: isSslAlert
+      };
 
-    console.warn("\n============================================================");
-    console.warn("[MongoDB] Atlas integration: Connection refused or failed. Using Server memory cache instead.");
-    console.warn(`[MongoDB Error Detail]: ${errorStr}`);
-    
-    if (isSslAlert) {
-      console.warn("\n⚠️  DETECTED MONGO ATLAS IP WHITELIST / TLS SECURITY ISSUE!");
-      console.warn("This SSL 'alert number 80' or SSL alert internal error happens when MongoDB Atlas");
-      console.warn("closes the connection because the client IP is not whitelisted.");
-      console.warn("\n👉 TO FIX THIS:");
-      console.warn("1. Log in to your MongoDB Atlas Dashboard.");
-      console.warn("2. Go to 'Security' -> 'Network Access' on the left side menu.");
-      console.warn("3. Click '+ Add IP Address'.");
-      console.warn("4. Select 'ALLOW ACCESS FROM ANYWHERE' (adds 0.0.0.0/0) and click 'Confirm'.");
-      console.warn("Wait 1 minute for Atlas to apply changes, then refresh/restart your app.");
-    } else {
-      console.warn("\nPlease verify your MONGODB_URI format in the environment config.");
+      console.warn("\n============================================================");
+      console.warn("[MongoDB] Atlas integration: Connection refused or failed. Using Server memory cache instead.");
+      console.warn(`[MongoDB Error Detail]: ${errorStr}`);
+      
+      if (isSslAlert) {
+        console.warn("\n⚠️  DETECTED MONGO ATLAS IP WHITELIST / TLS SECURITY ISSUE!");
+        console.warn("This SSL 'alert number 80' or SSL alert internal error happens when MongoDB Atlas");
+        console.warn("closes the connection because the client IP is not whitelisted.");
+        console.warn("\n👉 TO FIX THIS:");
+        console.warn("1. Log in to your MongoDB Atlas Dashboard.");
+        console.warn("2. Go to 'Security' -> 'Network Access' on the left side menu.");
+        console.warn("3. Click '+ Add IP Address'.");
+        console.warn("4. Select 'ALLOW ACCESS FROM ANYWHERE' (adds 0.0.0.0/0) and click 'Confirm'.");
+        console.warn("Wait 1 minute for Atlas to apply changes, then refresh/restart your app.");
+      } else {
+        console.warn("\nPlease verify your MONGODB_URI format in the environment config.");
+      }
+      console.warn("============================================================\n");
+      
+      client = null;
+      db = null;
+      connectPromise = null; // Clear so subsequent calls can retry the connection
+      return null;
     }
-    console.warn("============================================================\n");
-    
-    client = null;
-    db = null;
-    return null;
-  } finally {
-    isConnecting = false;
-  }
+  })();
+
+  return connectPromise;
 }
 
 // Global resource controllers that fetch from DB or memory cache
