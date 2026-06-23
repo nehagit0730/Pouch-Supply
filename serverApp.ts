@@ -3,6 +3,16 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { fetchResource, saveResource, saveUploadedImage, getUploadedImage, getConnectionStatus, updateMongoUri, getDb } from "./serverDb";
 
+// Import modular routers for products, collections, customers, orders, files, discounts, custom pages, and blogs
+import productsRouter from "./backend/routes/products";
+import collectionsRouter from "./backend/routes/collections";
+import ordersRouter from "./backend/routes/orders";
+import filesRouter from "./backend/routes/files";
+import customersRouter from "./backend/routes/customers";
+import discountsRouter from "./backend/routes/discounts";
+import customPagesRouter from "./backend/routes/customPages";
+import blogsRouter from "./backend/routes/blogs";
+
 export async function createExpressApp() {
   const app = express();
 
@@ -113,54 +123,15 @@ export async function createExpressApp() {
     }
   });
 
-  // Explicit mappings for all storefront and admin entities to keep the database and frontend fully synced
-  const endpoints = [
-    { name: "products", path: "/api/products" },
-    { name: "collections", path: "/api/collections" },
-    { name: "orders", path: "/api/orders" },
-    { name: "files", path: "/api/files" },
-    { name: "customers", path: "/api/customers" },
-    { name: "discounts", path: "/api/discounts" },
-    { name: "customPages", path: "/api/custompages" },
-    { name: "blogs", path: "/api/blogs" }
-  ];
-
-  endpoints.forEach(({ name, path: routePath }) => {
-    // Read route
-    app.get(routePath, async (req, res) => {
-      try {
-        const data = await fetchResource(name);
-        res.json(data);
-      } catch (err: any) {
-        console.error(`[API Server] Error routing GET for ${name}:`, err);
-        res.status(500).json({ error: err.message || "Failed to fetch resource" });
-      }
-    });
-
-     // Write/Sync route
-    app.post(routePath, async (req, res) => {
-      try {
-        const payload = req.body;
-        if (!Array.isArray(payload)) {
-          return res.status(400).json({ error: "API expects schema to be an array of documents" });
-        }
-        
-        // Dynamic check of the database connection
-        const database = await getDb();
-        if (!database) {
-          res.setHeader("X-Database-Offline", "true");
-        } else {
-          res.setHeader("X-Database-Offline", "false");
-        }
-
-        const updated = await saveResource(name, payload);
-        res.json(updated);
-      } catch (err: any) {
-        console.error(`[API Server] Error routing POST for ${name}:`, err);
-        res.status(500).json({ error: err.message || "Failed to persist resource" });
-      }
-    });
-  });
+  // Mount modular backend routers to handle storefront and admin entities properly
+  app.use("/api/products", productsRouter);
+  app.use("/api/collections", collectionsRouter);
+  app.use("/api/orders", ordersRouter);
+  app.use("/api/files", filesRouter);
+  app.use("/api/customers", customersRouter);
+  app.use("/api/discounts", discountsRouter);
+  app.use("/api/custompages", customPagesRouter);
+  app.use("/api/blogs", blogsRouter);
 
   // Vite middleware for development or static serving for production
   if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
