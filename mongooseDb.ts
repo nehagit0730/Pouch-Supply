@@ -69,7 +69,10 @@ export function getHostFromUri(uri: string): string {
 // Schemes mapped with strict: false so dynamic properties stored via standard dashboard
 // do not get stripped, giving us high compatibility with the raw driver's structure.
 const ProductSchema = new Schema({
-  id: { type: String, required: true, unique: true }
+  id: { type: String, required: true, unique: true },
+  title: { type: String },
+  price: { type: Number },
+  description: { type: String }
 }, { strict: false, timestamps: true });
 
 const CollectionSchema = new Schema({
@@ -213,4 +216,13 @@ export async function connectMongoose(): Promise<typeof mongoose | null> {
   })();
 
   return connectPromise;
+}
+
+export async function connectDB() {
+  if (mongoose.connection?.readyState) return;
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error("MONGODB_URI is not set in environment variables");
+  }
+  await mongoose.connect(uri);
 }
