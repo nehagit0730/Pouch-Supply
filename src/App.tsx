@@ -87,13 +87,30 @@ export default function App() {
 
   const [loggedInCustomer, setLoggedInCustomer] = useState<Customer | null>(() => {
     const saved = localStorage.getItem('ps_logged_in_customer');
-    return saved ? JSON.parse(saved) : INITIAL_CUSTOMERS[3]; // Keep Kayla Canty logged in
+    return saved ? JSON.parse(saved) : (INITIAL_CUSTOMERS[3] || null); // Keep Kayla Canty logged in
   });
 
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
 
   // Load all central database arrays on mount
   useEffect(() => {
+    // Clear old static mock-data from your browser storage if it is cached
+    const savedProds = localStorage.getItem('ps_products');
+    if (savedProds && savedProds.includes('77-black-tea')) {
+      console.log("[Migration] Wiping old cached static mockup products for a clean database slate...");
+      localStorage.removeItem('ps_products');
+      localStorage.removeItem('ps_collections');
+      localStorage.removeItem('ps_orders');
+      localStorage.removeItem('ps_files');
+      localStorage.removeItem('ps_customers');
+      localStorage.removeItem('ps_discounts');
+      localStorage.removeItem('ps_blogs');
+      localStorage.removeItem('ps_custom_pages');
+      localStorage.removeItem('ps_logged_in_customer');
+      window.location.reload();
+      return;
+    }
+
     async function loadDataFromDb() {
       try {
         console.log("[State Loader] Fetching store data from MongoDB Atlas database...");
