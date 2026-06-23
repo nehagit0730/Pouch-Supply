@@ -87,7 +87,10 @@ export async function createExpressApp() {
     res.json({ status: "ok" });
   });
 
-  app.get("/api/db-status", (req, res) => {
+  app.get("/api/db-status", async (req, res) => {
+    try {
+      await getDb();
+    } catch (e) {}
     res.json(getConnectionStatus());
   });
 
@@ -134,13 +137,22 @@ export async function createExpressApp() {
       }
     });
 
-    // Write/Sync route
+     // Write/Sync route
     app.post(routePath, async (req, res) => {
       try {
         const payload = req.body;
         if (!Array.isArray(payload)) {
           return res.status(400).json({ error: "API expects schema to be an array of documents" });
         }
+        
+        // Dynamic check of the database connection
+        const database = await getDb();
+        if (!database) {
+          res.setHeader("X-Database-Offline", "true");
+        } else {
+          res.setHeader("X-Database-Offline", "false");
+        }
+
         const updated = await saveResource(name, payload);
         res.json(updated);
       } catch (err: any) {

@@ -1274,6 +1274,40 @@ export default function AdminDashboard({
                   </button>
                 </div>
 
+                {/* Highly structured, simple, exact MongoDB whitelisting diagnostic manual */}
+                <div className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 border border-indigo-150 rounded-xl p-5 space-y-4 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-lg bg-indigo-600 flex items-center justify-center select-none shrink-0 text-white font-bold text-xs ring-4 ring-indigo-100">
+                      ?
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wide">Why is your Atlas Whitelist failing? (Important diagnostic)</h4>
+                      <p className="text-[10px] text-indigo-700 font-semibold">The SSL Handshake Failed (TLS Alert 80) error results solely from dynamic container hosting.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                    <div className="bg-white/90 border border-slate-150 p-3.5 rounded-lg space-y-2">
+                      <span className="text-[9px] font-black uppercase text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">Diagnosis</span>
+                      <p className="text-[10.5px] text-slate-700 leading-relaxed font-medium">
+                        This web app operates server-side in a secure <strong>Google Cloud Run container</strong>. The requests to MongoDB originate from our Cloud server, <strong>not</strong> your local computer.
+                      </p>
+                    </div>
+                    <div className="bg-white/90 border border-slate-150 p-3.5 rounded-lg space-y-2">
+                      <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">The Conflict</span>
+                      <p className="text-[10.5px] text-slate-700 leading-relaxed font-medium">
+                        If you whitelisted your laptop's current IP address, Atlas blocks connection attempts from our server container. Cloud Run uses dynamic outbound IPs that rotate constantly.
+                      </p>
+                    </div>
+                    <div className="bg-white/90 border border-slate-150 p-3.5 rounded-lg space-y-2">
+                      <span className="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">The Solution</span>
+                      <p className="text-[10.5px] text-slate-700 leading-relaxed font-semibold">
+                        In your <strong>MongoDB Atlas Panel</strong> under <strong>Network Access</strong>, click <strong>+ Add IP Address</strong> and click the <strong>Allow Access from Anywhere</strong> button (this adds <code className="font-mono text-slate-900 bg-slate-100 px-1 text-[9.5px] rounded">0.0.0.0/0</code>). This instantly unblocks all Cloud containers!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Secure Configuration Input Form */}
                 <div className="bg-white/80 border border-slate-205 rounded-xl p-4 space-y-3 shadow-3xs">
                   <span className="text-[10px] font-extrabold text-slate-605 uppercase tracking-wider block">Update MongoDB Connection URI string:</span>

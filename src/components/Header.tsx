@@ -267,7 +267,7 @@ export default function Header({
           >
             <User className="h-4.5 w-4.5 text-slate-600 shrink-0" />
             <span className="text-[11px] font-bold text-slate-700 truncate">
-              {loggedInCustomer ? loggedInCustomer.name.split(' ')[0] : 'Log In'}
+              {loggedInCustomer && loggedInCustomer.name ? loggedInCustomer.name.split(' ')[0] : 'Log In'}
             </span>
           </button>
 

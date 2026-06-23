@@ -26,40 +26,47 @@ import {
 } from 'lucide-react';
 
 export default function App() {
+  // Helper for safe JSON parsing from LocalStorage
+  const safeLoadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
+    try {
+      const saved = localStorage.getItem(key);
+      if (!saved) return defaultValue;
+      const parsed = JSON.parse(saved);
+      if (parsed === null || parsed === undefined) return defaultValue;
+      return parsed as T;
+    } catch (e) {
+      console.warn(`[LocalStorage] Failed to parse key "${key}", reverting to default.`, e);
+      return defaultValue;
+    }
+  };
+
   // --- Persistent Storage State Initialization ---
   const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('ps_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    return safeLoadFromLocalStorage<Product[]>('ps_products', INITIAL_PRODUCTS);
   });
 
   const [collections, setCollections] = useState<Collection[]>(() => {
-    const saved = localStorage.getItem('ps_collections');
-    return saved ? JSON.parse(saved) : INITIAL_COLLECTIONS;
+    return safeLoadFromLocalStorage<Collection[]>('ps_collections', INITIAL_COLLECTIONS);
   });
 
   const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('ps_orders');
-    return saved ? JSON.parse(saved) : INITIAL_ORDERS;
+    return safeLoadFromLocalStorage<Order[]>('ps_orders', INITIAL_ORDERS);
   });
 
   const [files, setFiles] = useState<FileEntry[]>(() => {
-    const saved = localStorage.getItem('ps_files');
-    return saved ? JSON.parse(saved) : INITIAL_FILES;
+    return safeLoadFromLocalStorage<FileEntry[]>('ps_files', INITIAL_FILES);
   });
 
   const [customers, setCustomers] = useState<Customer[]>(() => {
-    const saved = localStorage.getItem('ps_customers');
-    return saved ? JSON.parse(saved) : INITIAL_CUSTOMERS;
+    return safeLoadFromLocalStorage<Customer[]>('ps_customers', INITIAL_CUSTOMERS);
   });
 
   const [discounts, setDiscounts] = useState<Discount[]>(() => {
-    const saved = localStorage.getItem('ps_discounts');
-    return saved ? JSON.parse(saved) : INITIAL_DISCOUNTS;
+    return safeLoadFromLocalStorage<Discount[]>('ps_discounts', INITIAL_DISCOUNTS);
   });
 
   const [blogs, setBlogs] = useState<BlogPost[]>(() => {
-    const saved = localStorage.getItem('ps_blogs');
-    return saved ? JSON.parse(saved) : INITIAL_BLOGS;
+    return safeLoadFromLocalStorage<BlogPost[]>('ps_blogs', INITIAL_BLOGS);
   });
 
   const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null);
@@ -67,50 +74,60 @@ export default function App() {
   const [selectedFrontCategory, setSelectedFrontCategory] = useState('All');
 
   const [customPages, setCustomPages] = useState<CustomPage[]>(() => {
-    const saved = localStorage.getItem('ps_custom_pages');
-    const loaded = saved ? JSON.parse(saved) : DEFAULT_PAGES;
+    const loaded = safeLoadFromLocalStorage<CustomPage[]>('ps_custom_pages', DEFAULT_PAGES);
+    const guaranteedList = Array.isArray(loaded) ? loaded : DEFAULT_PAGES;
     // Guaranteed presence check for Homepage in Pages list
-    if (!loaded.some((p: any) => p.isHomepage)) {
+    if (!guaranteedList.some((p: any) => p && p.isHomepage)) {
       const defaultHome = DEFAULT_PAGES.find((p: any) => p.isHomepage);
       if (defaultHome) {
-        return [defaultHome, ...loaded];
+        return [defaultHome, ...guaranteedList];
       }
     }
-    return loaded;
+    return guaranteedList;
   });
 
   // Shopping Cart & User session statuses
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('ps_cart');
-    return saved ? JSON.parse(saved) : [];
+    return safeLoadFromLocalStorage<CartItem[]>('ps_cart', []);
   });
 
   const [loggedInCustomer, setLoggedInCustomer] = useState<Customer | null>(() => {
     const saved = localStorage.getItem('ps_logged_in_customer');
-    return saved ? JSON.parse(saved) : (INITIAL_CUSTOMERS[3] || null); // Keep Kayla Canty logged in
+    if (!saved || saved === 'undefined') return null;
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed && parsed.id ? parsed : null;
+    } catch {
+      return null;
+    }
   });
 
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
+  const [isDbOffline, setIsDbOffline] = useState<boolean>(false);
+
+  // Reusable, highly robust sync engine that checks database connectivity headers
+  const syncToApi = async (resource: string, payload: any[]) => {
+    try {
+      const res = await fetch(`/api/${resource}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const offlineHeader = res.headers.get("X-Database-Offline");
+        if (offlineHeader === "true") {
+          setIsDbOffline(true);
+        } else {
+          setIsDbOffline(false);
+        }
+      }
+    } catch (err) {
+      console.error(`[Sync Engine] Failed to sync ${resource}:`, err);
+    }
+  };
 
   // Load all central database arrays on mount
   useEffect(() => {
-    // Clear old static mock-data from your browser storage if it is cached
-    const savedProds = localStorage.getItem('ps_products');
-    if (savedProds && savedProds.includes('77-black-tea')) {
-      console.log("[Migration] Wiping old cached static mockup products for a clean database slate...");
-      localStorage.removeItem('ps_products');
-      localStorage.removeItem('ps_collections');
-      localStorage.removeItem('ps_orders');
-      localStorage.removeItem('ps_files');
-      localStorage.removeItem('ps_customers');
-      localStorage.removeItem('ps_discounts');
-      localStorage.removeItem('ps_blogs');
-      localStorage.removeItem('ps_custom_pages');
-      localStorage.removeItem('ps_logged_in_customer');
-      window.location.reload();
-      return;
-    }
-
     async function loadDataFromDb() {
       try {
         console.log("[State Loader] Fetching store data from MongoDB Atlas database...");
@@ -277,88 +294,56 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('ps_products', JSON.stringify(products));
     if (isInitialLoadDone) {
-      fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(products)
-      }).catch(err => console.error("Error syncing products to DB:", err));
+      syncToApi('products', products);
     }
   }, [products, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_collections', JSON.stringify(collections));
     if (isInitialLoadDone) {
-      fetch('/api/collections', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(collections)
-      }).catch(err => console.error("Error syncing collections to DB:", err));
+      syncToApi('collections', collections);
     }
   }, [collections, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_orders', JSON.stringify(orders));
     if (isInitialLoadDone) {
-      fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orders)
-      }).catch(err => console.error("Error syncing orders to DB:", err));
+      syncToApi('orders', orders);
     }
   }, [orders, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_files', JSON.stringify(files));
     if (isInitialLoadDone) {
-      fetch('/api/files', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(files)
-      }).catch(err => console.error("Error syncing files to DB:", err));
+      syncToApi('files', files);
     }
   }, [files, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_customers', JSON.stringify(customers));
     if (isInitialLoadDone) {
-      fetch('/api/customers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(customers)
-      }).catch(err => console.error("Error syncing customers to DB:", err));
+      syncToApi('customers', customers);
     }
   }, [customers, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_discounts', JSON.stringify(discounts));
     if (isInitialLoadDone) {
-      fetch('/api/discounts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(discounts)
-      }).catch(err => console.error("Error syncing discounts to DB:", err));
+      syncToApi('discounts', discounts);
     }
   }, [discounts, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_custom_pages', JSON.stringify(customPages));
     if (isInitialLoadDone) {
-      fetch('/api/custompages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(customPages)
-      }).catch(err => console.error("Error syncing custom pages to DB:", err));
+      syncToApi('custompages', customPages);
     }
   }, [customPages, isInitialLoadDone]);
 
   useEffect(() => {
     localStorage.setItem('ps_blogs', JSON.stringify(blogs));
     if (isInitialLoadDone) {
-      fetch('/api/blogs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(blogs)
-      }).catch(err => console.error("Error syncing blogs to DB:", err));
+      syncToApi('blogs', blogs);
     }
   }, [blogs, isInitialLoadDone]);
 
@@ -564,6 +549,23 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f6f6f7] text-slate-800 flex flex-col font-sans">
       
+      {isDbOffline && !isAdminActive && (
+        <div className="bg-amber-600 text-white px-4 py-2.5 text-center text-[11px] font-bold flex flex-col sm:flex-row items-center justify-center gap-2 relative z-50 shadow-md">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-white animate-ping shrink-0" />
+            <span>⚠️ MongoDB Connection Offline (Pending IP Whitelist):</span>
+          </div>
+          <span className="opacity-95">Your Atlas firewall is blocking server connection. To save permanently, allow any IP address (0.0.0.0/0) inside your Atlas Network Access console.</span>
+          <button 
+            type="button"
+            onClick={() => setIsAdminActive(true)}
+            className="underline hover:text-slate-100 font-black cursor-pointer text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded border border-white/30 hover:border-white transition-colors shrink-0"
+          >
+            Open Portal
+          </button>
+        </div>
+      )}
+
       {/* Universal header layout */}
       {!isAdminActive && (
         <Header
