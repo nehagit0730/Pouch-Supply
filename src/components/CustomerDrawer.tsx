@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Customer, Product, Order } from '../types';
 import { 
   X, User, LogIn, Heart, MapPin, Package, ShoppingBag, 
-  Plus, Trash2, Eye, ShieldCheck, Sparkles, Smile, ArrowRight 
+  Plus, Trash2, Eye, ShieldCheck, Sparkles, Smile, ArrowRight,
+  Truck, Check, Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -371,6 +372,74 @@ export default function CustomerDrawer({
                                             <span className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Fulfillment Details</span>
                                             <p className="text-slate-700 leading-tight">📍 Courier: {order.destination}</p>
                                             <p className="text-slate-500 leading-none mt-1">🚚 Delivery Type: {order.deliveryMethod}</p>
+                                          </div>
+
+                                          {/* Direct Shipment Status Timeline (Real-time tracking) */}
+                                          <div className="bg-slate-50 border border-slate-150 p-3.5 rounded-2xl space-y-3 shadow-3xs">
+                                            <span className="text-[8px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                                              <Truck className="h-3 w-3 text-indigo-600 animate-pulse" />
+                                              Live Delivery Tracker
+                                            </span>
+
+                                            <div className="relative pl-5 space-y-4 before:absolute before:left-1.5 before:top-1 before:bottom-1 before:w-0.5 before:bg-slate-250">
+                                              {(() => {
+                                                const isUnfulfilled = order.fulfillmentStatus === 'Unfulfilled';
+                                                const isFulfilled = order.fulfillmentStatus === 'Fulfilled';
+                                                const isDelivered = order.fulfillmentStatus === 'Delivered';
+
+                                                const steps = [
+                                                  {
+                                                    label: 'Placed',
+                                                    active: true,
+                                                    completed: true,
+                                                    date: order.date,
+                                                    desc: 'Order received and payment confirmed.'
+                                                  },
+                                                  {
+                                                    label: 'Processing',
+                                                    active: isUnfulfilled,
+                                                    completed: !isUnfulfilled,
+                                                    date: isUnfulfilled ? 'Current step' : 'Prepared',
+                                                    desc: 'Personalization & custom packaging.'
+                                                  },
+                                                  {
+                                                    label: 'Dispatched',
+                                                    active: isFulfilled,
+                                                    completed: isDelivered,
+                                                    date: isUnfulfilled ? 'Pending' : (isFulfilled ? 'In Transit' : 'Departed hub'),
+                                                    desc: 'In transit with postal carrier.'
+                                                  },
+                                                  {
+                                                    label: 'Delivered',
+                                                    active: isDelivered,
+                                                    completed: isDelivered,
+                                                    date: isDelivered ? 'Handed over' : 'Pending',
+                                                    desc: 'Safely delivered at destination.'
+                                                  }
+                                                ];
+
+                                                return steps.map((step, sIdx) => (
+                                                  <div key={sIdx} className="relative text-left">
+                                                    <div className={`absolute -left-[18.5px] top-1.5 h-2.5 w-2.5 rounded-full border-2 transition-all flex items-center justify-center ${
+                                                      step.completed
+                                                        ? 'bg-indigo-600 border-indigo-600'
+                                                        : step.active
+                                                        ? 'bg-amber-500 border-amber-500 animate-pulse'
+                                                        : 'bg-white border-slate-300'
+                                                    }`} />
+                                                    <div className="leading-tight">
+                                                      <span className={`text-[10px] font-black uppercase tracking-wider block ${
+                                                        step.completed ? 'text-indigo-950' : step.active ? 'text-amber-600' : 'text-slate-400'
+                                                      }`}>
+                                                        {step.label}
+                                                      </span>
+                                                      <p className="text-[9px] text-slate-500 leading-normal">{step.desc}</p>
+                                                      <span className="text-[8.5px] font-mono text-slate-400 font-semibold mt-0.5 block">{step.date}</span>
+                                                    </div>
+                                                  </div>
+                                                ));
+                                              })()}
+                                            </div>
                                           </div>
 
                                           {/* Items List inside accordion */}

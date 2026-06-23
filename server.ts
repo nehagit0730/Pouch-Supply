@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import { createExpressApp } from "./serverApp";
 
 const PORT = 3000;

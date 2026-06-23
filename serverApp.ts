@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { fetchResource, saveResource, saveUploadedImage, getUploadedImage, getConnectionStatus } from "./serverDb";
+import { fetchResource, saveResource, saveUploadedImage, getUploadedImage, getConnectionStatus, updateMongoUri, getDb } from "./serverDb";
 
 export async function createExpressApp() {
   const app = express();
@@ -89,6 +89,25 @@ export async function createExpressApp() {
 
   app.get("/api/db-status", (req, res) => {
     res.json(getConnectionStatus());
+  });
+
+  app.post("/api/update-db-uri", async (req, res) => {
+    try {
+      const { uri } = req.body;
+      if (!uri) {
+        return res.status(400).json({ error: "No connection string was provided." });
+      }
+      // Re-initialize with new Mongo URI
+      updateMongoUri(uri);
+      
+      // Attempt immediate connection check
+      await getDb();
+      
+      res.json(getConnectionStatus());
+    } catch (err: any) {
+      console.error("[API update-db-uri] Error saving and testing URI:", err);
+      res.status(500).json({ error: err.message || "Failed to update connection string" });
+    }
   });
 
   // Explicit mappings for all storefront and admin entities to keep the database and frontend fully synced

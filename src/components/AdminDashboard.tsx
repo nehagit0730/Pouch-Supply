@@ -4,7 +4,7 @@ import {
   TrendingUp, BarChart3, Package, Users, Tag, FileCode, HardDrive, Percent, 
   Search, Plus, Eye, CheckCircle2, Clipboard, ArrowUpDown, ChevronRight, 
   Trash2, Filter, Save, Sparkles, Building, Settings, Image as ImageIcon, 
-  X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw,
+  X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw, AlertTriangle,
   Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass,
   ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid
 } from 'lucide-react';
@@ -104,7 +104,55 @@ export default function AdminDashboard({
     status: 'connected' | 'error' | 'not-configured' | 'pending';
     error?: string;
     isSslAlert?: boolean;
+    isDnsError?: boolean;
+    uriHost?: string;
   } | null>(null);
+
+  const [customUriInput, setCustomUriInput] = useState('');
+  const [uriUpdating, setUriUpdating] = useState(false);
+  const [uriUpdateResult, setUriUpdateResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleUpdateUriSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customUriInput.trim()) return;
+    setUriUpdating(true);
+    setUriUpdateResult(null);
+    try {
+      const response = await fetch('/api/update-db-uri', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ uri: customUriInput.trim() }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setDbStatus(data);
+        if (data.status === 'connected') {
+          setUriUpdateResult({ success: true, message: 'Successfully connected to MongoDB Atlas database!' });
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } else if (data.status === 'error') {
+          setUriUpdateResult({ 
+            success: false, 
+            message: data.isSslAlert 
+              ? 'SSL Handshake blocked by Atlas. IP address needs to be whitelisted (Allow all 0.0.0.0/0). IP Whitelist needed.'
+              : 'Connection attempt failed: ' + (data.error || 'Check layout format.') 
+          });
+        } else {
+          setUriUpdateResult({ success: false, message: 'Connection string changed, status ' + data.status });
+        }
+      } else {
+        setUriUpdateResult({ success: false, message: data.error || 'Could not map configuration.' });
+      }
+    } catch (err: any) {
+      setUriUpdateResult({ success: false, message: 'Communication fault: ' + err.message });
+    } finally {
+      setUriUpdating(false);
+    }
+  };
 
   useEffect(() => {
     fetch('/api/db-status')
@@ -1093,94 +1141,193 @@ export default function AdminDashboard({
 
         {/* Database Integration & IP Whitelisting Diagnosis Banner */}
         {dbStatus && (
-          <div className="w-full">
+          <div className="w-full space-y-4">
             {dbStatus.status === 'connected' && (
-              <div className="bg-emerald-50/50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between shadow-xs">
+              <div className="bg-emerald-50/50 border border-emerald-200 rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between shadow-xs gap-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <div className="h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center animate-pulse">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                   </div>
                   <div>
-                    <p className="text-[11px] font-black text-emerald-950 uppercase tracking-wide">Primary Database Active</p>
-                    <p className="text-[10px] text-emerald-700 font-medium font-bold">Successfully synchronized and connected to MongoDB Atlas database.</p>
+                    <p className="text-[11px] font-black text-emerald-950 uppercase tracking-wide">Primary Database Active & Synchronized</p>
+                    <p className="text-[10px] text-emerald-700 font-medium">Successfully synchronized and connected to MongoDB Atlas database.</p>
                   </div>
                 </div>
-                <span className="text-[9px] font-mono font-bold bg-[#008060] text-white px-2 py-0.5 rounded uppercase tracking-widest">
-                  Live Sync
-                </span>
-              </div>
-            )}
-
-            {dbStatus.status === 'not-configured' && (
-              <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
-                <div className="space-y-1">
-                  <p className="text-xs font-black text-amber-950 uppercase tracking-wide flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-amber-600 animate-pulse" />
-                    Offline-Safe Mode Enabled (Memory Cache & LocalStorage)
-                  </p>
-                  <p className="text-[10px] text-amber-800 leading-relaxed max-w-3xl">
-                    Specify <code className="font-mono bg-amber-100/60 px-1 py-0.5 rounded font-bold text-amber-950 font-black">MONGODB_URI</code> in environment secrets to persist layout, images, categories, and inventory securely in MongoDB Atlas database.
-                  </p>
-                </div>
-                <div className="shrink-0">
-                  <span className="text-[9px] font-mono font-black border border-amber-200 bg-amber-50 text-amber-800 px-2.5 py-1 rounded-lg uppercase tracking-wider">
-                    Fallback Cache Online
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      if (confirm("Would you like to change your MongoDB URI?")) {
+                        setDbStatus({ status: 'not-configured' });
+                      }
+                    }}
+                    className="text-[9px] hover:bg-slate-100 text-slate-600 border border-slate-200 px-2 py-1 rounded font-bold uppercase transition-colors"
+                  >
+                    Change Connection
+                  </button>
+                  <span className="text-[9px] font-mono font-bold bg-[#008060] text-white px-2 py-0.5 rounded uppercase tracking-widest">
+                    Live Sync
                   </span>
                 </div>
               </div>
             )}
 
-            {dbStatus.status === 'error' && (
-              <div className="bg-pink-50/70 border-2 border-pink-250 rounded-xl p-5 shadow-sm space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="h-8 w-8 rounded-full bg-pink-100 flex items-center justify-center shrink-0">
-                    <EyeOff className="h-4 w-4 text-pink-600" />
-                  </div>
+            {dbStatus.status === 'not-configured' && (
+              <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-5 shadow-xs space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-amber-100/30">
                   <div className="space-y-1">
-                    <h3 className="text-sm font-black text-pink-950 uppercase tracking-wide">
-                      MongoDB Atlas Connection Whitelist Blocked (SSL Handshake Failed)
-                    </h3>
-                    <p className="text-[11.5px] text-pink-900 leading-relaxed font-bold">
-                      Your database connection attempts threw <code className="font-mono bg-pink-100/80 px-1 py-0.5 rounded text-pink-950 font-black">SSL_TLSV1_ALERT_INTERNAL_ERROR (alert number 80)</code>.
-                      This happens because MongoDB Atlas prevents the container from connecting until its IP address is whitelisted in your cluster.
+                    <p className="text-xs font-black text-amber-950 uppercase tracking-wide flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4 text-amber-600 animate-pulse" />
+                      Offline-Safe Mode Enabled (Memory Cache & LocalStorage)
+                    </p>
+                    <p className="text-[10px] text-amber-800 leading-relaxed max-w-3xl">
+                      Configure a <code className="font-mono bg-amber-100/60 px-1 py-0.5 rounded font-bold text-amber-950">MONGODB_URI</code> below to persist layout, images, categories, and inventory securely in your own MongoDB Atlas database.
                     </p>
                   </div>
+                  <div className="shrink-0">
+                    <span className="text-[9px] font-mono font-black border border-amber-200 bg-amber-50 text-amber-800 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                      Fallback Cache Online
+                    </span>
+                  </div>
                 </div>
 
-                <div className="bg-white/80 border border-pink-200 rounded-xl p-4 space-y-3">
-                  <p className="text-[11px] font-black text-slate-905 uppercase tracking-wide">
-                    👉 Easy 1-Minute Whitelisting Resolution Steps:
-                  </p>
-                  <ol className="text-[10px] text-slate-800 space-y-2 list-decimal list-inside leading-relaxed font-bold">
-                    <li>
-                      Log in to your <a href="https://cloud.mongodb.com" target="_blank" rel="noopener noreferrer" className="text-indigo-650 underline hover:text-indigo-850">MongoDB Atlas Dashboard</a>.
-                    </li>
-                    <li>
-                      In the left sidebar menu under <strong className="text-slate-950 font-extrabold">Security</strong>, click on <strong className="text-slate-950 font-extrabold">Network Access</strong>.
-                    </li>
-                    <li>
-                      Click the <strong className="text-slate-950 bg-slate-100 px-1.5 py-0.5 rounded border">+ Add IP Address</strong> button on the top right.
-                    </li>
-                    <li>
-                      Choose the <span className="text-indigo-750 font-black font-extrabold">ALLOW ACCESS FROM ANYWHERE</span> preset button (this adds <code className="bg-slate-100 px-1 rounded font-mono">0.0.0.0/0</code> representing modern container dynamic clusters) then click <strong className="text-slate-950 font-extrabold">Confirm</strong>.
-                    </li>
-                    <li>
-                      Wait about 60 seconds for MongoDB Atlas to apply the firewall rule, then click below to restart your connection sync!
-                    </li>
-                  </ol>
+                {/* Secure Configuration Input Form */}
+                <div className="bg-white/80 border border-amber-200 rounded-xl p-4 space-y-3 shadow-3xs">
+                  <div>
+                    <span className="text-[10px] font-extrabold text-slate-600 uppercase tracking-wider block mb-1">Enter your MongoDB Atlas Connection String:</span>
+                    <form onSubmit={handleUpdateUriSubmit} className="flex flex-col sm:flex-row gap-2">
+                      <div className="relative flex-1 flex items-center">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="mongodb+srv://<username>:<password>@cluster0.abcde.mongodb.net/dbname?retryWrites=true&w=majority"
+                          value={customUriInput}
+                          onChange={(e) => setCustomUriInput(e.target.value)}
+                          className="w-full text-xs font-mono border border-slate-200 p-2.5 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-505 bg-white font-bold"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 text-slate-400 hover:text-slate-600 p-1"
+                          title={showPassword ? "Hide Connection String" : "Show Connection String"}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={uriUpdating}
+                        className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-400 text-white text-[10px] font-bold uppercase tracking-wider px-4 py-2.5 rounded-lg cursor-pointer transition-colors shrink-0 flex items-center justify-center gap-1"
+                      >
+                        {uriUpdating ? (
+                          <>
+                            <RefreshCw className="h-3 w-3 animate-spin" />
+                            Connecting...
+                          </>
+                        ) : (
+                          "Save & Connect"
+                        )}
+                      </button>
+                    </form>
+                    {uriUpdateResult && (
+                      <p className={`text-[11px] font-bold mt-2 ${uriUpdateResult.success ? 'text-emerald-600' : 'text-pink-600'}`}>
+                        {uriUpdateResult.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {dbStatus.status === 'error' && (
+              <div className="space-y-4">
+                {/* Clean, compact, non-intrusive status alert */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-3xs">
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="h-3.5 w-3.5 text-amber-650" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-slate-800">
+                        MongoDB Connection Inactive (Local fallback cache active)
+                      </p>
+                      <p className="text-[10px] text-slate-500 leading-relaxed font-semibold">
+                        Your database is offline or unable to resolve. Data will be saved locally so you don't lose anything: <code className="font-mono text-slate-600 bg-slate-100/80 px-1 py-0.5 rounded text-[9.5px] select-all">{dbStatus.error ? dbStatus.error.slice(0, 150) + '...' : 'Connection Error'}</code>
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm("Are you sure you want to clear the custom MongoDB URI?")) {
+                        setCustomUriInput('');
+                        fetch('/api/update-db-uri', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ uri: '' })
+                        }).then(() => {
+                          setDbStatus({ status: 'not-configured' });
+                        });
+                      }
+                    }}
+                    className="text-[9px] hover:bg-rose-50 text-rose-600 border border-rose-200 px-2 py-1 rounded font-bold uppercase tracking-wider transition-colors whitespace-nowrap self-start sm:self-center cursor-pointer"
+                  >
+                    Clear URI
+                  </button>
                 </div>
 
-                <div className="flex items-center gap-3">
+                {/* Secure Configuration Input Form */}
+                <div className="bg-white/80 border border-slate-205 rounded-xl p-4 space-y-3 shadow-3xs">
+                  <span className="text-[10px] font-extrabold text-slate-605 uppercase tracking-wider block">Update MongoDB Connection URI string:</span>
+                  <form onSubmit={handleUpdateUriSubmit} className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative flex-1 flex items-center">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter new MongoDB URI"
+                        value={customUriInput}
+                        onChange={(e) => setCustomUriInput(e.target.value)}
+                        className="w-full text-xs font-mono border border-slate-202 p-2.5 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-505 bg-white font-bold"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 text-slate-400 hover:text-slate-650 p-1"
+                        title={showPassword ? "Hide Connection String" : "Show Connection String"}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={uriUpdating}
+                      className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-400 text-white text-[10px] font-bold uppercase tracking-wider px-4 py-2.5 rounded-lg cursor-pointer transition-colors shrink-0 flex items-center justify-center gap-1"
+                    >
+                      {uriUpdating ? (
+                        <>
+                          <RefreshCw className="h-3 w-3 animate-spin" />
+                          Testing Connection...
+                        </>
+                      ) : (
+                        "Save & Retry"
+                      )}
+                    </button>
+                  </form>
+                  {uriUpdateResult && (
+                    <p className={`text-[11px] font-bold mt-2 ${uriUpdateResult.success ? 'text-emerald-600' : 'text-pink-600'}`}>
+                      {uriUpdateResult.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 pt-2">
                   <button
                     onClick={() => {
                       window.location.reload();
                     }}
-                    className="flex items-center gap-2 bg-pink-650 hover:bg-pink-700 bg-indigo-650 hover:bg-indigo-750 transition-colors text-white text-[10px] font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-xs cursor-pointer"
+                    className="flex items-center gap-2 bg-indigo-650 hover:bg-indigo-750 transition-colors text-white text-[10px] font-black uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-xs cursor-pointer"
                   >
-                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <RefreshCw className="h-3.5 w-3.5" />
                     <span>Retry Sync Connection</span>
                   </button>
-                  <span className="text-[10px] text-pink-750 font-semibold italic">
+                  <span className="text-[10px] text-slate-500 font-semibold italic">
                     (Currently operating safely on full-fidelity backup Server Mode memory cache)
                   </span>
                 </div>
@@ -1442,26 +1589,42 @@ export default function AdminDashboard({
                     </div>
 
                     {/* Fulfillment Action bar */}
-                    <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                    <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4">
                       <div>
-                        <span className="text-[9px] font-bold text-slate-405 block uppercase tracking-wider">Fulfillment state</span>
-                        <p className={`font-bold mt-0.5 uppercase tracking-wide text-xs ${selectedOrder.fulfillmentStatus === 'Fulfilled' ? 'text-emerald-600' : 'text-amber-500'}`}>
+                        <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Fulfillment state</span>
+                        <p className={`font-bold mt-0.5 uppercase tracking-wide text-xs ${
+                          selectedOrder.fulfillmentStatus === 'Delivered'
+                            ? 'text-teal-600'
+                            : selectedOrder.fulfillmentStatus === 'Fulfilled'
+                            ? 'text-emerald-600'
+                            : 'text-amber-500'
+                        }`}>
                           {selectedOrder.fulfillmentStatus}
                         </p>
                       </div>
 
-                      {selectedOrder.fulfillmentStatus === 'Unfulfilled' ? (
-                        <button
-                          onClick={() => handleFulfillOrder(selectedOrder.id)}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm text-xs"
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500 font-semibold">Change Status:</span>
+                        <select
+                          value={selectedOrder.fulfillmentStatus}
+                          onChange={(e) => {
+                            const newStatus = e.target.value as 'Unfulfilled' | 'Fulfilled' | 'Delivered';
+                            const updated = parentOrders.map(o => {
+                              if (o.id === selectedOrder.id) {
+                                return { ...o, fulfillmentStatus: newStatus };
+                              }
+                              return o;
+                            });
+                            parentOnUpdateOrders(updated);
+                            setSelectedOrder({ ...selectedOrder, fulfillmentStatus: newStatus });
+                          }}
+                          className="text-xs border border-slate-200 bg-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-705 cursor-pointer max-w-[170px]"
                         >
-                          <CheckCircle2 className="h-4 w-4" /> Ship & Fulfill Items
-                        </button>
-                      ) : (
-                        <span className="text-emerald-600 font-bold bg-emerald-50 py-1.5 px-3.5 border border-emerald-100 rounded-md flex items-center gap-1">
-                          <CheckCircle2 className="h-4 w-4" /> Order Fulfilled
-                        </span>
-                      )}
+                          <option value="Unfulfilled">Unfulfilled (Processing)</option>
+                          <option value="Fulfilled">Fulfilled (Dispatched)</option>
+                          <option value="Delivered">Delivered</option>
+                        </select>
+                      </div>
                     </div>
 
                   </div>
