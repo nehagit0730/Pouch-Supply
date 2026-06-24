@@ -33,11 +33,7 @@ export async function createExpressApp() {
     express.urlencoded({ limit: "50mb", extended: true })(req, res, next);
   });
 
-  // Logging middleware to inspect all incoming traffic
-  app.use((req, res, next) => {
-    console.log(`[Server Logging] ${req.method} ${req.url} | headers: ${JSON.stringify(req.headers['accept'] || '')}`);
-    next();
-  });
+
 
   // API Route: Secure binary/base64 Image Storage
   app.post("/api/upload", async (req, res) => {

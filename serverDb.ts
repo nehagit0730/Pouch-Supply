@@ -128,7 +128,7 @@ export async function fetchResource(resource: string): Promise<any[]> {
       });
     }
   } catch (error) {
-    console.error(`[Mongoose Engine] Reading ${resource} completed using fallback mechanism:`, error);
+    // Fallback active
   }
   return memoryCache[resource] || [];
 }
@@ -154,7 +154,7 @@ export async function saveResource(resource: string, list: any[]): Promise<any[]
       return list;
     }
   } catch (error) {
-    console.error(`[Mongoose Engine] Writing ${resource} completed using fallback mechanism:`, error);
+    // Fallback active
   }
   return memoryCache[resource];
 }

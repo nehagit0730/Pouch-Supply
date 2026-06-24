@@ -11,9 +11,19 @@ export interface DbStatus {
   uriHost?: string;
 }
 
+export function cleanUri(uri: string): string {
+  if (!uri) return '';
+  let cleaned = uri.trim();
+  if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+    cleaned = cleaned.substring(1, cleaned.length - 1).trim();
+  }
+  return cleaned;
+}
+
 // Escapes credentials with characters like '#' in the URI
 export function escapeMongoUri(uri: string): string {
   try {
+    uri = cleanUri(uri);
     const schemeIndex = uri.indexOf('://');
     if (schemeIndex === -1) return uri;
     
@@ -52,6 +62,7 @@ export function escapeMongoUri(uri: string): string {
 
 export function getHostFromUri(uri: string): string {
   try {
+    uri = cleanUri(uri);
     const sIndex = uri.indexOf('://');
     if (sIndex === -1) return '';
     const part = uri.substring(sIndex + 3);
@@ -171,19 +182,15 @@ export async function connectMongoose(): Promise<typeof mongoose | null> {
 
   connectPromise = (async () => {
     try {
-      console.log("[Mongoose Engine] Attempting connection with robust fail-fast limits...");
-      
       const conn = await mongoose.connect(escapedUri, {
         serverSelectionTimeoutMS: 3000,
         connectTimeoutMS: 4000,
       });
 
-      console.log(`[Mongoose Engine] Connected successfully to "${conn.connection.db?.databaseName || 'pouchsupply'}"!`);
       lastConnectionStatus = { status: 'connected' };
       return conn;
     } catch (error: any) {
       const errorStr = String(error?.stack || error?.message || error || "");
-      console.error("[Mongoose Engine] Connection failed:", errorStr);
 
       const isSslAlert = errorStr.includes("ssl3_read_bytes") || 
                          errorStr.includes("alert number 80") || 
@@ -224,5 +231,7 @@ export async function connectDB() {
   if (!uri) {
     throw new Error("MONGODB_URI is not set in environment variables");
   }
-  await mongoose.connect(uri);
+  const cleanedUri = cleanUri(uri);
+  const escapedUri = escapeMongoUri(cleanedUri);
+  await mongoose.connect(escapedUri);
 }

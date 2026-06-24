@@ -130,7 +130,7 @@ export default function App() {
   useEffect(() => {
     async function loadDataFromDb() {
       try {
-        console.log("[State Loader] Fetching store data from MongoDB Atlas database...");
+        // Fetch store data
         const [
           prodsRes, collsRes, ordersRes, filesRes,
           custsRes, discsRes, pagesRes, blogsRes
@@ -153,8 +153,6 @@ export default function App() {
         if (Array.isArray(discsRes)) setDiscounts(discsRes);
         if (Array.isArray(pagesRes)) setCustomPages(pagesRes);
         if (Array.isArray(blogsRes)) setBlogs(blogsRes);
-
-        console.log("[State Loader] Store data updated from MongoDB.");
       } catch (err) {
         console.error("[State Loader] Failed to connect to backend MongoDB API. Using local backup state.", err);
       } finally {

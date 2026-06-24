@@ -10,15 +10,7 @@ async function start() {
   
   // Pre-load database connection tests on startup to seed/connect immediately
   import("./serverDb").then(({ getDb }) => {
-    getDb().then(dbObj => {
-      if (dbObj) {
-        console.log("[Startup DB State] Connection established. MongoDB Atlas active.");
-      } else {
-        console.log("[Startup DB State] Warning: Primary connection offline. Local schema fallback buffers running.");
-      }
-    }).catch(e => {
-      console.error("[Startup DB State] Failed to check database state:", e);
-    });
+    getDb().catch(() => {});
   });
 
   app.listen(PORT, "0.0.0.0", () => {
