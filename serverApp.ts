@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { fetchResource, saveResource, saveUploadedImage, getUploadedImage, getConnectionStatus, updateMongoUri, getDb } from "./serverDb";
+import { fetchResource, saveResource, saveUploadedImage, getUploadedImage, getConnectionStatus, updateMongoUri, getDb, getDatabaseDetails } from "./serverDb";
 
 // Import modular routers for products, collections, customers, orders, files, discounts, custom pages, and blogs
 import productsRouter from "./backend/routes/products";
@@ -98,6 +98,16 @@ export async function createExpressApp() {
       await getDb();
     } catch (e) {}
     res.json(getConnectionStatus());
+  });
+
+  app.get("/api/db-details", async (req, res) => {
+    try {
+      const details = await getDatabaseDetails();
+      res.json(details);
+    } catch (err: any) {
+      console.error("[API db-details] Error fetching DB details:", err);
+      res.status(500).json({ error: err.message || "Failed to fetch database details" });
+    }
   });
 
   app.post("/api/update-db-uri", async (req, res) => {
