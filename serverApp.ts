@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { fetchResource, saveResource, saveUploadedImage, getUploadedImage, getConnectionStatus, updateMongoUri, getDb, getDatabaseDetails } from "./serverDb";
 
 // Import modular routers for products, collections, customers, orders, files, discounts, custom pages, and blogs
@@ -141,6 +140,7 @@ export async function createExpressApp() {
 
   // Vite middleware for development or static serving for production
   if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+    const { createServer: createViteServer } = await import("vite");
     // Using "custom" appType so we can explicitly handle SPA fallback ourselves without Vite intercepting and returning 404s
     const vite = await createViteServer({
       server: { middlewareMode: true },
