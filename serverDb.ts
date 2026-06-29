@@ -78,47 +78,61 @@ export function getConnectionStatus(): DbStatus {
 }
 
 export async function getDatabaseDetails(): Promise<any> {
-  const status = getMongooseStatus();
-  
-  if (status.status !== 'connected') {
-    try {
-      await connectMongoose();
-    } catch (e) {}
-  }
-  
-  const currentStatus = getMongooseStatus();
-  const readyState = mongoose.connection.readyState;
-  
-  const details: any = {
-    status: currentStatus.status,
-    uriHost: currentStatus.uriHost || 'N/A',
-    error: currentStatus.error || null,
-    readyState,
-    readyStateLabel: getReadyStateLabel(readyState),
-    dbName: mongoose.connection.name || 'N/A',
-    collections: [],
-    models: Object.keys(mongoose.models),
-  };
-
-  if (readyState === 1 && mongoose.connection.db) {
-    try {
-      const db = mongoose.connection.db;
-      const collectionsList = await db.listCollections().toArray();
-      const collectionsInfo = [];
-      for (const col of collectionsList) {
-        const count = await db.collection(col.name).countDocuments();
-        collectionsInfo.push({
-          name: col.name,
-          count
-        });
-      }
-      details.collections = collectionsInfo;
-    } catch (err: any) {
-      details.collectionError = err.message || String(err);
+  try {
+    const status = getMongooseStatus();
+    
+    if (status.status !== 'connected') {
+      try {
+        await connectMongoose();
+      } catch (e) {}
     }
-  }
+    
+    const currentStatus = getMongooseStatus();
+    const readyState = mongoose.connection.readyState;
+    
+    const details: any = {
+      status: currentStatus.status,
+      uriHost: currentStatus.uriHost || 'N/A',
+      error: currentStatus.error || null,
+      readyState,
+      readyStateLabel: getReadyStateLabel(readyState),
+      dbName: mongoose.connection.name || 'N/A',
+      collections: [],
+      models: Object.keys(mongoose.models),
+    };
 
-  return details;
+    if (readyState === 1 && mongoose.connection.db) {
+      try {
+        const db = mongoose.connection.db;
+        const collectionsList = await db.listCollections().toArray();
+        const collectionsInfo = [];
+        for (const col of collectionsList) {
+          const count = await db.collection(col.name).countDocuments();
+          collectionsInfo.push({
+            name: col.name,
+            count
+          });
+        }
+        details.collections = collectionsInfo;
+      } catch (err: any) {
+        details.collectionError = err.message || String(err);
+      }
+    }
+
+    return details;
+  } catch (err: any) {
+    console.error("[Database Info] Error inside getDatabaseDetails:", err);
+    return {
+      status: 'error',
+      uriHost: 'N/A',
+      error: err.message || String(err),
+      readyState: mongoose.connection.readyState,
+      readyStateLabel: getReadyStateLabel(mongoose.connection.readyState),
+      dbName: 'N/A',
+      collections: [],
+      models: []
+    };
+  }
 }
 
 function getReadyStateLabel(state: number): string {
