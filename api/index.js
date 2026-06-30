@@ -929,6 +929,7 @@ function getModelForResource(resource) {
     case "discounts":
       return DiscountModel;
     case "customPages":
+    case "custompages":
       return CustomPageModel;
     case "blogs":
       return BlogModel;
@@ -1085,14 +1086,23 @@ async function saveResource(resource, list) {
     const Model = getModelForResource(resource);
     if (conn && Model) {
       const currentIds = list.map((item) => item.id).filter(Boolean);
-      await Model.deleteMany({ id: { $nin: currentIds } });
+      console.log(`[saveResource Vercel] Syncing ${resource} collection. Payloaded: ${list.length}. IDs:`, currentIds);
+      
+      const deleteResult = await Model.deleteMany({ id: { $nin: currentIds } });
+      if (deleteResult.deletedCount > 0) {
+        console.log(`[saveResource Vercel] Permanently deleted ${deleteResult.deletedCount} items from ${resource} on Vercel backend.`);
+      }
+      
       for (const item of list) {
         if (!item.id) continue;
-        await Model.replaceOne({ id: item.id }, { ...item }, { upsert: true });
+        const { _id, __v, ...cleanItem } = item;
+        await Model.replaceOne({ id: item.id }, cleanItem, { upsert: true });
       }
+      console.log(`[saveResource Vercel] Successfully synced all ${list.length} items to ${resource} collection.`);
       return list;
     }
   } catch (error) {
+    console.error(`[saveResource Vercel] Error during database synchronization for "${resource}":`, error);
   }
   return memoryCache[resource];
 }

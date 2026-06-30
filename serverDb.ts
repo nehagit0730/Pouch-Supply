@@ -40,7 +40,8 @@ function getModelForResource(resource: string) {
     case 'files': return FileModel;
     case 'customers': return CustomerModel;
     case 'discounts': return DiscountModel;
-    case 'customPages': return CustomPageModel;
+    case 'customPages':
+    case 'custompages': return CustomPageModel;
     case 'blogs': return BlogModel;
     default: return null;
   }
@@ -203,7 +204,7 @@ export async function fetchResource(resource: string): Promise<any[]> {
 }
 
 export async function saveResource(resource: string, list: any[]): Promise<any[]> {
-  // Synchronously update local fallback cash
+  // Synchronously update local fallback cache
   memoryCache[resource] = [...list];
 
   try {
@@ -211,19 +212,26 @@ export async function saveResource(resource: string, list: any[]): Promise<any[]
     const Model = getModelForResource(resource) as any;
     if (conn && Model) {
       const currentIds = list.map(item => item.id).filter(Boolean);
+      console.log(`[saveResource] Syncing ${resource} collection. Total items in payload: ${list.length}. Active IDs:`, currentIds);
       
       // Delete items no longer in client list
-      await Model.deleteMany({ id: { $nin: currentIds } });
+      const deleteResult = await Model.deleteMany({ id: { $nin: currentIds } });
+      if (deleteResult.deletedCount > 0) {
+        console.log(`[saveResource] Permanently deleted ${deleteResult.deletedCount} items from ${resource} not in active client list.`);
+      }
       
       // Upsert current items using replaceOne to avoid duplicate or outdated structures
       for (const item of list) {
         if (!item.id) continue;
-        await Model.replaceOne({ id: item.id }, { ...item }, { upsert: true });
+        // Strip out any _id or __v fields to prevent "Performing an update on the path '_id' would modify the immutable field '_id'" error
+        const { _id, __v, ...cleanItem } = item;
+        await Model.replaceOne({ id: item.id }, cleanItem, { upsert: true });
       }
+      console.log(`[saveResource] Successfully upserted and synchronized all ${list.length} items to ${resource} collection.`);
       return list;
     }
   } catch (error) {
-    // Fallback active
+    console.error(`[saveResource] Error during database synchronization for "${resource}":`, error);
   }
   return memoryCache[resource];
 }

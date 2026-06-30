@@ -114,6 +114,26 @@ export default function AdminDashboard({
   const [dbDetailsData, setDbDetailsData] = useState<any | null>(null);
   const [dbDetailsError, setDbDetailsError] = useState<string | null>(null);
 
+  // Custom confirmation dialog state to replace blocked window.confirm in sandboxed iframe
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  const triggerConfirm = (message: string, onConfirm: () => void, title = "Confirm Action") => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmDialog(null);
+      }
+    });
+  };
+
   const fetchDbDetails = async () => {
     setDbDetailsLoading(true);
     setDbDetailsError(null);
@@ -530,10 +550,10 @@ export default function AdminDashboard({
   };
 
   const handleDeleteProduct = (pId: string) => {
-    if (confirm("Are you sure you want to delete this product?")) {
+    triggerConfirm("Are you sure you want to delete this product?", () => {
       const updated = products.filter(p => p.id !== pId);
       onUpdateProducts(updated);
-    }
+    }, "Delete Product");
   };
 
   // Create & Edit Collection
@@ -595,9 +615,9 @@ export default function AdminDashboard({
   };
 
   const handleDeleteCollection = (id: string) => {
-    if (confirm("Are you sure you want to delete this collection?")) {
+    triggerConfirm("Are you sure you want to delete this collection?", () => {
       onUpdateCollections(collections.filter(c => c.id !== id));
-    }
+    }, "Delete Collection");
   };
 
   // Pages & Section Builder Handlers
@@ -818,9 +838,9 @@ export default function AdminDashboard({
   };
 
   const handleDeleteFile = (id: string) => {
-    if (confirm("Are you sure you want to delete this media file?")) {
+    triggerConfirm("Are you sure you want to delete this media file?", () => {
       onUpdateFiles(files.filter(f => f.id !== id));
-    }
+    }, "Delete Media File");
   };
 
   // Add Customer
@@ -877,9 +897,9 @@ export default function AdminDashboard({
   };
 
   const handleDeleteDiscount = (id: string) => {
-    if (confirm("Are you sure you want to delete this promotional code?")) {
+    triggerConfirm("Are you sure you want to delete this promotional code?", () => {
       onUpdateDiscounts(discounts.filter(d => d.id !== id));
-    }
+    }, "Delete Discount");
   };
 
   const handleCreateBlog = (e: React.FormEvent) => {
@@ -943,9 +963,9 @@ export default function AdminDashboard({
   };
 
   const handleDeleteBlog = (blogId: string) => {
-    if (confirm("Are you sure you want to delete this blog post? This action cannot be undone.")) {
+    triggerConfirm("Are you sure you want to delete this blog post? This action cannot be undone.", () => {
       onUpdateBlogs(blogs.filter(b => b.id !== blogId));
-    }
+    }, "Delete Blog Post");
   };
 
 
@@ -4483,6 +4503,42 @@ export default function AdminDashboard({
                 </button>
               </div>
 
+            </div>
+          </div>
+        )}
+
+        {/* CUSTOM CONFIRMATION DIALOG MODAL (Guaranteed to work in sandboxed iframes) */}
+        {confirmDialog && confirmDialog.isOpen && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-[10000]">
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150 text-left">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="h-5 w-5 text-rose-600" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">{confirmDialog.title}</h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Please confirm your dashboard request.</p>
+                </div>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed font-semibold">
+                {confirmDialog.message}
+              </p>
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  onClick={() => setConfirmDialog(null)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    confirmDialog.onConfirm();
+                  }}
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl shadow-md shadow-rose-200 transition-all cursor-pointer"
+                >
+                  Confirm Delete
+                </button>
+              </div>
             </div>
           </div>
         )}

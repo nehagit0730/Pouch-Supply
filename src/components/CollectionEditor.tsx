@@ -48,6 +48,7 @@ export default function CollectionEditor({
 
   // Toast confirmation
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Initialize states from existing collection or draft blank
   useEffect(() => {
@@ -233,9 +234,7 @@ export default function CollectionEditor({
           {onDelete && collection && collection.id !== 'all' && (
             <button
               onClick={() => {
-                if (confirm(`Are you sure you want to delete the collection "${title}"? This cannot be undone.`)) {
-                  onDelete(collection.id);
-                }
+                setShowDeleteConfirm(true);
               }}
               className="py-2.5 px-3.5 border border-red-200/80 bg-red-50 text-red-650 hover:bg-red-100 hover:text-red-750 font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
               title="Delete Collection Permanently"
@@ -958,6 +957,43 @@ export default function CollectionEditor({
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOM CONFIRMATION DIALOG MODAL (Iframe safe) */}
+      {showDeleteConfirm && collection && (
+        <div className="fixed inset-0 bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-4 z-[10000]">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl space-y-4 text-left animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+                <Trash2 className="h-5 w-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">Delete Collection</h3>
+                <p className="text-[10px] text-slate-400 mt-0.5 font-medium">This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-650 font-semibold leading-relaxed">
+              Are you sure you want to delete the collection <strong className="text-slate-900">"{title || 'this collection'}"</strong>?
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  if (onDelete) onDelete(collection.id);
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl shadow-md shadow-rose-200 transition-all cursor-pointer"
+              >
+                Confirm Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
