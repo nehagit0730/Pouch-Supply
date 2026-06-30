@@ -1016,6 +1016,7 @@ export default function App() {
             {currentTab === 'frontend-subscribe' && (
               <SubscriptionBuilder
                 allProducts={products}
+                collections={collections}
                 onAddSubToCart={handleAddSubBoxToCart}
               />
             )}

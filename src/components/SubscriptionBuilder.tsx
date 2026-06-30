@@ -1,47 +1,68 @@
 import React, { useState } from 'react';
-import { Product, CartItem } from '../types';
+import { Product, CartItem, Collection } from '../types';
 import { Check, Info, RefreshCw, ShoppingCart, HelpCircle, Package, Sparkles } from 'lucide-react';
 
 interface SubscriptionBuilderProps {
   allProducts: Product[];
+  collections: Collection[];
   onAddSubToCart: (packName: string, items: { product: Product; quantity: number }[], frequency: string, flatPrice: number) => void;
 }
 
-export default function SubscriptionBuilder({ allProducts, onAddSubToCart }: SubscriptionBuilderProps) {
-  const [selectedBrand, setSelectedBrand] = useState('77');
-  const [allocatedItems, setAllocatedItems] = useState<{ [productId: string]: number }>({});
+export default function SubscriptionBuilder({ allProducts, collections, onAddSubToCart }: SubscriptionBuilderProps) {
+  const userCollections = collections.filter(c => c.id !== 'all');
+
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string>(() => {
+    return userCollections.length > 0 ? userCollections[0].id : '';
+  });
+
+  // State to track selected variant ID per product ID
+  const [selectedVariantIdForProduct, setSelectedVariantIdForProduct] = useState<{ [productId: string]: string }>({});
+
+  // key format is "productId::variantId" (or "productId::main" if no variant)
+  const [allocatedItems, setAllocatedItems] = useState<{ [key: string]: number }>({});
   const [frequency, setFrequency] = useState('Every 2 weeks');
   const [successAnimation, setSuccessAnimation] = useState(false);
 
-  // Available brand tabs
-  const brands = ['77', 'CUBA', 'CLEW', 'KILLA', 'VELO'];
+  // Automatically select a default collection if selectedCollectionId is empty
+  const activeCollection = userCollections.find(c => c.id === selectedCollectionId) || userCollections[0];
 
-  const filteredProducts = allProducts.filter(p => p.vendor === selectedBrand && p.status === 'Active');
+  const filteredProducts = activeCollection 
+    ? allProducts.filter(p => activeCollection.productIds.includes(p.id) && p.status === 'Active')
+    : [];
 
   const totalSelectedCount = (Object.values(allocatedItems) as number[]).reduce((sum, count) => sum + count, 0);
 
-  const handleAddProduct = (product: Product) => {
+  const getSelectedVariantId = (prod: Product) => {
+    if (!prod.concreteVariants || prod.concreteVariants.length === 0) {
+      return 'main';
+    }
+    return selectedVariantIdForProduct[prod.id] || prod.concreteVariants[0].id;
+  };
+
+  const handleAddProduct = (product: Product, forcedVariantId?: string) => {
     if (totalSelectedCount >= 6) {
       alert("You have already selected 6 items. Please remove some items if you'd like to choose different ones.");
       return;
     }
+    const vid = forcedVariantId || getSelectedVariantId(product);
+    const key = `${product.id}::${vid}`;
     setAllocatedItems(prev => ({
       ...prev,
-      [product.id]: (prev[product.id] || 0) + 1
+      [key]: (prev[key] || 0) + 1
     }));
   };
 
-  const handleRemoveProduct = (productId: string) => {
+  const handleRemoveProductKey = (key: string) => {
     setAllocatedItems(prev => {
-      const current = prev[productId] || 0;
+      const current = prev[key] || 0;
       if (current <= 1) {
         const copy = { ...prev };
-        delete copy[productId];
+        delete copy[key];
         return copy;
       }
       return {
         ...prev,
-        [productId]: current - 1
+        [key]: current - 1
       };
     });
   };
@@ -56,9 +77,25 @@ export default function SubscriptionBuilder({ allProducts, onAddSubToCart }: Sub
       return;
     }
 
-    const compiledItems = (Object.entries(allocatedItems) as [string, number][]).map(([id, quantity]) => {
-      const product = allProducts.find(p => p.id === id)!;
-      return { product, quantity };
+    const compiledItems = (Object.entries(allocatedItems) as [string, number][]).map(([key, quantity]) => {
+      const [prodId, variantId] = key.split('::');
+      const prod = allProducts.find(p => p.id === prodId)!;
+
+      const variant = variantId !== 'main' 
+        ? prod.concreteVariants?.find(v => v.id === variantId) 
+        : null;
+
+      const finalProduct: Product = {
+        ...prod,
+        id: variant ? variant.id : prod.id,
+        title: variant ? `${prod.title} ${variant.name}` : prod.title,
+        price: variant ? variant.price : prod.price,
+        image: (variant && variant.images && variant.images.length > 0 && variant.images[0])
+          ? variant.images[0]
+          : prod.image
+      };
+
+      return { product: finalProduct, quantity };
     });
 
     // Flat rate subscription price for LITE plan: £24.99 (high value pack!)
@@ -92,85 +129,140 @@ export default function SubscriptionBuilder({ allProducts, onAddSubToCart }: Sub
           <div className="bg-white border border-slate-200 rounded-xl p-4 md:p-6 shadow-xs">
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4">Choose Products: Brand Collections</h3>
             
-            {/* Brands selector buttons */}
-            <div className="flex flex-wrap gap-2 pb-4 border-b border-slate-100 mb-6">
-              {brands.map(brand => (
-                <button
-                  key={brand}
-                  onClick={() => setSelectedBrand(brand)}
-                  className={`py-2 px-5 text-sm rounded-lg font-bold transition-all cursor-pointer ${
-                    selectedBrand === brand 
-                      ? 'bg-slate-900 border-slate-900 text-white shadow-sm' 
-                      : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  {brand}
-                </button>
-              ))}
-            </div>
-
-            {/* Display list of products belonging to selected brand */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {filteredProducts.map(prod => {
-                const countAllocated = allocatedItems[prod.id] || 0;
-                return (
-                  <div 
-                    key={prod.id} 
-                    className={`border rounded-xl p-4 flex flex-col justify-between transition-all ${
-                      countAllocated > 0 
-                        ? 'border-indigo-500 bg-indigo-50/20 shadow-xs' 
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
+            {/* Brands/Collections selector buttons */}
+            {userCollections.length > 0 ? (
+              <div className="flex flex-wrap gap-2 pb-4 border-b border-slate-100 mb-6">
+                {userCollections.map(col => (
+                  <button
+                    key={col.id}
+                    onClick={() => setSelectedCollectionId(col.id)}
+                    className={`py-2 px-5 text-sm rounded-lg font-bold transition-all cursor-pointer ${
+                      selectedCollectionId === col.id 
+                        ? 'bg-slate-900 border-slate-900 text-white shadow-sm' 
+                        : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <div className="relative mb-3">
-                      <img
-                        src={prod.image}
-                        alt={prod.title}
-                        className="w-full h-44 object-cover rounded-lg bg-slate-50 border border-slate-100"
-                        referrerPolicy="no-referrer"
-                      />
-                      {countAllocated > 0 && (
-                        <div className="absolute top-2 right-2 bg-indigo-600 text-white text-xs font-black h-7 w-7 rounded-full flex items-center justify-center shadow-md animate-scale">
-                          {countAllocated}
-                        </div>
-                      )}
-                    </div>
+                    {col.title}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 bg-slate-50 border border-slate-150 rounded-xl mb-6">
+                <p className="text-xs text-slate-500 font-medium">No collections found. Create collections in your Admin Dashboard first.</p>
+              </div>
+            )}
 
-                    <div className="space-y-1.5 flex-1 flex flex-col justify-between">
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase block">{prod.vendor}</span>
-                        <h4 className="text-xs font-extrabold text-slate-800 leading-snug line-clamp-2">{prod.title}</h4>
-                        <p className="text-[11px] text-slate-400 mt-1 pb-2 line-clamp-2">{(prod.description || '').replace(/<[^>]*>/g, '')}</p>
+            {/* Display list of products belonging to selected brand/collection */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map(prod => {
+                  const hasVariants = prod.concreteVariants && prod.concreteVariants.length > 0;
+                  const currentVariantId = hasVariants 
+                    ? (selectedVariantIdForProduct[prod.id] || prod.concreteVariants![0].id) 
+                    : 'main';
+                  
+                  const currentVariant = hasVariants 
+                    ? prod.concreteVariants!.find(v => v.id === currentVariantId) 
+                    : null;
+
+                  const currentPrice = currentVariant ? currentVariant.price : prod.price;
+                  const key = `${prod.id}::${currentVariantId}`;
+                  const countAllocated = allocatedItems[key] || 0;
+
+                  return (
+                    <div 
+                      key={prod.id} 
+                      className={`border rounded-xl p-4 flex flex-col justify-between transition-all ${
+                        countAllocated > 0 
+                          ? 'border-indigo-500 bg-indigo-50/20 shadow-xs' 
+                          : 'border-slate-200 hover:border-slate-300 bg-white'
+                      }`}
+                    >
+                      <div className="relative mb-3">
+                        <img
+                          src={(currentVariant && currentVariant.images && currentVariant.images.length > 0) ? currentVariant.images[0] : prod.image}
+                          alt={prod.title}
+                          className="w-full h-44 object-cover rounded-lg bg-slate-50 border border-slate-100"
+                          referrerPolicy="no-referrer"
+                        />
+                        {countAllocated > 0 && (
+                          <div className="absolute top-2 right-2 bg-indigo-600 text-white text-xs font-black h-7 w-7 rounded-full flex items-center justify-center shadow-md animate-scale">
+                            {countAllocated}
+                          </div>
+                        )}
                       </div>
 
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 mt-auto">
-                        <span className="text-xs font-bold text-slate-900">£{prod.price.toFixed(2)} / each</span>
-                        
-                        <div className="flex items-center gap-1">
-                          {countAllocated > 0 && (
-                            <button
-                              onClick={() => handleRemoveProduct(prod.id)}
-                              className="h-7 w-7 text-xs bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md font-bold flex items-center justify-center cursor-pointer transition-colors"
-                            >
-                              -
-                            </button>
+                      <div className="space-y-2.5 flex-1 flex flex-col justify-between">
+                        <div>
+                          <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase block">{prod.vendor}</span>
+                          <h4 className="text-xs font-extrabold text-slate-800 leading-snug line-clamp-2">
+                            {prod.title}
+                            {currentVariant && (
+                              <span className="text-indigo-600 font-extrabold ml-1">
+                                ({currentVariant.name})
+                              </span>
+                            )}
+                          </h4>
+                          <p className="text-[11px] text-slate-400 mt-1 line-clamp-1">
+                            {currentVariant && currentVariant.description 
+                              ? currentVariant.description.replace(/<[^>]*>/g, '') 
+                              : (prod.description || '').replace(/<[^>]*>/g, '')}
+                          </p>
+
+                          {/* Variant Selector Dropdown if variants exist */}
+                          {hasVariants && (
+                            <div className="mt-2 text-left">
+                              <label className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block mb-1">
+                                Select Variant / Option
+                              </label>
+                              <select
+                                value={currentVariantId}
+                                onChange={(e) => setSelectedVariantIdForProduct(prev => ({ ...prev, [prod.id]: e.target.value }))}
+                                className="w-full text-xs font-bold border border-slate-200 bg-slate-50/50 p-1.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                              >
+                                {prod.concreteVariants!.map(v => (
+                                  <option key={v.id} value={v.id}>
+                                    {v.name} - £{v.price.toFixed(2)}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                           )}
-                          <button
-                            onClick={() => handleAddProduct(prod)}
-                            className={`h-7 px-3 text-xs rounded-md font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                              countAllocated > 0 
-                                ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
-                                : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
-                            }`}
-                          >
-                            Add
-                          </button>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 mt-auto">
+                          <span className="text-xs font-bold text-slate-900">£{currentPrice.toFixed(2)} / each</span>
+                          
+                          <div className="flex items-center gap-1">
+                            {countAllocated > 0 && (
+                              <button
+                                onClick={() => handleRemoveProductKey(key)}
+                                className="h-7 w-7 text-xs bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 rounded-md font-bold flex items-center justify-center cursor-pointer transition-colors"
+                              >
+                                -
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleAddProduct(prod, currentVariantId)}
+                              className={`h-7 px-3 text-xs rounded-md font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                                countAllocated > 0 
+                                  ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
+                                  : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
+                              }`}
+                            >
+                              Add
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <div className="col-span-full text-center py-12 text-slate-400">
+                  <p className="text-sm font-medium">No active products inside this collection.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -215,24 +307,39 @@ export default function SubscriptionBuilder({ allProducts, onAddSubToCart }: Sub
                   <p className="text-[10px] text-slate-400">Select any 6 items from the brand collections on the left.</p>
                 </div>
               ) : (
-                (Object.entries(allocatedItems) as [string, number][]).map(([id, quantity]) => {
-                  const prod = allProducts.find(p => p.id === id)!;
+                (Object.entries(allocatedItems) as [string, number][]).map(([key, quantity]) => {
+                  const [prodId, variantId] = key.split('::');
+                  const prod = allProducts.find(p => p.id === prodId);
+                  if (!prod) return null;
+
+                  const variant = variantId !== 'main' 
+                    ? prod.concreteVariants?.find(v => v.id === variantId) 
+                    : null;
+
+                  const displayName = variant 
+                    ? `${prod.title} (${variant.name})` 
+                    : prod.title;
+
+                  const displayImg = (variant && variant.images && variant.images.length > 0)
+                    ? variant.images[0]
+                    : prod.image;
+
                   return (
-                    <div key={id} className="flex gap-2 justify-between items-center bg-slate-50 border border-slate-200/50 p-2 rounded-lg text-xs">
+                    <div key={key} className="flex gap-2 justify-between items-center bg-slate-50 border border-slate-200/50 p-2 rounded-lg text-xs">
                       <div className="flex items-center gap-2 truncate flex-1">
-                        <img src={prod.image} className="w-8 h-8 rounded bg-white border shrink-0" alt="" referrerPolicy="no-referrer" />
-                        <span className="font-semibold text-slate-700 truncate">{prod.title}</span>
+                        <img src={displayImg} className="w-8 h-8 rounded bg-white border shrink-0" alt="" referrerPolicy="no-referrer" />
+                        <span className="font-semibold text-slate-700 truncate" title={displayName}>{displayName}</span>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
-                          onClick={() => handleRemoveProduct(id)}
+                          onClick={() => handleRemoveProductKey(key)}
                           className="h-5 w-5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-500 rounded flex items-center justify-center font-bold text-[10px] cursor-pointer"
                         >
                           -
                         </button>
                         <span className="font-extrabold text-slate-800 text-xs w-4 text-center">{quantity}</span>
                         <button
-                          onClick={() => handleAddProduct(prod)}
+                          onClick={() => handleAddProduct(prod, variantId)}
                           className="h-5 w-5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-500 rounded flex items-center justify-center font-bold text-[10px] cursor-pointer"
                         >
                           +
