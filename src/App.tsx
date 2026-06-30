@@ -288,7 +288,15 @@ export default function App() {
         setCurrentTab('blog-detail');
       } else if (path.startsWith('/pages/')) {
         const slug = path.replace('/pages/', '');
-        setCurrentTab(slug);
+        if (slug === 'subscribe') {
+          setCurrentTab('frontend-subscribe');
+        } else if (slug === 'brands') {
+          setCurrentTab('frontend-brands');
+        } else if (slug === 'account') {
+          setCurrentTab('frontend-account');
+        } else {
+          setCurrentTab(slug);
+        }
       } else if (path.startsWith('/collections/')) {
         const colId = path.replace('/collections/', '');
         const matchedCol = collections.find(c => c.id === colId || slugify(c.title) === colId);
