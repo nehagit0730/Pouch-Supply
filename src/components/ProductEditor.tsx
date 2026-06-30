@@ -65,8 +65,8 @@ export default function ProductEditor({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Preset vendors/categories for smart search options
-  const defaultVendors = ['Olival', '77 Pouches', 'CUBA Cans', 'KILLA Inc', 'VELO Sweden', 'White Fox', 'Siberia'];
-  const defaultCategories = ['Hair Care in Personal Care', 'Nicotine Pouches', 'Energy Pouches', 'Empty Canisters', 'Accessories'];
+  const defaultVendors = ['Olival', '77', 'Cuba', 'KILLA', 'VELO', 'White Fox', 'Siberia'];
+  const defaultCategories = ['Clothing', 'Jwellery', 'Nicotine Pouches', 'Protein', 'Food'];
 
   // Helper to generate combination names from option dimensions
   const generateCombinations = (options: ProductVariant[]): string[] => {
@@ -445,7 +445,7 @@ export default function ProductEditor({
             className="group inline-flex items-center gap-1.5 text-[10px] font-black text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
-            <span>Back to Inventory Cans</span>
+            <span>Back</span>
           </button>
           
           <div className="flex flex-wrap items-center gap-2">
@@ -474,11 +474,24 @@ export default function ProductEditor({
                 setShowDeleteConfirm(true);
               }}
               className="py-2.5 px-3.5 border border-red-200/80 bg-red-50 text-red-650 hover:bg-rose-100 hover:text-red-750 font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
-              title="Delete Product Profile Permanently"
+              title="Delete Product Permanently"
             >
               <Trash2 className="h-3.5 w-3.5" />
-              <span>Delete Profile</span>
+              <span>Delete Product</span>
             </button>
+          )}
+
+          {product && (
+            <a
+              href={`/products/${product.slug || product.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-2.5 px-3.5 border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-150 font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+              title="View Product in Storefront"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>View Product</span>
+            </a>
           )}
 
           <button
@@ -493,7 +506,7 @@ export default function ProductEditor({
             className="py-2.5 px-5.5 bg-[#008060] hover:bg-[#006e52] text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
           >
             <Save className="h-4 w-4" />
-            <span>Save Product Canister</span>
+            <span>Save Product</span>
           </button>
         </div>
       </div>
@@ -1242,10 +1255,6 @@ export default function ProductEditor({
                 <span className="font-bold text-slate-700">Online storefront portal</span>
                 <span className="text-[8.5px] font-black text-emerald-700 bg-emerald-100 border border-emerald-250 px-2 rounded font-mono">LIVE</span>
               </div>
-              <div className="flex items-center justify-between p-1 bg-slate-50 border border-slate-150 rounded-lg px-2.5 py-1.5 text-slate-450">
-                <span>Custom Wholesale Excel lists</span>
-                <span className="text-[8px] font-bold bg-slate-100 border border-slate-200 px-1.5 rounded">OFF</span>
-              </div>
             </div>
           </div>
 
@@ -1256,7 +1265,7 @@ export default function ProductEditor({
             {/* Vendor Type option field */}
             <div className="space-y-1.5">
               <label className="block text-[#475569] font-bold uppercase tracking-wider text-[9px]">
-                Vendor / Brand
+                Vendor
               </label>
               <div className="relative">
                 <select
@@ -1279,7 +1288,7 @@ export default function ProductEditor({
             {/* Category selection */}
             <div className="space-y-1.5">
               <label className="block text-[#475569] font-bold uppercase tracking-wider text-[9px]">
-                Product Category Type
+                Type
               </label>
               <div className="relative">
                 <select
@@ -1364,23 +1373,6 @@ export default function ProductEditor({
 
           </div>
 
-          {/* Sidebar block 4: theme templates select options dropdown */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
-            <h3 className="font-extrabold text-slate-805 text-[10.5px] uppercase tracking-widest pb-1 border-b border-indigo-50/50">Theme design layout</h3>
-            
-            <div className="relative">
-              <select className="w-full text-xs font-bold pl-3 pr-8 py-2.5 border border-slate-350 bg-white rounded-xl focus:outline-none cursor-pointer appearance-none">
-                <option value="default">Default product template</option>
-                <option value="landing">Active visual landing page</option>
-                <option value="limited">Wholesale bulk flash listing</option>
-              </select>
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-500">
-                <ChevronDown className="h-4 w-4" />
-              </div>
-            </div>
-            <p className="text-[8.5px] text-slate-400 leading-normal">Determines layout format of page sections matching client navigation routing.</p>
-          </div>
-
         </div>
 
       </div>
@@ -1399,7 +1391,7 @@ export default function ProductEditor({
           className="py-2.5 px-6 bg-[#008060] hover:bg-[#006e52] text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-700/5 hover:shadow-lg"
         >
           <Save className="h-4 w-4" />
-          <span>Save Product Changes</span>
+          <span>Save Product</span>
         </button>
       </div>
 
@@ -1412,12 +1404,12 @@ export default function ProductEditor({
                 <Trash2 className="h-5 w-5 text-rose-600" />
               </div>
               <div>
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">Delete Product Profile</h3>
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">Delete Product</h3>
                 <p className="text-[10px] text-slate-400 mt-0.5 font-medium">This action cannot be undone.</p>
               </div>
             </div>
             <p className="text-xs text-slate-650 font-semibold leading-relaxed">
-              Are you sure you want to remove the product profile <strong className="text-slate-900">"{title || 'this item'}"</strong> from your catalog repository forever?
+              Are you sure you want to remove the product <strong className="text-slate-900">"{title || 'this item'}"</strong> from your catalog repository forever?
             </p>
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
               <button

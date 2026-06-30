@@ -6,7 +6,8 @@ import {
   Trash2, Filter, Save, Sparkles, Building, Settings, Image as ImageIcon, 
   X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw, AlertTriangle,
   Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass,
-  ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server
+  ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server,
+  Pencil, Copy
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 import CollectionEditor from './CollectionEditor';
@@ -1201,35 +1202,6 @@ export default function AdminDashboard({
         {/* Database Integration & IP Whitelisting Diagnosis Banner */}
         {dbStatus && (
           <div className="w-full space-y-4">
-            {dbStatus.status === 'connected' && (
-              <div className="bg-emerald-50/50 border border-emerald-200 rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between shadow-xs gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center animate-pulse">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-black text-emerald-950 uppercase tracking-wide">Primary Database Active & Synchronized</p>
-                    <p className="text-[10px] text-emerald-700 font-medium">Successfully synchronized and connected to MongoDB Atlas database.</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      if (confirm("Would you like to change your MongoDB URI?")) {
-                        setDbStatus({ status: 'not-configured' });
-                      }
-                    }}
-                    className="text-[9px] hover:bg-slate-100 text-slate-600 border border-slate-200 px-2 py-1 rounded font-bold uppercase transition-colors"
-                  >
-                    Change Connection
-                  </button>
-                  <span className="text-[9px] font-mono font-bold bg-[#008060] text-white px-2 py-0.5 rounded uppercase tracking-widest">
-                    Live Sync
-                  </span>
-                </div>
-              </div>
-            )}
-
             {dbStatus.status === 'not-configured' && (
               <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-5 shadow-xs space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-amber-100/30">
@@ -1961,7 +1933,11 @@ export default function AdminDashboard({
                           </tr>
                         ) : (
                           filteredProductsAdmin.map(prod => (
-                            <tr key={prod.id} className="hover:bg-slate-50/60">
+                            <tr 
+                              key={prod.id} 
+                              className="hover:bg-slate-50/60 cursor-pointer transition-colors"
+                              onClick={() => handleEditProductClick(prod)}
+                            >
                               <td className="p-4 shrink-0">
                                 <img
                                   src={prod.image}
@@ -1975,7 +1951,7 @@ export default function AdminDashboard({
                               <td className="p-4 text-center">
                                 <span className={`inline-block py-0.5 px-2 rounded-full font-black text-[9px] uppercase tracking-wider ${
                                   prod.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-150' : 'bg-slate-100 text-slate-500'
-                                }}`}>
+                                }`}>
                                   {prod.status}
                                 </span>
                               </td>
@@ -1985,38 +1961,80 @@ export default function AdminDashboard({
                                 </span>
                               </td>
                               <td className="p-4 text-right font-extrabold text-slate-900">£{prod.price.toFixed(2)}</td>
-                              <td className="p-4 text-center text-xs space-x-1.5 whitespace-nowrap">
-                                <button
-                                  onClick={() => handleEditProductClick(prod)}
-                                  className="hover:text-indigo-600 font-bold cursor-pointer"
-                                  title="Edit product"
-                                >
-                                  Edit
-                                </button>
-                                <span className="text-slate-350">|</span>
-                                <button
-                                  onClick={() => handleDuplicateProduct(prod)}
-                                  className="text-teal-650 hover:text-teal-850 font-bold cursor-pointer"
-                                  title="Duplicate product"
-                                >
-                                  Dup
-                                </button>
-                                <span className="text-slate-350">|</span>
-                                <button
-                                  onClick={() => handlePreviewProduct(prod)}
-                                  className="text-sky-650 hover:text-sky-850 font-bold cursor-pointer"
-                                  title="Preview product"
-                                >
-                                  View
-                                </button>
-                                <span className="text-slate-350">|</span>
-                                <button
-                                  onClick={() => handleDeleteProduct(prod.id)}
-                                  className="text-red-500 hover:text-red-700 font-bold cursor-pointer"
-                                  title="Delete product"
-                                >
-                                  Del
-                                </button>
+                              <td className="p-4 text-center text-xs whitespace-nowrap">
+                                <div className="flex items-center justify-center gap-2">
+                                  {/* Edit Product Action */}
+                                  <div className="relative group/tooltip">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditProductClick(prod);
+                                      }}
+                                      className="p-1.5 bg-indigo-50 hover:bg-indigo-150 text-indigo-700 rounded-md transition-all cursor-pointer hover:scale-105"
+                                      aria-label="Edit"
+                                      title="Edit product"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                                      Edit
+                                    </div>
+                                  </div>
+
+                                  {/* Duplicate Action */}
+                                  <div className="relative group/tooltip">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDuplicateProduct(prod);
+                                      }}
+                                      className="p-1.5 bg-teal-50 hover:bg-teal-150 text-teal-700 rounded-md transition-all cursor-pointer hover:scale-105"
+                                      aria-label="Duplicate"
+                                      title="Duplicate product"
+                                    >
+                                      <Copy className="h-3.5 w-3.5" />
+                                    </button>
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                                      Dup
+                                    </div>
+                                  </div>
+
+                                  {/* View Action */}
+                                  <div className="relative group/tooltip">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePreviewProduct(prod);
+                                      }}
+                                      className="p-1.5 bg-sky-50 hover:bg-sky-150 text-sky-700 rounded-md transition-all cursor-pointer hover:scale-105"
+                                      aria-label="View"
+                                      title="Preview product"
+                                    >
+                                      <Eye className="h-3.5 w-3.5" />
+                                    </button>
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                                      View
+                                    </div>
+                                  </div>
+
+                                  {/* Delete Action */}
+                                  <div className="relative group/tooltip">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteProduct(prod.id);
+                                      }}
+                                      className="p-1.5 bg-red-50 hover:bg-red-150 text-red-650 rounded-md transition-all cursor-pointer hover:scale-105"
+                                      aria-label="Delete"
+                                      title="Delete product"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                                      Del
+                                    </div>
+                                  </div>
+                                </div>
                               </td>
                             </tr>
                           ))
