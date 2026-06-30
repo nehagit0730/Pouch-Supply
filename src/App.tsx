@@ -274,26 +274,21 @@ export default function App() {
       if (path === '/admin-dashboard') {
         setIsAdminActive(true);
         return;
-      } else if (isAdminActive && path !== '/admin-dashboard') {
-        // If they hit back button and left admin dashboard, turn off admin mode
+      } else {
         setIsAdminActive(false);
       }
 
       if (path === '/' || path === '') {
         setCurrentTab('frontend-home');
-        setIsAdminActive(false);
       } else if (path === '/blogs' || path === '/blogs/') {
         setCurrentTab('blogs');
-        setIsAdminActive(false);
       } else if (path.startsWith('/blogs/')) {
         const slug = path.replace('/blogs/', '');
         setSelectedBlogSlug(slug);
         setCurrentTab('blog-detail');
-        setIsAdminActive(false);
       } else if (path.startsWith('/pages/')) {
         const slug = path.replace('/pages/', '');
         setCurrentTab(slug);
-        setIsAdminActive(false);
       } else if (path.startsWith('/collections/')) {
         const colId = path.replace('/collections/', '');
         const matchedCol = collections.find(c => c.id === colId || slugify(c.title) === colId);
@@ -304,19 +299,17 @@ export default function App() {
           setActiveCollectionId('all');
           setCurrentTab('frontend-shop');
         }
-        setIsAdminActive(false);
       } else if (path.startsWith('/products/')) {
         const prodId = path.replace('/products/', '');
         setSelectedProductId(decodeURIComponent(prodId));
         setCurrentTab('product-detail');
-        setIsAdminActive(false);
       }
     };
 
     handleLocationChange();
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
-  }, [collections, isAdminActive]);
+  }, [collections]);
 
   // Synchronize browser URL when isAdminActive state changes in React UI
   useEffect(() => {
