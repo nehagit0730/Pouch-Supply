@@ -264,17 +264,21 @@ export default function App() {
   // Synchronize path and load links successfully in iframe/new tab
   useEffect(() => {
     const handleLocationChange = () => {
-      if (isAdminActive) {
-        // If we are currently in admin mode, do NOT let collection/product
-        // updates trigger frontend tab changes or deactivate admin mode!
-        return;
-      }
       let path = '';
       try {
         path = window.location.pathname;
       } catch (e) {
         console.warn('[History] Failed to read location pathname:', e);
       }
+
+      if (path === '/admin-dashboard') {
+        setIsAdminActive(true);
+        return;
+      } else if (isAdminActive && path !== '/admin-dashboard') {
+        // If they hit back button and left admin dashboard, turn off admin mode
+        setIsAdminActive(false);
+      }
+
       if (path === '/' || path === '') {
         setCurrentTab('frontend-home');
         setIsAdminActive(false);
@@ -313,6 +317,59 @@ export default function App() {
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, [collections, isAdminActive]);
+
+  // Synchronize browser URL when isAdminActive state changes in React UI
+  useEffect(() => {
+    let path = '';
+    try {
+      path = window.location.pathname;
+    } catch (e) {
+      console.warn('[History] Failed to read location pathname:', e);
+    }
+
+    if (isAdminActive) {
+      if (path !== '/admin-dashboard') {
+        try {
+          window.history.pushState({}, '', '/admin-dashboard');
+        } catch (e) {
+          console.warn('[History] Failed to pushState (sandboxed iframe constraint):', e);
+        }
+      }
+    } else {
+      if (path === '/admin-dashboard') {
+        // Switch back to matching URL for the currently active tab
+        let url = '/';
+        if (currentTab === 'frontend-home') {
+          url = '/';
+        } else if (currentTab === 'frontend-shop') {
+          url = '/collections/all';
+        } else if (currentTab === 'frontend-brands') {
+          url = '/pages/brands';
+        } else if (currentTab === 'frontend-subscribe') {
+          url = '/pages/subscribe';
+        } else if (currentTab === 'frontend-account') {
+          url = '/pages/account';
+        } else if (currentTab === 'blogs') {
+          url = '/blogs';
+        } else if (currentTab === 'blog-detail' && selectedBlogSlug) {
+          url = `/blogs/${selectedBlogSlug}`;
+        } else if (currentTab === 'product-detail' && selectedProductId) {
+          const prod = products.find(p => p.id === selectedProductId || p.slug === selectedProductId);
+          url = `/products/${prod?.slug || selectedProductId}`;
+        } else if (currentTab === 'collection-detail' && activeCollectionId) {
+          const col = collections.find(c => c.id === activeCollectionId || c.slug === activeCollectionId);
+          url = `/collections/${col?.slug || activeCollectionId}`;
+        } else {
+          url = `/pages/${currentTab}`;
+        }
+        try {
+          window.history.pushState({}, '', url);
+        } catch (e) {
+          console.warn('[History] Failed to pushState (sandboxed iframe constraint):', e);
+        }
+      }
+    }
+  }, [isAdminActive]);
 
   // --- Write to LocalStorage AND MongoDB Database on Changes ---
   useEffect(() => {

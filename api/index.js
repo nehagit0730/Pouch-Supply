@@ -1,7 +1,6 @@
 // serverApp.ts
 import express from "express";
 import path2 from "path";
-import { createServer as createViteServer } from "vite";
 
 // serverDb.ts
 import fs from "fs";
@@ -664,6 +663,13 @@ Advanced clients accustomed to high-count compounds typically navigate toward KI
     tags: ["buying-advice", "cuba-strength", "pouch-science"]
   }
 ];
+var INITIAL_PRODUCTS = [];
+var INITIAL_COLLECTIONS = [];
+var INITIAL_ORDERS = [];
+var INITIAL_FILES = [];
+var INITIAL_CUSTOMERS = [];
+var INITIAL_DISCOUNTS = [];
+var INITIAL_BLOGS = [];
 var DEFAULT_PAGES = [
   {
     id: "homepage",
@@ -1086,23 +1092,21 @@ async function saveResource(resource, list) {
     const Model = getModelForResource(resource);
     if (conn && Model) {
       const currentIds = list.map((item) => item.id).filter(Boolean);
-      console.log(`[saveResource Vercel] Syncing ${resource} collection. Payloaded: ${list.length}. IDs:`, currentIds);
-      
+      console.log(`[saveResource] Syncing ${resource} collection. Total items in payload: ${list.length}. Active IDs:`, currentIds);
       const deleteResult = await Model.deleteMany({ id: { $nin: currentIds } });
       if (deleteResult.deletedCount > 0) {
-        console.log(`[saveResource Vercel] Permanently deleted ${deleteResult.deletedCount} items from ${resource} on Vercel backend.`);
+        console.log(`[saveResource] Permanently deleted ${deleteResult.deletedCount} items from ${resource} not in active client list.`);
       }
-      
       for (const item of list) {
         if (!item.id) continue;
         const { _id, __v, ...cleanItem } = item;
         await Model.replaceOne({ id: item.id }, cleanItem, { upsert: true });
       }
-      console.log(`[saveResource Vercel] Successfully synced all ${list.length} items to ${resource} collection.`);
+      console.log(`[saveResource] Successfully upserted and synchronized all ${list.length} items to ${resource} collection.`);
       return list;
     }
   } catch (error) {
-    console.error(`[saveResource Vercel] Error during database synchronization for "${resource}":`, error);
+    console.error(`[saveResource] Error during database synchronization for "${resource}":`, error);
   }
   return memoryCache[resource];
 }
@@ -1508,6 +1512,7 @@ async function createExpressApp() {
   app.use("/api/custompages", customPages_default);
   app.use("/api/blogs", blogs_default);
   if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "custom"
@@ -1551,7 +1556,7 @@ async function createExpressApp() {
   return app;
 }
 
-// api/index.ts
+// api-entry.ts
 var appPromise = createExpressApp();
 async function handler(req, res) {
   const app = await appPromise;
