@@ -55,7 +55,7 @@ export default function PageRenderer({
   };
 
   return (
-    <div className="space-y-16 pb-24 font-sans">
+    <div className="space-y-0 pb-24 font-sans">
       {page.sections && page.sections.length > 0 ? (
         page.sections.map((sec, idx) => {
           const sStyle = {
@@ -63,21 +63,17 @@ export default function PageRenderer({
             color: sec.settings.textColor || '#475569'
           };
           
-          const isFullBleed = (sec.type === 'Slideshow' || sec.type === 'Image banner') && sec.settings.fullWidth;
-          const maxContainerClass = sec.settings.fullWidth ? 'w-full' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
-          const paddingClass = isFullBleed ? 'py-0' : 'py-16 md:py-24';
+          const isFullBleed = (sec.type === 'Slideshow' || sec.type === 'Image banner' || sec.type === 'Marquee text') && sec.settings.fullWidth;
+          const paddingClass = isFullBleed ? 'py-0' : 'py-12 sm:py-16 md:py-20';
+          const containerClass = sec.settings.fullWidth ? 'w-full' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
 
           return (
             <section
               key={sec.id || idx}
               style={sStyle}
-              className={`${paddingClass} relative transition-all duration-300 ${
-                sec.settings.fullWidth 
-                  ? '' 
-                  : 'rounded-3xl border border-slate-200/60 shadow-xl my-10 mx-4 sm:mx-6 lg:mx-8 overflow-hidden bg-white hover:shadow-2xl'
-              }`}
+              className={`${paddingClass} relative transition-all duration-300 w-full overflow-hidden`}
             >
-              <div className={maxContainerClass}>
+              <div className={containerClass}>
                 
                 {/* 1. IMAGE BANNER */}
                 {sec.type === 'Image banner' && (
@@ -345,24 +341,44 @@ export default function PageRenderer({
 
                 {/* 6. MARQUEE TEXT */}
                 {sec.type === 'Marquee text' && (
-                  <div className="overflow-hidden bg-slate-900 py-4.5 rounded-2xl border border-slate-800 relative shadow-inner">
-                    <div className="whitespace-nowrap flex gap-12 items-center justify-center font-mono font-bold text-white text-[10px] tracking-wider leading-none">
-                      <span className="flex items-center gap-2 shrink-0">
-                        <Flame className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /> 
-                        <span>QUALITY LABORATORY PACKED // TOBACCO-FREE</span>
-                      </span>
-                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
-                      <span className="flex items-center gap-2 shrink-0">
-                        ⭐ <span>OFFICIALLY LICENSED IN EUROPE AND UK CORES</span>
-                      </span>
-                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
-                      <span className="flex items-center gap-2 shrink-0">
-                        📦 <span>INSTANT DISPATCH ON BULK PACKS DISCOUNTS APPLIED</span>
-                      </span>
-                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
-                      <span className="flex items-center gap-2 shrink-0 hidden sm:flex">
-                        ✓ <span>VACUUM TESTED POUCHES FOR ABSOLUTE CRISPINESS</span>
-                      </span>
+                  <div className={`overflow-hidden bg-slate-900 py-4.5 border-y border-slate-800/80 relative shadow-inner w-full ${sec.settings.fullWidth ? '' : 'rounded-2xl'}`}>
+                    <div className="marquee-container">
+                      <div className="animate-marquee whitespace-nowrap flex gap-12 items-center font-mono font-bold text-white text-[10px] sm:text-xs tracking-wider leading-none">
+                        <span className="flex items-center gap-2 shrink-0">
+                          <Flame className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /> 
+                          <span>QUALITY LABORATORY PACKED // TOBACCO-FREE</span>
+                        </span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                        <span className="flex items-center gap-2 shrink-0">
+                          ⭐ <span>OFFICIALLY LICENSED IN EUROPE AND UK CORES</span>
+                        </span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                        <span className="flex items-center gap-2 shrink-0">
+                          📦 <span>INSTANT DISPATCH ON BULK PACKS DISCOUNTS APPLIED</span>
+                        </span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                        <span className="flex items-center gap-2 shrink-0">
+                          ✓ <span>VACUUM TESTED POUCHES FOR ABSOLUTE CRISPINESS</span>
+                        </span>
+                        
+                        {/* Repeat items for seamless animation loop */}
+                        <span className="flex items-center gap-2 shrink-0">
+                          <Flame className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /> 
+                          <span>QUALITY LABORATORY PACKED // TOBACCO-FREE</span>
+                        </span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                        <span className="flex items-center gap-2 shrink-0">
+                          ⭐ <span>OFFICIALLY LICENSED IN EUROPE AND UK CORES</span>
+                        </span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                        <span className="flex items-center gap-2 shrink-0">
+                          📦 <span>INSTANT DISPATCH ON BULK PACKS DISCOUNTS APPLIED</span>
+                        </span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                        <span className="flex items-center gap-2 shrink-0">
+                          ✓ <span>VACUUM TESTED POUCHES FOR ABSOLUTE CRISPINESS</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -500,15 +516,20 @@ export default function PageRenderer({
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {allProducts
-                        .filter(p => p.status === 'Active')
-                        .slice(0, sec.settings.itemsCount || 4)
-                        .map(prod => {
+                      {(() => {
+                        const targetCollectionId = sec.settings.selectedCollectionId;
+                        const selectedColl = targetCollectionId ? allCollections.find(c => c.id === targetCollectionId) : null;
+                        const filtered = allProducts
+                          .filter(p => p.status === 'Active')
+                          .filter(p => !targetCollectionId || selectedColl?.productIds.includes(p.id));
+                        
+                        return filtered.slice(0, sec.settings.itemsCount || 4).map(prod => {
                           const isWishlisted = loggedInCustomer?.wishlist.includes(prod.id);
                           return (
                             <div 
                               key={prod.id} 
-                              className="bg-white border border-slate-150 rounded-2xl overflow-hidden p-4 space-y-4 group hover:shadow-xl hover:border-slate-300 transition-all relative flex flex-col justify-between"
+                              onClick={() => onNavigate(`/products/${prod.id}`)}
+                              className="bg-white border border-slate-150 rounded-2xl overflow-hidden p-4 space-y-4 group hover:shadow-xl hover:border-slate-300 transition-all relative flex flex-col justify-between cursor-pointer"
                             >
                               {/* Wishlist triggers */}
                               <button
@@ -592,7 +613,8 @@ export default function PageRenderer({
                               </div>
                             </div>
                           );
-                        })}
+                        });
+                      })()}
                     </div>
                   </div>
                 )}

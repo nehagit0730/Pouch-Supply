@@ -84,7 +84,8 @@ export default function App() {
 
   const [customPages, setCustomPages] = useState<CustomPage[]>(() => {
     const loaded = safeLoadFromLocalStorage<CustomPage[]>('ps_custom_pages', DEFAULT_PAGES);
-    const guaranteedList = Array.isArray(loaded) ? loaded : DEFAULT_PAGES;
+    const guaranteedList = (Array.isArray(loaded) ? loaded : DEFAULT_PAGES)
+      .filter((p: any) => p && p.slug !== 'subscribe' && p.id !== 'subscribe');
     // Guaranteed presence check for Homepage in Pages list
     if (!guaranteedList.some((p: any) => p && p.isHomepage)) {
       const defaultHome = DEFAULT_PAGES.find((p: any) => p.isHomepage);

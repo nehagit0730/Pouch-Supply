@@ -94,3 +94,27 @@ body {
   background: #008060;
   border-radius: 2px 2px 0 0;
 }
+
+@keyframes marquee {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 25s linear infinite;
+}
+
+.animate-marquee-slow {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+
+.marquee-container {
+  overflow: hidden;
+  display: flex;
+  width: 100%;
+}
+

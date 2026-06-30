@@ -35,27 +35,6 @@ export const DEFAULT_PAGES: CustomPage[] = [
     ]
   },
   {
-    id: 'subscribe',
-    title: 'Subscription Builder',
-    slug: 'subscribe',
-    visibility: 'Visible',
-    updatedAt: 'Jun 23, 2026',
-    sections: [
-      {
-        id: 's1',
-        type: 'Rich text',
-        settings: {
-          fullWidth: false,
-          backgroundColor: '#FFFFFF',
-          headingColor: '#1E293B',
-          textColor: '#64748B',
-          title: 'Custom Subscription Plans',
-          description: 'Access premium rates on your favorite products. Create a customized subscription box, select your automatic replenishment frequency, and modify or cancel anytime.',
-        }
-      }
-    ]
-  },
-  {
     id: 'brands',
     title: 'Brands Directory',
     slug: 'brands',

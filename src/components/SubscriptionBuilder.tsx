@@ -208,8 +208,7 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
                               ? currentVariant.description.replace(/<[^>]*>/g, '') 
                               : (prod.description || '').replace(/<[^>]*>/g, '')}
                           </p>
-
-                          {/* Variant Selector Dropdown if variants exist */}
+                           {/* Variant Selector Dropdown if variants exist */}
                           {hasVariants && (
                             <div className="mt-2 text-left">
                               <label className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block mb-1">
@@ -228,6 +227,31 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
                               </select>
                             </div>
                           )}
+
+                          {/* Beautiful allocated variants breakdown list for this product */}
+                          {(() => {
+                            const allocatedForThisProduct = Object.entries(allocatedItems)
+                              .filter(([allocKey]) => allocKey.split('::')[0] === prod.id)
+                              .map(([allocKey, qty]) => {
+                                const vid = allocKey.split('::')[1];
+                                const v = vid !== 'main' ? prod.concreteVariants?.find(x => x.id === vid) : null;
+                                return { vid, qty, name: v ? v.name : 'Standard' };
+                              });
+
+                            if (allocatedForThisProduct.length === 0) return null;
+
+                            return (
+                              <div className="mt-3 p-2.5 bg-indigo-50/20 rounded-lg border border-indigo-100/50 text-[10px] space-y-1">
+                                <span className="font-extrabold text-indigo-700 uppercase tracking-wider block text-[8px]">In Your Pack Box:</span>
+                                {allocatedForThisProduct.map(item => (
+                                  <div key={item.vid} className="flex justify-between items-center text-slate-700 font-semibold">
+                                    <span>• {item.name}</span>
+                                    <span className="bg-indigo-600 text-white font-extrabold px-2 py-0.5 rounded-full text-[9px] min-w-4 text-center">{item.qty}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 mt-auto">
