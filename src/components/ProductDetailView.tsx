@@ -21,39 +21,102 @@ export default function ProductDetailView({
   const [addedMessage, setAddedMessage] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
 
+  // State to hold selected variant options, e.g. { "Strength": "Strong", "Size": "Large" }
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+
   // Sync active images list and selected image state
   const mediaImages = product.media && product.media.length > 0 ? product.media : [product.image];
   const [selectedImage, setSelectedImage] = useState(product.image);
 
-  // State to hold selected variant options, e.g. { "Strength": "Strong", "Size": "Large" }
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  // Active combo name is option values joined by " / "
+  const activeComboName = product.variants && product.variants.length > 0
+    ? product.variants.map(v => selectedVariants[v.name]).filter(Boolean).join(' / ')
+    : '';
 
+  // Get active physical variant from concreteVariants list
+  const activeVariant = product.concreteVariants?.find(v => v.name === activeComboName);
+
+  // Choose first option value as selected default for each variant option OR match variant query parameter
   useEffect(() => {
-    setSelectedImage(product.image);
+    let variantId: string | null = null;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      variantId = urlParams.get('variant');
+    } catch (e) {
+      console.warn('[History] Failed to read URL search parameters:', e);
+    }
     
-    // Choose first option value as selected default for each variant option
-    if (product.variants && product.variants.length > 0) {
-      const initial: Record<string, string> = {};
-      product.variants.forEach(v => {
-        if (v.values && v.values.length > 0) {
-          initial[v.name] = v.values[0];
+    let matched = false;
+    if (variantId && product.concreteVariants) {
+      const matchedVariant = product.concreteVariants.find(v => v.id === variantId);
+      if (matchedVariant) {
+        const parts = matchedVariant.name.split(' / ');
+        if (product.variants && parts.length === product.variants.length) {
+          const initial: Record<string, string> = {};
+          product.variants.forEach((v, idx) => {
+            initial[v.name] = parts[idx];
+          });
+          setSelectedVariants(initial);
+          matched = true;
+        } else if (product.variants && product.variants.length === 1) {
+          setSelectedVariants({ [product.variants[0].name]: matchedVariant.name });
+          matched = true;
         }
-      });
-      setSelectedVariants(initial);
-    } else {
-      setSelectedVariants({});
+      }
+    }
+
+    if (!matched) {
+      if (product.variants && product.variants.length > 0) {
+        const initial: Record<string, string> = {};
+        product.variants.forEach(v => {
+          if (v.values && v.values.length > 0) {
+            initial[v.name] = v.values[0];
+          }
+        });
+        setSelectedVariants(initial);
+      } else {
+        setSelectedVariants({});
+      }
     }
   }, [product]);
 
+  // Sync selected variant image to display
+  useEffect(() => {
+    if (activeVariant && activeVariant.images && activeVariant.images.length > 0 && activeVariant.images[0]) {
+      setSelectedImage(activeVariant.images[0]);
+    } else {
+      setSelectedImage(product.image);
+    }
+  }, [activeVariant, product]);
+
+  // Update URL to match current active variant ID
+  useEffect(() => {
+    try {
+      if (activeVariant) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('variant', activeVariant.id);
+        window.history.replaceState({}, '', url.pathname + url.search);
+      } else {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('variant')) {
+          url.searchParams.delete('variant');
+          window.history.replaceState({}, '', url.pathname + url.search);
+        }
+      }
+    } catch (e) {
+      console.warn('[History] Failed to replaceState (sandboxed iframe constraint):', e);
+    }
+  }, [activeVariant]);
+
   const handleAddToCartClick = () => {
-    // Generate selected variants label string, e.g. " (Strength: Strong, Size: Medium)"
-    const variantLabels = Object.entries(selectedVariants)
-      .map(([name, val]) => `${name}: ${val}`)
-      .join(', ');
-    
     const cartProduct = {
       ...product,
-      title: variantLabels ? `${product.title} (${variantLabels})` : product.title
+      id: activeVariant ? activeVariant.id : product.id,
+      title: activeVariant ? `${product.title} ${activeVariant.name}` : product.title,
+      price: activeVariant ? activeVariant.price : product.price,
+      image: (activeVariant && activeVariant.images && activeVariant.images.length > 0 && activeVariant.images[0])
+        ? activeVariant.images[0]
+        : product.image
     };
 
     onAddToCart(cartProduct, quantity);
@@ -81,7 +144,11 @@ export default function ProductDetailView({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <button
             onClick={() => {
-              window.history.pushState({}, '', '/collections/all');
+              try {
+                window.history.pushState({}, '', '/collections/all');
+              } catch (e) {
+                console.warn('[History] Failed to pushState (sandboxed iframe constraint):', e);
+              }
               onNavigate('frontend-shop');
             }}
             className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors uppercase cursor-pointer"
@@ -107,19 +174,19 @@ export default function ProductDetailView({
             <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden aspect-square flex items-center justify-center p-6 relative group">
               <img
                 src={selectedImage || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80'}
-                alt={product.title}
+                alt={activeVariant ? `${product.title} ${activeVariant.name}` : product.title}
                 className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
                 referrerPolicy="no-referrer"
               />
               <span className="absolute top-4 left-4 bg-indigo-600 text-white text-[9px] font-black uppercase py-1 px-3 rounded-full border border-indigo-500 tracking-wider">
                 {product.vendor}
               </span>
-              {product.inventory < 10 && product.inventory > 0 && (
+              {((activeVariant ? activeVariant.inventory : product.inventory) < 10 && (activeVariant ? activeVariant.inventory : product.inventory) > 0) && (
                 <span className="absolute top-4 right-4 bg-amber-500 text-slate-950 text-[9px] font-black uppercase py-1 px-3 rounded-full">
-                  Only {product.inventory} Left
+                  Only {activeVariant ? activeVariant.inventory : product.inventory} Left
                 </span>
               )}
-              {product.inventory === 0 && (
+              {(activeVariant ? activeVariant.inventory : product.inventory) === 0 && (
                 <span className="absolute top-4 right-4 bg-red-650 text-white text-[9px] font-black uppercase py-1 px-3 rounded-full">
                   Sold Out
                 </span>
@@ -149,7 +216,9 @@ export default function ProductDetailView({
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-center space-y-1">
                 <span className="text-slate-400 block text-[8px] font-black uppercase tracking-wider">SKU Code</span>
-                <span className="font-mono font-extrabold text-[#1a1c1d] text-[10px] block">{product.sku || 'N/A'}</span>
+                <span className="font-mono font-extrabold text-[#1a1c1d] text-[10px] block truncate" title={activeVariant ? activeVariant.id : (product.sku || 'N/A')}>
+                  {activeVariant ? activeVariant.id : (product.sku || 'N/A')}
+                </span>
               </div>
               <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-center space-y-1">
                 <span className="text-slate-400 block text-[8px] font-black uppercase tracking-wider">Weight</span>
@@ -167,7 +236,9 @@ export default function ProductDetailView({
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <span className="text-[10px] text-indigo-650 font-black uppercase tracking-widest block">{product.vendor} Pouches</span>
-                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">{product.title}</h1>
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+                  {activeVariant ? `${product.title} ${activeVariant.name}` : product.title}
+                </h1>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center text-amber-400">
                     {'★★★★★'.split('').map((char, i) => (
@@ -180,12 +251,14 @@ export default function ProductDetailView({
 
               {/* Price Row */}
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-150/80 flex items-baseline gap-4">
-                <span className="text-2xl font-black text-slate-900">£{product.price.toFixed(2)}</span>
-                {product.compareAtPrice > product.price && (
+                <span className="text-2xl font-black text-slate-900">
+                  £{(activeVariant ? activeVariant.price : product.price).toFixed(2)}
+                </span>
+                {product.compareAtPrice > (activeVariant ? activeVariant.price : product.price) && (
                   <>
                     <span className="text-xs text-slate-400 line-through font-medium">£{product.compareAtPrice.toFixed(2)}</span>
                     <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 uppercase tracking-wide">
-                      Save £{(product.compareAtPrice - product.price).toFixed(2)}
+                      Save £{(product.compareAtPrice - (activeVariant ? activeVariant.price : product.price)).toFixed(2)}
                     </span>
                   </>
                 )}
@@ -194,7 +267,12 @@ export default function ProductDetailView({
               {/* Description */}
               <div className="space-y-2">
                 <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Description</h3>
-                {product.description ? (
+                {(activeVariant && activeVariant.description) ? (
+                  <div 
+                    className="text-slate-600 text-xs leading-relaxed font-sans font-medium space-y-2 prose prose-slate max-w-none break-words"
+                    dangerouslySetInnerHTML={{ __html: activeVariant.description }}
+                  />
+                ) : product.description ? (
                   <div 
                     className="text-slate-600 text-xs leading-relaxed font-sans font-medium space-y-2 prose prose-slate max-w-none break-words"
                     dangerouslySetInnerHTML={{ __html: product.description }}
@@ -243,7 +321,7 @@ export default function ProductDetailView({
             <div className="space-y-4 pt-4 border-t border-slate-150">
               
               {/* Quantity selector */}
-              {product.inventory > 0 && (
+              {(activeVariant ? activeVariant.inventory : product.inventory) > 0 && (
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Quantity:</span>
                   <div className="flex items-center border border-slate-205 rounded-xl bg-slate-50 overflow-hidden">
@@ -254,22 +332,22 @@ export default function ProductDetailView({
                     >
                       -
                     </button>
-                    <span className="px-5 font-extrabold text-xs text-slate-800 min-w-[40px] text-center">{quantity}</span>
+                    <span className="px-5 font-extrabold text-xs text-[#1a1c1d] min-w-[40px] text-center">{quantity}</span>
                     <button
                       type="button"
-                      onClick={() => setQuantity(Math.min(product.inventory, quantity + 1))}
+                      onClick={() => setQuantity(Math.min(activeVariant ? activeVariant.inventory : product.inventory, quantity + 1))}
                       className="px-3.5 py-2 hover:bg-slate-200 text-slate-600 font-bold transition-colors cursor-pointer select-none"
                     >
                       +
                     </button>
                   </div>
-                  <span className="text-[10px] text-slate-400 font-extrabold uppercase">({product.inventory} available)</span>
+                  <span className="text-[10px] text-slate-400 font-extrabold uppercase">({activeVariant ? activeVariant.inventory : product.inventory} available)</span>
                 </div>
               )}
 
               {/* Action Buttons row */}
               <div className="flex gap-3">
-                {product.inventory > 0 ? (
+                {(activeVariant ? activeVariant.inventory : product.inventory) > 0 ? (
                   <button
                     type="button"
                     onClick={handleAddToCartClick}
@@ -346,7 +424,11 @@ export default function ProductDetailView({
                   key={rel.id}
                   onClick={() => {
                     setQuantity(1);
-                    window.history.pushState({}, '', `/products/${rel.slug || rel.id}`);
+                    try {
+                      window.history.pushState({}, '', `/products/${rel.slug || rel.id}`);
+                    } catch (e) {
+                      console.warn('[History] Failed to pushState (sandboxed iframe constraint):', e);
+                    }
                     onNavigate('product-detail', rel.slug || rel.id);
                   }}
                   className="bg-white border border-slate-200 hover:border-slate-350 p-4 rounded-xl space-y-3 cursor-pointer group hover:shadow-md transition-all text-center flex flex-col justify-between"

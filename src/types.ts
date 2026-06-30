@@ -4,6 +4,15 @@ export interface ProductVariant {
   values: string[]; // e.g. ["Medium", "Large"]
 }
 
+export interface VariantDetail {
+  id: string; // Every product variant should have its own unique Product ID
+  name: string; // Combination name, e.g. "Tropical Punch"
+  price: number;
+  inventory: number;
+  description: string;
+  images: string[]; // Upload different images for each variant
+}
+
 export interface Product {
   id: string;
   title: string;
@@ -20,6 +29,7 @@ export interface Product {
   tags: string[];
   media?: string[]; // Multiple media URLs
   variants?: ProductVariant[]; // Option list matching Shopify-style variants
+  concreteVariants?: VariantDetail[]; // Custom physical variant details
   barcode?: string;
   weightUnit?: string; // 'g' | 'kg' | 'oz' | 'lb'
   slug?: string;

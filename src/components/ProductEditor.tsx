@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Product, Collection, ProductVariant } from '../types';
+import { Product, Collection, ProductVariant, VariantDetail } from '../types';
 import { 
   ArrowLeft, Search, Plus, X, Image as ImageIcon, Save, Check, Globe, HelpCircle, 
   Sparkles, SlidersHorizontal, Trash2, ArrowUpDown, GripVertical, ChevronDown, 
@@ -51,6 +51,7 @@ export default function ProductEditor({
 
   // Shopify style Variants Option fields state
   const [variantsList, setVariantsList] = useState<ProductVariant[]>([]);
+  const [concreteVariantsList, setConcreteVariantsList] = useState<VariantDetail[]>([]);
 
   // SEO fields state
   const [showSeoFields, setShowSeoFields] = useState(false);
@@ -65,6 +66,26 @@ export default function ProductEditor({
   // Preset vendors/categories for smart search options
   const defaultVendors = ['Olival', '77 Pouches', 'CUBA Cans', 'KILLA Inc', 'VELO Sweden', 'White Fox', 'Siberia'];
   const defaultCategories = ['Hair Care in Personal Care', 'Nicotine Pouches', 'Energy Pouches', 'Empty Canisters', 'Accessories'];
+
+  // Helper to generate combination names from option dimensions
+  const generateCombinations = (options: ProductVariant[]): string[] => {
+    if (!options || options.length === 0) return [];
+    const validOptions = options.filter(o => o.name.trim() !== '' && o.values && o.values.length > 0);
+    if (validOptions.length === 0) return [];
+
+    const combine = (index: number, current: string[]): string[][] => {
+      if (index === validOptions.length) return [current];
+      const results: string[][] = [];
+      const option = validOptions[index];
+      for (const value of option.values) {
+        results.push(...combine(index + 1, [...current, value]));
+      }
+      return results;
+    };
+
+    const combos = combine(0, []);
+    return combos.map(c => c.join(' / '));
+  };
 
   // Initialize values on load or change
   useEffect(() => {
@@ -84,14 +105,15 @@ export default function ProductEditor({
       setTags(product.tags || []);
       setMediaList(product.media || (product.image ? [product.image] : []));
       setVariantsList(product.variants || []);
+      setConcreteVariantsList(product.concreteVariants || []);
       setCustomSlug(product.slug || product.id || '');
       setSeoTitle(product.seoTitle || product.title || '');
       setSeoDescription(product.seoDescription || product.description.slice(0, 155) || '');
 
       // Locate collection memberships on creation mapping
       const currentMemberships = allCollections
-        .filter(c => c.productIds && c.productIds.includes(product.id))
-        .map(c => c.id);
+         .filter(c => c.productIds && c.productIds.includes(product.id))
+         .map(c => c.id);
       setSelectedColIds(currentMemberships);
     } else {
       // Clear all fields for clean creation draft
@@ -114,12 +136,54 @@ export default function ProductEditor({
       setVariantsList([
         { id: `opt-${Date.now()}`, name: 'Strength', values: ['Medium', 'Strong', 'Extra-Strong'] }
       ]);
+      setConcreteVariantsList([]);
       setCustomSlug('');
       setSeoTitle('');
       setSeoDescription('');
       setSelectedColIds(['all']);
     }
   }, [product, allCollections]);
+
+  // Sync physical variants state when option combinations change
+  useEffect(() => {
+    const combos = generateCombinations(variantsList);
+    if (combos.length === 0) {
+      setConcreteVariantsList([]);
+      return;
+    }
+
+    setConcreteVariantsList(prev => {
+      const existingMap = new Map(prev.map(v => [v.name, v]));
+      const updated = combos.map(comboName => {
+        const existing = existingMap.get(comboName);
+        if (existing) {
+          return existing;
+        } else {
+          const baseSku = sku || 'PABLO';
+          const cleanCombo = comboName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          const generatedId = `${baseSku}-${cleanCombo}`.toUpperCase();
+
+          return {
+            id: generatedId,
+            name: comboName,
+            price: price || 4.99,
+            inventory: inventory || 100,
+            description: description || '',
+            images: mediaList.length > 0 ? [mediaList[0]] : []
+          };
+        }
+      });
+      return updated;
+    });
+  }, [variantsList, sku, price, inventory, description, mediaList]);
+
+  const handleUpdateConcreteVariant = (index: number, updatedFields: Partial<VariantDetail>) => {
+    setConcreteVariantsList(prev => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], ...updatedFields };
+      return copy;
+    });
+  };
 
   // Format Helper for SEO handles slug
   const slugify = (text: string) => {
@@ -350,6 +414,7 @@ export default function ProductEditor({
       tags: tags,
       media: mediaList,
       variants: variantsList.filter(v => v.name.trim() !== ''), // keep only valid options with a name
+      concreteVariants: concreteVariantsList,
       slug: finalSlug,
       seoTitle: seoTitle.trim() || title.trim(),
       seoDescription: seoDescription.trim() || description.trim().slice(0, 155),
@@ -966,6 +1031,106 @@ export default function ProductEditor({
               </div>
             )}
           </div>
+
+          {/* Card 6.5: CONCRETE PHYSICAL VARIANTS DETAILS */}
+          {variantsList.length > 0 && concreteVariantsList.length > 0 && (
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xs text-left">
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-xs sm:text-[13px] uppercase tracking-wide flex items-center gap-1.5">
+                  <SlidersHorizontal className="h-4 w-4 text-emerald-650" />
+                  <span>Physical Variants Configurations</span>
+                  <span className="text-[10px] lowercase text-[#008060] bg-[#008060]/5 border border-[#008060]/15 font-black px-2 py-0.5 rounded-full font-mono">
+                    {concreteVariantsList.length} Variant(s)
+                  </span>
+                </h3>
+                <p className="text-[10px] text-zinc-400 mt-0.5">Customize individual settings for each physical combination. Set custom prices, stock levels, descriptions, unique Product IDs, and upload different images.</p>
+              </div>
+
+              <div className="space-y-6">
+                {concreteVariantsList.map((variant, vIdx) => (
+                  <div key={variant.name} className="border border-slate-200 rounded-xl p-4 sm:p-5 bg-slate-50/40 space-y-4">
+                    {/* Variant Header / Combination & Product ID */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                      <div className="font-extrabold text-slate-800 text-[11px] tracking-tight bg-slate-100 px-3 py-1 rounded-lg uppercase font-mono">
+                        Combination: <span className="text-emerald-700">{variant.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 shrink-0">Product ID / SKU:</label>
+                        <input
+                          type="text"
+                          value={variant.id}
+                          onChange={(e) => handleUpdateConcreteVariant(vIdx, { id: e.target.value })}
+                          className="text-xs font-bold px-3 py-1 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 w-44"
+                          placeholder="Unique Product ID"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+                      {/* Left Side: Image upload area for the variant */}
+                      <div className="md:col-span-5 space-y-2">
+                        <span className="block text-slate-550 font-bold uppercase tracking-wider text-[9px]">Variant Image</span>
+                        <ImageUploadInput
+                          label=""
+                          value={variant.images?.[0] || ''}
+                          onChange={(imgUrl) => handleUpdateConcreteVariant(vIdx, { images: imgUrl ? [imgUrl] : [] })}
+                          placeholder="Variant Image URL..."
+                        />
+                        {variant.images?.[0] && (
+                          <div className="relative mt-2 border border-slate-200 rounded-lg overflow-hidden h-28 bg-white flex items-center justify-center">
+                            <img src={variant.images[0]} referrerPolicy="no-referrer" alt={variant.name} className="max-h-full max-w-full object-contain" />
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateConcreteVariant(vIdx, { images: [] })}
+                              className="absolute top-1 right-1 p-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-full cursor-pointer border border-red-250"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right Side: Inputs for price, stock, and description */}
+                      <div className="md:col-span-7 space-y-3.5">
+                        <div className="grid grid-cols-2 gap-3.5">
+                          <div>
+                            <label className="block text-slate-550 font-bold uppercase tracking-wider text-[9px] mb-1.5">Price (£ GBP)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={variant.price}
+                              onChange={(e) => handleUpdateConcreteVariant(vIdx, { price: Math.max(0, parseFloat(e.target.value) || 0) })}
+                              className="w-full text-xs font-bold px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-550 font-bold uppercase tracking-wider text-[9px] mb-1.5">Stock Quantity</label>
+                            <input
+                              type="number"
+                              value={variant.inventory}
+                              onChange={(e) => handleUpdateConcreteVariant(vIdx, { inventory: Math.max(0, parseInt(e.target.value) || 0) })}
+                              className="w-full text-xs font-bold px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-550 font-bold uppercase tracking-wider text-[9px] mb-1.5">Separate Description</label>
+                          <textarea
+                            rows={2}
+                            value={variant.description}
+                            onChange={(e) => handleUpdateConcreteVariant(vIdx, { description: e.target.value })}
+                            placeholder="Enter description specific to this flavor/combination..."
+                            className="w-full text-xs font-semibold px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder-slate-400"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Card 7: Advanced SEO simulation for Cans */}
           <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xs">

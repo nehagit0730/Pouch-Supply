@@ -72,7 +72,11 @@ export default function CollectionDetailView({
         {/* Navigation back link */}
         <button
           onClick={() => {
-            window.history.pushState({}, '', '/collections/all');
+            try {
+              window.history.pushState({}, '', '/collections/all');
+            } catch (e) {
+              console.warn('[History] Failed to pushState:', e);
+            }
             onNavigate('frontend-shop');
           }}
           className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors uppercase cursor-pointer"
@@ -160,7 +164,11 @@ export default function CollectionDetailView({
               <div 
                 key={prod.id} 
                 onClick={() => {
-                  window.history.pushState({}, '', `/products/${prod.slug || prod.id}`);
+                  try {
+                    window.history.pushState({}, '', `/products/${prod.slug || prod.id}`);
+                  } catch (e) {
+                    console.warn('[History] Failed to pushState:', e);
+                  }
                   onNavigate('product-detail', prod.slug || prod.id);
                 }}
                 className="bg-white border hover:border-slate-350 p-4 rounded-xl space-y-4 cursor-pointer group hover:shadow-md transition-all flex flex-col justify-between"

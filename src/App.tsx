@@ -40,6 +40,15 @@ export default function App() {
     }
   };
 
+  // Helper to safely write to LocalStorage
+  const safeSaveToLocalStorage = (key: string, value: any) => {
+    try {
+      localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+    } catch (e) {
+      console.warn(`[LocalStorage] Failed to write key "${key}" to localStorage:`, e);
+    }
+  };
+
   // --- Persistent Storage State Initialization ---
   const [products, setProducts] = useState<Product[]>(() => {
     return safeLoadFromLocalStorage<Product[]>('ps_products', INITIAL_PRODUCTS);
@@ -92,12 +101,13 @@ export default function App() {
   });
 
   const [loggedInCustomer, setLoggedInCustomer] = useState<Customer | null>(() => {
-    const saved = localStorage.getItem('ps_logged_in_customer');
-    if (!saved || saved === 'undefined') return null;
     try {
+      const saved = localStorage.getItem('ps_logged_in_customer');
+      if (!saved || saved === 'undefined') return null;
       const parsed = JSON.parse(saved);
       return parsed && parsed.id ? parsed : null;
-    } catch {
+    } catch (e) {
+      console.warn('[LocalStorage] Failed to read ps_logged_in_customer:', e);
       return null;
     }
   });
@@ -198,8 +208,19 @@ export default function App() {
       url = `/pages/${tab}`;
     }
 
-    if (window.location.pathname !== url) {
-      window.history.pushState({}, '', url);
+    let currentPathname = '';
+    try {
+      currentPathname = window.location.pathname;
+    } catch (e) {
+      console.warn('[History] Failed to read location pathname:', e);
+    }
+
+    if (currentPathname !== url) {
+      try {
+        window.history.pushState({}, '', url);
+      } catch (e) {
+        console.warn('[History] Failed to pushState (sandboxed iframe constraint):', e);
+      }
     }
     
     setCurrentTab(tab);
@@ -248,7 +269,12 @@ export default function App() {
         // updates trigger frontend tab changes or deactivate admin mode!
         return;
       }
-      const path = window.location.pathname;
+      let path = '';
+      try {
+        path = window.location.pathname;
+      } catch (e) {
+        console.warn('[History] Failed to read location pathname:', e);
+      }
       if (path === '/' || path === '') {
         setCurrentTab('frontend-home');
         setIsAdminActive(false);
@@ -290,67 +316,67 @@ export default function App() {
 
   // --- Write to LocalStorage AND MongoDB Database on Changes ---
   useEffect(() => {
-    localStorage.setItem('ps_products', JSON.stringify(products));
+    safeSaveToLocalStorage('ps_products', products);
     if (isInitialLoadDone) {
       syncToApi('products', products);
     }
   }, [products, isInitialLoadDone]);
 
   useEffect(() => {
-    localStorage.setItem('ps_collections', JSON.stringify(collections));
+    safeSaveToLocalStorage('ps_collections', collections);
     if (isInitialLoadDone) {
       syncToApi('collections', collections);
     }
   }, [collections, isInitialLoadDone]);
 
   useEffect(() => {
-    localStorage.setItem('ps_orders', JSON.stringify(orders));
+    safeSaveToLocalStorage('ps_orders', orders);
     if (isInitialLoadDone) {
       syncToApi('orders', orders);
     }
   }, [orders, isInitialLoadDone]);
 
   useEffect(() => {
-    localStorage.setItem('ps_files', JSON.stringify(files));
+    safeSaveToLocalStorage('ps_files', files);
     if (isInitialLoadDone) {
       syncToApi('files', files);
     }
   }, [files, isInitialLoadDone]);
 
   useEffect(() => {
-    localStorage.setItem('ps_customers', JSON.stringify(customers));
+    safeSaveToLocalStorage('ps_customers', customers);
     if (isInitialLoadDone) {
       syncToApi('customers', customers);
     }
   }, [customers, isInitialLoadDone]);
 
   useEffect(() => {
-    localStorage.setItem('ps_discounts', JSON.stringify(discounts));
+    safeSaveToLocalStorage('ps_discounts', discounts);
     if (isInitialLoadDone) {
       syncToApi('discounts', discounts);
     }
   }, [discounts, isInitialLoadDone]);
 
   useEffect(() => {
-    localStorage.setItem('ps_custom_pages', JSON.stringify(customPages));
+    safeSaveToLocalStorage('ps_custom_pages', customPages);
     if (isInitialLoadDone) {
       syncToApi('custompages', customPages);
     }
   }, [customPages, isInitialLoadDone]);
 
   useEffect(() => {
-    localStorage.setItem('ps_blogs', JSON.stringify(blogs));
+    safeSaveToLocalStorage('ps_blogs', blogs);
     if (isInitialLoadDone) {
       syncToApi('blogs', blogs);
     }
   }, [blogs, isInitialLoadDone]);
 
   useEffect(() => {
-    localStorage.setItem('ps_cart', JSON.stringify(cartItems));
+    safeSaveToLocalStorage('ps_cart', cartItems);
   }, [cartItems]);
 
   useEffect(() => {
-    localStorage.setItem('ps_logged_in_customer', JSON.stringify(loggedInCustomer));
+    safeSaveToLocalStorage('ps_logged_in_customer', loggedInCustomer);
     if (loggedInCustomer) {
       // Keep customer object in the master listing synced as well
       setCustomers(prev => prev.map(c => c.id === loggedInCustomer.id ? loggedInCustomer : c));
