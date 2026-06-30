@@ -1111,16 +1111,15 @@ export default function AdminDashboard({
             </div>
 
             {/* View Online Store main button */}
-            {onExitAdmin && (
-              <button
-                type="button"
-                onClick={onExitAdmin}
-                className="mt-4 w-full flex items-center justify-center gap-2 bg-[#008060] hover:bg-[#006e52] px-3.5 py-2.5 rounded-xl text-white font-black text-[11px] uppercase tracking-wider shadow-sm transition-colors cursor-pointer select-none"
-              >
-                <Globe className="h-4 w-4 shrink-0" />
-                <span>View Online Store</span>
-              </button>
-            )}
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 w-full flex items-center justify-center gap-2 bg-[#008060] hover:bg-[#006e52] px-3.5 py-2.5 rounded-xl text-white font-black text-[11px] uppercase tracking-wider shadow-sm transition-colors cursor-pointer select-none text-center"
+            >
+              <Globe className="h-4 w-4 shrink-0" />
+              <span>View Online Store</span>
+            </a>
           </div>
 
           {/* Foot of sidebar */}
@@ -1184,17 +1183,16 @@ export default function AdminDashboard({
               )}
 
               {/* View Online Store Button */}
-              {onExitAdmin && (
-                <button
-                  type="button"
-                  onClick={onExitAdmin}
-                  className="py-2.5 px-4 bg-white hover:bg-slate-150 text-[#008060] border border-slate-250 hover:border-slate-350 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all shadow-xs cursor-pointer select-none"
-                  title="Return to Customer Online Store"
-                >
-                  <Globe className="h-4 w-4 shrink-0 text-[#008060]" />
-                  <span>View Online Store</span>
-                </button>
-              )}
+              <a
+                href="/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2.5 px-4 bg-white hover:bg-slate-150 text-[#008060] border border-slate-250 hover:border-slate-350 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all shadow-xs cursor-pointer select-none"
+                title="Open Customer Online Store in new tab"
+              >
+                <Globe className="h-4 w-4 shrink-0 text-[#008060]" />
+                <span>View Online Store</span>
+              </a>
 
               <div className="bg-white border border-slate-250 px-4 py-2.5 rounded-xl shadow-xs">
                 <span className="text-slate-400 block text-[9px] font-bold uppercase tracking-wider">Gross Sales</span>
@@ -2185,12 +2183,12 @@ export default function AdminDashboard({
                         <div className="relative group/tooltip">
                           <button
                             onClick={() => setSelectedBuilderPageId(page.id)}
-                            className="p-2.5 bg-teal-50 hover:bg-teal-100 hover:scale-105 text-teal-800 border border-teal-150 rounded-xl transition-all cursor-pointer flex items-center justify-center animate-hover"
+                            className="p-1.5 bg-teal-50 hover:bg-teal-150 text-teal-700 rounded-md transition-all cursor-pointer hover:scale-105"
                             aria-label="Customize Layout"
                           >
-                            <Settings className="h-4.5 w-4.5" />
+                            <Settings className="h-3.5 w-3.5" />
                           </button>
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
                             Customize Layout
                           </div>
                         </div>
@@ -2199,12 +2197,12 @@ export default function AdminDashboard({
                         <div className="relative group/tooltip">
                           <button
                             onClick={() => handleDuplicatePage(page)}
-                            className="p-2.5 bg-slate-100 hover:bg-slate-200 hover:scale-105 text-slate-700 border border-slate-200 rounded-xl transition-all cursor-pointer flex items-center justify-center animate-hover"
+                            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-all cursor-pointer hover:scale-105"
                             aria-label="Duplicate"
                           >
-                            <Clipboard className="h-4.5 w-4.5" />
+                            <Clipboard className="h-3.5 w-3.5" />
                           </button>
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#1a1c1d] text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-[#1a1c1d] text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
                             Duplicate Page
                           </div>
                         </div>
@@ -2213,12 +2211,12 @@ export default function AdminDashboard({
                         <div className="relative group/tooltip">
                           <button
                             onClick={() => handlePreviewPage(page)}
-                            className="p-2.5 bg-sky-50 hover:bg-sky-100 hover:scale-105 text-sky-800 border border-sky-150 rounded-xl transition-all cursor-pointer flex items-center justify-center animate-hover"
+                            className="p-1.5 bg-sky-50 hover:bg-sky-150 text-sky-700 rounded-md transition-all cursor-pointer hover:scale-105"
                             aria-label="Preview"
                           >
-                            <Eye className="h-4.5 w-4.5" />
+                            <Eye className="h-3.5 w-3.5" />
                           </button>
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
                             Preview Page
                           </div>
                         </div>
@@ -2234,16 +2232,16 @@ export default function AdminDashboard({
                                 onUpdateCustomPages(updated);
                               }
                             }}
-                            className={`p-2.5 border rounded-xl transition-all flex items-center justify-center ${
+                            className={`p-1.5 rounded-md transition-all flex items-center justify-center ${
                               page.isHomepage
-                                ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed opacity-50'
-                                : 'bg-red-50 text-red-600 hover:text-white hover:bg-red-600 hover:scale-105 border-red-150 cursor-pointer'
+                                ? 'bg-slate-100 text-slate-300 cursor-not-allowed opacity-50'
+                                : 'bg-red-50 hover:bg-red-150 text-red-650 cursor-pointer hover:scale-105'
                             }`}
                             aria-label="Delete"
                           >
-                            <Trash2 className="h-4.5 w-4.5" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
                             {page.isHomepage ? 'Homepage Cannot Be Deleted' : 'Delete Page'}
                           </div>
                         </div>
