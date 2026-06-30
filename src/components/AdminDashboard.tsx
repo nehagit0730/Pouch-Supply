@@ -305,6 +305,11 @@ export default function AdminDashboard({
     if (onAdminActionComplete) onAdminActionComplete('discard');
   };
 
+  // Sync files state unconditionally so uploads instantly appear in the File Manager bypassing draft locks
+  React.useEffect(() => {
+    setLocalFiles(parentFiles);
+  }, [parentFiles]);
+
   // Sync draft states when external database updates occur (when not dirty)
   React.useEffect(() => {
     if (!hasUnsavedChanges) {
@@ -313,11 +318,10 @@ export default function AdminDashboard({
       setLocalPages(parentCustomPages);
       setLocalDiscounts(parentDiscounts);
       setLocalOrders(parentOrders);
-      setLocalFiles(parentFiles);
       setLocalCustomers(parentCustomers);
       setLocalBlogs(parentBlogs);
     }
-  }, [parentProducts, parentCollections, parentCustomPages, parentDiscounts, parentOrders, parentFiles, parentCustomers, parentBlogs, hasUnsavedChanges]);
+  }, [parentProducts, parentCollections, parentCustomPages, parentDiscounts, parentOrders, parentCustomers, parentBlogs, hasUnsavedChanges]);
 
   // Listen to external modal command requests (from App.tsx confirm triggers)
   React.useEffect(() => {

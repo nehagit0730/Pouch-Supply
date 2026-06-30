@@ -373,6 +373,38 @@ export default function App() {
     }
   }, [isAdminActive]);
 
+  // Listen for image uploads/URL entries across components and auto-add to files list
+  useEffect(() => {
+    const handleImageUploaded = (event: Event) => {
+      const customEvent = event as CustomEvent<{ url: string; fileName: string }>;
+      const { url, fileName } = customEvent.detail;
+      if (!url) return;
+
+      setFiles((prevFiles) => {
+        const exists = prevFiles.some((f) => f.url === url);
+        if (exists) return prevFiles;
+
+        const cleanName = fileName || 'Uploaded Image';
+        const fileEntry: FileEntry = {
+          id: `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          fileName: cleanName.endsWith('.png') || cleanName.endsWith('.jpg') || cleanName.endsWith('.jpeg') || cleanName.endsWith('.webp') || cleanName.endsWith('.svg') ? cleanName : `${cleanName}.png`,
+          altText: 'Uploaded via Product/Collection/Page Editor',
+          dateAdded: 'Today at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          size: `${(Math.random() * 400 + 40).toFixed(2)} KB`,
+          references: 'Used in Editor',
+          url: url
+        };
+
+        return [fileEntry, ...prevFiles];
+      });
+    };
+
+    window.addEventListener('app-image-uploaded', handleImageUploaded);
+    return () => {
+      window.removeEventListener('app-image-uploaded', handleImageUploaded);
+    };
+  }, []);
+
   // --- Write to LocalStorage AND MongoDB Database on Changes ---
   useEffect(() => {
     safeSaveToLocalStorage('ps_products', products);

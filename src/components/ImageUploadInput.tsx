@@ -41,12 +41,21 @@ export default function ImageUploadInput({
           const info = await res.json();
           if (info.url) {
             onChange(info.url);
+            window.dispatchEvent(new CustomEvent('app-image-uploaded', {
+              detail: { url: info.url, fileName: file.name }
+            }));
           } else {
             onChange(reader.result);
+            window.dispatchEvent(new CustomEvent('app-image-uploaded', {
+              detail: { url: reader.result, fileName: file.name }
+            }));
           }
         } catch (err) {
           console.warn('[ImageUpload] API upload failed, falling back to local base64:', err);
           onChange(reader.result);
+          window.dispatchEvent(new CustomEvent('app-image-uploaded', {
+            detail: { url: reader.result, fileName: file.name }
+          }));
         } finally {
           setIsUploading(false);
         }
@@ -171,7 +180,23 @@ export default function ImageUploadInput({
           type="text"
           placeholder={placeholder}
           value={value.startsWith('data:') ? '' : value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            onChange(val);
+            if (val && (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:'))) {
+              let name = 'External Asset';
+              try {
+                const u = new URL(val);
+                const last = u.pathname.substring(u.pathname.lastIndexOf('/') + 1);
+                if (last && last.includes('.')) {
+                  name = last;
+                }
+              } catch (_) {}
+              window.dispatchEvent(new CustomEvent('app-image-uploaded', {
+                detail: { url: val, fileName: name }
+              }));
+            }
+          }}
           className="w-full text-[10px] pl-7 pr-2 py-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium"
         />
       </div>
