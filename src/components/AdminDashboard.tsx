@@ -367,6 +367,7 @@ export default function AdminDashboard({
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const [showAddCollection, setShowAddCollection] = useState(false);
+  const [collectionQuery, setCollectionQuery] = useState('');
   const [newCollectionForm, setNewCollectionForm] = useState<Partial<Collection>>({
     title: '', description: '', type: 'Manual', image: '', productIds: []
   });
@@ -989,6 +990,14 @@ export default function AdminDashboard({
       p.sku.toLowerCase().includes(productQuery.toLowerCase())
     );
   }, [products, productQuery]);
+
+  const filteredCollections = useMemo(() => {
+    return collections.filter(c => 
+      c.title.toLowerCase().includes(collectionQuery.toLowerCase()) ||
+      (c.description || '').toLowerCase().includes(collectionQuery.toLowerCase()) ||
+      c.type.toLowerCase().includes(collectionQuery.toLowerCase())
+    );
+  }, [collections, collectionQuery]);
 
   const filteredFiles = useMemo(() => {
     return files.filter(f => 
@@ -1737,9 +1746,19 @@ export default function AdminDashboard({
               />
             ) : (
               <>
-                {/* Header action menu */}
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-450 font-bold">List of store collections</span>
+                {/* Header menu filter */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
+                  <div className="relative w-full sm:w-64">
+                    <input
+                      type="text"
+                      placeholder="Search collections..."
+                      value={collectionQuery}
+                      onChange={(e) => setCollectionQuery(e.target.value)}
+                      className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
+                    />
+                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                  </div>
+
                   <button
                     onClick={() => setEditingCollection({
                       id: 'new_temp_draft_col',
@@ -1749,83 +1768,147 @@ export default function AdminDashboard({
                       image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=500&q=80',
                       productIds: []
                     })}
-                    className="bg-slate-900 hover:bg-slate-800 text-white p-2.5 px-4 font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
+                    className="bg-slate-900 hover:bg-slate-850 font-bold p-2.5 px-4 rounded-xl text-xs text-white flex items-center gap-1 shadow-xs cursor-pointer"
                   >
                     <Plus className="h-4 w-4" /> Create Collection Box
                   </button>
                 </div>
 
-                {/* Collection tiles list wrapper */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {collections.map(col => (
-                    <div key={col.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between hover:shadow-xs transition-shadow">
-                      <div>
-                        <img
-                          src={col.image}
-                          alt={col.title}
-                          className="w-full h-36 object-cover rounded-lg border border-slate-100 bg-slate-50 mb-3"
-                          referrerPolicy="no-referrer"
-                        />
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-black text-slate-800 text-xs uppercase tracking-wide">{col.title}</h4>
-                          <span className="text-[10px] text-indigo-600 bg-indigo-50 font-bold py-0.5 px-2 rounded-full border border-indigo-150">
-                            {col.type} Collection
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">{col.description}</p>
-                        {col.productConditions && (
-                          <p className="text-[10px] text-slate-400 mt-2 bg-slate-50 p-2 border rounded font-mono">
-                            Rule: {col.productConditions}
-                          </p>
-                        )}
-                      </div>
+                {/* Collections Table Grid list */}
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50/75 border-b border-slate-200 text-[10px] text-slate-450 font-semibold uppercase tracking-widest">
+                          <th className="p-4">Image</th>
+                          <th className="p-4">Collection Title</th>
+                          <th className="p-4">Type</th>
+                          <th className="p-4">Description</th>
+                          <th className="p-4 text-center">Products Count</th>
+                          <th className="p-4 text-center">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-150/70">
+                        {filteredCollections.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="text-center py-12 text-slate-400">No collections match the criteria or configured yet.</td>
+                          </tr>
+                        ) : (
+                          filteredCollections.map(col => (
+                            <tr 
+                              key={col.id} 
+                              className="hover:bg-slate-50/60 cursor-pointer transition-colors"
+                              onClick={() => {
+                                setEditingCollection(col);
+                                setNewCollectionForm(col);
+                              }}
+                            >
+                              <td className="p-4 shrink-0">
+                                <img
+                                  src={col.image}
+                                  alt=""
+                                  className="w-10 h-10 object-cover rounded-md bg-slate-50 border border-slate-100"
+                                  referrerPolicy="no-referrer"
+                                />
+                              </td>
+                              <td className="p-4 font-bold text-slate-900 leading-normal max-w-xs">{col.title}</td>
+                              <td className="p-4">
+                                <span className={`inline-block py-0.5 px-2 rounded-full font-black text-[9px] uppercase tracking-wider ${
+                                  col.type === 'Automated' ? 'bg-indigo-50 text-indigo-700 border border-indigo-150' : 'bg-slate-100 text-slate-500'
+                                }`}>
+                                  {col.type}
+                                </span>
+                              </td>
+                              <td className="p-4 text-slate-500 font-medium max-w-md truncate leading-relaxed">
+                                {col.description || <span className="text-slate-350 italic">No description provided</span>}
+                              </td>
+                              <td className="p-4 text-center font-black text-xs text-slate-800">
+                                {col.id === 'all' ? products.length : col.productIds.length} products
+                              </td>
+                              <td className="p-4 text-center text-xs whitespace-nowrap">
+                                <div className="flex items-center justify-center gap-2">
+                                  {/* Edit Action */}
+                                  <div className="relative group/tooltip">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingCollection(col);
+                                        setNewCollectionForm(col);
+                                      }}
+                                      className="p-1.5 bg-indigo-50 hover:bg-indigo-150 text-indigo-700 rounded-md transition-all cursor-pointer hover:scale-105"
+                                      aria-label="Edit"
+                                      title="Edit collection"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                                      Edit
+                                    </div>
+                                  </div>
 
-                      <div className="pt-3 border-t border-slate-100 mt-4 flex justify-between items-center text-[11px] gap-2">
-                        <span className="text-slate-400 block">Products: <span className="font-extrabold text-slate-700">{col.id === 'all' ? products.length : col.productIds.length}</span></span>
-                        
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => {
-                              setEditingCollection(col);
-                              setNewCollectionForm(col);
-                            }}
-                            className="text-indigo-600 hover:text-indigo-800 font-extrabold cursor-pointer"
-                            title="Edit collection details"
-                          >
-                            Edit
-                          </button>
-                          <span className="text-slate-200">|</span>
-                          <button
-                            onClick={() => handleDuplicateCollection(col)}
-                            className="text-teal-600 hover:text-teal-850 font-extrabold cursor-pointer"
-                            title="Duplicate collection"
-                          >
-                            Dup
-                          </button>
-                          <span className="text-slate-200">|</span>
-                          <button
-                            onClick={() => handlePreviewCollection(col)}
-                            className="text-sky-650 hover:text-sky-800 font-extrabold cursor-pointer"
-                            title="Preview collection"
-                          >
-                            View
-                          </button>
-                          {col.id !== 'all' && (
-                            <>
-                              <span className="text-slate-200">|</span>
-                              <button
-                                onClick={() => handleDeleteCollection(col.id)}
-                                className="text-red-500 hover:text-red-700 font-extrabold cursor-pointer"
-                                title="Delete collection"
-                              >
-                                Del
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                                  {/* Duplicate Action */}
+                                  <div className="relative group/tooltip">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDuplicateCollection(col);
+                                      }}
+                                      className="p-1.5 bg-teal-50 hover:bg-teal-150 text-teal-700 rounded-md transition-all cursor-pointer hover:scale-105"
+                                      aria-label="Duplicate"
+                                      title="Duplicate collection"
+                                    >
+                                      <Copy className="h-3.5 w-3.5" />
+                                    </button>
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                                      Dup
+                                    </div>
+                                  </div>
+
+                                  {/* View Action */}
+                                  <div className="relative group/tooltip">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePreviewCollection(col);
+                                      }}
+                                      className="p-1.5 bg-sky-50 hover:bg-sky-150 text-sky-700 rounded-md transition-all cursor-pointer hover:scale-105"
+                                      aria-label="View"
+                                      title="Preview collection"
+                                    >
+                                      <Eye className="h-3.5 w-3.5" />
+                                    </button>
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                                      View
+                                    </div>
+                                  </div>
+
+                                  {/* Delete Action */}
+                                  {col.id !== 'all' && (
+                                    <div className="relative group/tooltip">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteCollection(col.id);
+                                        }}
+                                        className="p-1.5 bg-red-50 hover:bg-red-150 text-red-650 rounded-md transition-all cursor-pointer hover:scale-105"
+                                        aria-label="Delete"
+                                        title="Delete collection"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                                        Del
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </>
             )}

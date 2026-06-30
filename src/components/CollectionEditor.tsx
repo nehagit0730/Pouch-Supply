@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Collection, Product } from '../types';
 import { 
   ArrowLeft, Search, Plus, X, Image as ImageIcon, Save, Check, Globe, LayoutTemplate, 
-  HelpCircle, Sparkles, SlidersHorizontal, Trash2, ArrowUpDown, GripVertical, ChevronDown, CheckSquare, Square
+  HelpCircle, Sparkles, SlidersHorizontal, Trash2, ArrowUpDown, GripVertical, ChevronDown, CheckSquare, Square,
+  Eye
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 
@@ -242,12 +243,24 @@ export default function CollectionEditor({
               <Trash2 className="h-3.5 w-3.5" />
               <span>Delete</span>
             </button>
+           )}
+ 
+          {collection && (
+            <a
+              href={`/collections/${collection.slug || collection.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-2.5 px-3.5 border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-150 font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+              title="View Collection in Storefront"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>View Collection</span>
+            </a>
           )}
-
-          <button
-            onClick={onCancel}
-            className="py-2.5 px-4 border border-slate-250 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer"
-          >
+           <button
+             onClick={onCancel}
+             className="py-2.5 px-4 border border-slate-250 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+           >
             Cancel
           </button>
 
@@ -740,23 +753,7 @@ export default function CollectionEditor({
             </div>
           </div>
 
-          {/* Sidebar block 3: Theme template select option */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
-            <h3 className="font-extrabold text-slate-805 text-[10.5px] uppercase tracking-widest pb-2 border-b border-indigo-50/50">Theme template</h3>
-            
-            <div className="relative">
-              <select className="w-full text-xs font-bold pl-3 pr-8 py-2.5 border border-slate-350 bg-white rounded-xl focus:outline-none cursor-pointer appearance-none">
-                <option value="default">Default custom collection</option>
-                <option value="featured">Featured grid collection</option>
-                <option value="slideshow">Hero template slideshow</option>
-              </select>
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-500">
-                <ChevronDown className="h-3.5 w-3.5" />
-              </div>
-            </div>
-            
-            <p className="text-[9px] text-slate-400 font-medium">Determines layout format of page sections matching client navigation routing.</p>
-          </div>
+
 
           {/* Side box collection settings: Smart vs Manual configuration rules */}
           <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4.5">
