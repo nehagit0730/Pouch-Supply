@@ -149,11 +149,18 @@ export default function ProductEditor({
   useEffect(() => {
     const combos = generateCombinations(variantsList);
     if (combos.length === 0) {
-      setConcreteVariantsList([]);
+      setConcreteVariantsList(prev => prev.length === 0 ? prev : []);
       return;
     }
 
     setConcreteVariantsList(prev => {
+      // Check if combos match prev exactly to avoid unnecessary state changes and potential race conditions
+      const prevNames = prev.map(v => v.name);
+      const isIdentical = combos.length === prevNames.length && combos.every((c, i) => c === prevNames[i]);
+      if (isIdentical) {
+        return prev;
+      }
+
       const existingMap = new Map(prev.map(v => [v.name, v]));
       const updated = combos.map(comboName => {
         const existing = existingMap.get(comboName);
@@ -176,7 +183,7 @@ export default function ProductEditor({
       });
       return updated;
     });
-  }, [variantsList, sku, price, inventory, description, mediaList]);
+  }, [variantsList]);
 
   const handleUpdateConcreteVariant = (index: number, updatedFields: Partial<VariantDetail>) => {
     setConcreteVariantsList(prev => {
