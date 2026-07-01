@@ -341,48 +341,37 @@ export default function PageRenderer({
                 )}
 
                 {/* 6. MARQUEE TEXT */}
-                {sec.type === 'Marquee text' && (
-                  <div className={`overflow-hidden bg-slate-900 py-4.5 border-y border-slate-800/80 relative shadow-inner w-full ${sec.settings.fullWidth ? '' : 'rounded-2xl'}`}>
-                    <div className="marquee-container">
-                      <div className="animate-marquee whitespace-nowrap flex gap-12 items-center font-mono font-bold text-white text-[10px] sm:text-xs tracking-wider leading-none">
-                        <span className="flex items-center gap-2 shrink-0">
-                          <Flame className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /> 
-                          <span>QUALITY LABORATORY PACKED // TOBACCO-FREE</span>
-                        </span>
-                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
-                        <span className="flex items-center gap-2 shrink-0">
-                          ⭐ <span>OFFICIALLY LICENSED IN EUROPE AND UK CORES</span>
-                        </span>
-                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
-                        <span className="flex items-center gap-2 shrink-0">
-                          📦 <span>INSTANT DISPATCH ON BULK PACKS DISCOUNTS APPLIED</span>
-                        </span>
-                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
-                        <span className="flex items-center gap-2 shrink-0">
-                          ✓ <span>VACUUM TESTED POUCHES FOR ABSOLUTE CRISPINESS</span>
-                        </span>
-                        
-                        {/* Repeat items for seamless animation loop */}
-                        <span className="flex items-center gap-2 shrink-0">
-                          <Flame className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /> 
-                          <span>QUALITY LABORATORY PACKED // TOBACCO-FREE</span>
-                        </span>
-                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
-                        <span className="flex items-center gap-2 shrink-0">
-                          ⭐ <span>OFFICIALLY LICENSED IN EUROPE AND UK CORES</span>
-                        </span>
-                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
-                        <span className="flex items-center gap-2 shrink-0">
-                          📦 <span>INSTANT DISPATCH ON BULK PACKS DISCOUNTS APPLIED</span>
-                        </span>
-                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
-                        <span className="flex items-center gap-2 shrink-0">
-                          ✓ <span>VACUUM TESTED POUCHES FOR ABSOLUTE CRISPINESS</span>
-                        </span>
+                {sec.type === 'Marquee text' && (() => {
+                  const rawText = sec.settings.title || 'DELIVERY // CANCEL ANYTIME // LOYALTY SCHEME // NEVER RUN OUT // DELIVERED ON YOUR SCHEDULE // SAVE VS. SHOP PRICES // DISCREET DELIVERY';
+                  const items = rawText.includes('//') 
+                    ? rawText.split('//').map(item => item.trim()).filter(Boolean)
+                    : rawText.includes('•')
+                    ? rawText.split('•').map(item => item.trim()).filter(Boolean)
+                    : [rawText];
+                  
+                  // Duplicate items multiple times to create an absolute seamless continuous scroll loop
+                  const doubledItems = items.length > 0 ? [...items, ...items, ...items, ...items] : [];
+                  return (
+                    <div 
+                      className={`overflow-hidden py-3.5 border-y border-amber-500/10 relative w-full ${sec.settings.fullWidth ? '' : 'rounded-2xl'}`}
+                      style={{ backgroundColor: sec.settings.backgroundColor || '#E8BE74' }}
+                    >
+                      <div className="marquee-container">
+                        <div 
+                          className="animate-marquee whitespace-nowrap flex gap-8 items-center font-sans font-black uppercase text-[11px] sm:text-xs tracking-wider leading-none"
+                          style={{ color: sec.settings.textColor || '#1A1C1D' }}
+                        >
+                          {doubledItems.map((item, idx) => (
+                            <React.Fragment key={idx}>
+                              <span className="shrink-0">{item}</span>
+                              <span className="text-[13px] opacity-80 shrink-0 select-none">•</span>
+                            </React.Fragment>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* 7. MARQUEE IMAGES */}
                 {sec.type === 'Marquee images' && (

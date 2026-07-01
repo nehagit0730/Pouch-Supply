@@ -16,23 +16,28 @@ import ProductEditor from './ProductEditor';
 export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'Image banner', label: 'Image Banner', desc: 'Hero banner with centered headline overlay & CTA buttons', icon: 'ImageIcon' },
   { type: 'Image with text', label: 'Image with Text', desc: 'Beautifully-aligned structural image with side description', icon: 'Columns' },
-  { type: 'Text column with image', label: 'Text Grid with Images', desc: 'Three-column display grid showing core brand standards', icon: 'Grid' },
-  { type: 'Featured collection', label: 'Featured Products', desc: 'Interactive storefront product card grid with live data', icon: 'ShoppingBag' },
-  { type: 'Collection list', label: 'Collection Grid', desc: 'Display all available categorized nicotine canister series', icon: 'FolderHeart' },
-  { type: 'Slideshow', label: 'Slideshow Slider', desc: 'Smooth horizontal multi-slide sliding carousel banner', icon: 'PlaySquare' },
-  { type: 'Video banner', label: 'Video Showcase', desc: 'Cinematic YouTube player showcasing laboratory workflows', icon: 'Video' },
-  { type: 'Rich text', label: 'Rich Editorial Details', desc: 'Focussed header with spacious text for brand newsletters', icon: 'FileText' },
-  { type: 'Marquee text', label: 'Scrolling News Ribbon', desc: 'Fast, animated horizontal news marquee with key notices', icon: 'Sparkles' },
-  { type: 'Marquee images', label: 'Active Product Reel', desc: 'Dynamic ticker reel demonstrating recently stocked canisters', icon: 'Layers' },
-  { type: 'Logo list', label: 'Clinical Partners Registry', desc: 'Official partnered distributors and reseller banners', icon: 'Award' },
-  { type: 'Images gallery', label: 'Production Facility Gallery', desc: 'Scenic four-column gallery of clean compounding rooms', icon: 'Layout' },
-  { type: 'FAQs', label: 'Accordion FAQs', desc: 'Collapsible answered support questions', icon: 'HelpCircle' },
-  { type: 'Blog post', label: 'Blog Posts Grid', desc: 'Display a beautiful list/grid of live Pouch Journal articles with columns control', icon: 'BookOpen' },
-  { type: 'Brand list', label: 'Brand List with Images', desc: 'Scenic brand logo matrix with interactive links to collections', icon: 'LayoutGrid' },
+  { type: 'Text column with image', label: 'Text Column with Image', desc: 'Three-column display grid showing core brand standards', icon: 'Grid' },
+  { type: 'Featured collection', label: 'Featured Collection', desc: 'Interactive storefront product card grid with live data', icon: 'ShoppingBag' },
+  { type: 'Collection list', label: 'Collection List', desc: 'Display all available categorized nicotine canister series', icon: 'FolderHeart' },
+  { type: 'Slideshow', label: 'Slideshow', desc: 'Smooth horizontal multi-slide sliding carousel banner', icon: 'PlaySquare' },
+  { type: 'Video banner', label: 'Video Banner', desc: 'Cinematic YouTube player showcasing laboratory workflows', icon: 'Video' },
+  { type: 'Rich text', label: 'Rich Text', desc: 'Focussed header with spacious text for brand newsletters', icon: 'FileText' },
+  { type: 'Marquee text', label: 'Marquee Text', desc: 'Fast, animated horizontal news marquee with key notices', icon: 'Sparkles' },
+  { type: 'Marquee images', label: 'Marquee Images', desc: 'Dynamic ticker reel demonstrating recently stocked canisters', icon: 'Layers' },
+  { type: 'Logo list', label: 'Logo List', desc: 'Official partnered distributors and reseller banners', icon: 'Award' },
+  { type: 'Images gallery', label: 'Images Gallery', desc: 'Scenic four-column gallery of clean compounding rooms', icon: 'Layout' },
+  { type: 'FAQs', label: 'FAQs', desc: 'Collapsible answered support questions', icon: 'HelpCircle' },
+  { type: 'Blog post', label: 'Blog Post', desc: 'Display a beautiful list/grid of live Pouch Journal articles with columns control', icon: 'BookOpen' },
+  { type: 'Brand list', label: 'Brand List', desc: 'Scenic brand logo matrix with interactive links to collections', icon: 'LayoutGrid' },
   { type: 'Icon with text', label: 'Icon with Text', desc: 'Six-item feature display grid with customizable icons and colors', icon: 'Sparkles' },
   { type: 'Brands we offer', label: 'Brands we offer', desc: 'Infinite running marquee of brand logo images with live upload option', icon: 'Layers' },
-  { type: 'How it works', label: 'How it Works Steps', desc: 'Dynamic timeline workflow steps with custom images & layouts', icon: 'Compass' }
+  { type: 'How it works', label: 'How it works', desc: 'Dynamic timeline workflow steps with custom images & layouts', icon: 'Compass' }
 ] as const;
+
+export const getSectionLabel = (type: string): string => {
+  const found = AVAILABLE_SECTION_TEMPLATES.find(t => t.type === type);
+  return found ? found.label : type;
+};
 
 export const getSectionIcon = (type: string) => {
   switch (type) {
@@ -674,24 +679,24 @@ export default function AdminDashboard({
   const handleAddSectionToPage = (sectionType: PageSection['type']) => {
     if (!selectedBuilderPageId) return;
     
-    // Banner and Slideshow should be full width by default!
-    const isFullWidthByDefault = sectionType === 'Image banner' || sectionType === 'Slideshow';
+    // Banner, Slideshow and Marquee text should be full width by default!
+    const isFullWidthByDefault = sectionType === 'Image banner' || sectionType === 'Slideshow' || sectionType === 'Marquee text';
     
     const newSection: PageSection = {
       id: `sec-${Date.now()}`,
       type: sectionType,
       settings: {
         fullWidth: isFullWidthByDefault,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: sectionType === 'Marquee text' ? '#E8BE74' : '#FFFFFF',
         headingColor: '#1E293B',
-        textColor: '#64748B',
+        textColor: sectionType === 'Marquee text' ? '#1A1C1D' : '#64748B',
         title: sectionType === 'Image banner' ? 'Exclusive Pouch Launch' 
              : sectionType === 'Image with text' ? 'Curate Your Premium Package'
              : sectionType === 'Text column with image' ? 'Our Laboratory Certified Foundations'
              : sectionType === 'Featured collection' ? 'Featured Collection Highlights'
              : sectionType === 'Collection list' ? 'Explore Brand Collections'
              : sectionType === 'Images gallery' ? 'Laboratory & Dispatch Facility Gallery'
-             : sectionType === 'Marquee text' ? 'FREE PRIOR SHIPPING OVER £40! // 100% TOBACCO-FREE // BULK SAVINGS ACTIVE'
+             : sectionType === 'Marquee text' ? 'DELIVERY // CANCEL ANYTIME // LOYALTY SCHEME // NEVER RUN OUT // DELIVERED ON YOUR SCHEDULE // SAVE VS. SHOP PRICES // DISCREET DELIVERY'
              : sectionType === 'Marquee images' ? 'Fresh Stock Dispatch Reel'
              : sectionType === 'Logo list' ? 'Official Lab Partner Register'
              : sectionType === 'FAQs' ? 'Frequently Answered Questions'
@@ -2446,7 +2451,7 @@ export default function AdminDashboard({
                             </div>
                             <div className="truncate text-left font-bold text-slate-800">
                               <span className="text-[8px] text-slate-400 block font-mono uppercase leading-none mb-0.5">Sec {idx + 1}</span>
-                              <span className="truncate block leading-tight">{sec.type}</span>
+                              <span className="truncate block leading-tight">{getSectionLabel(sec.type)}</span>
                             </div>
                           </div>
 
@@ -2622,7 +2627,7 @@ export default function AdminDashboard({
 
                               {/* Overlay tag indicator */}
                               <span className="absolute top-2.5 left-3 bg-slate-900 text-white text-[8px] font-black tracking-widest uppercase py-0.5 px-1.5 rounded-md pointer-events-none opacity-80">
-                                {sec.type} {isFocused ? '• EDITING' : ''}
+                                {getSectionLabel(sec.type)} {isFocused ? '• EDITING' : ''}
                               </span>
 
                               {/* Different visual layouts */}
@@ -2731,13 +2736,32 @@ export default function AdminDashboard({
                                 )}
 
                                 {/* 6. MARQUEE TEXT */}
-                                {sec.type === 'Marquee text' && (
-                                  <div className="overflow-hidden bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-center relative shadow-inner">
-                                    <p className="animate-pulse flex items-center justify-center gap-1.5 font-bold text-teal-400 text-[8.5px] uppercase tracking-widest font-mono">
-                                      <span>⚡ {sec.settings.title || 'FREE PRIORITY SHIPPING OVER £40!'} ⚡</span>
-                                    </p>
-                                  </div>
-                                )}
+                                {sec.type === 'Marquee text' && (() => {
+                                  const rawText = sec.settings.title || 'DELIVERY // CANCEL ANYTIME // LOYALTY SCHEME // NEVER RUN OUT // DELIVERED ON YOUR SCHEDULE // SAVE VS. SHOP PRICES // DISCREET DELIVERY';
+                                  const items = rawText.includes('//') 
+                                    ? rawText.split('//').map(item => item.trim()).filter(Boolean)
+                                    : rawText.includes('•')
+                                    ? rawText.split('•').map(item => item.trim()).filter(Boolean)
+                                    : [rawText];
+                                  return (
+                                    <div 
+                                      className="overflow-hidden p-2.5 rounded-lg border border-amber-500/10 text-center relative shadow-xs"
+                                      style={{ backgroundColor: sec.settings.backgroundColor || '#E8BE74' }}
+                                    >
+                                      <p 
+                                        className="font-bold text-[9px] uppercase tracking-wider font-sans truncate flex items-center justify-center gap-1.5"
+                                        style={{ color: sec.settings.textColor || '#1A1C1D' }}
+                                      >
+                                        {items.map((item, index) => (
+                                          <span key={index} className="flex items-center gap-1.5 shrink-0">
+                                            <span>{item}</span>
+                                            {index < items.length - 1 && <span className="opacity-75">•</span>}
+                                          </span>
+                                        ))}
+                                      </p>
+                                    </div>
+                                  );
+                                })()}
 
                                 {/* 7. MARQUEE IMAGES */}
                                 {sec.type === 'Marquee images' && (
@@ -3209,7 +3233,7 @@ export default function AdminDashboard({
                       <div className="space-y-4 text-[11px] leading-normal font-sans">
                         
                         <div className="bg-slate-50 p-2.5 rounded border border-slate-200/55 mb-2 flex items-center justify-between">
-                          <span className="font-bold text-indigo-700 capitalize">{currentlyEditingSection.type}</span>
+                          <span className="font-bold text-indigo-700">{getSectionLabel(currentlyEditingSection.type)}</span>
                           <span className="text-[9px] text-slate-400 font-mono">ID: {currentlyEditingSection.id.substring(4, 8)}</span>
                         </div>
 
