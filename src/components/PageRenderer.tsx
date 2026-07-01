@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { CustomPage, PageSection, Product, Collection, Customer, BlogPost } from '../types';
 import { 
   ArrowRight, ShoppingCart, Star, Heart, FileText, Check, 
-  ChevronDown, ChevronUp, Play, Sparkles, TrendingUp, Plus, Minus, ShieldCheck, Award, Eye, Flame, ArrowUpRight, BookOpen, Layers
+  ChevronDown, ChevronUp, Play, Sparkles, TrendingUp, Plus, Minus, ShieldCheck, Award, Eye, Flame, ArrowUpRight, BookOpen, Layers,
+  Truck, Zap, Shield, Clock, Package, HelpCircle
 } from 'lucide-react';
 import PremiumSlideshow from './PremiumSlideshow';
 
@@ -865,6 +866,94 @@ export default function PageRenderer({
                     </div>
                   </div>
                 )}
+
+                {/* 16. ICON WITH TEXT */}
+                {sec.type === 'Icon with text' && (() => {
+                  const items = sec.settings.iconItems || [
+                    { iconName: 'Truck', title: 'Delivered on your schedule', description: 'Flexible delivery, when you need it.', linkUrl: 'frontend-shop' },
+                    { iconName: 'Zap', title: 'Save vs. shop prices', description: 'Better prices than retail stores.', linkUrl: 'frontend-shop' },
+                    { iconName: 'Shield', title: 'Discreet delivery', description: 'Plain, private, and secure packaging.', linkUrl: 'frontend-shop' },
+                    { iconName: 'Clock', title: 'Cancel anytime', description: 'No commitments, full control.', linkUrl: 'frontend-shop' },
+                    { iconName: 'Award', title: 'Loyalty scheme', description: 'Earn rewards on every order.', linkUrl: 'frontend-shop' },
+                    { iconName: 'Package', title: 'Never run out', description: 'Auto-refill and easy reordering.', linkUrl: 'frontend-shop' }
+                  ];
+
+                  return (
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-12 py-12">
+                      <div className="text-center space-y-3">
+                        {sec.settings.title && (
+                          <h2 
+                            className="text-3xl md:text-4xl font-black uppercase tracking-tight"
+                            style={{ color: sec.settings.headingColor || sec.settings.textColor || '#0F172A' }}
+                          >
+                            {sec.settings.title}
+                          </h2>
+                        )}
+                        {sec.settings.description && (
+                          <p 
+                            className="max-w-2xl mx-auto text-xs sm:text-sm leading-relaxed opacity-85"
+                            style={{ color: sec.settings.textColor || '#475569' }}
+                          >
+                            {sec.settings.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-12 gap-x-8 text-center pt-4">
+                        {items.map((item, iIdx) => {
+                          const IconComp = (() => {
+                            const iconStyle = { color: sec.settings.iconColor || '#4F46E5' };
+                            switch (item.iconName) {
+                              case 'Truck': return <Truck className="h-7 w-7 mx-auto" style={iconStyle} />;
+                              case 'Zap': return <Zap className="h-7 w-7 mx-auto" style={iconStyle} />;
+                              case 'Shield': return <ShieldCheck className="h-7 w-7 mx-auto" style={iconStyle} />;
+                              case 'Clock': return <Clock className="h-7 w-7 mx-auto" style={iconStyle} />;
+                              case 'Award': return <Award className="h-7 w-7 mx-auto" style={iconStyle} />;
+                              case 'Package': return <Package className="h-7 w-7 mx-auto" style={iconStyle} />;
+                              case 'Heart': return <Heart className="h-7 w-7 mx-auto" style={iconStyle} />;
+                              case 'HelpCircle': return <HelpCircle className="h-7 w-7 mx-auto" style={iconStyle} />;
+                              case 'Star': return <Star className="h-7 w-7 mx-auto" style={iconStyle} />;
+                              default: return <Sparkles className="h-7 w-7 mx-auto" style={iconStyle} />;
+                            }
+                          })();
+
+                          return (
+                            <div 
+                              key={iIdx} 
+                              className="flex flex-col items-center space-y-3 p-4 group rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-300"
+                            >
+                              <div className="p-3 rounded-full bg-slate-500/10 mb-1 flex items-center justify-center transition-transform duration-350 group-hover:scale-110">
+                                {IconComp}
+                              </div>
+                              <h3 
+                                className="text-sm font-black uppercase tracking-tight"
+                                style={{ color: sec.settings.headingColor || sec.settings.textColor || '#1E293B' }}
+                              >
+                                {item.title}
+                              </h3>
+                              <p 
+                                className="text-xs max-w-xs leading-relaxed opacity-75 font-medium"
+                                style={{ color: sec.settings.textColor || '#64748B' }}
+                              >
+                                {item.description}
+                              </p>
+                              {item.linkUrl && (
+                                <button
+                                  onClick={() => handleLinkClick(item.linkUrl)}
+                                  className="text-[10px] font-black uppercase tracking-widest mt-2 hover:underline opacity-90 hover:opacity-100 flex items-center gap-1 transition-all cursor-pointer bg-transparent border-none outline-none"
+                                  style={{ color: sec.settings.iconColor || sec.settings.textColor || '#4F46E5' }}
+                                >
+                                  <span>Learn more</span>
+                                  <span className="text-xs">↗</span>
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
 
               </div>
             </section>

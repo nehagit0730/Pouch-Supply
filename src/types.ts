@@ -113,12 +113,19 @@ export interface Discount {
 
 export interface PageSection {
   id: string;
-  type: 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list';
+  type: 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list' | 'Icon with text';
   settings: {
     fullWidth: boolean;
     backgroundColor: string; // hex
     headingColor: string; // hex
     textColor: string; // hex
+    iconColor?: string; // hex
+    iconItems?: {
+      iconName: 'Truck' | 'Zap' | 'Shield' | 'Clock' | 'Award' | 'Package' | 'Heart' | 'HelpCircle' | 'Star';
+      title: string;
+      description: string;
+      linkUrl?: string;
+    }[];
     title?: string;
     description?: string;
     buttonText?: string;

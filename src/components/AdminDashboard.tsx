@@ -28,7 +28,8 @@ export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'Images gallery', label: 'Production Facility Gallery', desc: 'Scenic four-column gallery of clean compounding rooms', icon: 'Layout' },
   { type: 'FAQs', label: 'Accordion FAQs', desc: 'Collapsible answered support questions', icon: 'HelpCircle' },
   { type: 'Blog post', label: 'Blog Posts Grid', desc: 'Display a beautiful list/grid of live Pouch Journal articles with columns control', icon: 'BookOpen' },
-  { type: 'Brand list', label: 'Brand List with Images', desc: 'Scenic brand logo matrix with interactive links to collections', icon: 'LayoutGrid' }
+  { type: 'Brand list', label: 'Brand List with Images', desc: 'Scenic brand logo matrix with interactive links to collections', icon: 'LayoutGrid' },
+  { type: 'Icon with text', label: 'Icon with Text', desc: 'Six-item feature display grid with customizable icons and colors', icon: 'Sparkles' }
 ] as const;
 
 export const getSectionIcon = (type: string) => {
@@ -48,6 +49,7 @@ export const getSectionIcon = (type: string) => {
     case 'FAQs': return <HelpCircle className="h-4 w-4 text-violet-500" />;
     case 'Blog post': return <BookOpen className="h-4 w-4 text-orange-600" />;
     case 'Brand list': return <LayoutGrid className="h-4 w-4 text-pink-500" />;
+    case 'Icon with text': return <Sparkles className="h-4 w-4 text-indigo-600 animate-pulse" />;
     default: return <FileCode className="h-4 w-4 text-slate-400" />;
   }
 };
@@ -691,6 +693,7 @@ export default function AdminDashboard({
              : sectionType === 'FAQs' ? 'Frequently Answered Questions'
              : sectionType === 'Blog post' ? 'Latest From Our Journal'
              : sectionType === 'Brand list' ? 'Shop Premium Brands'
+             : sectionType === 'Icon with text' ? 'Why subscribe to Pouch Supply?'
              : `Custom ${sectionType}`,
         description: sectionType === 'Image with text' ? 'Our plant-fiber formulations are packed under sterile medical conditions for persistent, smooth boosts.'
                  : sectionType === 'Text column with image' ? 'Every single canister batch is vacuum-sealed inside high-density polymer tubes guaranteeing pristine flavor locks.'
@@ -699,6 +702,7 @@ export default function AdminDashboard({
                  : sectionType === 'FAQs' ? 'Find quick validations regarding shipping rules, subscriptions, and formulation safety standards.'
                  : sectionType === 'Blog post' ? 'Scientific reports, dosage guides, and news bulletins straight from Scandinavia.'
                  : sectionType === 'Brand list' ? 'Check our collection of premium, laboratory-certified brand canisters.'
+                 : sectionType === 'Icon with text' ? 'Explore exclusive rewards and reliable logistics built directly into our ecosystem.'
                  : 'Edit option elements inside options sidebar',
         columnsDesktop: sectionType === 'Blog post' ? 3 : undefined,
         columnsMobile: sectionType === 'Blog post' ? 1 : undefined,
@@ -737,6 +741,15 @@ export default function AdminDashboard({
             buttonText: 'Explore Sub-Zero Bundles',
             buttonLink: 'frontend-shop'
           }
+        ] : undefined,
+        iconColor: sectionType === 'Icon with text' ? '#4F46E5' : undefined,
+        iconItems: sectionType === 'Icon with text' ? [
+          { iconName: 'Truck', title: 'Delivered on your schedule', description: 'Flexible delivery, when you need it.', linkUrl: 'frontend-shop' },
+          { iconName: 'Zap', title: 'Save vs. shop prices', description: 'Better prices than retail stores.', linkUrl: 'frontend-shop' },
+          { iconName: 'Shield', title: 'Discreet delivery', description: 'Plain, private, and secure packaging.', linkUrl: 'frontend-shop' },
+          { iconName: 'Clock', title: 'Cancel anytime', description: 'No commitments, full control.', linkUrl: 'frontend-shop' },
+          { iconName: 'Award', title: 'Loyalty scheme', description: 'Earn rewards on every order.', linkUrl: 'frontend-shop' },
+          { iconName: 'Package', title: 'Never run out', description: 'Auto-refill and easy reordering.', linkUrl: 'frontend-shop' }
         ] : undefined
       }
     };
@@ -3018,6 +3031,42 @@ export default function AdminDashboard({
                                   </div>
                                 )}
 
+                                {/* 16. ICON WITH TEXT */}
+                                {sec.type === 'Icon with text' && (() => {
+                                  const previewItems = sec.settings.iconItems || [
+                                    { iconName: 'Truck', title: 'Delivered on your schedule', description: 'Flexible delivery, when you need it.' },
+                                    { iconName: 'Zap', title: 'Save vs. shop prices', description: 'Better prices than retail stores.' },
+                                    { iconName: 'Shield', title: 'Discreet delivery', description: 'Plain, private, and secure packaging.' },
+                                    { iconName: 'Clock', title: 'Cancel anytime', description: 'No commitments, full control.' },
+                                    { iconName: 'Award', title: 'Loyalty scheme', description: 'Earn rewards on every order.' },
+                                    { iconName: 'Package', title: 'Never run out', description: 'Auto-refill and easy reordering.' }
+                                  ];
+
+                                  return (
+                                    <div className="py-6 space-y-4 font-sans text-center">
+                                      <div>
+                                        <h3 className="text-sm font-extrabold uppercase tracking-tight" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                          {sec.settings.title || 'Why subscribe to Pouch Supply?'}
+                                        </h3>
+                                        {sec.settings.description && (
+                                          <p className="text-[10px] text-slate-400 mt-0.5 max-w-md mx-auto leading-relaxed">{sec.settings.description}</p>
+                                        )}
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-3 pt-2">
+                                        {previewItems.map((item, pidx) => (
+                                          <div key={pidx} className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl space-y-1 text-center hover:shadow-2xs transition-shadow">
+                                            <div className="h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center mx-auto text-[10px]" style={{ color: sec.settings.iconColor || '#4F46E5' }}>
+                                              {item.iconName === 'Truck' ? '🚚' : item.iconName === 'Zap' ? '⚡' : item.iconName === 'Shield' ? '🛡️' : item.iconName === 'Clock' ? '⏱️' : item.iconName === 'Award' ? '🏆' : item.iconName === 'Package' ? '📦' : '✨'}
+                                            </div>
+                                            <h4 className="font-extrabold text-[9.5px] leading-tight text-slate-800 uppercase tracking-tight">{item.title}</h4>
+                                            <p className="text-[8.5px] text-slate-400 leading-snug line-clamp-2">{item.description}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+
                               </div>
 
                             </div>
@@ -3463,6 +3512,118 @@ export default function AdminDashboard({
                           </div>
                         )}
 
+                        {/* ICON WITH TEXT EDITING SETTINGS */}
+                        {currentlyEditingSection.type === 'Icon with text' && (
+                          <div className="space-y-4 pt-1">
+                            <div className="flex justify-between items-center">
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Features / Benefit items</label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const list = currentlyEditingSection.settings.iconItems || [];
+                                  const updated = [...list, { iconName: 'Star', title: 'New Benefit', description: 'Describe your custom benefit here.', linkUrl: 'frontend-shop' }];
+                                  handleUpdateSectionSettings('iconItems', updated);
+                                }}
+                                className="text-[9px] bg-indigo-50 text-indigo-700 hover:bg-indigo-100 p-1 px-2 rounded-md font-bold transition-all cursor-pointer uppercase tracking-wider"
+                              >
+                                + Add Benefit
+                              </button>
+                            </div>
+
+                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
+                              {(currentlyEditingSection.settings.iconItems || []).map((item, idx) => (
+                                <div key={idx} className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg space-y-2 relative">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const list = [...(currentlyEditingSection.settings.iconItems || [])];
+                                      list.splice(idx, 1);
+                                      handleUpdateSectionSettings('iconItems', list);
+                                    }}
+                                    className="absolute top-1.5 right-1.5 text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
+                                    title="Delete Benefit item"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+
+                                  <div className="text-[9px] font-black uppercase text-indigo-650 mb-1">Benefit #{idx + 1}</div>
+
+                                  <div>
+                                    <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">Icon Shape</label>
+                                    <select
+                                      value={item.iconName || 'Star'}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.iconItems || [])];
+                                        list[idx] = { ...list[idx], iconName: e.target.value as any };
+                                        handleUpdateSectionSettings('iconItems', list);
+                                      }}
+                                      className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none focus:ring-1 focus:ring-indigo-650 cursor-pointer"
+                                    >
+                                      <option value="Truck">Truck (Delivery)</option>
+                                      <option value="Zap">Zap (Lightning / Speed)</option>
+                                      <option value="Shield">Shield (Secure / Private)</option>
+                                      <option value="Clock">Clock (Time / Subscription)</option>
+                                      <option value="Award">Award (Badge / Quality)</option>
+                                      <option value="Package">Package (Box / Refill)</option>
+                                      <option value="Heart">Heart (Loyalty / Healthcare)</option>
+                                      <option value="HelpCircle">Help Circle (Support / FAQ)</option>
+                                      <option value="Star">Star (Premium / Rating)</option>
+                                    </select>
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">Title</label>
+                                    <input
+                                      type="text"
+                                      value={item.title || ''}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.iconItems || [])];
+                                        list[idx] = { ...list[idx], title: e.target.value };
+                                        handleUpdateSectionSettings('iconItems', list);
+                                      }}
+                                      className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none"
+                                      placeholder="e.g. Delivered on your schedule"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">Description</label>
+                                    <textarea
+                                      rows={2}
+                                      value={item.description || ''}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.iconItems || [])];
+                                        list[idx] = { ...list[idx], description: e.target.value };
+                                        handleUpdateSectionSettings('iconItems', list);
+                                      }}
+                                      className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none resize-none"
+                                      placeholder="e.g. Flexible delivery, when you need it."
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">Redirect Link / Tab</label>
+                                    <input
+                                      type="text"
+                                      value={item.linkUrl || ''}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.iconItems || [])];
+                                        list[idx] = { ...list[idx], linkUrl: e.target.value };
+                                        handleUpdateSectionSettings('iconItems', list);
+                                      }}
+                                      className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none font-mono"
+                                      placeholder="e.g. frontend-shop or empty"
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                              {(currentlyEditingSection.settings.iconItems || []).length === 0 && (
+                                <p className="text-[10px] text-slate-400 text-center py-4">No benefits in the list. Click "+ Add Benefit" above.</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Image asset url selector */}
                         {currentlyEditingSection.settings.imageUrl !== undefined && currentlyEditingSection.type !== 'Slideshow' && (
                           <ImageUploadInput
@@ -3521,6 +3682,26 @@ export default function AdminDashboard({
                               className="w-full h-8 border rounded cursor-pointer bg-slate-50"
                             />
                           </div>
+                          <div>
+                            <label className="block text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1 font-sans">Body Text Hex</label>
+                            <input
+                              type="color"
+                              value={currentlyEditingSection.settings.textColor || '#64748B'}
+                              onChange={(e) => handleUpdateSectionSettings('textColor', e.target.value)}
+                              className="w-full h-8 border rounded cursor-pointer bg-slate-50"
+                            />
+                          </div>
+                          {currentlyEditingSection.settings.iconColor !== undefined && (
+                            <div>
+                              <label className="block text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1 font-sans">Icon Hex Color</label>
+                              <input
+                                type="color"
+                                value={currentlyEditingSection.settings.iconColor || '#4F46E5'}
+                                onChange={(e) => handleUpdateSectionSettings('iconColor', e.target.value)}
+                                className="w-full h-8 border rounded cursor-pointer bg-slate-50"
+                              />
+                            </div>
+                          )}
                         </div>
 
                       </div>
