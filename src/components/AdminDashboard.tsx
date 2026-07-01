@@ -680,7 +680,7 @@ export default function AdminDashboard({
     if (!selectedBuilderPageId) return;
     
     // Banner, Slideshow and Marquee text should be full width by default!
-    const isFullWidthByDefault = sectionType === 'Image banner' || sectionType === 'Slideshow' || sectionType === 'Marquee text';
+    const isFullWidthByDefault = sectionType === 'Image banner' || sectionType === 'Slideshow' || sectionType === 'Marquee text' || sectionType === 'Video banner';
     
     const newSection: PageSection = {
       id: `sec-${Date.now()}`,
@@ -704,6 +704,7 @@ export default function AdminDashboard({
              : sectionType === 'Brand list' ? 'Shop Premium Brands'
              : sectionType === 'Brands we offer' ? 'Brands we offer'
              : sectionType === 'Icon with text' ? 'Why subscribe to Pouch Supply?'
+             : sectionType === 'Video banner' ? 'Watch Our Laboratory Showcase'
              : `Custom ${sectionType}`,
         description: sectionType === 'Image with text' ? 'Our plant-fiber formulations are packed under sterile medical conditions for persistent, smooth boosts.'
                  : sectionType === 'Text column with image' ? 'Every single canister batch is vacuum-sealed inside high-density polymer tubes guaranteeing pristine flavor locks.'
@@ -714,6 +715,7 @@ export default function AdminDashboard({
                  : sectionType === 'Brand list' ? 'Check our collection of premium, laboratory-certified brand canisters.'
                  : sectionType === 'Brands we offer' ? 'Explore our curated roster of premium nicotine pouches and global compounding series.'
                  : sectionType === 'Icon with text' ? 'Explore exclusive rewards and reliable logistics built directly into our ecosystem.'
+                  : sectionType === 'Video banner' ? 'Witness the clinical sterile compounding process behind our sub-zero cooling pouches.'
                  : 'Edit option elements inside options sidebar',
         columnsDesktop: sectionType === 'Blog post' ? 3 : undefined,
         columnsMobile: sectionType === 'Blog post' ? 1 : undefined,
@@ -732,10 +734,12 @@ export default function AdminDashboard({
           { imageUrl: 'https://images.unsplash.com/photo-1483168527879-c66136b56105?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'White Fox' },
           { imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Snü Fruity' }
         ] : undefined,
-        buttonText: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text') ? 'Purchase Packs' : undefined,
-        buttonLink: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text') ? 'frontend-shop' : undefined,
+        buttonText: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text' || sectionType === 'Video banner') ? 'Purchase Packs' : undefined,
+        buttonLink: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text' || sectionType === 'Video banner') ? 'frontend-shop' : undefined,
         marqueeSpeed: 3,
         itemsCount: (sectionType === 'Featured collection' || sectionType === 'Marquee images' || sectionType === 'Collection list') ? 4 : undefined,
+        videoUrl: sectionType === 'Video banner' ? '' : undefined,
+        videoMp4Url: sectionType === 'Video banner' ? 'https://assets.mixkit.co/videos/preview/mixkit-laboratory-test-tubes-40436-large.mp4' : undefined,
         imageUrl: (sectionType === 'Image banner' || sectionType === 'Image with text') ? 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80' : undefined,
         slides: sectionType === 'Slideshow' ? [
           {
@@ -3528,16 +3532,125 @@ export default function AdminDashboard({
 
                         {/* CUSTOM VIDEO BANNER LINK SOURCE CODE */}
                         {currentlyEditingSection.type === 'Video banner' && (
-                          <div>
-                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">YouTube Video ID / URL Resource</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. dQw4w9WgXcQ"
-                              value={currentlyEditingSection.settings.videoUrl || ''}
-                              onChange={(e) => handleUpdateSectionSettings('videoUrl', e.target.value)}
-                              className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
-                            />
-                            <p className="text-[8.5px] text-slate-400 mt-1">Provide the Youtube 11-character video ID to loop laboratory showcase media.</p>
+                          <div className="space-y-4 pt-1">
+                            {/* YouTube URL input */}
+                            <div>
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">YouTube Video ID / URL</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. dQw4w9WgXcQ"
+                                value={currentlyEditingSection.settings.videoUrl || ''}
+                                onChange={(e) => handleUpdateSectionSettings('videoUrl', e.target.value)}
+                                className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
+                              />
+                              <p className="text-[8.5px] text-slate-400 mt-1">Provide the YouTube 11-char ID or URL. If blank, it will fall back to MP4 upload/link.</p>
+                            </div>
+
+                            {/* MP4 Source Input */}
+                            <div className="border-t border-slate-100 pt-3">
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">Direct MP4 URL (Fallback / Native Upload)</label>
+                              <input
+                                type="text"
+                                placeholder="https://example.com/video.mp4"
+                                value={currentlyEditingSection.settings.videoMp4Url || ''}
+                                onChange={(e) => handleUpdateSectionSettings('videoMp4Url', e.target.value)}
+                                className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
+                              />
+                            </div>
+
+                            {/* Native MP4 File Uploader */}
+                            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60 space-y-2">
+                              <span className="text-[8.5px] font-black text-slate-500 uppercase block">Upload Local MP4 Video File</span>
+                              <input
+                                type="file"
+                                accept="video/mp4,video/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    if (!file.type.startsWith('video/')) {
+                                      alert('Only video files are permitted (e.g., mp4, webm)!');
+                                      return;
+                                    }
+                                    const reader = new FileReader();
+                                    reader.onload = async () => {
+                                      if (typeof reader.result === 'string') {
+                                        try {
+                                          const res = await fetch('/api/upload', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ data: reader.result })
+                                          });
+                                          if (!res.ok) throw new Error(`Server returned status code ${res.status}`);
+                                          const info = await res.json();
+                                          if (info.url) {
+                                            handleUpdateSectionSettings('videoMp4Url', info.url);
+                                            alert('MP4 Video uploaded successfully and database streaming URL saved!');
+                                          } else {
+                                            handleUpdateSectionSettings('videoMp4Url', reader.result);
+                                          }
+                                        } catch (err) {
+                                          console.warn('[VideoUpload] API upload failed, falling back to local base64:', err);
+                                          handleUpdateSectionSettings('videoMp4Url', reader.result);
+                                          alert('Uploaded successfully (stored in browser fallback state).');
+                                        }
+                                      }
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                                className="text-[10px] w-full cursor-pointer file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-black file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                              />
+                            </div>
+
+                            {/* Video Banner Overlay Content Customizer */}
+                            <div className="border-t border-slate-100 pt-3 space-y-3">
+                              <span className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px]">Banner Text & CTA Button</span>
+                              
+                              <div>
+                                <label className="block text-slate-400 font-bold uppercase text-[7.5px] mb-0.5">Heading Title</label>
+                                <input
+                                  type="text"
+                                  placeholder="Watch Our Laboratory Showcase"
+                                  value={currentlyEditingSection.settings.title || ''}
+                                  onChange={(e) => handleUpdateSectionSettings('title', e.target.value)}
+                                  className="w-full text-xs border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-slate-400 font-bold uppercase text-[7.5px] mb-0.5">Description Paragraph</label>
+                                <textarea
+                                  rows={3}
+                                  placeholder="Witness the clinical sterile compounding process behind our sub-zero cooling pouches."
+                                  value={currentlyEditingSection.settings.description || ''}
+                                  onChange={(e) => handleUpdateSectionSettings('description', e.target.value)}
+                                  className="w-full text-xs border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650 resize-none leading-relaxed"
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="block text-slate-400 font-bold uppercase text-[7.5px] mb-0.5">Button Text</label>
+                                  <input
+                                    type="text"
+                                    placeholder="Purchase Packs"
+                                    value={currentlyEditingSection.settings.buttonText || ''}
+                                    onChange={(e) => handleUpdateSectionSettings('buttonText', e.target.value)}
+                                    className="w-full text-xs border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-slate-400 font-bold uppercase text-[7.5px] mb-0.5">Button Action Link</label>
+                                  <input
+                                    type="text"
+                                    placeholder="frontend-shop"
+                                    value={currentlyEditingSection.settings.buttonLink || ''}
+                                    onChange={(e) => handleUpdateSectionSettings('buttonLink', e.target.value)}
+                                    className="w-full text-xs border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1"
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         )}
 

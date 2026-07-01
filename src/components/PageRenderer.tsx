@@ -64,7 +64,7 @@ export default function PageRenderer({
             color: sec.settings.textColor || '#475569'
           };
           
-          const isFullBleed = (sec.type === 'Slideshow' || sec.type === 'Image banner' || sec.type === 'Marquee text') && sec.settings.fullWidth;
+          const isFullBleed = (sec.type === 'Slideshow' || sec.type === 'Image banner' || sec.type === 'Marquee text' || sec.type === 'Video banner') && sec.settings.fullWidth;
           const paddingClass = isFullBleed ? 'py-0' : 'py-12 sm:py-16 md:py-20';
           const containerClass = sec.settings.fullWidth ? 'w-full' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
 
@@ -183,43 +183,81 @@ export default function PageRenderer({
                 )}
 
                 {/* 2. VIDEO BANNER */}
-                {sec.type === 'Video banner' && (
-                  <div className="space-y-8 text-center max-w-4xl mx-auto px-4 sm:px-6">
-                    <div className="space-y-3">
-                      <span className="text-[10px] tracking-widest font-extrabold uppercase text-indigo-600 bg-indigo-50/85 py-1 px-3 rounded-full inline-block">
-                        🎥 Laboratory Showcase
-                      </span>
-                      <h2
-                        className="text-3xl sm:text-4xl font-black tracking-tight uppercase"
-                        style={{ color: sec.settings.headingColor || '#000000' }}
-                      >
-                        {sec.settings.title || 'Watch Brand Highlights'}
-                      </h2>
-                      {sec.settings.description && (
-                        <p className="text-xs sm:text-sm leading-relaxed max-w-2xl mx-auto text-slate-500">{sec.settings.description}</p>
-                      )}
-                    </div>
+                {sec.type === 'Video banner' && (() => {
+                  const getYouTubeId = (url: string) => {
+                    if (!url) return '';
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                    const match = url.match(regExp);
+                    return (match && match[2].length === 11) ? match[2] : url;
+                  };
 
-                    <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white aspect-video bg-neutral-950 flex items-center justify-center max-w-3xl mx-auto group">
-                      {sec.settings.videoUrl || sec.settings.videoEmbed ? (
-                        <iframe
-                          className="w-full h-full"
-                          src={sec.settings.videoEmbed || `https://www.youtube.com/embed/${sec.settings.videoUrl || 'dQw4w9WgXcQ'}`}
-                          title="Video Player"
-                          allowFullScreen
-                        />
-                      ) : (
-                        <div className="text-center p-12 space-y-4">
-                          <div className="w-16 h-16 rounded-full bg-indigo-600/10 text-indigo-650 flex items-center justify-center mx-auto shadow-md border border-indigo-200">
-                            <Play className="h-7 w-7 animate-pulse fill-indigo-650" />
+                  const ytId = getYouTubeId(sec.settings.videoUrl || '');
+                  const mp4Url = sec.settings.videoMp4Url || 'https://assets.mixkit.co/videos/preview/mixkit-laboratory-test-tubes-40436-large.mp4';
+
+                  return (
+                    <div className="relative w-full min-h-[420px] sm:min-h-[520px] md:min-h-[600px] flex items-center justify-center overflow-hidden bg-slate-950">
+                      {/* Video Player Background (YouTube or MP4 upload) */}
+                      <div className="absolute inset-0 z-0 w-full h-full pointer-events-none">
+                        {ytId ? (
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] pointer-events-none scale-105">
+                            <iframe
+                              className="w-full h-full object-cover border-0"
+                              src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&playlist=${ytId}&loop=1&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1`}
+                              title="Video Banner Background"
+                              allow="autoplay; encrypted-media"
+                              allowFullScreen
+                            />
                           </div>
-                          <p className="font-mono text-[11px] text-slate-500">Pure Lab Grade Dispersion Quality (Configure URL in settings)</p>
-                          <div className="text-[10px] text-slate-400 bg-slate-50 border border-slate-100 rounded-md py-1 px-3.5 inline-block">Ref: PLG-08206</div>
-                        </div>
-                      )}
+                        ) : (
+                          <video
+                            className="w-full h-full object-cover opacity-90"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            src={mp4Url}
+                          />
+                        )}
+                        {/* Elegant semi-transparent overlay gradient protecting readability */}
+                        <div className="absolute inset-0 bg-slate-950/60 sm:bg-slate-950/50" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/20" />
+                      </div>
+
+                      {/* Content Overlay */}
+                      <div className="relative z-10 max-w-5xl mx-auto px-6 py-16 sm:py-24 text-center text-white space-y-6 flex flex-col items-center">
+                        <span className="inline-flex items-center gap-1.5 bg-indigo-650/85 text-white font-extrabold uppercase tracking-widest text-[8px] sm:text-[9.5px] py-1 px-3.5 rounded-full border border-indigo-400/25">
+                          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping mr-0.5" />
+                          🎥 Laboratory Loop Showcase
+                        </span>
+
+                        <h2
+                          className="text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight leading-tight max-w-4xl text-white drop-shadow-sm font-sans"
+                          style={{ color: '#FFFFFF' }}
+                        >
+                          {sec.settings.title || 'Watch Brand Highlights'}
+                        </h2>
+
+                        {sec.settings.description && (
+                          <p className="text-xs sm:text-sm md:text-base leading-relaxed max-w-2xl mx-auto text-slate-200 opacity-95 font-medium drop-shadow-xs">
+                            {sec.settings.description}
+                          </p>
+                        )}
+
+                        {sec.settings.buttonText && (
+                          <div className="pt-4">
+                            <button
+                              onClick={() => handleLinkClick(sec.settings.buttonLink || 'frontend-shop')}
+                              className="bg-white hover:bg-slate-100 text-slate-950 font-black text-xs sm:text-sm py-4 px-10 rounded-xl shadow-lg transition-all duration-300 cursor-pointer flex items-center gap-2 uppercase tracking-widest group"
+                            >
+                              <span>{sec.settings.buttonText}</span>
+                              <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* 3. IMAGE WITH TEXT */}
                 {sec.type === 'Image with text' && (

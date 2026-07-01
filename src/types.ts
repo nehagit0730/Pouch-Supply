@@ -133,6 +133,7 @@ export interface PageSection {
     imageUrl?: string;
     videoUrl?: string;
     videoEmbed?: string;
+    videoMp4Url?: string;
     marqueeSpeed?: number;
     itemsCount?: number;
     selectedCollectionId?: string;
