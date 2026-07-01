@@ -29,7 +29,8 @@ export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'FAQs', label: 'Accordion FAQs', desc: 'Collapsible answered support questions', icon: 'HelpCircle' },
   { type: 'Blog post', label: 'Blog Posts Grid', desc: 'Display a beautiful list/grid of live Pouch Journal articles with columns control', icon: 'BookOpen' },
   { type: 'Brand list', label: 'Brand List with Images', desc: 'Scenic brand logo matrix with interactive links to collections', icon: 'LayoutGrid' },
-  { type: 'Icon with text', label: 'Icon with Text', desc: 'Six-item feature display grid with customizable icons and colors', icon: 'Sparkles' }
+  { type: 'Icon with text', label: 'Icon with Text', desc: 'Six-item feature display grid with customizable icons and colors', icon: 'Sparkles' },
+  { type: 'Brands we offer', label: 'Brands we offer', desc: 'Infinite running marquee of brand logo images with live upload option', icon: 'Layers' }
 ] as const;
 
 export const getSectionIcon = (type: string) => {
@@ -50,6 +51,7 @@ export const getSectionIcon = (type: string) => {
     case 'Blog post': return <BookOpen className="h-4 w-4 text-orange-600" />;
     case 'Brand list': return <LayoutGrid className="h-4 w-4 text-pink-500" />;
     case 'Icon with text': return <Sparkles className="h-4 w-4 text-indigo-600 animate-pulse" />;
+    case 'Brands we offer': return <Layers className="h-4 w-4 text-amber-600 animate-bounce" />;
     default: return <FileCode className="h-4 w-4 text-slate-400" />;
   }
 };
@@ -693,6 +695,7 @@ export default function AdminDashboard({
              : sectionType === 'FAQs' ? 'Frequently Answered Questions'
              : sectionType === 'Blog post' ? 'Latest From Our Journal'
              : sectionType === 'Brand list' ? 'Shop Premium Brands'
+             : sectionType === 'Brands we offer' ? 'Brands we offer'
              : sectionType === 'Icon with text' ? 'Why subscribe to Pouch Supply?'
              : `Custom ${sectionType}`,
         description: sectionType === 'Image with text' ? 'Our plant-fiber formulations are packed under sterile medical conditions for persistent, smooth boosts.'
@@ -702,11 +705,12 @@ export default function AdminDashboard({
                  : sectionType === 'FAQs' ? 'Find quick validations regarding shipping rules, subscriptions, and formulation safety standards.'
                  : sectionType === 'Blog post' ? 'Scientific reports, dosage guides, and news bulletins straight from Scandinavia.'
                  : sectionType === 'Brand list' ? 'Check our collection of premium, laboratory-certified brand canisters.'
+                 : sectionType === 'Brands we offer' ? 'Explore our curated roster of premium nicotine pouches and global compounding series.'
                  : sectionType === 'Icon with text' ? 'Explore exclusive rewards and reliable logistics built directly into our ecosystem.'
                  : 'Edit option elements inside options sidebar',
         columnsDesktop: sectionType === 'Blog post' ? 3 : undefined,
         columnsMobile: sectionType === 'Blog post' ? 1 : undefined,
-        brandItems: sectionType === 'Brand list' ? [
+        brandItems: (sectionType === 'Brand list' || sectionType === 'Brands we offer') ? [
           { imageUrl: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: '77 Nicotine' },
           { imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Clew Pouches' },
           { imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=650&h=650&q=80', linkUrl: 'frontend-shop', title: 'Cuba Black' },
@@ -3031,6 +3035,50 @@ export default function AdminDashboard({
                                   </div>
                                 )}
 
+                                {/* 17. BRANDS WE OFFER */}
+                                {sec.type === 'Brands we offer' && (() => {
+                                  const items = sec.settings.brandItems || [];
+                                  // Duplicate items for seamless scrolling loop
+                                  const doubledItems = [...items, ...items, ...items];
+                                  return (
+                                    <div className="py-6 space-y-4 font-sans text-center bg-white border border-slate-100 rounded-2xl overflow-hidden relative shadow-xs">
+                                      <div className="px-4">
+                                        <h3 className="text-sm font-extrabold uppercase tracking-tight text-slate-800" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                          {sec.settings.title || 'Brands we offer'}
+                                        </h3>
+                                        {sec.settings.description && (
+                                          <p className="text-[10px] text-slate-400 mt-0.5 max-w-md mx-auto leading-relaxed">{sec.settings.description}</p>
+                                        )}
+                                      </div>
+                                      
+                                      <div className="marquee-container py-3 bg-white border-y border-slate-50/50 relative">
+                                        <div className="animate-marquee-slow whitespace-nowrap flex gap-8 items-center">
+                                          {doubledItems.map((b, bidx) => (
+                                            <div 
+                                              key={bidx} 
+                                              className="inline-flex flex-col items-center justify-center shrink-0 w-24 h-12 bg-white rounded-lg p-1.5 border border-slate-100/50 hover:border-slate-200 transition-all select-none"
+                                            >
+                                              {b.imageUrl ? (
+                                                <img 
+                                                  src={b.imageUrl} 
+                                                  className="max-h-8 max-w-[80px] object-contain filter hover:brightness-95 transition-all" 
+                                                  alt={b.title} 
+                                                  referrerPolicy="no-referrer"
+                                                />
+                                              ) : (
+                                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight truncate max-w-full">{b.title || 'Brand'}</span>
+                                              )}
+                                            </div>
+                                          ))}
+                                          {items.length === 0 && (
+                                            <span className="text-[10px] text-slate-400 italic py-2">No brand logos added. Click "+ Add Brand" in sidebar.</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+
                                 {/* 16. ICON WITH TEXT */}
                                 {sec.type === 'Icon with text' && (() => {
                                   const previewItems = sec.settings.iconItems || [
@@ -3429,7 +3477,7 @@ export default function AdminDashboard({
                         )}
 
                         {/* BRAND LIST EDITING SETTINGS */}
-                        {currentlyEditingSection.type === 'Brand list' && (
+                        {(currentlyEditingSection.type === 'Brand list' || currentlyEditingSection.type === 'Brands we offer') && (
                           <div className="space-y-4 pt-1">
                             <div className="flex justify-between items-center">
                               <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Brand Logos Matrix</label>

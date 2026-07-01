@@ -867,6 +867,67 @@ export default function PageRenderer({
                   </div>
                 )}
 
+                {/* 17. BRANDS WE OFFER */}
+                {sec.type === 'Brands we offer' && (() => {
+                  const items = sec.settings.brandItems || [];
+                  // Duplicate items multiple times to create an absolute seamless continuous scroll loop
+                  const doubledItems = [...items, ...items, ...items, ...items];
+                  return (
+                    <div className="py-16 space-y-12 bg-white w-full overflow-hidden">
+                      <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center space-y-3">
+                        {sec.settings.title && (
+                          <h2 
+                            className="text-3xl md:text-4xl font-black uppercase tracking-tight text-slate-900 animate-fade-in"
+                            style={{ color: sec.settings.headingColor || '#0C1017' }}
+                          >
+                            {sec.settings.title}
+                          </h2>
+                        )}
+                        {sec.settings.description && (
+                          <p 
+                            className="max-w-2xl mx-auto text-xs sm:text-sm leading-relaxed text-slate-500 opacity-85"
+                            style={{ color: sec.settings.textColor || '#64748B' }}
+                          >
+                            {sec.settings.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="marquee-container py-4 bg-white border-y border-slate-100 relative">
+                        {/* Left & Right gradient fades to create premium cinematic mask */}
+                        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+                        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+
+                        <div className="animate-marquee-slow whitespace-nowrap flex gap-12 items-center hover:[animation-play-state:paused] cursor-pointer">
+                          {doubledItems.map((b, bidx) => (
+                            <div 
+                              key={bidx} 
+                              onClick={() => b.linkUrl && handleLinkClick(b.linkUrl)}
+                              className="inline-flex flex-col items-center justify-center shrink-0 min-w-[140px] h-20 bg-white rounded-xl p-3 border border-slate-100 hover:border-slate-300 hover:shadow-xs transition-all duration-300 transform hover:-translate-y-0.5 select-none"
+                            >
+                              {b.imageUrl ? (
+                                <img 
+                                  src={b.imageUrl} 
+                                  className="max-h-12 max-w-[120px] object-contain transition-transform duration-300 hover:scale-105" 
+                                  alt={b.title || 'Brand'} 
+                                  referrerPolicy="no-referrer"
+                                />
+                              ) : (
+                                <span className="text-sm font-black text-slate-800 uppercase tracking-tight truncate max-w-full">
+                                  {b.title || 'Brand'}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                          {items.length === 0 && (
+                            <div className="text-slate-400 italic text-center py-4 text-xs">No brands found. Go to Admin Dashboard to upload brands!</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* 16. ICON WITH TEXT */}
                 {sec.type === 'Icon with text' && (() => {
                   const items = sec.settings.iconItems || [
