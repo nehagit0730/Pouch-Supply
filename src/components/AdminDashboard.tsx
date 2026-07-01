@@ -110,7 +110,82 @@ export default function AdminDashboard({
   onAdminActionComplete,
   onExitAdmin
 }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<SidebarTab>('analytics');
+  const tabToPathMap: Record<SidebarTab, string> = {
+    analytics: 'analytics',
+    orders: 'orders',
+    collections: 'collections',
+    products: 'products',
+    pages: 'pages',
+    blogs: 'blog-posts',
+    files: 'files',
+    customers: 'customers',
+    discounts: 'discounts',
+  };
+
+  const pathToTabMap: Record<string, SidebarTab> = {
+    analytics: 'analytics',
+    orders: 'orders',
+    collections: 'collections',
+    products: 'products',
+    pages: 'pages',
+    'blog-posts': 'blogs',
+    files: 'files',
+    customers: 'customers',
+    discounts: 'discounts',
+  };
+
+  const getInitialTab = (): SidebarTab => {
+    try {
+      const path = window.location.pathname;
+      if (path.startsWith('/admin-dashboard/')) {
+        const sub = path.replace('/admin-dashboard/', '');
+        if (pathToTabMap[sub]) {
+          return pathToTabMap[sub];
+        }
+      }
+    } catch (e) {
+      console.warn('[AdminDashboard] Failed to read initial path:', e);
+    }
+    return 'analytics';
+  };
+
+  const [activeTab, setActiveTab] = useState<SidebarTab>(getInitialTab);
+
+  // Sync state to URL
+  useEffect(() => {
+    try {
+      const path = window.location.pathname;
+      const subPath = tabToPathMap[activeTab];
+      const targetUrl = `/admin-dashboard/${subPath}`;
+      if (path !== targetUrl) {
+        window.history.pushState({}, '', targetUrl);
+      }
+    } catch (e) {
+      console.warn('[AdminDashboard] Failed to pushState:', e);
+    }
+  }, [activeTab]);
+
+  // Sync URL to state (Popstate for back/forward support)
+  useEffect(() => {
+    const handlePopState = () => {
+      try {
+        const path = window.location.pathname;
+        if (path.startsWith('/admin-dashboard/')) {
+          const sub = path.replace('/admin-dashboard/', '');
+          if (pathToTabMap[sub] && pathToTabMap[sub] !== activeTab) {
+            setActiveTab(pathToTabMap[sub]);
+          }
+        } else if (path === '/admin-dashboard') {
+          setActiveTab('analytics');
+        }
+      } catch (e) {
+        console.warn('[AdminDashboard] Failed to handle popstate:', e);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [activeTab]);
   
   const [dbStatus, setDbStatus] = useState<{
     status: 'connected' | 'error' | 'not-configured' | 'pending';

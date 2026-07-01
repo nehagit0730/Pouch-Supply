@@ -279,7 +279,7 @@ export default function App() {
         console.warn('[History] Failed to read location pathname:', e);
       }
 
-      if (path === '/admin-dashboard') {
+      if (path === '/admin-dashboard' || path.startsWith('/admin-dashboard/')) {
         setIsAdminActive(true);
         return;
       } else {
@@ -339,15 +339,15 @@ export default function App() {
     }
 
     if (isAdminActive) {
-      if (path !== '/admin-dashboard') {
+      if (!path.startsWith('/admin-dashboard')) {
         try {
-          window.history.pushState({}, '', '/admin-dashboard');
+          window.history.pushState({}, '', '/admin-dashboard/analytics');
         } catch (e) {
           console.warn('[History] Failed to pushState (sandboxed iframe constraint):', e);
         }
       }
     } else {
-      if (path === '/admin-dashboard') {
+      if (path.startsWith('/admin-dashboard')) {
         // Switch back to matching URL for the currently active tab
         let url = '/';
         if (currentTab === 'frontend-home') {
