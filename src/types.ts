@@ -61,6 +61,10 @@ export interface Order {
   customerEmail: string;
   tags: string[];
   fulfillmentStatus: 'Unfulfilled' | 'Fulfilled' | 'Delivered';
+  paymentStatus?: 'Pending' | 'Paid' | 'Failed' | 'Refunded';
+  worldpayTxId?: string;
+  worldpayAuthCode?: string;
+  cardBrand?: string;
   total: number;
   destination: string;
   date: string; // e.g. Today at 10:28 pm

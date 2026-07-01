@@ -1648,6 +1648,34 @@ export default function AdminDashboard({
                       </div>
                     </div>
 
+                    {/* Worldpay Payment Gateway details */}
+                    <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-xl space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700 block">Worldpay Gateway Transaction</span>
+                        <span className="bg-emerald-100 border border-emerald-150 text-emerald-800 font-extrabold py-0.5 px-2.5 rounded text-[8px] uppercase tracking-wider">
+                          {selectedOrder.paymentStatus || 'Paid'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10.5px]">
+                        <div>
+                          <span className="text-[9px] text-slate-400 block uppercase tracking-wider font-bold">Transaction Ref</span>
+                          <span className="font-mono font-bold text-slate-800">{selectedOrder.worldpayTxId || 'wp-tx-4819028'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-400 block uppercase tracking-wider font-bold">Auth Code</span>
+                          <span className="font-mono font-bold text-slate-800">{selectedOrder.worldpayAuthCode || 'WPY201994'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-450 block uppercase tracking-wider font-bold">Card Brand</span>
+                          <span className="font-extrabold text-slate-800">{selectedOrder.cardBrand || 'Visa Secure'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-450 block uppercase tracking-wider font-bold">Network Channel</span>
+                          <span className="font-bold text-slate-800">Sandbox (Simulated)</span>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Order items */}
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-2">Item Package Details</span>

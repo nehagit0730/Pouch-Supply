@@ -21,6 +21,7 @@ import RefundPolicy from './components/RefundPolicy';
 import TermsConditions from './components/TermsConditions';
 import ProductDetailView from './components/ProductDetailView';
 import CollectionDetailView from './components/CollectionDetailView';
+import CheckoutView from './components/CheckoutView';
 import { 
   Sparkles, ShieldCheck, Truck, RefreshCw, Star, ArrowRight, Package, ShoppingCart, Check, Heart, User, CheckCircle2, Save, AlertTriangle, Search
 } from 'lucide-react';
@@ -182,6 +183,10 @@ export default function App() {
   const [customerDrawerTab, setCustomerDrawerTab] = useState<'orders' | 'addresses' | 'wishlist'>('orders');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
+  // Worldpay checkout persistent states
+  const [checkoutDiscount, setCheckoutDiscount] = useState<Discount | null>(null);
+  const [checkoutTotal, setCheckoutTotal] = useState<number>(0);
+
   // Unified SPA navigation helper mapping state shifts to matching browser URLs
   const navigateToTab = (tab: string, productId?: string, collectionId?: string) => {
     let url = '/';
@@ -195,6 +200,8 @@ export default function App() {
       url = '/pages/subscribe';
     } else if (tab === 'frontend-account') {
       url = '/pages/account';
+    } else if (tab === 'frontend-checkout') {
+      url = '/pages/checkout';
     } else if (tab === 'blogs') {
       url = '/blogs';
     } else if (tab === 'blog-detail' && productId) {
@@ -295,6 +302,8 @@ export default function App() {
           setCurrentTab('frontend-brands');
         } else if (slug === 'account') {
           setCurrentTab('frontend-account');
+        } else if (slug === 'checkout') {
+          setCurrentTab('frontend-checkout');
         } else {
           setCurrentTab(slug);
         }
@@ -598,50 +607,63 @@ export default function App() {
 
   // --- Checkout sequence logic ---
   const handleTriggerCheckout = (discountApplied: Discount | null, finalTotal: number) => {
-    const orderId = `CT${Math.floor(Math.random() * 90000 + 10000)}`;
-    const lineItems = cartItems.map(item => ({
-      productId: item.productId,
-      productTitle: item.productTitle,
-      price: item.price,
-      quantity: item.quantity
-    }));
+    setCheckoutDiscount(discountApplied);
+    setCheckoutTotal(finalTotal);
+    setCartOpen(false);
+    navigateToTab('frontend-checkout');
+  };
 
+  const handleCompleteCheckout = (paymentDetails: {
+    orderId: string;
+    customerName: string;
+    customerEmail: string;
+    address: string;
+    total: number;
+    discountApplied: Discount | null;
+    items: { productId: string; productTitle: string; price: number; quantity: number; image?: string; }[];
+    worldpayTxId: string;
+    worldpayAuthCode: string;
+    cardBrand: string;
+  }) => {
     // Construct order
     const newOrder: Order = {
-      id: orderId,
-      customerName: loggedInCustomer ? loggedInCustomer.name : 'Guest User Checkout',
-      customerEmail: loggedInCustomer ? loggedInCustomer.email : 'guest@pouch-supply.com',
-      tags: discountApplied ? ['coupon', discountApplied.title] : [],
+      id: paymentDetails.orderId,
+      customerName: paymentDetails.customerName,
+      customerEmail: paymentDetails.customerEmail,
+      tags: paymentDetails.discountApplied ? ['coupon', paymentDetails.discountApplied.title] : [],
       fulfillmentStatus: 'Unfulfilled',
-      total: finalTotal,
-      destination: loggedInCustomer && loggedInCustomer.addresses[0] ? loggedInCustomer.addresses[0] : 'United Kingdom',
+      paymentStatus: 'Paid',
+      worldpayTxId: paymentDetails.worldpayTxId,
+      worldpayAuthCode: paymentDetails.worldpayAuthCode,
+      cardBrand: paymentDetails.cardBrand,
+      total: paymentDetails.total,
+      destination: paymentDetails.address,
       date: 'Today at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      deliveryMethod: 'Priority Courier Shipping over £40 | Tracked',
-      items: lineItems
+      deliveryMethod: 'Priority Courier Shipping via Worldpay | Tracked',
+      items: paymentDetails.items
     };
 
     setOrders(prev => [newOrder, ...prev]);
 
     // Handle coupon used increase
-    if (discountApplied) {
-      setDiscounts(prev => prev.map(d => d.id === discountApplied.id ? { ...d, used: d.used + 1 } : d));
+    if (paymentDetails.discountApplied) {
+      setDiscounts(prev => prev.map(d => d.id === paymentDetails.discountApplied!.id ? { ...d, used: d.used + 1 } : d));
     }
 
     // Handle spent stats inside customers profile
     if (loggedInCustomer) {
-      setLoggedInCustomer(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          ordersCount: prev.ordersCount + 1,
-          amountSpent: prev.amountSpent + finalTotal
-        };
-      });
+      const updatedCust = {
+        ...loggedInCustomer,
+        ordersCount: loggedInCustomer.ordersCount + 1,
+        amountSpent: loggedInCustomer.amountSpent + paymentDetails.total
+      };
+      setLoggedInCustomer(updatedCust);
+      setCustomers(prev => prev.map(c => c.id === loggedInCustomer.id ? updatedCust : c));
     }
 
+    // Clear cart
     setCartItems([]);
     setCartOpen(false);
-    setCheckoutSuccessful({ id: orderId, amount: finalTotal });
   };
 
   if (!isInitialLoadDone) {
@@ -1130,6 +1152,18 @@ export default function App() {
                 orders={orders}
                 onAddAddress={handleAddAddress}
                 onRemoveAddress={handleRemoveAddress}
+              />
+            )}
+
+            {/* FRONTEND VIEW - SECURE WORLDPAY CHECKOUT */}
+            {currentTab === 'frontend-checkout' && (
+              <CheckoutView
+                cartItems={cartItems}
+                discountApplied={checkoutDiscount}
+                totalAmount={checkoutTotal}
+                loggedInCustomer={loggedInCustomer}
+                onNavigate={navigateToTab}
+                onCompleteCheckout={handleCompleteCheckout}
               />
             )}
 
