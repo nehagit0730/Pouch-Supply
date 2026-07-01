@@ -30,7 +30,8 @@ export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'Blog post', label: 'Blog Posts Grid', desc: 'Display a beautiful list/grid of live Pouch Journal articles with columns control', icon: 'BookOpen' },
   { type: 'Brand list', label: 'Brand List with Images', desc: 'Scenic brand logo matrix with interactive links to collections', icon: 'LayoutGrid' },
   { type: 'Icon with text', label: 'Icon with Text', desc: 'Six-item feature display grid with customizable icons and colors', icon: 'Sparkles' },
-  { type: 'Brands we offer', label: 'Brands we offer', desc: 'Infinite running marquee of brand logo images with live upload option', icon: 'Layers' }
+  { type: 'Brands we offer', label: 'Brands we offer', desc: 'Infinite running marquee of brand logo images with live upload option', icon: 'Layers' },
+  { type: 'How it works', label: 'How it Works Steps', desc: 'Dynamic timeline workflow steps with custom images & layouts', icon: 'Compass' }
 ] as const;
 
 export const getSectionIcon = (type: string) => {
@@ -50,8 +51,9 @@ export const getSectionIcon = (type: string) => {
     case 'FAQs': return <HelpCircle className="h-4 w-4 text-violet-500" />;
     case 'Blog post': return <BookOpen className="h-4 w-4 text-orange-600" />;
     case 'Brand list': return <LayoutGrid className="h-4 w-4 text-pink-500" />;
-    case 'Icon with text': return <Sparkles className="h-4 w-4 text-indigo-600 animate-pulse" />;
+    case 'Icon with text': return <Sparkles className="h-4 w-4 text-indigo-650 animate-pulse" />;
     case 'Brands we offer': return <Layers className="h-4 w-4 text-amber-600 animate-bounce" />;
+    case 'How it works': return <Compass className="h-4 w-4 text-blue-600 animate-spin" style={{ animationDuration: '6s' }} />;
     default: return <FileCode className="h-4 w-4 text-slate-400" />;
   }
 };
@@ -754,6 +756,11 @@ export default function AdminDashboard({
           { iconName: 'Clock', title: 'Cancel anytime', description: 'No commitments, full control.', linkUrl: 'frontend-shop' },
           { iconName: 'Award', title: 'Loyalty scheme', description: 'Earn rewards on every order.', linkUrl: 'frontend-shop' },
           { iconName: 'Package', title: 'Never run out', description: 'Auto-refill and easy reordering.', linkUrl: 'frontend-shop' }
+        ] : undefined,
+        stepItems: sectionType === 'How it works' ? [
+          { number: '1', title: 'Choose your plan', description: 'Select one of our flexible subscription plans', imageUrl: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=650&h=650&q=80' },
+          { number: '2', title: 'Choose your pouches', description: 'Mix and match your favourite brands, flavours and strengths. (these can be changed at anytime)', imageUrl: 'https://images.unsplash.com/photo-1555529669-26f9d103abdd?auto=format&fit=crop&w=650&h=650&q=80' },
+          { number: '3', title: 'We handle the rest', description: 'Delivered automatically to your door hassle free weekly, Bi-weekly or monthly', imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=650&h=650&q=80' }
         ] : undefined
       }
     };
@@ -3037,9 +3044,9 @@ export default function AdminDashboard({
 
                                 {/* 17. BRANDS WE OFFER */}
                                 {sec.type === 'Brands we offer' && (() => {
-                                  const items = sec.settings.brandItems || [];
+                                  const items = (sec.settings.brandItems || []).filter(b => b.imageUrl && b.imageUrl.trim() !== '');
                                   // Duplicate items for seamless scrolling loop
-                                  const doubledItems = [...items, ...items, ...items];
+                                  const doubledItems = items.length > 0 ? [...items, ...items, ...items] : [];
                                   return (
                                     <div className="py-6 space-y-4 font-sans text-center bg-white border border-slate-100 rounded-2xl overflow-hidden relative shadow-xs">
                                       <div className="px-4">
@@ -3074,6 +3081,70 @@ export default function AdminDashboard({
                                             <span className="text-[10px] text-slate-400 italic py-2">No brand logos added. Click "+ Add Brand" in sidebar.</span>
                                           )}
                                         </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+
+                                {/* 18. HOW IT WORKS */}
+                                {sec.type === 'How it works' && (() => {
+                                  const steps = sec.settings.stepItems || [];
+                                  return (
+                                    <div className="py-8 px-4 space-y-6 font-sans bg-[#F4F7FC] border border-slate-100 rounded-2xl relative shadow-xs text-center">
+                                      <div>
+                                        <h3 className="text-sm font-extrabold uppercase tracking-tight text-slate-800" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                          {sec.settings.title || 'How it works'}
+                                        </h3>
+                                        {sec.settings.description && (
+                                          <p className="text-[10px] text-slate-400 mt-0.5 max-w-md mx-auto leading-relaxed">{sec.settings.description}</p>
+                                        )}
+                                      </div>
+
+                                      <div className="flex flex-col md:flex-row items-stretch justify-center gap-4 pt-2">
+                                        {steps.map((step, sidx) => (
+                                          <React.Fragment key={sidx}>
+                                            <div className="flex-1 bg-white p-4 rounded-xl border border-slate-100 hover:shadow-md transition-all flex flex-col items-center justify-between text-center relative max-w-sm mx-auto">
+                                              <div className="space-y-2 flex-1 flex flex-col items-center">
+                                                <div className="w-7 h-7 bg-indigo-50 text-indigo-700 rounded-full font-black text-xs flex items-center justify-center mb-1">
+                                                  {step.number || (sidx + 1)}
+                                                </div>
+                                                <h4 className="text-xs font-bold text-slate-800 leading-tight">
+                                                  {step.title || 'Step Title'}
+                                                </h4>
+                                                <p className="text-[9px] text-slate-450 leading-relaxed max-w-[180px]">
+                                                  {step.description || 'Step description text details.'}
+                                                </p>
+                                              </div>
+
+                                              <div className="mt-4 w-20 h-20 flex items-center justify-center bg-slate-50 rounded-lg p-2 shrink-0 border border-slate-50">
+                                                {step.imageUrl ? (
+                                                  <img 
+                                                    src={step.imageUrl} 
+                                                    className="max-h-16 max-w-full object-contain" 
+                                                    alt={step.title} 
+                                                    referrerPolicy="no-referrer"
+                                                  />
+                                                ) : (
+                                                  <span className="text-[8px] font-semibold text-slate-400">No Image</span>
+                                                )}
+                                              </div>
+                                            </div>
+
+                                            {/* Connecting curves between steps */}
+                                            {sidx < steps.length - 1 && (
+                                              <div className="hidden md:flex items-center justify-center shrink-0 self-center py-2">
+                                                <svg className="w-12 h-6 text-indigo-500/80 rotate-12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 44 12">
+                                                  <path d="M2 10 C 12 2, 32 2, 42 10" strokeLinecap="round" strokeLinejoin="round"/>
+                                                  <path d="M36 8 L42 10 L38 12" strokeLinecap="round" strokeLinejoin="round"/>
+                                                </svg>
+                                              </div>
+                                            )}
+                                          </React.Fragment>
+                                        ))}
+
+                                        {steps.length === 0 && (
+                                          <p className="text-[10px] text-slate-400 italic py-4">No steps added. Click "+ Add Step" in sidebar.</p>
+                                        )}
                                       </div>
                                     </div>
                                   );
@@ -3555,6 +3626,109 @@ export default function AdminDashboard({
                               ))}
                               {(currentlyEditingSection.settings.brandItems || []).length === 0 && (
                                 <p className="text-[10px] text-slate-400 text-center py-4">No brands in the list. Click "+ Add Brand" above.</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* HOW IT WORKS EDITING SETTINGS */}
+                        {currentlyEditingSection.type === 'How it works' && (
+                          <div className="space-y-4 pt-1">
+                            <div className="flex justify-between items-center">
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">How It Works Steps</label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const list = currentlyEditingSection.settings.stepItems || [];
+                                  const updated = [...list, { number: String(list.length + 1), title: 'New Step', description: 'Enter step details here', imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=150&q=80' }];
+                                  handleUpdateSectionSettings('stepItems', updated);
+                                }}
+                                className="text-[9px] bg-indigo-50 text-indigo-700 hover:bg-indigo-100 p-1 px-2 rounded-md font-bold transition-all cursor-pointer uppercase tracking-wider"
+                              >
+                                + Add Step
+                              </button>
+                            </div>
+
+                            <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1 scrollbar-thin">
+                              {(currentlyEditingSection.settings.stepItems || []).map((step, idx) => (
+                                <div key={idx} className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg space-y-2 relative">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const list = [...(currentlyEditingSection.settings.stepItems || [])];
+                                      list.splice(idx, 1);
+                                      const reindexed = list.map((item, i) => ({
+                                        ...item,
+                                        number: /^\d+$/.test(item.number) ? String(i + 1) : item.number
+                                      }));
+                                      handleUpdateSectionSettings('stepItems', reindexed);
+                                    }}
+                                    className="absolute top-1.5 right-1.5 text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
+                                    title="Delete Step"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+
+                                  <div className="text-[9px] font-black uppercase text-indigo-650 mb-1">Step #{idx + 1}</div>
+
+                                  <div className="grid grid-cols-4 gap-2">
+                                    <div className="col-span-1">
+                                      <label className="block text-[8px] font-bold text-slate-405 uppercase mb-0.5">Step Number</label>
+                                      <input
+                                        type="text"
+                                        value={step.number || ''}
+                                        onChange={(e) => {
+                                          const list = [...(currentlyEditingSection.settings.stepItems || [])];
+                                          list[idx] = { ...list[idx], number: e.target.value };
+                                          handleUpdateSectionSettings('stepItems', list);
+                                        }}
+                                        className="w-full text-[10px] border p-1 rounded bg-white text-center font-bold focus:outline-none"
+                                        placeholder="e.g. 1"
+                                      />
+                                    </div>
+                                    <div className="col-span-3">
+                                      <label className="block text-[8px] font-bold text-slate-405 uppercase mb-0.5">Step Title</label>
+                                      <input
+                                        type="text"
+                                        value={step.title || ''}
+                                        onChange={(e) => {
+                                          const list = [...(currentlyEditingSection.settings.stepItems || [])];
+                                          list[idx] = { ...list[idx], title: e.target.value };
+                                          handleUpdateSectionSettings('stepItems', list);
+                                        }}
+                                        className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none font-semibold"
+                                        placeholder="e.g. Choose your plan"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[8px] font-bold text-slate-455 uppercase mb-0.5">Description</label>
+                                    <textarea
+                                      value={step.description || ''}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.stepItems || [])];
+                                        list[idx] = { ...list[idx], description: e.target.value };
+                                        handleUpdateSectionSettings('stepItems', list);
+                                      }}
+                                      className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none min-h-[40px] resize-y"
+                                      placeholder="e.g. Select subscription plans"
+                                    />
+                                  </div>
+
+                                  <ImageUploadInput
+                                    label="Upload Step Illustration / Icon"
+                                    value={step.imageUrl}
+                                    onChange={(base64) => {
+                                      const list = [...(currentlyEditingSection.settings.stepItems || [])];
+                                      list[idx] = { ...list[idx], imageUrl: base64 };
+                                      handleUpdateSectionSettings('stepItems', list);
+                                    }}
+                                  />
+                                </div>
+                              ))}
+                              {(currentlyEditingSection.settings.stepItems || []).length === 0 && (
+                                <p className="text-[10px] text-slate-400 text-center py-4">No steps added yet. Click "+ Add Step" above.</p>
                               )}
                             </div>
                           </div>

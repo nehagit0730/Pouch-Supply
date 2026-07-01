@@ -869,9 +869,9 @@ export default function PageRenderer({
 
                 {/* 17. BRANDS WE OFFER */}
                 {sec.type === 'Brands we offer' && (() => {
-                  const items = sec.settings.brandItems || [];
+                  const items = (sec.settings.brandItems || []).filter(b => b.imageUrl && b.imageUrl.trim() !== '');
                   // Duplicate items multiple times to create an absolute seamless continuous scroll loop
-                  const doubledItems = [...items, ...items, ...items, ...items];
+                  const doubledItems = items.length > 0 ? [...items, ...items, ...items, ...items] : [];
                   return (
                     <div className="py-16 space-y-12 bg-white w-full overflow-hidden">
                       <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center space-y-3">
@@ -921,6 +921,93 @@ export default function PageRenderer({
                           ))}
                           {items.length === 0 && (
                             <div className="text-slate-400 italic text-center py-4 text-xs">No brands found. Go to Admin Dashboard to upload brands!</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* 18. HOW IT WORKS */}
+                {sec.type === 'How it works' && (() => {
+                  const steps = sec.settings.stepItems || [];
+                  return (
+                    <div 
+                      className="py-20 w-full font-sans transition-all duration-300"
+                      style={{ backgroundColor: sec.settings.backgroundColor || '#F4F7FC' }}
+                    >
+                      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+                        {/* Section Header */}
+                        <div className="text-center space-y-4 max-w-3xl mx-auto">
+                          <h2 
+                            className="text-3xl md:text-5xl font-black uppercase tracking-tight text-slate-900 animate-fade-in"
+                            style={{ color: sec.settings.headingColor || '#0C1017' }}
+                          >
+                            {sec.settings.title || 'How it works'}
+                          </h2>
+                          {sec.settings.description && (
+                            <p 
+                              className="text-xs sm:text-base leading-relaxed text-slate-500 opacity-90"
+                              style={{ color: sec.settings.textColor || '#475569' }}
+                            >
+                              {sec.settings.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Steps Grid */}
+                        <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 lg:gap-8 max-w-6xl mx-auto relative">
+                          {steps.map((step, sidx) => (
+                            <React.Fragment key={sidx}>
+                              <div className="flex-1 bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl border border-slate-100 p-8 flex flex-col items-center justify-between text-center min-h-[380px] group">
+                                <div className="space-y-4 flex-1 flex flex-col items-center">
+                                  {/* Step Number */}
+                                  <div className="w-10 h-10 bg-indigo-50 text-indigo-700 font-black text-lg rounded-full flex items-center justify-center shadow-xs group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                                    {step.number || (sidx + 1)}
+                                  </div>
+                                  
+                                  {/* Step Title */}
+                                  <h3 className="text-xl font-extrabold text-slate-800 tracking-tight leading-snug">
+                                    {step.title || 'Step Title'}
+                                  </h3>
+                                  
+                                  {/* Step Description */}
+                                  <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-[240px]">
+                                    {step.description || 'Step description text details.'}
+                                  </p>
+                                </div>
+
+                                {/* Step Image Frame */}
+                                <div className="mt-8 w-36 h-36 flex items-center justify-center bg-slate-50/50 rounded-2xl p-4 shrink-0 border border-slate-100/50 group-hover:border-slate-200 group-hover:bg-white transition-all duration-300">
+                                  {step.imageUrl ? (
+                                    <img 
+                                      src={step.imageUrl} 
+                                      className="max-h-28 max-w-full object-contain filter drop-shadow-sm group-hover:scale-105 transition-transform duration-300" 
+                                      alt={step.title} 
+                                      referrerPolicy="no-referrer"
+                                    />
+                                  ) : (
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">No Image Asset</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Curved connection arrow on desktop */}
+                              {sidx < steps.length - 1 && (
+                                <div className="hidden md:flex items-center justify-center shrink-0 self-center px-2 z-10">
+                                  <svg className="w-16 h-8 text-indigo-500 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 44 12" style={{ animationDuration: '4s' }}>
+                                    <path d="M2 10 C 12 2, 32 2, 42 10" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M35 7 L42 10 L37 13" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </div>
+                              )}
+                            </React.Fragment>
+                          ))}
+
+                          {steps.length === 0 && (
+                            <div className="text-slate-500 text-center py-12 w-full italic text-sm">
+                              No workflow steps created. Configure them in the Admin Dashboard!
+                            </div>
                           )}
                         </div>
                       </div>
