@@ -907,6 +907,26 @@ export default function AdminDashboard({
     setHasUnsavedChanges(true);
   };
 
+  const handleUpdatePageProperties = (updates: Partial<CustomPage>) => {
+    if (!selectedBuilderPageId) return;
+    const updated = localPages.map(p => {
+      if (p.id === selectedBuilderPageId) {
+        return {
+          ...p,
+          ...updates,
+          updatedAt: new Date().toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          })
+        };
+      }
+      return p;
+    });
+    setLocalPages(updated);
+    setHasUnsavedChanges(true);
+    if (onDirtyChange) onDirtyChange(true);
+  };
+
   // Move Section Up/Down
   const handleMoveSection = (idx: number, direction: 'up' | 'down') => {
     if (!selectedBuilderPageId) return;
@@ -3302,6 +3322,84 @@ export default function AdminDashboard({
 
                 {/* 3. Right properties column: Content Customizer Sidebar */}
                 <div className="lg:col-span-1 space-y-4">
+                  {/* Page settings Card */}
+                  <div className="bg-white border rounded-xl p-4 shadow-xs">
+                    <div className="border-b border-slate-100 pb-2 mb-3 flex justify-between items-center">
+                      <div>
+                        <h4 className="font-extrabold text-slate-800 text-xs">Page Settings</h4>
+                        <p className="text-[10px] text-slate-400 mt-0.5">Title, Visibility & SEO URL Slug</p>
+                      </div>
+                      <FileText className="h-4 w-4 text-indigo-650" />
+                    </div>
+                    
+                    <div className="space-y-3.5 text-xs">
+                      <div>
+                        <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">Page Name (Title)</label>
+                        <input
+                          type="text"
+                          value={currentlyEditingPage?.title || ''}
+                          onChange={(e) => {
+                            const newTitle = e.target.value;
+                            const oldTitle = currentlyEditingPage?.title || '';
+                            const oldSlug = currentlyEditingPage?.slug || '';
+                            const expectedOldSlug = slugify(oldTitle);
+                            
+                            const updates: Partial<CustomPage> = { title: newTitle };
+                            if (!oldSlug || oldSlug === expectedOldSlug) {
+                              updates.slug = slugify(newTitle);
+                            }
+                            handleUpdatePageProperties(updates);
+                          }}
+                          className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px]">Route URL Slug</label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (currentlyEditingPage) {
+                                handleUpdatePageProperties({ slug: slugify(currentlyEditingPage.title) });
+                              }
+                            }}
+                            className="text-[8px] text-indigo-600 hover:underline font-extrabold uppercase cursor-pointer"
+                          >
+                            Reset to Match Title
+                          </button>
+                        </div>
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-2 text-[11px] text-slate-400 font-medium select-none">/pages/</span>
+                          <input
+                            type="text"
+                            value={currentlyEditingPage?.slug || ''}
+                            onChange={(e) => {
+                              handleUpdatePageProperties({ slug: slugify(e.target.value) });
+                            }}
+                            className="w-full text-xs font-semibold border p-2 pl-14 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
+                          />
+                        </div>
+                        <p className="text-[8px] text-slate-400 mt-1 leading-normal">
+                          Active live route: <span className="font-mono bg-slate-50 border px-1 py-0.5 rounded">/pages/{currentlyEditingPage?.slug || ''}</span>
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">Page Visibility</label>
+                        <select
+                          value={currentlyEditingPage?.visibility || 'Visible'}
+                          onChange={(e) => handleUpdatePageProperties({ visibility: e.target.value as 'Visible' | 'Hidden' })}
+                          className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
+                        >
+                          <option value="Visible">Visible (Published in headers/menus)</option>
+                          <option value="Hidden">Hidden (Draft / Unpublished)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section Customizer Card */}
                   <div className="bg-white border rounded-xl p-4 shadow-xs sticky top-4">
                     <div className="border-b border-slate-100 pb-2 mb-3">
                       <h4 className="font-extrabold text-slate-800 text-xs">Section customizer option</h4>
