@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
-  Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
+  Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight,
   Link, Image as ImageIcon, Video, Code, Sparkles, ChevronDown, 
-  MoreHorizontal, X, Table, Trash2, List, Quote, HelpCircle, Sparkle
+  MoreHorizontal, X, Table, Sparkle
 } from 'lucide-react';
 
 interface BlogContentEditorProps {
@@ -91,7 +91,7 @@ export default function BlogContentEditor({
   }, [isCodeView]);
 
   // Dynamic selector for active heading or paragraph based on cursor / selection
-  const updateActiveBlockFormat = () => {
+  const updateActiveBlockFormat = useCallback(() => {
     if (isCodeView) return;
     
     if (typeof document !== 'undefined') {
@@ -130,7 +130,7 @@ export default function BlogContentEditor({
       }
     }
     setActiveBlockFormat('p');
-  };
+  }, [isCodeView]);
 
   // Setup standard selectionchange listener on focused document
   useEffect(() => {
@@ -150,7 +150,7 @@ export default function BlogContentEditor({
     return () => {
       document.removeEventListener('selectionchange', handleSelectionChange);
     };
-  }, [isCodeView]);
+  }, [isCodeView, updateActiveBlockFormat]);
 
   // Handle rich text input changes
   const handleVisualInput = () => {
@@ -219,6 +219,58 @@ export default function BlogContentEditor({
     } else {
       if (editorRef.current) {
         editorRef.current.focus();
+        
+        // Let's try converting the current block element directly
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          let node: Node | null = selection.getRangeAt(0).startContainer;
+          let blockNode: HTMLElement | null = null;
+          
+          if (editorRef.current.contains(node)) {
+            while (node && node !== editorRef.current) {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = (node as Element).tagName.toLowerCase();
+                if (['h1', 'h2', 'h3', 'p', 'div'].includes(tagName)) {
+                  blockNode = node as HTMLElement;
+                  break;
+                }
+              }
+              node = node.parentNode;
+            }
+          }
+          
+          if (blockNode && blockNode.tagName.toLowerCase() !== tag) {
+            // Create a new element with the target tag and copy content + child nodes
+            const newElement = document.createElement(tag);
+            newElement.innerHTML = blockNode.innerHTML;
+            
+            // Preserve alignment classes if they exist
+            if (blockNode.className) {
+              newElement.className = blockNode.className;
+            }
+            if (blockNode.style.textAlign) {
+              newElement.style.textAlign = blockNode.style.textAlign;
+            }
+            if (blockNode.style.color) {
+              newElement.style.color = blockNode.style.color;
+            }
+            
+            blockNode.parentNode?.replaceChild(newElement, blockNode);
+            
+            // Restore selection / cursor inside the new element
+            const range = document.createRange();
+            range.selectNodeContents(newElement);
+            range.collapse(false); // Move to end of node
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            handleVisualInput();
+            setTimeout(updateActiveBlockFormat, 50);
+            return;
+          }
+        }
+        
+        // Fallback to standard execCommand formatBlock
         try {
           document.execCommand('formatBlock', false, tag);
         } catch (e) {
@@ -794,6 +846,7 @@ export default function BlogContentEditor({
         <div 
           ref={editorRef}
           contentEditable
+          suppressContentEditableWarning={true}
           onInput={() => {
             handleVisualInput();
             updateActiveBlockFormat();

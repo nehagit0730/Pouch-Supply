@@ -63,6 +63,7 @@ export default function ProductEditor({
   // Interactive UI Feedbacks
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
 
   // Preset vendors/categories for smart search options
   const defaultVendors = ['Olival', '77', 'Cuba', 'KILLA', 'VELO', 'White Fox', 'Siberia'];
@@ -122,7 +123,7 @@ export default function ProductEditor({
       setDescription('');
       setPrice(0.00);
       setCompareAtPrice(0.00);
-      setInventory(250);
+      setInventory(0);
       setSku(`PCH-${100000 + Math.floor(Math.random() * 900000)}`);
       setBarcode('');
       setCategory('Nicotine Pouches');
@@ -134,9 +135,7 @@ export default function ProductEditor({
       setMediaList([
         'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=500&q=80'
       ]);
-      setVariantsList([
-        { id: `opt-${Date.now()}`, name: 'Strength', values: ['Medium', 'Strong', 'Extra-Strong'] }
-      ]);
+      setVariantsList([]);
       setConcreteVariantsList([]);
       setCustomSlug('');
       setSeoTitle('');
@@ -162,8 +161,10 @@ export default function ProductEditor({
       }
 
       const existingMap = new Map(prev.map(v => [v.name, v]));
+      const productMap = new Map((product?.concreteVariants || []).map(v => [v.name, v]));
+
       const updated = combos.map(comboName => {
-        const existing = existingMap.get(comboName);
+        const existing = existingMap.get(comboName) || productMap.get(comboName);
         if (existing) {
           return existing;
         } else {
@@ -174,10 +175,10 @@ export default function ProductEditor({
           return {
             id: generatedId,
             name: comboName,
-            price: price || 4.99,
-            inventory: inventory || 100,
-            description: description || '',
-            images: mediaList.length > 0 ? [mediaList[0]] : []
+            price: price || 0,
+            inventory: 0,
+            description: '',
+            images: []
           };
         }
       });
@@ -394,6 +395,61 @@ export default function ProductEditor({
     }));
   };
 
+  const hasUnsavedChanges = () => {
+    if (product) {
+      const initColIds = allCollections
+         .filter(c => c.productIds && c.productIds.includes(product.id))
+         .map(c => c.id);
+      
+      const collectionsChanged = JSON.stringify([...selectedColIds].sort()) !== JSON.stringify([...initColIds].sort());
+      const tagsChanged = JSON.stringify([...tags].sort()) !== JSON.stringify([...(product.tags || [])].sort());
+      const mediaChanged = JSON.stringify(mediaList) !== JSON.stringify(product.media || (product.image ? [product.image] : []));
+      const variantsChanged = JSON.stringify(variantsList) !== JSON.stringify(product.variants || []);
+      const concreteChanged = JSON.stringify(concreteVariantsList) !== JSON.stringify(product.concreteVariants || []);
+
+      return (
+        title !== (product.title || '') ||
+        description !== (product.description || '') ||
+        price !== (product.price || 0) ||
+        compareAtPrice !== (product.compareAtPrice || 0) ||
+        inventory !== (product.inventory || 0) ||
+        sku !== (product.sku || '') ||
+        barcode !== (product.barcode || '') ||
+        category !== (product.category || 'Nicotine Pouches') ||
+        vendor !== (product.vendor || 'Olival') ||
+        status !== (product.status || 'Active') ||
+        weight !== (product.weight || 0) ||
+        weightUnit !== (product.weightUnit || 'g') ||
+        collectionsChanged ||
+        tagsChanged ||
+        mediaChanged ||
+        variantsChanged ||
+        concreteChanged
+      );
+    } else {
+      return (
+        title !== '' ||
+        description !== '' ||
+        price !== 0 ||
+        compareAtPrice !== 0 ||
+        inventory !== 0 ||
+        sku !== '' ||
+        barcode !== '' ||
+        selectedColIds.length > 1 ||
+        tags.length > 0 ||
+        mediaList.length > 1
+      );
+    }
+  };
+
+  const handleBackOrDiscard = () => {
+    if (hasUnsavedChanges()) {
+      setShowUnsavedConfirm(true);
+    } else {
+      onCancel();
+    }
+  };
+
   // Final Form saving triggers
   const executeFormSubmit = () => {
     if (!title.trim()) {
@@ -404,13 +460,17 @@ export default function ProductEditor({
     const finalSlug = customSlug.trim() ? slugify(customSlug) : slugify(title);
     const finalParentImage = mediaList[0] || 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=500&q=80';
 
+    const calculatedInventory = concreteVariantsList.length > 0
+      ? concreteVariantsList.reduce((sum, v) => sum + (v.inventory || 0), 0)
+      : (inventoryTracked ? Math.max(0, inventory) : 9999);
+
     const cleanProduct: Product = {
       id: product?.id || finalSlug || `product-${Date.now()}`,
       title: title.trim(),
       description: description.trim(),
       price: Math.max(0, price),
       compareAtPrice: Math.max(0, compareAtPrice),
-      inventory: inventoryTracked ? Math.max(0, inventory) : 9999,
+      inventory: calculatedInventory,
       sku: sku.trim(),
       barcode: barcode.trim() || undefined,
       category: category.trim(),
@@ -448,7 +508,7 @@ export default function ProductEditor({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div className="space-y-1.5">
           <button
-            onClick={onCancel}
+            onClick={handleBackOrDiscard}
             className="group inline-flex items-center gap-1.5 text-[10px] font-black text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
@@ -502,7 +562,7 @@ export default function ProductEditor({
           )}
 
           <button
-            onClick={onCancel}
+            onClick={handleBackOrDiscard}
             className="py-2.5 px-4.5 border border-slate-250 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer"
           >
             Discard
@@ -1094,19 +1154,8 @@ export default function ProductEditor({
                           value={variant.images?.[0] || ''}
                           onChange={(imgUrl) => handleUpdateConcreteVariant(vIdx, { images: imgUrl ? [imgUrl] : [] })}
                           placeholder="Variant Image URL..."
+                          hideUrlInput={true}
                         />
-                        {variant.images?.[0] && (
-                          <div className="relative mt-2 border border-slate-200 rounded-lg overflow-hidden h-28 bg-white flex items-center justify-center">
-                            <img src={variant.images[0]} referrerPolicy="no-referrer" alt={variant.name} className="max-h-full max-w-full object-contain" />
-                            <button
-                              type="button"
-                              onClick={() => handleUpdateConcreteVariant(vIdx, { images: [] })}
-                              className="absolute top-1 right-1 p-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-full cursor-pointer border border-red-250"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        )}
                       </div>
 
                       {/* Right Side: Inputs for price, stock, and description */}
@@ -1387,7 +1436,7 @@ export default function ProductEditor({
       {/* FOOTER CONFIRMATION ROW */}
       <div className="pt-6 border-t border-slate-200 flex justify-end items-center gap-3">
         <button
-          onClick={onCancel}
+          onClick={handleBackOrDiscard}
           className="py-2.5 px-5 border border-slate-255 bg-white hover:bg-slate-55 text-slate-650 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer"
         >
           Discard
@@ -1433,6 +1482,45 @@ export default function ProductEditor({
                 className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl shadow-md shadow-rose-200 transition-all cursor-pointer"
               >
                 Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* UNSAVED CHANGES WARNING MODAL (Iframe safe) */}
+      {showUnsavedConfirm && (
+        <div className="fixed inset-0 bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-4 z-[10000]">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 max-w-md w-full shadow-2xl space-y-4 text-left animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
+                <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">Unsaved Changes</h3>
+                <p className="text-[10px] text-slate-400 mt-0.5 font-medium">You have modified this product catalog entry.</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-650 font-semibold leading-relaxed">
+              You have unsaved changes on this product page. Leaving or backing out now will cause all your recent modifications to be discarded permanently.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                onClick={() => setShowUnsavedConfirm(false)}
+                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+              >
+                Keep Editing
+              </button>
+              <button
+                onClick={() => {
+                  setShowUnsavedConfirm(false);
+                  onCancel();
+                }}
+                className="px-4 py-2 bg-amber-650 hover:bg-amber-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl shadow-md shadow-amber-200 transition-all cursor-pointer"
+              >
+                Discard Changes
               </button>
             </div>
           </div>

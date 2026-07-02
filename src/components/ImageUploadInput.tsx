@@ -7,6 +7,7 @@ interface ImageUploadInputProps {
   onChange: (base64OrLink: string) => void;
   placeholder?: string;
   className?: string;
+  hideUrlInput?: boolean;
 }
 
 export default function ImageUploadInput({
@@ -14,7 +15,8 @@ export default function ImageUploadInput({
   value,
   onChange,
   placeholder = 'Or enter image URL link...',
-  className = ''
+  className = '',
+  hideUrlInput = false
 }: ImageUploadInputProps) {
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -147,9 +149,11 @@ export default function ImageUploadInput({
               </button>
             </div>
             
-            <p className="text-[9px] text-slate-450 font-mono truncate max-w-full text-center px-4">
-              {value.startsWith('data:') ? 'Custom Uploaded Base64 Data' : value}
-            </p>
+            {!hideUrlInput && (
+              <p className="text-[9px] text-slate-450 font-mono truncate max-w-full text-center px-4">
+                {value.startsWith('data:') ? 'Custom Uploaded Base64 Data' : value}
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-1.5 py-1">
@@ -172,34 +176,36 @@ export default function ImageUploadInput({
         />
       </div>
 
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
-          <ImageIcon className="h-3 w-3" />
+      {!hideUrlInput && (
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+            <ImageIcon className="h-3 w-3" />
+          </div>
+          <input
+            type="text"
+            placeholder={placeholder}
+            value={value.startsWith('data:') ? '' : value}
+            onChange={(e) => {
+              const val = e.target.value;
+              onChange(val);
+              if (val && (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:'))) {
+                let name = 'External Asset';
+                try {
+                  const u = new URL(val);
+                  const last = u.pathname.substring(u.pathname.lastIndexOf('/') + 1);
+                  if (last && last.includes('.')) {
+                    name = last;
+                  }
+                } catch (_) {}
+                window.dispatchEvent(new CustomEvent('app-image-uploaded', {
+                  detail: { url: val, fileName: name }
+                }));
+              }
+            }}
+            className="w-full text-[10px] pl-7 pr-2 py-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium"
+          />
         </div>
-        <input
-          type="text"
-          placeholder={placeholder}
-          value={value.startsWith('data:') ? '' : value}
-          onChange={(e) => {
-            const val = e.target.value;
-            onChange(val);
-            if (val && (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:'))) {
-              let name = 'External Asset';
-              try {
-                const u = new URL(val);
-                const last = u.pathname.substring(u.pathname.lastIndexOf('/') + 1);
-                if (last && last.includes('.')) {
-                  name = last;
-                }
-              } catch (_) {}
-              window.dispatchEvent(new CustomEvent('app-image-uploaded', {
-                detail: { url: val, fileName: name }
-              }));
-            }
-          }}
-          className="w-full text-[10px] pl-7 pr-2 py-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium"
-        />
-      </div>
+      )}
     </div>
   );
 }
