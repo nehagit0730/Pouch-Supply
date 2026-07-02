@@ -7,7 +7,7 @@ import {
   X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw, AlertTriangle,
   Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass,
   ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server,
-  Pencil, Copy
+  Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 import CollectionEditor from './CollectionEditor';
@@ -4695,9 +4695,10 @@ export default function AdminDashboard({
         {/* 9. BLOGS BLOCK */}
         {activeTab === 'blogs' && (
           <div className="space-y-6">
-            
-            {/* Header controls */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
+            {!showAddBlog && !selectedBlog ? (
+              <>
+                {/* Header controls */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <div className="relative w-full sm:w-64">
                   <input
@@ -4836,347 +4837,452 @@ export default function AdminDashboard({
                 </table>
               </div>
             </div>
+          </>
+        ) : (
+          // HIGH FIDELITY EDITOR SCREEN (SCREENSHOT LAYOUT)
+          (() => {
+            const isEdit = !!selectedBlog;
+            const titleValue = isEdit ? selectedBlog.title : (newBlogForm.title || '');
+            const slugValue = isEdit ? selectedBlog.slug : (newBlogForm.slug || '');
+            const contentValue = isEdit ? selectedBlog.content : (newBlogForm.content || '');
+            const excerptValue = isEdit ? selectedBlog.excerpt : (newBlogForm.excerpt || '');
+            const statusValue = isEdit ? selectedBlog.status : (newBlogForm.status || 'Active');
+            const imageValue = isEdit ? selectedBlog.image : (newBlogForm.image || '');
+            const authorValue = isEdit ? selectedBlog.author : (newBlogForm.author || 'neha bhardwaz');
+            const categoryValue = isEdit ? selectedBlog.category : (newBlogForm.category || 'News');
+            const tagsValue = blogTagsInput;
 
-            {/* ADD BLOG MODAL */}
-            {showAddBlog && (
-              <div className="fixed inset-0 bg-slate-905/45 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl border border-slate-150 overflow-hidden flex flex-col max-h-[90vh]">
-                  
-                  {/* Modal Header */}
-                  <div className="p-5 border-b flex justify-between items-center bg-slate-50">
-                    <div>
-                      <h3 className="font-black text-slate-800 text-sm">Create New Editorial Post</h3>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Publish an article to keep your clients informed & engaged.</p>
-                    </div>
-                    <button onClick={() => setShowAddBlog(false)} className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer">
-                      <X className="h-4 w-4" />
-                    </button>
+            const setContentValue = (val: string) => {
+              if (isEdit) {
+                setSelectedBlog({ ...selectedBlog!, content: val });
+              } else {
+                setNewBlogForm({ ...newBlogForm, content: val });
+              }
+            };
+
+            const setExcerptValue = (val: string) => {
+              if (isEdit) {
+                setSelectedBlog({ ...selectedBlog!, excerpt: val });
+              } else {
+                setNewBlogForm({ ...newBlogForm, excerpt: val });
+              }
+            };
+
+            const setSlugValue = (val: string) => {
+              if (isEdit) {
+                setSelectedBlog({ ...selectedBlog!, slug: val });
+              } else {
+                setNewBlogForm({ ...newBlogForm, slug: val });
+              }
+            };
+
+            const setStatusValue = (val: 'Active' | 'Draft' | 'Archived') => {
+              if (isEdit) {
+                setSelectedBlog({ ...selectedBlog!, status: val });
+              } else {
+                setNewBlogForm({ ...newBlogForm, status: val });
+              }
+            };
+
+            const setImageValue = (val: string) => {
+              if (isEdit) {
+                setSelectedBlog({ ...selectedBlog!, image: val });
+              } else {
+                setNewBlogForm({ ...newBlogForm, image: val });
+              }
+            };
+
+            const setAuthorValue = (val: string) => {
+              if (isEdit) {
+                setSelectedBlog({ ...selectedBlog!, author: val });
+              } else {
+                setNewBlogForm({ ...newBlogForm, author: val });
+              }
+            };
+
+            const setCategoryValue = (val: string) => {
+              if (isEdit) {
+                setSelectedBlog({ ...selectedBlog!, category: val });
+              } else {
+                setNewBlogForm({ ...newBlogForm, category: val });
+              }
+            };
+
+            const setTagsValue = (val: string) => {
+              setBlogTagsInput(val);
+            };
+
+            return (
+              <div className="max-w-6xl mx-auto space-y-6 text-xs text-left bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+                {/* Top breadcrumb navigation row */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                    <FileEdit className="h-4 w-4 text-slate-600" />
+                    <span>›</span>
+                    <span className="text-slate-900 font-bold text-sm">
+                      {isEdit ? 'Edit blog post' : 'Add blog post'}
+                    </span>
                   </div>
-
-                  {/* Modal Body Form */}
-                  <form onSubmit={handleCreateBlog} className="p-6 overflow-y-auto space-y-4 flex-1 text-left text-xs">
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Article Title *</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. 5 Pouch Hacks for Winter"
-                          value={newBlogForm.title}
-                          onChange={(e) => {
-                            const title = e.target.value;
-                            setNewBlogForm({ 
-                              ...newBlogForm, 
-                              title,
-                              slug: slugify(title)
-                            });
-                          }}
-                          className="w-full border p-2 rounded-lg focus:ring-1 focus:ring-slate-400 focus:outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Slug Route (Unique URL) *</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. 5-pouch-hacks-for-winter"
-                          value={newBlogForm.slug}
-                          onChange={(e) => setNewBlogForm({ ...newBlogForm, slug: slugify(e.target.value) })}
-                          className="w-full border p-2 rounded-lg focus:ring-1 focus:ring-slate-400 focus:outline-none font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Author Name</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Store Owner"
-                          value={newBlogForm.author}
-                          onChange={(e) => setNewBlogForm({ ...newBlogForm, author: e.target.value })}
-                          className="w-full border p-2 rounded-lg focus:outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Category</label>
-                        <select
-                          value={newBlogForm.category}
-                          onChange={(e) => setNewBlogForm({ ...newBlogForm, category: e.target.value })}
-                          className="w-full border p-2 rounded-lg focus:outline-none bg-white cursor-pointer"
-                        >
-                          <option value="Chemistry & Science">Chemistry & Science</option>
-                          <option value="Buying Guides">Buying Guides</option>
-                          <option value="Tips & Hacks">Tips & Hacks</option>
-                          <option value="Industry Trends">Industry Trends</option>
-                          <option value="General">General</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Status</label>
-                        <select
-                          value={newBlogForm.status}
-                          onChange={(e) => setNewBlogForm({ ...newBlogForm, status: e.target.value as any })}
-                          className="w-full border p-2 rounded-lg focus:outline-none bg-white cursor-pointer"
-                        >
-                          <option value="Active">Active (Visible)</option>
-                          <option value="Draft">Draft (Hidden)</option>
-                          <option value="Archived">Archived</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex flex-col justify-end">
-                        <ImageUploadInput
-                          label="Cover Image"
-                          value={newBlogForm.image || ''}
-                          onChange={(base64) => setNewBlogForm({ ...newBlogForm, image: base64 })}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Read Duration (e.g. '5 min read')</label>
-                        <input
-                          type="text"
-                          value={newBlogForm.readTime}
-                          onChange={(e) => setNewBlogForm({ ...newBlogForm, readTime: e.target.value })}
-                          className="w-full border p-2 rounded-lg focus:outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Tags (Comma-separated)</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Science, Organic, Winter, 77"
-                        value={blogTagsInput}
-                        onChange={(e) => setBlogTagsInput(e.target.value)}
-                        className="w-full border p-2 rounded-lg focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Post Excerpt / Brief Summary *</label>
-                      <textarea
-                        required
-                        rows={2}
-                        placeholder="Provide a clicky scannable 2-sentence hook for cards selection layout."
-                        value={newBlogForm.excerpt}
-                        onChange={(e) => setNewBlogForm({ ...newBlogForm, excerpt: e.target.value })}
-                        className="w-full border p-2 rounded-lg focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Rich Markdown Content *</label>
-                      <textarea
-                        required
-                        rows={6}
-                        placeholder="Write article details. Supports markdown headers, **bold**, and bullet lists."
-                        value={newBlogForm.content}
-                        onChange={(e) => setNewBlogForm({ ...newBlogForm, content: e.target.value })}
-                        className="w-full border p-2 rounded-lg focus:outline-none font-mono text-[11px]"
-                      />
-                    </div>
-
-                    <div className="pt-2">
-                      <button
-                        type="submit"
-                        className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg cursor-pointer"
-                      >
-                        Publish Blog Article Draft
-                      </button>
-                    </div>
-
-                  </form>
+                  <button
+                    type="button"
+                    onClick={() => { setShowAddBlog(false); setSelectedBlog(null); }}
+                    className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white shadow-xs hover:bg-slate-50 transition cursor-pointer"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" /> Back to blog posts
+                  </button>
                 </div>
-              </div>
-            )}
 
-            {/* EDIT BLOG MODAL */}
-            {selectedBlog && (
-              <div className="fixed inset-0 bg-slate-905/45 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl border border-slate-150 overflow-hidden flex flex-col max-h-[90vh]">
-                  
-                  {/* Modal Header */}
-                  <div className="p-5 border-b flex justify-between items-center bg-slate-50">
-                    <div>
-                      <h3 className="font-black text-slate-800 text-sm">Modify Editorial Post</h3>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Updating: {selectedBlog.title}</p>
+                {/* Two-column layout */}
+                <form 
+                  onSubmit={isEdit ? handleUpdateBlog : handleCreateBlog} 
+                  className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                >
+                  {/* Left Column: Main input panels */}
+                  <div className="lg:col-span-2 space-y-5">
+                    
+                    {/* Title Card */}
+                    <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-5 text-left">
+                      <label className="block text-slate-700 font-semibold text-xs mb-1.5">Title</label>
+                      <div className="relative flex items-center">
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g., Blog about your latest products or deals"
+                          value={titleValue}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (isEdit) {
+                              setSelectedBlog({
+                                ...selectedBlog!,
+                                title: val,
+                                slug: slugify(val)
+                              });
+                            } else {
+                              setNewBlogForm({
+                                ...newBlogForm,
+                                title: val,
+                                slug: slugify(val)
+                              });
+                            }
+                          }}
+                          className="w-full text-xs font-semibold border border-slate-200 p-2.5 pr-10 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 focus:border-slate-400 text-slate-850"
+                        />
+                        <div className="absolute right-3 cursor-pointer text-slate-400 hover:text-indigo-650 transition" title="Auto-format title">
+                          <Sparkles className="h-4 w-4" />
+                        </div>
+                      </div>
                     </div>
-                    <button onClick={() => setSelectedBlog(null)} className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer">
-                      <X className="h-4 w-4" />
-                    </button>
+
+                    {/* Content Card */}
+                    <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-5 text-left">
+                      <label className="block text-slate-700 font-semibold text-xs mb-1.5">Content</label>
+                      
+                      <div className="border border-slate-200 rounded-lg overflow-hidden mt-1.5">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border-b border-slate-200 flex-wrap">
+                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="Smart AI Copywriter">
+                            <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+                          </button>
+                          <div className="h-4 w-px bg-slate-200" />
+                          <select 
+                            className="text-[10px] font-bold text-slate-650 px-1.5 py-0.5 bg-white border border-slate-200 rounded cursor-pointer focus:outline-none"
+                            defaultValue="paragraph"
+                          >
+                            <option value="paragraph">Paragraph</option>
+                            <option value="h1">Heading 1</option>
+                            <option value="h2">Heading 2</option>
+                            <option value="h3">Heading 3</option>
+                          </select>
+                          <div className="h-4 w-px bg-slate-200" />
+                          <button type="button" className="p-1 hover:bg-slate-150 rounded font-black text-slate-700 text-[11px] transition min-w-[18px]" title="Bold">
+                            B
+                          </button>
+                          <button type="button" className="p-1 hover:bg-slate-150 rounded italic font-bold text-slate-700 text-[11px] transition min-w-[18px]" title="Italic">
+                            I
+                          </button>
+                          <button type="button" className="p-1 hover:bg-slate-150 rounded underline font-bold text-slate-700 text-[11px] transition min-w-[18px]" title="Underline">
+                            U
+                          </button>
+                          <button type="button" className="p-1 hover:bg-slate-150 rounded text-slate-700 text-[11px] transition flex items-center gap-0.5" title="Font Color">
+                            <span>A</span>
+                            <span className="text-[7px]">▼</span>
+                          </button>
+                          <div className="h-4 w-px bg-slate-200" />
+                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="Align text">
+                            <AlignLeft className="h-3.5 w-3.5" />
+                          </button>
+                          <div className="h-4 w-px bg-slate-200" />
+                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="Insert Link">
+                            <Link className="h-3.5 w-3.5" />
+                          </button>
+                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="Insert Image">
+                            <ImageIcon className="h-3.5 w-3.5" />
+                          </button>
+                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="Insert Video">
+                            <Video className="h-3.5 w-3.5" />
+                          </button>
+                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="Insert Table">
+                            <FolderHeart className="h-3.5 w-3.5" />
+                          </button>
+                          <div className="h-4 w-px bg-slate-200" />
+                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="More format tools">
+                            <MoreHorizontal className="h-3.5 w-3.5" />
+                          </button>
+                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500 ml-auto" title="Raw Code Output View">
+                            <Code className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <textarea
+                          required
+                          rows={12}
+                          placeholder="Write article details. Supports markdown headers, **bold**, and bullet lists."
+                          value={contentValue}
+                          onChange={(e) => setContentValue(e.target.value)}
+                          className="w-full text-xs p-4 focus:outline-none min-h-[220px] font-sans leading-relaxed text-slate-800 bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Excerpt Card */}
+                    <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-5 text-left">
+                      <div className="flex justify-between items-center mb-2.5">
+                        <label className="block text-slate-700 font-semibold text-xs">Excerpt</label>
+                        <Pencil className="h-3.5 w-3.5 text-slate-400 hover:text-slate-600 cursor-pointer" />
+                      </div>
+                      <textarea
+                        rows={2}
+                        placeholder="Add a summary of the post to appear on your home page or blog."
+                        value={excerptValue}
+                        onChange={(e) => setExcerptValue(e.target.value)}
+                        className="w-full border border-slate-200 p-2.5 rounded-lg text-xs text-slate-600 focus:outline-none focus:ring-1 focus:ring-slate-400 bg-white leading-relaxed resize-none font-medium"
+                      />
+                    </div>
+
+                    {/* Search engine listing Card */}
+                    <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-5 text-left">
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-slate-700 font-semibold text-xs">Search engine listing</label>
+                        <Pencil className="h-3.5 w-3.5 text-slate-400 hover:text-slate-600 cursor-pointer" />
+                      </div>
+                      <p className="text-[10.5px] text-slate-400 leading-normal mb-3 font-medium">
+                        Add a title and description to see how this blog post might appear in a search engine listing
+                      </p>
+                      
+                      <div className="space-y-3.5 border-t border-slate-100 pt-3">
+                        <div>
+                          <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">URL Route Handle (Slug)</label>
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-2 text-[11px] text-slate-400 font-medium select-none">/blogs/</span>
+                            <input
+                              type="text"
+                              required
+                              placeholder="slug-route-handle"
+                              value={slugValue}
+                              onChange={(e) => setSlugValue(slugify(e.target.value))}
+                              className="w-full text-xs font-semibold border border-slate-200 p-2 pl-14 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-slate-400 font-mono text-slate-755"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
 
-                  {/* Modal Body Form */}
-                  <form onSubmit={handleUpdateBlog} className="p-6 overflow-y-auto space-y-4 flex-1 text-left text-xs">
+                  {/* Right Column: Sidebar controls */}
+                  <div className="lg:col-span-1 space-y-5">
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Article Title *</label>
-                        <input
-                          type="text"
-                          required
-                          value={selectedBlog.title}
-                          onChange={(e) => setSelectedBlog({ ...selectedBlog, title: e.target.value, slug: slugify(e.target.value) })}
-                          className="w-full border p-2 rounded-lg focus:outline-none"
-                        />
+                    {/* Visibility Card */}
+                    <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-4 text-left">
+                      <div className="flex justify-between items-center mb-3">
+                        <label className="block text-slate-700 font-semibold text-xs">Visibility</label>
+                        <Calendar className="h-3.5 w-3.5 text-slate-400" />
                       </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Slug Route (Unique URL) *</label>
-                        <input
-                          type="text"
-                          required
-                          value={selectedBlog.slug}
-                          onChange={(e) => setSelectedBlog({ ...selectedBlog, slug: slugify(e.target.value) })}
-                          className="w-full border p-2 rounded-lg focus:outline-none font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Author Name</label>
-                        <input
-                          type="text"
-                          value={selectedBlog.author}
-                          onChange={(e) => setSelectedBlog({ ...selectedBlog, author: e.target.value })}
-                          className="w-full border p-2 rounded-lg focus:outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Category</label>
-                        <select
-                          value={selectedBlog.category}
-                          onChange={(e) => setSelectedBlog({ ...selectedBlog, category: e.target.value })}
-                          className="w-full border p-2 rounded-lg focus:outline-none bg-white cursor-pointer"
-                        >
-                          <option value="Chemistry & Science">Chemistry & Science</option>
-                          <option value="Buying Guides">Buying Guides</option>
-                          <option value="Tips & Hacks">Tips & Hacks</option>
-                          <option value="Industry Trends">Industry Trends</option>
-                          <option value="General">General</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Status</label>
-                        <select
-                          value={selectedBlog.status}
-                          onChange={(e) => setSelectedBlog({ ...selectedBlog, status: e.target.value as any })}
-                          className="w-full border p-2 rounded-lg focus:outline-none bg-white cursor-pointer"
-                        >
-                          <option value="Active">Active (Visible)</option>
-                          <option value="Draft">Draft (Hidden)</option>
-                          <option value="Archived">Archived</option>
-                        </select>
+                      <div className="space-y-2.5 pt-1">
+                        <label className="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-slate-700">
+                          <input 
+                            type="radio" 
+                            name="visibility" 
+                            checked={statusValue === 'Active'} 
+                            onChange={() => setStatusValue('Active')} 
+                            className="h-3.5 w-3.5 text-slate-900 focus:ring-slate-900 border-slate-305"
+                          />
+                          <span>Visible</span>
+                        </label>
+                        <label className="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-slate-700">
+                          <input 
+                            type="radio" 
+                            name="visibility" 
+                            checked={statusValue === 'Draft'} 
+                            onChange={() => setStatusValue('Draft')} 
+                            className="h-3.5 w-3.5 text-slate-900 focus:ring-slate-900 border-slate-305"
+                          />
+                          <span>Hidden</span>
+                        </label>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Cover Image URL</label>
-                        <div className="flex gap-2">
+                    {/* Image Card */}
+                    <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-4 text-left">
+                      <label className="block text-slate-700 font-semibold text-xs mb-3">Image</label>
+                      
+                      {imageValue ? (
+                        <div className="relative border border-slate-200 rounded-xl overflow-hidden group bg-slate-50">
+                          <img 
+                            src={imageValue} 
+                            alt="Blog Cover" 
+                            referrerPolicy="no-referrer"
+                            className="w-full h-36 object-cover" 
+                          />
+                          <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setImageValue('')}
+                              className="p-1.5 bg-white rounded-full hover:bg-rose-50 text-rose-600 transition cursor-pointer"
+                              title="Remove Image"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          onClick={() => {
+                            const fileEl = document.getElementById('blog-cover-file-input');
+                            if (fileEl) fileEl.click();
+                          }}
+                          className="border border-dashed border-slate-300 bg-white hover:bg-slate-50 p-6 rounded-xl text-center cursor-pointer flex flex-col items-center justify-center space-y-2 transition"
+                        >
                           <input
-                            type="text"
-                            value={selectedBlog.image}
-                            onChange={(e) => setSelectedBlog({ ...selectedBlog, image: e.target.value })}
-                            className="w-full border p-2 rounded-lg focus:outline-none"
+                            type="file"
+                            id="blog-cover-file-input"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = async () => {
+                                  if (typeof reader.result === 'string') {
+                                    try {
+                                      const res = await fetch('/api/upload', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ data: reader.result })
+                                      });
+                                      if (res.ok) {
+                                        const info = await res.json();
+                                        if (info.url) {
+                                          setImageValue(info.url);
+                                          return;
+                                        }
+                                      }
+                                      setImageValue(reader.result);
+                                    } catch (err) {
+                                      console.warn('[BlogUpload] API upload failed:', err);
+                                      setImageValue(reader.result);
+                                    }
+                                  }
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
                           />
                           <button
                             type="button"
-                            onClick={() => {
-                              const randoms = [
-                                'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80',
-                                'https://images.unsplash.com/photo-1518152002797-94ce700236a2?auto=format&fit=crop&w=800&q=80',
-                                'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&w=800&q=80',
-                                'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=800&q=80'
-                              ];
-                              const r = randoms[Math.floor(Math.random() * randoms.length)];
-                              setSelectedBlog({ ...selectedBlog, image: r });
-                            }}
-                            className="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-2 rounded-lg shrink-0 cursor-pointer text-[10px]"
+                            className="bg-white border border-slate-200 text-slate-700 text-[10px] font-bold px-4 py-1.5 rounded-lg shadow-2xs hover:bg-slate-50 transition cursor-pointer"
                           >
-                            Suggest Photo
+                            Add image
                           </button>
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            or drop an image to upload
+                          </span>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Organization Card */}
+                    <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-4 text-left space-y-3">
+                      <label className="block text-slate-700 font-semibold text-xs pb-1.5 border-b border-slate-100">Organization</label>
+                      
+                      <div>
+                        <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Author</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., neha bhardwaz"
+                          value={authorValue}
+                          onChange={(e) => setAuthorValue(e.target.value)}
+                          className="w-full text-xs font-semibold border border-slate-200 p-2 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
+                        />
                       </div>
 
                       <div>
-                        <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Read Duration</label>
+                        <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Blog</label>
+                        <select
+                          value={categoryValue}
+                          onChange={(e) => setCategoryValue(e.target.value)}
+                          className="w-full text-xs font-semibold border border-slate-200 p-2 rounded-lg bg-white focus:outline-none cursor-pointer text-slate-750"
+                        >
+                          <option value="News">News</option>
+                          <option value="Chemistry & Science">Chemistry & Science</option>
+                          <option value="Buying Guides">Buying Guides</option>
+                          <option value="Tips & Hacks">Tips & Hacks</option>
+                          <option value="Industry Trends">Industry Trends</option>
+                          <option value="General">General</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Tags</label>
                         <input
                           type="text"
-                          value={selectedBlog.readTime}
-                          onChange={(e) => setSelectedBlog({ ...selectedBlog, readTime: e.target.value })}
-                          className="w-full border p-2 rounded-lg focus:outline-none"
+                          placeholder="e.g. Science, Organic, Pouch"
+                          value={tagsValue}
+                          onChange={(e) => setTagsValue(e.target.value)}
+                          className="w-full text-xs font-semibold border border-slate-200 p-2 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
                         />
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Tags (Comma-separated)</label>
-                      <input
-                        type="text"
-                        value={blogTagsInput}
-                        onChange={(e) => setBlogTagsInput(e.target.value)}
-                        className="w-full border p-2 rounded-lg focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Post Excerpt / Brief Summary *</label>
-                      <textarea
-                        required
-                        rows={2}
-                        value={selectedBlog.excerpt}
-                        onChange={(e) => setSelectedBlog({ ...selectedBlog, excerpt: e.target.value })}
-                        className="w-full border p-2 rounded-lg focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-wider text-[9px] mb-1">Rich Markdown Content *</label>
-                      <textarea
-                        required
-                        rows={6}
-                        value={selectedBlog.content}
-                        onChange={(e) => setSelectedBlog({ ...selectedBlog, content: e.target.value })}
-                        className="w-full border p-2 rounded-lg focus:outline-none font-mono text-[11px]"
-                      />
-                    </div>
-
-                    <div className="pt-2 flex gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedBlog(null)}
-                        className="w-1/3 border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold py-2.5 rounded-lg cursor-pointer"
+                    {/* Theme template Card */}
+                    <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-4 text-left">
+                      <div className="flex justify-between items-center mb-2.5">
+                        <label className="block text-slate-700 font-semibold text-xs">Theme template</label>
+                        <Eye className="h-3.5 w-3.5 text-slate-400" />
+                      </div>
+                      <select
+                        className="w-full text-xs font-semibold border border-slate-200 p-2 rounded-lg bg-white focus:outline-none cursor-pointer text-slate-750"
+                        defaultValue="default-post"
                       >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="w-2/3 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg cursor-pointer"
-                      >
-                        Keep Blog Post Adjustments
-                      </button>
+                        <option value="default-post">Default blog post</option>
+                        <option value="custom-post">Custom layout template</option>
+                      </select>
                     </div>
 
-                  </form>
-                </div>
+                  </div>
+
+                  {/* Bottom right actions layout block */}
+                  <div className="lg:col-span-3 pt-4 border-t border-slate-200/60 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => { setShowAddBlog(false); setSelectedBlog(null); }}
+                      className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-2 px-5 rounded-lg cursor-pointer text-xs transition shadow-2xs"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-slate-900 hover:bg-slate-850 text-white font-bold py-2 px-6 rounded-lg cursor-pointer text-xs shadow-sm transition"
+                    >
+                      Save
+                    </button>
+                  </div>
+
+                </form>
               </div>
-            )}
-
-          </div>
+            );
+          })()
         )}
+      </div>
+    )}
 
         {/* DATABASE CONNECTION DETAILS MODAL */}
         {showDbDetailsModal && (
