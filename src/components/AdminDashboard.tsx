@@ -12,6 +12,7 @@ import {
 import ImageUploadInput from './ImageUploadInput';
 import CollectionEditor from './CollectionEditor';
 import ProductEditor from './ProductEditor';
+import BlogContentEditor from './BlogContentEditor';
 
 export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'Image banner', label: 'Image Banner', desc: 'Hero banner with centered headline overlay & CTA buttons', icon: 'ImageIcon' },
@@ -4976,70 +4977,11 @@ export default function AdminDashboard({
                     {/* Content Card */}
                     <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-5 text-left">
                       <label className="block text-slate-700 font-semibold text-xs mb-1.5">Content</label>
-                      
-                      <div className="border border-slate-200 rounded-lg overflow-hidden mt-1.5">
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border-b border-slate-200 flex-wrap">
-                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="Smart AI Copywriter">
-                            <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-                          </button>
-                          <div className="h-4 w-px bg-slate-200" />
-                          <select 
-                            className="text-[10px] font-bold text-slate-650 px-1.5 py-0.5 bg-white border border-slate-200 rounded cursor-pointer focus:outline-none"
-                            defaultValue="paragraph"
-                          >
-                            <option value="paragraph">Paragraph</option>
-                            <option value="h1">Heading 1</option>
-                            <option value="h2">Heading 2</option>
-                            <option value="h3">Heading 3</option>
-                          </select>
-                          <div className="h-4 w-px bg-slate-200" />
-                          <button type="button" className="p-1 hover:bg-slate-150 rounded font-black text-slate-700 text-[11px] transition min-w-[18px]" title="Bold">
-                            B
-                          </button>
-                          <button type="button" className="p-1 hover:bg-slate-150 rounded italic font-bold text-slate-700 text-[11px] transition min-w-[18px]" title="Italic">
-                            I
-                          </button>
-                          <button type="button" className="p-1 hover:bg-slate-150 rounded underline font-bold text-slate-700 text-[11px] transition min-w-[18px]" title="Underline">
-                            U
-                          </button>
-                          <button type="button" className="p-1 hover:bg-slate-150 rounded text-slate-700 text-[11px] transition flex items-center gap-0.5" title="Font Color">
-                            <span>A</span>
-                            <span className="text-[7px]">▼</span>
-                          </button>
-                          <div className="h-4 w-px bg-slate-200" />
-                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="Align text">
-                            <AlignLeft className="h-3.5 w-3.5" />
-                          </button>
-                          <div className="h-4 w-px bg-slate-200" />
-                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="Insert Link">
-                            <Link className="h-3.5 w-3.5" />
-                          </button>
-                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="Insert Image">
-                            <ImageIcon className="h-3.5 w-3.5" />
-                          </button>
-                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="Insert Video">
-                            <Video className="h-3.5 w-3.5" />
-                          </button>
-                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="Insert Table">
-                            <FolderHeart className="h-3.5 w-3.5" />
-                          </button>
-                          <div className="h-4 w-px bg-slate-200" />
-                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500" title="More format tools">
-                            <MoreHorizontal className="h-3.5 w-3.5" />
-                          </button>
-                          <button type="button" className="p-1 hover:bg-slate-150 rounded transition text-slate-500 ml-auto" title="Raw Code Output View">
-                            <Code className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                        <textarea
-                          required
-                          rows={12}
-                          placeholder="Write article details. Supports markdown headers, **bold**, and bullet lists."
-                          value={contentValue}
-                          onChange={(e) => setContentValue(e.target.value)}
-                          className="w-full text-xs p-4 focus:outline-none min-h-[220px] font-sans leading-relaxed text-slate-800 bg-white"
-                        />
-                      </div>
+                      <BlogContentEditor 
+                        value={contentValue} 
+                        onChange={setContentValue} 
+                        placeholder="Write article details. Supports rich HTML editing, lists, headings, and custom tags."
+                      />
                     </div>
 
                     {/* Excerpt Card */}
