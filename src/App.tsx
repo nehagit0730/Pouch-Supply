@@ -521,7 +521,7 @@ export default function App() {
         productId: `sub-pack-${Date.now()}`,
         productTitle: desc,
         price: flatPrice,
-        image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=500&q=80',
+        image: '/placeholder.png',
         quantity: 1,
         vendor: 'Subscription Pack'
       }
@@ -893,7 +893,7 @@ export default function App() {
                   {/* Welcome Highlights */}
                   <section className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                     <img
-                      src="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80"
+                      src="/placeholder.png"
                       alt="Canisters"
                       className="rounded-2xl shadow-md border object-cover h-80 w-full"
                       referrerPolicy="no-referrer"

@@ -140,6 +140,11 @@ export async function createExpressApp() {
   app.use("/api/blogs", blogsRouter);
   app.use("/api/worldpay", worldpayRouter);
 
+  // Serve placeholder.png directly from root workspace to handle all environments smoothly
+  app.get("/placeholder.png", (req, res) => {
+    res.sendFile(path.resolve(process.cwd(), "placeholder.png"));
+  });
+
   // Vite middleware for development or static serving for production
   if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     const { createServer: createViteServer } = await import("vite");

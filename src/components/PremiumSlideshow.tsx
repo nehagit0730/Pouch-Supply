@@ -22,14 +22,14 @@ const DEFAULT_SLIDES: Slide[] = [
   {
     title: 'Precision-Engineered Pouch Purity',
     description: 'Sourced directly from certified laboratories utilizing medical-grade plant fiber and vacuum-fresh locks.',
-    imageUrl: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=1400&q=80',
+    imageUrl: '/placeholder.png',
     buttonText: 'View Laboratory Journal',
     buttonLink: 'blogs'
   },
   {
     title: 'Extreme Mint Cryo Freeze',
     description: 'Sub-zero locking technology delivering an immediate, absolute sensory refreshing experience.',
-    imageUrl: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=1400&q=80',
+    imageUrl: '/placeholder.png',
     buttonText: 'Explore Sub-Zero Bundles',
     buttonLink: 'frontend-shop'
   }
@@ -97,7 +97,7 @@ export default function PremiumSlideshow({
               {/* Background cover image with sleek gradient overlay */}
               <div className="absolute inset-0">
                 <img
-                  src={slide.imageUrl || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=1200&q=80'}
+                  src={slide.imageUrl || '/placeholder.png'}
                   alt={slide.title}
                   className="w-full h-full object-cover transition-transform duration-10000 ease-linear scale-100 group-hover:scale-102"
                   referrerPolicy="no-referrer"

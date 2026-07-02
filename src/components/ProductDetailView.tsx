@@ -173,7 +173,7 @@ export default function ProductDetailView({
           <div className="space-y-4">
             <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden aspect-square flex items-center justify-center p-6 relative group">
               <img
-                src={selectedImage || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80'}
+                src={selectedImage || '/placeholder.png'}
                 alt={activeVariant ? `${product.title} ${activeVariant.name}` : product.title}
                 className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
                 referrerPolicy="no-referrer"

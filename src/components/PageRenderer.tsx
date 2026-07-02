@@ -84,7 +84,7 @@ export default function PageRenderer({
                       {/* Background Image & Overlay */}
                       <div className="absolute inset-0 z-0">
                         <img
-                          src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=1400&q=80'}
+                          src={sec.settings.imageUrl || '/placeholder.png'}
                           alt={sec.settings.title || 'Brand Banner'}
                           className="w-full h-full object-cover origin-center scale-100 hover:scale-102 transition-transform duration-10000"
                           referrerPolicy="no-referrer"
@@ -171,7 +171,7 @@ export default function PageRenderer({
 
                       <div className="relative group overflow-hidden rounded-2xl border border-slate-200/80 shadow-lg aspect-4/3 md:aspect-square">
                         <img
-                          src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=800&q=80'}
+                          src={sec.settings.imageUrl || '/placeholder.png'}
                           alt={sec.settings.title || 'Banner Media'}
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-103"
                           referrerPolicy="no-referrer"
@@ -266,7 +266,7 @@ export default function PageRenderer({
                       <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 to-indigo-500 rounded-3xl blur opacity-15 group-hover:opacity-20 transition duration-500" />
                       <div className="relative h-72 sm:h-96 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-md bg-slate-50">
                         <img
-                          src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=800&q=80'}
+                          src={sec.settings.imageUrl || '/placeholder.png'}
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-102"
                           alt=""
                           referrerPolicy="no-referrer"
@@ -322,9 +322,9 @@ export default function PageRenderer({
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                       {[
-                        { title: 'Global Certified Lab Testing', desc: 'Every batch is sourced strictly from laboratory test lines adhering to absolute security and clean protocols.', img: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=400&q=80', badge: 'LAB VERIFIED' },
-                        { title: 'Preservative Free Aroma Boost', desc: 'Crafted using pure food-grade crystalline ingredients, delivering rich natural aromas and smooth fresh locks.', img: 'https://images.unsplash.com/photo-1550507992-eb63ffee0847?auto=format&fit=crop&w=400&q=80', badge: '100% TOBACCO-FREE' },
-                        { title: 'Vacuum Sealed Freeze Guard', desc: 'Sealed instantly into high-density polymer canisters ensuring 100% cooling impact remains intact during shipping.', img: 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&w=400&q=80', badge: 'FRESHNESS LOCK' }
+                        { title: 'Global Certified Lab Testing', desc: 'Every batch is sourced strictly from laboratory test lines adhering to absolute security and clean protocols.', img: '/placeholder.png', badge: 'LAB VERIFIED' },
+                        { title: 'Preservative Free Aroma Boost', desc: 'Crafted using pure food-grade crystalline ingredients, delivering rich natural aromas and smooth fresh locks.', img: '/placeholder.png', badge: '100% TOBACCO-FREE' },
+                        { title: 'Vacuum Sealed Freeze Guard', desc: 'Sealed instantly into high-density polymer canisters ensuring 100% cooling impact remains intact during shipping.', img: '/placeholder.png', badge: 'FRESHNESS LOCK' }
                       ].map((col, cIdx) => (
                         <div key={cIdx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden p-4 space-y-4 shadow-sm hover:shadow-xl hover:border-slate-300/60 transition-all group flex flex-col justify-between">
                           <div className="space-y-3">
@@ -786,7 +786,7 @@ export default function PageRenderer({
                           >
                             <div className="aspect-video w-full rounded-xl overflow-hidden bg-slate-50 relative">
                               <img 
-                                src={b.image || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=400&q=80'} 
+                                src={b.image || '/placeholder.png'} 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                                 alt=""
                                 referrerPolicy="no-referrer"

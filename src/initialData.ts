@@ -29,7 +29,7 @@ export const DEFAULT_PAGES: CustomPage[] = [
           description: 'Start managing your products, collections, and page sections inside the Admin Dashboard.',
           buttonText: 'View Store Catalog',
           buttonLink: 'frontend-shop',
-          imageUrl: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=1200&q=80'
+          imageUrl: '/placeholder.png'
         }
       }
     ]

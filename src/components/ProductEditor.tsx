@@ -133,7 +133,7 @@ export default function ProductEditor({
       setWeightUnit('g');
       setTags(['fruit', 'extra-strong']);
       setMediaList([
-        'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=500&q=80'
+        '/placeholder.png'
       ]);
       setVariantsList([]);
       setConcreteVariantsList([]);
@@ -458,7 +458,7 @@ export default function ProductEditor({
     }
 
     const finalSlug = customSlug.trim() ? slugify(customSlug) : slugify(title);
-    const finalParentImage = mediaList[0] || 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=500&q=80';
+    const finalParentImage = mediaList[0] || '/placeholder.png';
 
     const calculatedInventory = concreteVariantsList.length > 0
       ? concreteVariantsList.reduce((sum, v) => sum + (v.inventory || 0), 0)

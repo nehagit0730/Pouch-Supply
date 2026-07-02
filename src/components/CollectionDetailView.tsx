@@ -176,7 +176,7 @@ export default function CollectionDetailView({
                 {/* Image block thumbnail */}
                 <div className="aspect-square rounded-lg bg-slate-50 border overflow-hidden relative p-4 flex items-center justify-center">
                   <img 
-                    src={prod.image || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=500&q=80'} 
+                    src={prod.image || '/placeholder.png'} 
                     className="max-h-full max-w-full object-contain transition-transform group-hover:scale-103 duration-300" 
                     alt={prod.title} 
                     referrerPolicy="no-referrer"
