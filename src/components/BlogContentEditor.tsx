@@ -21,7 +21,15 @@ export default function BlogContentEditor({
   const [showColorDropdown, setShowColorDropdown] = useState(false);
   const [showAlignDropdown, setShowAlignDropdown] = useState(false);
   const [showAiDropdown, setShowAiDropdown] = useState(false);
+  const [activeBlockFormat, setActiveBlockFormat] = useState('p');
   
+  const blockFormatLabels: Record<string, string> = {
+    p: 'Paragraph',
+    h1: 'Heading 1',
+    h2: 'Heading 2',
+    h3: 'Heading 3'
+  };
+
   // Custom dialog overlays
   const [activeModal, setActiveModal] = useState<'link' | 'image' | 'video' | 'table' | null>(null);
   
@@ -45,6 +53,50 @@ export default function BlogContentEditor({
       }
     }
   }, [value, isCodeView]);
+
+  // Dynamic selector for active heading or paragraph based on cursor / selection
+  const updateActiveBlockFormat = () => {
+    if (isCodeView) return;
+    
+    if (typeof window !== 'undefined') {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        let node: Node | null = selection.getRangeAt(0).startContainer;
+        
+        while (node && node !== editorRef.current) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const tagName = (node as Element).tagName.toLowerCase();
+            if (['h1', 'h2', 'h3', 'p', 'div'].includes(tagName)) {
+              if (tagName === 'div') {
+                setActiveBlockFormat('p');
+              } else {
+                setActiveBlockFormat(tagName);
+              }
+              return;
+            }
+          }
+          node = node.parentNode;
+        }
+      }
+    }
+    setActiveBlockFormat('p');
+  };
+
+  // Setup standard selectionchange listener on focused document
+  useEffect(() => {
+    if (isCodeView) return;
+
+    const handleSelectionChange = () => {
+      if (document.activeElement === editorRef.current) {
+        updateActiveBlockFormat();
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, [isCodeView]);
 
   // Handle rich text input changes
   const handleVisualInput = () => {
@@ -107,10 +159,24 @@ export default function BlogContentEditor({
   // Format Heading selection
   const handleSelectHeading = (tag: string) => {
     setShowHeadingDropdown(false);
+    setActiveBlockFormat(tag);
     if (isCodeView) {
       insertCodeTag(`<${tag}>`, `</${tag}>`);
     } else {
-      executeCommand('formatBlock', `<${tag}>`);
+      if (editorRef.current) {
+        editorRef.current.focus();
+        try {
+          document.execCommand('formatBlock', false, tag);
+        } catch (e) {
+          try {
+            document.execCommand('formatBlock', false, `<${tag}>`);
+          } catch (err) {
+            console.error('formatBlock error', err);
+          }
+        }
+        handleVisualInput();
+        setTimeout(updateActiveBlockFormat, 50);
+      }
     }
   };
 
@@ -317,7 +383,7 @@ export default function BlogContentEditor({
             onMouseDown={(e) => e.preventDefault()}
             className="text-[10.5px] font-bold text-slate-650 px-2 py-1 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer flex items-center gap-1"
           >
-            <span>Heading 2</span>
+            <span>{blockFormatLabels[activeBlockFormat] || 'Paragraph'}</span>
             <ChevronDown className="h-3 w-3 text-slate-400" />
           </button>
           
@@ -668,7 +734,13 @@ export default function BlogContentEditor({
         <div 
           ref={editorRef}
           contentEditable
-          onInput={handleVisualInput}
+          onInput={() => {
+            handleVisualInput();
+            updateActiveBlockFormat();
+          }}
+          onMouseUp={updateActiveBlockFormat}
+          onKeyUp={updateActiveBlockFormat}
+          onFocus={updateActiveBlockFormat}
           className="w-full min-h-[250px] p-4 text-xs font-sans leading-relaxed text-slate-800 bg-white focus:outline-none focus:ring-0 [&_h1]:text-2xl [&_h1]:font-extrabold [&_h1]:text-slate-900 [&_h1]:mt-4 [&_h1]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-slate-800 [&_h2]:mt-3 [&_h2]:mb-1.5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-slate-700 [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-indigo-650 [&_a]:underline hover:prose-slate overflow-y-auto max-h-[500px]"
           placeholder={placeholder}
           style={{ outline: 'none' }}
