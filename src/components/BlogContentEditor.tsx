@@ -22,6 +22,14 @@ export default function BlogContentEditor({
   const [showAlignDropdown, setShowAlignDropdown] = useState(false);
   const [showAiDropdown, setShowAiDropdown] = useState(false);
   const [activeBlockFormat, setActiveBlockFormat] = useState('p');
+
+  // Interactive inline styling active states
+  const [isBoldActive, setIsBoldActive] = useState(false);
+  const [isItalicActive, setIsItalicActive] = useState(false);
+  const [isUnderlineActive, setIsUnderlineActive] = useState(false);
+  const [isAlignLeftActive, setIsAlignLeftActive] = useState(false);
+  const [isAlignCenterActive, setIsAlignCenterActive] = useState(false);
+  const [isAlignRightActive, setIsAlignRightActive] = useState(false);
   
   const blockFormatLabels: Record<string, string> = {
     p: 'Paragraph',
@@ -45,6 +53,23 @@ export default function BlogContentEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
 
+  // Close dropdowns on clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.relative')) {
+        setShowHeadingDropdown(false);
+        setShowColorDropdown(false);
+        setShowAlignDropdown(false);
+        setShowAiDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Sync value to rich text contentEditable ONLY if it's different
   useEffect(() => {
     if (!isCodeView && editorRef.current) {
@@ -54,28 +79,53 @@ export default function BlogContentEditor({
     }
   }, [value, isCodeView]);
 
+  // Set default paragraph separator to standard paragraphs on load
+  useEffect(() => {
+    if (!isCodeView && editorRef.current) {
+      try {
+        document.execCommand('defaultParagraphSeparator', false, 'p');
+      } catch (e) {
+        console.warn('defaultParagraphSeparator not supported', e);
+      }
+    }
+  }, [isCodeView]);
+
   // Dynamic selector for active heading or paragraph based on cursor / selection
   const updateActiveBlockFormat = () => {
     if (isCodeView) return;
     
+    if (typeof document !== 'undefined') {
+      try {
+        setIsBoldActive(document.queryCommandState('bold'));
+        setIsItalicActive(document.queryCommandState('italic'));
+        setIsUnderlineActive(document.queryCommandState('underline'));
+        setIsAlignLeftActive(document.queryCommandState('justifyLeft'));
+        setIsAlignCenterActive(document.queryCommandState('justifyCenter'));
+        setIsAlignRightActive(document.queryCommandState('justifyRight'));
+      } catch (e) {}
+    }
+
     if (typeof window !== 'undefined') {
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         let node: Node | null = selection.getRangeAt(0).startContainer;
         
-        while (node && node !== editorRef.current) {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            const tagName = (node as Element).tagName.toLowerCase();
-            if (['h1', 'h2', 'h3', 'p', 'div'].includes(tagName)) {
-              if (tagName === 'div') {
-                setActiveBlockFormat('p');
-              } else {
-                setActiveBlockFormat(tagName);
+        // Ensure the selection context is inside our active editor component
+        if (editorRef.current && editorRef.current.contains(node)) {
+          while (node && node !== editorRef.current) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const tagName = (node as Element).tagName.toLowerCase();
+              if (['h1', 'h2', 'h3', 'p', 'div'].includes(tagName)) {
+                if (tagName === 'div') {
+                  setActiveBlockFormat('p');
+                } else {
+                  setActiveBlockFormat(tagName);
+                }
+                return;
               }
-              return;
             }
+            node = node.parentNode;
           }
-          node = node.parentNode;
         }
       }
     }
@@ -87,8 +137,12 @@ export default function BlogContentEditor({
     if (isCodeView) return;
 
     const handleSelectionChange = () => {
-      if (document.activeElement === editorRef.current) {
-        updateActiveBlockFormat();
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const node = selection.getRangeAt(0).startContainer;
+        if (editorRef.current && editorRef.current.contains(node)) {
+          updateActiveBlockFormat();
+        }
       }
     };
 
@@ -432,7 +486,7 @@ export default function BlogContentEditor({
           type="button" 
           onClick={() => executeCommand('bold')}
           onMouseDown={(e) => e.preventDefault()}
-          className="p-1.5 hover:bg-slate-150 rounded font-black text-slate-750 text-[11px] transition min-w-[24px] cursor-pointer" 
+          className={`p-1.5 rounded transition min-w-[24px] cursor-pointer ${isBoldActive ? 'bg-indigo-50 text-indigo-700 font-black' : 'hover:bg-slate-150 text-slate-750'}`} 
           title="Bold (Ctrl+B)"
         >
           <Bold className="h-3.5 w-3.5 mx-auto" />
@@ -442,7 +496,7 @@ export default function BlogContentEditor({
           type="button" 
           onClick={() => executeCommand('italic')}
           onMouseDown={(e) => e.preventDefault()}
-          className="p-1.5 hover:bg-slate-150 rounded italic font-black text-slate-750 text-[11px] transition min-w-[24px] cursor-pointer" 
+          className={`p-1.5 rounded transition min-w-[24px] cursor-pointer ${isItalicActive ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-slate-150 text-slate-750'}`} 
           title="Italic (Ctrl+I)"
         >
           <Italic className="h-3.5 w-3.5 mx-auto" />
@@ -452,7 +506,7 @@ export default function BlogContentEditor({
           type="button" 
           onClick={() => executeCommand('underline')}
           onMouseDown={(e) => e.preventDefault()}
-          className="p-1.5 hover:bg-slate-150 rounded underline font-black text-slate-750 text-[11px] transition min-w-[24px] cursor-pointer" 
+          className={`p-1.5 rounded transition min-w-[24px] cursor-pointer ${isUnderlineActive ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-slate-150 text-slate-750'}`} 
           title="Underline (Ctrl+U)"
         >
           <Underline className="h-3.5 w-3.5 mx-auto" />
@@ -502,10 +556,16 @@ export default function BlogContentEditor({
             type="button" 
             onClick={() => setShowAlignDropdown(!showAlignDropdown)}
             onMouseDown={(e) => e.preventDefault()}
-            className="p-1.5 hover:bg-slate-150 rounded transition text-slate-500 cursor-pointer flex items-center" 
+            className={`p-1.5 rounded transition cursor-pointer flex items-center ${isAlignLeftActive || isAlignCenterActive || isAlignRightActive ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-slate-150 text-slate-500'}`} 
             title="Align Text"
           >
-            <AlignLeft className="h-3.5 w-3.5 text-slate-650" />
+            {isAlignCenterActive ? (
+              <AlignCenter className="h-3.5 w-3.5" />
+            ) : isAlignRightActive ? (
+              <AlignRight className="h-3.5 w-3.5" />
+            ) : (
+              <AlignLeft className="h-3.5 w-3.5" />
+            )}
             <ChevronDown className="h-2.5 w-2.5 text-slate-400 ml-0.5" />
           </button>
           
@@ -515,7 +575,7 @@ export default function BlogContentEditor({
                 type="button"
                 onClick={() => { setShowAlignDropdown(false); executeCommand('justifyLeft'); }}
                 onMouseDown={(e) => e.preventDefault()}
-                className="w-full text-left px-2.5 py-1.5 hover:bg-slate-50 rounded-lg text-slate-700 font-medium transition flex items-center gap-1.5 cursor-pointer"
+                className={`w-full text-left px-2.5 py-1.5 hover:bg-slate-50 rounded-lg text-slate-700 font-medium transition flex items-center gap-1.5 cursor-pointer ${isAlignLeftActive ? 'bg-indigo-50/50 text-indigo-700' : ''}`}
               >
                 <AlignLeft className="h-3 w-3" /> Align Left
               </button>
@@ -523,7 +583,7 @@ export default function BlogContentEditor({
                 type="button"
                 onClick={() => { setShowAlignDropdown(false); executeCommand('justifyCenter'); }}
                 onMouseDown={(e) => e.preventDefault()}
-                className="w-full text-left px-2.5 py-1.5 hover:bg-slate-50 rounded-lg text-slate-700 font-medium transition flex items-center gap-1.5 cursor-pointer"
+                className={`w-full text-left px-2.5 py-1.5 hover:bg-slate-50 rounded-lg text-slate-700 font-medium transition flex items-center gap-1.5 cursor-pointer ${isAlignCenterActive ? 'bg-indigo-50/50 text-indigo-700' : ''}`}
               >
                 <AlignCenter className="h-3 w-3" /> Align Center
               </button>
@@ -531,7 +591,7 @@ export default function BlogContentEditor({
                 type="button"
                 onClick={() => { setShowAlignDropdown(false); executeCommand('justifyRight'); }}
                 onMouseDown={(e) => e.preventDefault()}
-                className="w-full text-left px-2.5 py-1.5 hover:bg-slate-50 rounded-lg text-slate-700 font-medium transition flex items-center gap-1.5 cursor-pointer"
+                className={`w-full text-left px-2.5 py-1.5 hover:bg-slate-50 rounded-lg text-slate-700 font-medium transition flex items-center gap-1.5 cursor-pointer ${isAlignRightActive ? 'bg-indigo-50/50 text-indigo-700' : ''}`}
               >
                 <AlignRight className="h-3 w-3" /> Align Right
               </button>
