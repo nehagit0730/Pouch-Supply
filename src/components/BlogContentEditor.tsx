@@ -741,7 +741,7 @@ export default function BlogContentEditor({
           onMouseUp={updateActiveBlockFormat}
           onKeyUp={updateActiveBlockFormat}
           onFocus={updateActiveBlockFormat}
-          className="w-full min-h-[250px] p-4 text-xs font-sans leading-relaxed text-slate-800 bg-white focus:outline-none focus:ring-0 [&_h1]:text-2xl [&_h1]:font-extrabold [&_h1]:text-slate-900 [&_h1]:mt-4 [&_h1]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-slate-800 [&_h2]:mt-3 [&_h2]:mb-1.5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-slate-700 [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-indigo-650 [&_a]:underline hover:prose-slate overflow-y-auto max-h-[500px]"
+          className="w-full min-h-[250px] p-4 text-xs font-sans leading-relaxed text-slate-800 bg-white focus:outline-none focus:ring-0 [&_h1]:text-[48px] [&_h1]:font-extrabold [&_h1]:text-slate-900 [&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:leading-tight [&_h2]:text-[35px] [&_h2]:font-bold [&_h2]:text-slate-800 [&_h2]:mt-3 [&_h2]:mb-1.5 [&_h2]:leading-tight [&_h3]:text-[30px] [&_h3]:font-semibold [&_h3]:text-slate-700 [&_h3]:mt-2 [&_h3]:mb-1 [&_h3]:leading-tight [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-indigo-650 [&_a]:underline hover:prose-slate overflow-y-auto max-h-[500px]"
           placeholder={placeholder}
           style={{ outline: 'none' }}
         />
