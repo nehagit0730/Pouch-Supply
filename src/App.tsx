@@ -296,7 +296,7 @@ export default function App() {
         setCurrentTab('blog-detail');
       } else if (path.startsWith('/pages/')) {
         const slug = path.replace('/pages/', '');
-        if (slug === 'subscribe') {
+        if (slug === 'subscribe' || slug.startsWith('subscribe/')) {
           setCurrentTab('frontend-subscribe');
         } else if (slug === 'brands') {
           setCurrentTab('frontend-brands');
