@@ -237,7 +237,7 @@ export default function CustomerAccount({
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="e.g. CT48884"
+                    placeholder="e.g. PS48884"
                     value={trackerInput}
                     onChange={(e) => setTrackerInput(e.target.value)}
                     className="w-full text-xs font-mono font-bold border border-slate-200 p-3 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase bg-white"
@@ -363,7 +363,7 @@ export default function CustomerAccount({
             <div className="relative flex-1 md:w-64">
               <input
                 type="text"
-                placeholder="Enter Order ID (e.g. CT48884)"
+                placeholder="Enter Order ID (e.g. PS48884)"
                 value={trackerInput}
                 onChange={(e) => setTrackerInput(e.target.value)}
                 className="w-full text-xs font-mono font-bold border border-slate-200 p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase bg-slate-50/50"

@@ -198,7 +198,7 @@ export default function CheckoutView({
         setIsProcessing(false);
 
         // Place the official order
-        const orderId = `CT${Math.floor(Math.random() * 90000 + 10000)}`;
+        const orderId = `PS${Math.floor(Math.random() * 90000 + 10000)}`;
         onCompleteCheckout({
           orderId,
           customerName: fullName,
@@ -278,7 +278,7 @@ export default function CheckoutView({
       setIsProcessing(false);
 
       // Place order
-      const orderId = `CT${Math.floor(Math.random() * 90000 + 10000)}`;
+      const orderId = `PS${Math.floor(Math.random() * 90000 + 10000)}`;
       onCompleteCheckout({
         orderId,
         customerName: fullName,
