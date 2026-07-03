@@ -6,6 +6,7 @@ import {
   Truck, Check, Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import SubscriptionIcon from './SubscriptionIcon';
 
 interface CustomerDrawerProps {
   isOpen: boolean;
@@ -451,12 +452,16 @@ export default function CustomerDrawer({
                                                 return (
                                                   <div key={id} className="p-2 flex gap-2.5 items-center justify-between text-[11px] leading-tight bg-white">
                                                     <div className="flex gap-2 items-center min-w-0">
-                                                      <img 
-                                                        src={matchingProduct?.image || item.image} 
-                                                        className="w-8 h-8 rounded-lg object-contain border border-slate-150 bg-slate-50 shrink-0" 
-                                                        alt="" 
-                                                        referrerPolicy="no-referrer"
-                                                      />
+                                                      {item.productId && (item.productId.startsWith('sub-pack-') || item.productId.includes('sub-pack')) ? (
+                                                        <SubscriptionIcon planName={item.productTitle} className="!w-8 !h-8 rounded-lg" />
+                                                      ) : (
+                                                        <img 
+                                                          src={matchingProduct?.image || item.image} 
+                                                          className="w-8 h-8 rounded-lg object-contain border border-slate-150 bg-slate-50 shrink-0" 
+                                                          alt="" 
+                                                          referrerPolicy="no-referrer"
+                                                        />
+                                                      )}
                                                       <div className="min-w-0">
                                                         <p className="font-bold text-slate-800 truncate">{item.productTitle}</p>
                                                         <p className="text-slate-400 text-[9.5px] font-mono whitespace-nowrap">Qty: {item.quantity} × £{item.price.toFixed(2)}</p>

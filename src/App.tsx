@@ -512,7 +512,15 @@ export default function App() {
     frequency: string,
     flatPrice: number
   ) => {
-    const listSummary = items.map(i => `${i.product.vendor} ${i.product.title.split(' ')[1]} (Qty:${i.quantity})`).join(', ');
+    const listSummary = items.map(i => {
+      const vendorName = i.product.vendor || '';
+      const productTitle = i.product.title || '';
+      // Avoid duplicate vendor prefix if product title already starts with it
+      const displayName = productTitle.toLowerCase().startsWith(vendorName.toLowerCase())
+        ? productTitle
+        : `${vendorName} ${productTitle}`;
+      return `${displayName} (Qty:${i.quantity})`;
+    }).join(', ');
     const desc = `${packName} [${frequency}] - (${listSummary})`;
 
     setCartItems(prev => [

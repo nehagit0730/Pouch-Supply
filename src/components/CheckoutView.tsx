@@ -4,6 +4,7 @@ import {
   ShieldCheck, ArrowLeft, CreditCard, Lock, Terminal, 
   CheckCircle, AlertTriangle, AlertCircle, RefreshCw, Send, HelpCircle, Truck, ShoppingCart
 } from 'lucide-react';
+import SubscriptionIcon from './SubscriptionIcon';
 
 interface CheckoutViewProps {
   cartItems: CartItem[];
@@ -754,12 +755,16 @@ export default function CheckoutView({
             <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto pr-2">
               {cartItems.map((item, idx) => (
                 <div key={idx} className="py-3 flex items-center gap-3.5 text-xs">
-                  <img
-                    src={item.image}
-                    alt={item.productTitle}
-                    className="w-12 h-12 object-cover rounded-lg bg-slate-50 border border-slate-100"
-                    referrerPolicy="no-referrer"
-                  />
+                  {item.productId && (item.productId.startsWith('sub-pack-') || item.productId.includes('sub-pack')) ? (
+                    <SubscriptionIcon planName={item.productTitle} className="!w-12 !h-12 rounded-lg" />
+                  ) : (
+                    <img
+                      src={item.image}
+                      alt={item.productTitle}
+                      className="w-12 h-12 object-cover rounded-lg bg-slate-50 border border-slate-100"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <h4 className="font-extrabold text-slate-800 truncate text-[11px]">{item.productTitle}</h4>
                     <p className="text-slate-400 text-[10px] font-bold">Qty: {item.quantity} × £{item.price.toFixed(2)}</p>

@@ -2041,7 +2041,6 @@ export default function AdminDashboard({
                           <th className="p-4">Image</th>
                           <th className="p-4">Collection Title</th>
                           <th className="p-4">Type</th>
-                          <th className="p-4">Description</th>
                           <th className="p-4 text-center">Products Count</th>
                           <th className="p-4 text-center">Actions</th>
                         </tr>
@@ -2049,7 +2048,7 @@ export default function AdminDashboard({
                       <tbody className="divide-y divide-slate-150/70">
                         {filteredCollections.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="text-center py-12 text-slate-400">No collections match the criteria or configured yet.</td>
+                            <td colSpan={5} className="text-center py-12 text-slate-400">No collections match the criteria or configured yet.</td>
                           </tr>
                         ) : (
                           filteredCollections.map(col => (
@@ -2076,9 +2075,6 @@ export default function AdminDashboard({
                                 }`}>
                                   {col.type}
                                 </span>
-                              </td>
-                              <td className="p-4 text-slate-500 font-medium max-w-md truncate leading-relaxed">
-                                {col.description || <span className="text-slate-350 italic">No description provided</span>}
                               </td>
                               <td className="p-4 text-center font-black text-xs text-slate-800">
                                 {col.id === 'all' ? products.length : col.productIds.length} products

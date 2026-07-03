@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CartItem, Discount } from '../types';
 import { X, Trash2, Plus, Minus, Ticket, Check, ShieldCheck, ShoppingBag, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import SubscriptionIcon from './SubscriptionIcon';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -121,12 +122,16 @@ export default function CartDrawer({
                   <div className="divide-y divide-slate-100">
                     {cartItems.map((item, index) => (
                       <div key={`${item.productId}-${index}`} className="py-4 flex gap-4 text-xs items-center justify-between">
-                        <img
-                          src={item.image}
-                          alt={item.productTitle}
-                          className="w-16 h-16 object-cover rounded-lg bg-slate-50 border border-slate-100 shrink-0"
-                          referrerPolicy="no-referrer"
-                        />
+                        {item.productId && (item.productId.startsWith('sub-pack-') || item.productId.includes('sub-pack')) ? (
+                          <SubscriptionIcon planName={item.productTitle} />
+                        ) : (
+                          <img
+                            src={item.image}
+                            alt={item.productTitle}
+                            className="w-16 h-16 object-cover rounded-lg bg-slate-50 border border-slate-100 shrink-0"
+                            referrerPolicy="no-referrer"
+                          />
+                        )}
 
                         <div className="flex-1 min-w-0 pr-3">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">{item.vendor}</span>
