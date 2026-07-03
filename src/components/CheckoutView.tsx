@@ -766,7 +766,7 @@ export default function CheckoutView({
                     />
                   )}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-extrabold text-slate-800 truncate text-[11px]">{item.productTitle}</h4>
+                    <h4 className="font-extrabold text-slate-800 text-[11px]">{item.productTitle}</h4>
                     <p className="text-slate-400 text-[10px] font-bold">Qty: {item.quantity} × £{item.price.toFixed(2)}</p>
                   </div>
                   <span className="font-black text-slate-800 text-[11px]">£{(item.price * item.quantity).toFixed(2)}</span>

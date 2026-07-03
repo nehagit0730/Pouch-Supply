@@ -463,7 +463,7 @@ export default function CustomerDrawer({
                                                         />
                                                       )}
                                                       <div className="min-w-0">
-                                                        <p className="font-bold text-slate-800 truncate">{item.productTitle}</p>
+                                                        <p className="font-bold text-slate-800">{item.productTitle}</p>
                                                         <p className="text-slate-400 text-[9.5px] font-mono whitespace-nowrap">Qty: {item.quantity} × £{item.price.toFixed(2)}</p>
                                                       </div>
                                                     </div>

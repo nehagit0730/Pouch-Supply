@@ -617,9 +617,9 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
 
                   return (
                     <div key={key} className="flex gap-2 justify-between items-center bg-slate-50 border border-slate-200/50 p-2 rounded-lg text-xs">
-                      <div className="flex items-center gap-2 truncate flex-1">
+                      <div className="flex items-center gap-2 flex-1">
                         <img src={displayImg} className="w-8 h-8 rounded bg-white border shrink-0" alt="" referrerPolicy="no-referrer" />
-                        <span className="font-semibold text-slate-700 truncate" title={displayName}>{displayName}</span>
+                        <span className="font-semibold text-slate-700" title={displayName}>{displayName}</span>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button

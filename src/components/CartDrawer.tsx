@@ -135,7 +135,7 @@ export default function CartDrawer({
 
                         <div className="flex-1 min-w-0 pr-3">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">{item.vendor}</span>
-                          <h4 className="font-extrabold text-slate-800 truncate leading-normal text-xs">{item.productTitle}</h4>
+                          <h4 className="font-extrabold text-slate-800 leading-normal text-xs">{item.productTitle}</h4>
                           <p className="text-slate-500 font-bold text-slate-900 mt-1">£{item.price.toFixed(2)} each</p>
 
                           {/* Quantity Controls */}
