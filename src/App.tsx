@@ -515,11 +515,11 @@ export default function App() {
     const listSummary = items.map(i => {
       const vendorName = i.product.vendor || '';
       const productTitle = i.product.title || '';
-      // Avoid duplicate vendor prefix if product title already starts with it
-      const displayName = productTitle.toLowerCase().startsWith(vendorName.toLowerCase())
-        ? productTitle
-        : `${vendorName} ${productTitle}`;
-      return `${displayName} (Qty:${i.quantity})`;
+      let cleanTitle = productTitle;
+      if (vendorName && productTitle.toLowerCase().startsWith(vendorName.toLowerCase())) {
+        cleanTitle = productTitle.substring(vendorName.length).trim();
+      }
+      return `${cleanTitle} (Qty:${i.quantity})`;
     }).join(', ');
     const desc = `${packName} [${frequency}] - (${listSummary})`;
 
