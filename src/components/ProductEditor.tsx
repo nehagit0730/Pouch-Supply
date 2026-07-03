@@ -186,6 +186,14 @@ export default function ProductEditor({
     });
   }, [variantsList]);
 
+  // Sync parent inventory level with the sum of all physical variant stock levels
+  useEffect(() => {
+    if (concreteVariantsList.length > 0) {
+      const sum = concreteVariantsList.reduce((acc, curr) => acc + (curr.inventory || 0), 0);
+      setInventory(sum);
+    }
+  }, [concreteVariantsList]);
+
   const handleUpdateConcreteVariant = (index: number, updatedFields: Partial<VariantDetail>) => {
     setConcreteVariantsList(prev => {
       const copy = [...prev];
@@ -889,11 +897,13 @@ export default function ProductEditor({
               </div>
 
               <div>
-                <label className="block text-slate-550 font-bold uppercase tracking-wider text-[9px] mb-1.5">Available Quantity cans</label>
+                <label className="block text-slate-550 font-bold uppercase tracking-wider text-[9px] mb-1.5">
+                  Available Quantity cans {concreteVariantsList.length > 0 && <span className="text-emerald-600 font-extrabold normal-case font-sans">(Sum of variants)</span>}
+                </label>
                 <input
                   type="number"
                   min="0"
-                  disabled={!inventoryTracked}
+                  disabled={!inventoryTracked || concreteVariantsList.length > 0}
                   placeholder="250"
                   value={inventoryTracked ? inventory : ''}
                   onChange={(e) => setInventory(parseInt(e.target.value) || 0)}
