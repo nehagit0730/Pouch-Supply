@@ -51,6 +51,7 @@ export default function CustomerDrawer({
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Addresses States
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -59,34 +60,63 @@ export default function CustomerDrawer({
   // Expandable Order details Accordion
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailInput.trim()) {
       setErrorMsg('Please enter an email.');
       return;
     }
     
-    // Simple look up, dynamic login based on exist or new
-    let found = customers.find(c => c.email.toLowerCase() === emailInput.toLowerCase().trim());
-    if (!found) {
-      // Create a new mock account
-      const mockName = emailInput.split('@')[0];
-      const newCust: Customer = {
-        id: `cust-${Date.now()}`,
-        name: mockName.charAt(0).toUpperCase() + mockName.slice(1),
-        email: emailInput.toLowerCase().trim(),
-        subscriptionStatus: 'Not subscribed',
-        location: 'United Kingdom',
-        ordersCount: 0,
-        amountSpent: 0,
-        addresses: ['221B Baker Street, London, NW1 6XE, UK'],
-        wishlist: []
-      };
-      onLogin(newCust);
-      setErrorMsg('');
-    } else {
-      onLogin(found);
-      setErrorMsg('');
+    setIsSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const password = passwordInput || 'password123';
+      const email = emailInput.toLowerCase().trim();
+
+      // First try to login
+      const loginResponse = await fetch('/api/customers/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const loginData = await loginResponse.json();
+
+      if (loginResponse.ok) {
+        onLogin(loginData.customer);
+        setErrorMsg('');
+        setEmailInput('');
+        setPasswordInput('');
+      } else if (loginResponse.status === 404 || (loginData.error && (loginData.error.includes('not found') || loginData.error.includes('register')))) {
+        // User not found, automatically register them! (Quick Create)
+        const mockName = email.split('@')[0];
+        const signupResponse = await fetch('/api/customers/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: mockName.charAt(0).toUpperCase() + mockName.slice(1),
+            email,
+            password
+          })
+        });
+
+        const signupData = await signupResponse.json();
+        if (signupResponse.ok) {
+          onLogin(signupData.customer);
+          setErrorMsg('');
+          setEmailInput('');
+          setPasswordInput('');
+        } else {
+          throw new Error(signupData.error || 'Failed to auto-create account.');
+        }
+      } else {
+        throw new Error(loginData.error || 'Incorrect credentials.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Server connection error.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -102,11 +132,35 @@ export default function CustomerDrawer({
     setShowAddressForm(false);
   };
 
-  const handleQuickLogin = (cust: Customer) => {
+  const handleQuickLogin = async (cust: Customer) => {
     setEmailInput(cust.email);
     setPasswordInput('password123');
-    onLogin(cust);
+    
+    setIsSubmitting(true);
     setErrorMsg('');
+
+    try {
+      const response = await fetch('/api/customers/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cust.email, password: 'password123' })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        onLogin(data.customer);
+        setErrorMsg('');
+        setEmailInput('');
+        setPasswordInput('');
+      } else {
+        // Fallback to local state if server has any issue or doesn't have seed
+        onLogin(cust);
+      }
+    } catch {
+      onLogin(cust);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const toggleOrderExpand = (orderId: string) => {
@@ -203,10 +257,20 @@ export default function CustomerDrawer({
 
                         <button
                           type="submit"
-                          className="w-full bg-[#1e293b] hover:bg-[#0f172a] text-white font-black text-xs uppercase tracking-widest py-3 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer mt-2"
+                          disabled={isSubmitting}
+                          className="w-full bg-[#1e293b] hover:bg-[#0f172a] disabled:bg-slate-300 text-white font-black text-xs uppercase tracking-widest py-3 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:cursor-not-allowed"
                         >
-                          <LogIn className="h-4 w-4" /> 
-                          <span>Sign In / Quick Create</span>
+                          {isSubmitting ? (
+                            <>
+                              <LogIn className="h-4 w-4 animate-spin" /> 
+                              <span>Authenticating...</span>
+                            </>
+                          ) : (
+                            <>
+                              <LogIn className="h-4 w-4" /> 
+                              <span>Sign In / Quick Create</span>
+                            </>
+                          )}
                         </button>
                       </form>
                     </div>

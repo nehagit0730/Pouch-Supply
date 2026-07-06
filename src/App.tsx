@@ -22,6 +22,7 @@ import TermsConditions from './components/TermsConditions';
 import ProductDetailView from './components/ProductDetailView';
 import CollectionDetailView from './components/CollectionDetailView';
 import CheckoutView from './components/CheckoutView';
+import { WorldpayGatewaySimulator, PaymentSuccessScreen, PaymentFailedScreen, PaymentCancelledScreen } from './components/PaymentStatusScreens';
 import { 
   Sparkles, ShieldCheck, Truck, RefreshCw, Star, ArrowRight, Package, ShoppingCart, Check, Heart, User, CheckCircle2, Save, AlertTriangle, Search
 } from 'lucide-react';
@@ -284,6 +285,22 @@ export default function App() {
         return;
       } else {
         setIsAdminActive(false);
+      }
+
+      if (path.startsWith('/payment/')) {
+        const sub = path.replace('/payment/', '');
+        if (sub.startsWith('worldpay-gateway')) {
+          setCurrentTab('payment-worldpay-gateway');
+        } else if (sub.startsWith('success')) {
+          setCartItems([]);
+          localStorage.removeItem('ps_cart');
+          setCurrentTab('payment-success');
+        } else if (sub.startsWith('failed')) {
+          setCurrentTab('payment-failed');
+        } else if (sub.startsWith('cancelled')) {
+          setCurrentTab('payment-cancelled');
+        }
+        return;
       }
 
       if (path === '/' || path === '') {
@@ -1175,6 +1192,46 @@ export default function App() {
               />
             )}
 
+            {/* FRONTEND VIEW - WORLDPAY SECURE GATEWAY */}
+            {currentTab === 'payment-worldpay-gateway' && (
+              <WorldpayGatewaySimulator 
+                onReturnToShop={() => {
+                  window.history.pushState({}, '', '/collections/all');
+                  window.dispatchEvent(new Event('popstate'));
+                }}
+              />
+            )}
+
+            {/* FRONTEND VIEW - SECURE PAYMENT SUCCESS */}
+            {currentTab === 'payment-success' && (
+              <PaymentSuccessScreen 
+                onReturnToShop={() => {
+                  window.history.pushState({}, '', '/collections/all');
+                  window.dispatchEvent(new Event('popstate'));
+                }}
+              />
+            )}
+
+            {/* FRONTEND VIEW - SECURE PAYMENT FAILED */}
+            {currentTab === 'payment-failed' && (
+              <PaymentFailedScreen 
+                onReturnToCheckout={() => {
+                  window.history.pushState({}, '', '/pages/checkout');
+                  window.dispatchEvent(new Event('popstate'));
+                }}
+              />
+            )}
+
+            {/* FRONTEND VIEW - SECURE PAYMENT CANCELLED */}
+            {currentTab === 'payment-cancelled' && (
+              <PaymentCancelledScreen 
+                onReturnToCheckout={() => {
+                  window.history.pushState({}, '', '/pages/checkout');
+                  window.dispatchEvent(new Event('popstate'));
+                }}
+              />
+            )}
+
             {/* FRONTEND VIEW - CURATED STORES BLOG/MAGAZINE HUB */}
             {currentTab === 'blogs' && (() => {
               const activeBlogs = blogs.filter(b => b.status === 'Active');
@@ -1743,7 +1800,7 @@ export default function App() {
       )}
 
       {/* Universal Footer layout */}
-      <Footer onNavigate={navigateToTab} />
+      {!isAdminActive && <Footer onNavigate={navigateToTab} />}
 
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Customer, Product, Order } from '../types';
-import { User, LogIn, Heart, PlusCircle, Trash2, MapPin, Package, ShoppingBag, Eye, X, Search, Truck, Check, Clock, Calendar } from 'lucide-react';
+import { User, LogIn, Heart, PlusCircle, Trash2, MapPin, Package, ShoppingBag, Eye, X, Search, Truck, Check, Clock, Calendar, RefreshCw } from 'lucide-react';
 
 interface CustomerAccountProps {
   customers: Customer[];
@@ -25,9 +25,12 @@ export default function CustomerAccount({
   onAddAddress,
   onRemoveAddress
 }: CustomerAccountProps) {
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [nameInput, setNameInput] = useState('');
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newAddress, setNewAddress] = useState('');
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<Order | null>(null);
@@ -37,34 +40,53 @@ export default function CustomerAccount({
   const [trackedOrder, setTrackedOrder] = useState<Order | null>(null);
   const [trackerError, setTrackerError] = useState('');
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailInput.trim()) {
-      setErrorMsg('Please enter an email.');
+    setErrorMsg('');
+
+    if (authMode === 'signup' && !nameInput.trim()) {
+      setErrorMsg('Please enter your full name.');
       return;
     }
-    // Simple look up, dynamic login based on exist or new
-    let found = customers.find(c => c.email.toLowerCase() === emailInput.toLowerCase().trim());
-    if (!found) {
-      // Create a new mock account
-      const mockName = emailInput.split('@')[0];
-      const newCust: Customer = {
-        id: `cust-${Date.now()}`,
-        name: mockName.charAt(0).toUpperCase() + mockName.slice(1),
-        email: emailInput.toLowerCase().trim(),
-        subscriptionStatus: 'Not subscribed',
-        location: 'United States',
-        ordersCount: 0,
-        amountSpent: 0,
-        addresses: ['100 Main Street, New York, NY, 10001'],
-        wishlist: []
-      };
-      // For instant response, simulate adding them in
-      onLogin(newCust);
+    if (!emailInput.trim()) {
+      setErrorMsg('Please enter your email.');
+      return;
+    }
+    if (!passwordInput) {
+      setErrorMsg('Please enter your password.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const endpoint = authMode === 'signup' ? '/api/customers/signup' : '/api/customers/login';
+      const bodyPayload = authMode === 'signup' 
+        ? { name: nameInput.trim(), email: emailInput.toLowerCase().trim(), password: passwordInput }
+        : { email: emailInput.toLowerCase().trim(), password: passwordInput };
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyPayload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Authentication failed. Please check your credentials.');
+      }
+
+      // Login success
+      onLogin(data.customer);
       setErrorMsg('');
-    } else {
-      onLogin(found);
-      setErrorMsg('');
+      // Clean inputs
+      setNameInput('');
+      setPasswordInput('');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Server connection error.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -144,27 +166,77 @@ export default function CustomerAccount({
       <div id="login-container" className="max-w-5xl mx-auto my-12 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-slate-100">
           
-          {/* COLUMN 1: LOGIN FORM */}
+          {/* COLUMN 1: LOGIN / SIGNUP FORM */}
           <div className="p-8 space-y-6">
-            <div className="flex justify-center md:justify-start">
-              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-full">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-full w-12 h-12 flex items-center justify-center">
                 <User className="h-6 w-6" />
               </div>
+
+              {/* Mode Toggle Tabs */}
+              <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-48">
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode('login'); setErrorMsg(''); }}
+                  className={`py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                    authMode === 'login'
+                      ? 'bg-white text-slate-900 shadow-3xs font-extrabold'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode('signup'); setErrorMsg(''); }}
+                  className={`py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                    authMode === 'signup'
+                      ? 'bg-white text-slate-900 shadow-3xs font-extrabold'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  Sign Up
+                </button>
+              </div>
             </div>
-            <h2 className="text-xl font-bold text-slate-800 text-center md:text-left">Customer Login</h2>
-            <p className="text-slate-500 text-xs text-center md:text-left leading-relaxed">
-              Sign in to view your order history, manage saved delivery points, and access your custom wishlist.
-            </p>
+
+            <div className="space-y-1">
+              <h2 className="text-xl font-bold text-slate-800">
+                {authMode === 'login' ? 'Customer Sign In' : 'Create Customer Account'}
+              </h2>
+              <p className="text-slate-500 text-xs leading-relaxed">
+                {authMode === 'login' 
+                  ? 'Sign in to view your order history, manage saved delivery points, and access your custom wishlist.'
+                  : 'Join Pouch Supply to save shipping preferences, earn loyal shop points, and checkout faster.'}
+              </p>
+            </div>
 
             <form onSubmit={handleLoginSubmit} className="space-y-4">
+              {authMode === 'signup' && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Kayla Canty"
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-505 bg-slate-50/50"
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
-                  Email Address / Account Name
+                  Email Address
                 </label>
                 <input
                   id="cust-login-email"
                   type="email"
-                  placeholder="kayla.canty@yahoo.com (Demo User)"
+                  required
+                  placeholder="kayla.canty@yahoo.com"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-505 bg-slate-50/50"
@@ -178,6 +250,7 @@ export default function CustomerAccount({
                 <input
                   id="cust-login-pass"
                   type="password"
+                  required
                   placeholder="••••••••"
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
@@ -186,15 +259,24 @@ export default function CustomerAccount({
               </div>
 
               {errorMsg && (
-                <p className="text-xs text-red-500 font-medium">{errorMsg}</p>
+                <p className="text-xs text-red-500 font-bold">{errorMsg}</p>
               )}
 
               <button
                 id="cust-login-btn"
                 type="submit"
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs uppercase tracking-widest py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 mt-4 cursor-pointer"
+                disabled={isSubmitting}
+                className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white font-medium text-xs uppercase tracking-widest py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 mt-4 cursor-pointer disabled:cursor-not-allowed"
               >
-                <LogIn className="h-4 w-4" /> Sign In
+                {isSubmitting ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" /> Authenticating...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="h-4 w-4" /> {authMode === 'login' ? 'Sign In' : 'Create Account'}
+                  </>
+                )}
               </button>
             </form>
 
