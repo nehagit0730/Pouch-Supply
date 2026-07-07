@@ -449,6 +449,7 @@ export default function AdminDashboard({
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const [productQuery, setProductQuery] = useState('');
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [newProductForm, setNewProductForm] = useState<Partial<Product>>({
     title: '', description: '', price: 4.99, compareAtPrice: 5.99,
@@ -730,7 +731,63 @@ export default function AdminDashboard({
     triggerConfirm("Are you sure you want to delete this product?", () => {
       const updated = products.filter(p => p.id !== pId);
       onUpdateProducts(updated);
+
+      // Clean up collection references
+      const updatedColls = collections.map(c => ({
+        ...c,
+        productIds: c.productIds.filter(id => id !== pId)
+      }));
+      onUpdateCollections(updatedColls);
+
+      // Remove from selected list
+      setSelectedProductIds(prev => prev.filter(id => id !== pId));
     }, "Delete Product");
+  };
+
+  const handleSelectAllProducts = (checked: boolean) => {
+    if (checked) {
+      const visibleIds = filteredProductsAdmin.map(p => p.id);
+      setSelectedProductIds(visibleIds);
+    } else {
+      setSelectedProductIds([]);
+    }
+  };
+
+  const handleSelectProduct = (productId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedProductIds(prev => {
+        if (prev.includes(productId)) return prev;
+        return [...prev, productId];
+      });
+    } else {
+      setSelectedProductIds(prev => prev.filter(id => id !== productId));
+    }
+  };
+
+  const handleBulkDeleteProducts = () => {
+    if (selectedProductIds.length === 0) return;
+    triggerConfirm(`Are you sure you want to bulk delete the ${selectedProductIds.length} selected products?`, () => {
+      const updated = products.filter(p => !selectedProductIds.includes(p.id));
+      onUpdateProducts(updated);
+
+      // Clean up collection references
+      const updatedColls = collections.map(c => ({
+        ...c,
+        productIds: c.productIds.filter(id => !selectedProductIds.includes(id))
+      }));
+      onUpdateCollections(updatedColls);
+
+      setSelectedProductIds([]);
+    }, "Bulk Delete Products");
+  };
+
+  const handleBulkStatusProducts = (status: 'Active' | 'Draft') => {
+    if (selectedProductIds.length === 0) return;
+    const updated = products.map(p => 
+      selectedProductIds.includes(p.id) ? { ...p, status } : p
+    );
+    onUpdateProducts(updated);
+    setSelectedProductIds([]);
   };
 
   // Create & Edit Collection
@@ -2226,15 +2283,21 @@ export default function AdminDashboard({
               <>
                 {/* Header menu filter */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-                  <div className="relative w-full sm:w-64">
-                    <input
-                      type="text"
-                      placeholder="Seach products via titles, vendors..."
-                      value={productQuery}
-                      onChange={(e) => setProductQuery(e.target.value)}
-                      className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
-                    />
-                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-64">
+                      <input
+                        type="text"
+                        placeholder="Seach products via titles, vendors..."
+                        value={productQuery}
+                        onChange={(e) => setProductQuery(e.target.value)}
+                        className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
+                      />
+                      <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                    </div>
+                    <div className="px-3 py-1.5 bg-slate-100 rounded-lg text-slate-600 text-xs font-bold whitespace-nowrap self-start sm:self-auto flex items-center gap-1.5 border border-slate-150">
+                      <Package className="h-3.5 w-3.5 text-slate-500" />
+                      <span>{filteredProductsAdmin.length} products on list</span>
+                    </div>
                   </div>
 
                   <button
@@ -2250,10 +2313,58 @@ export default function AdminDashboard({
 
                 {/* Products Inventory Grid table */}
                 <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                  {/* Bulk Actions Bar */}
+                  {selectedProductIds.length > 0 && (
+                    <div className="bg-slate-50 border-b border-slate-200 p-3 px-4 flex flex-wrap items-center justify-between gap-2 animate-fadeIn">
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="checkbox"
+                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-500 h-4 w-4 cursor-pointer"
+                          checked={filteredProductsAdmin.length > 0 && filteredProductsAdmin.every(p => selectedProductIds.includes(p.id))}
+                          onChange={(e) => handleSelectAllProducts(e.target.checked)}
+                        />
+                        <span className="text-xs font-bold text-slate-700">
+                          {selectedProductIds.length} selected <span className="text-slate-400 font-normal">({filteredProductsAdmin.length} total on list)</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleBulkStatusProducts('Active')}
+                          className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-extrabold text-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                          Set as active
+                        </button>
+                        <button
+                          onClick={() => handleBulkStatusProducts('Draft')}
+                          className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-extrabold text-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                        >
+                          <EyeOff className="h-3.5 w-3.5 text-slate-500" />
+                          Set as draft
+                        </button>
+                        <button
+                          onClick={handleBulkDeleteProducts}
+                          className="px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-extrabold text-red-650 transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete bulk
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
                         <tr className="bg-slate-50/75 border-b border-slate-200 text-[10px] text-slate-450 font-semibold uppercase tracking-widest">
+                          <th className="p-4 w-12 text-center">
+                            <input 
+                              type="checkbox"
+                              className="rounded border-slate-300 text-slate-900 focus:ring-slate-500 h-4 w-4 cursor-pointer"
+                              checked={filteredProductsAdmin.length > 0 && filteredProductsAdmin.every(p => selectedProductIds.includes(p.id))}
+                              onChange={(e) => handleSelectAllProducts(e.target.checked)}
+                            />
+                          </th>
                           <th className="p-4">Image</th>
                           <th className="p-4">Product Title</th>
                           <th className="p-4">Brand</th>
@@ -2266,7 +2377,7 @@ export default function AdminDashboard({
                       <tbody className="divide-y divide-slate-150/70">
                         {filteredProductsAdmin.length === 0 ? (
                           <tr>
-                            <td colSpan={7} className="text-center py-12 text-slate-400">No products configured yet.</td>
+                            <td colSpan={8} className="text-center py-12 text-slate-400">No products configured yet.</td>
                           </tr>
                         ) : (
                           filteredProductsAdmin.map(prod => (
@@ -2275,6 +2386,14 @@ export default function AdminDashboard({
                               className="hover:bg-slate-50/60 cursor-pointer transition-colors"
                               onClick={() => handleEditProductClick(prod)}
                             >
+                              <td className="p-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
+                                <input 
+                                  type="checkbox"
+                                  className="rounded border-slate-300 text-slate-900 focus:ring-slate-500 h-4 w-4 cursor-pointer"
+                                  checked={selectedProductIds.includes(prod.id)}
+                                  onChange={(e) => handleSelectProduct(prod.id, e.target.checked)}
+                                />
+                              </td>
                               <td className="p-4 shrink-0">
                                 <img
                                   src={prod.image}
