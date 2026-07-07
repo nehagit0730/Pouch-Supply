@@ -7,7 +7,7 @@ import {
   X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw, AlertTriangle,
   Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass,
   ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server,
-  Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit
+  Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit, LogOut
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 import CollectionEditor from './CollectionEditor';
@@ -85,6 +85,7 @@ interface AdminDashboardProps {
   adminActionTrigger?: { action: 'save' | 'discard'; timestamp: number } | null;
   onAdminActionComplete?: (action: 'save' | 'discard') => void;
   onExitAdmin?: () => void;
+  onLogoutAdmin?: () => void;
 }
 
 type SidebarTab = 'analytics' | 'orders' | 'collections' | 'products' | 'pages' | 'blogs' | 'files' | 'customers' | 'discounts';
@@ -109,7 +110,8 @@ export default function AdminDashboard({
   onDirtyChange,
   adminActionTrigger,
   onAdminActionComplete,
-  onExitAdmin
+  onExitAdmin,
+  onLogoutAdmin
 }: AdminDashboardProps) {
   const tabToPathMap: Record<SidebarTab, string> = {
     analytics: 'analytics',
@@ -460,6 +462,7 @@ export default function AdminDashboard({
 
   const [showAddCollection, setShowAddCollection] = useState(false);
   const [collectionQuery, setCollectionQuery] = useState('');
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
   const [newCollectionForm, setNewCollectionForm] = useState<Partial<Collection>>({
     title: '', description: '', type: 'Manual', image: '', productIds: []
   });
@@ -851,7 +854,36 @@ export default function AdminDashboard({
   const handleDeleteCollection = (id: string) => {
     triggerConfirm("Are you sure you want to delete this collection?", () => {
       onUpdateCollections(collections.filter(c => c.id !== id));
+      setSelectedCollectionIds(prev => prev.filter(item => item !== id));
     }, "Delete Collection");
+  };
+
+  const handleSelectAllCollections = (checked: boolean) => {
+    if (checked) {
+      const visibleIds = filteredCollections.filter(c => c.id !== 'all').map(c => c.id);
+      setSelectedCollectionIds(visibleIds);
+    } else {
+      setSelectedCollectionIds([]);
+    }
+  };
+
+  const handleSelectCollection = (colId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedCollectionIds(prev => {
+        if (prev.includes(colId)) return prev;
+        return [...prev, colId];
+      });
+    } else {
+      setSelectedCollectionIds(prev => prev.filter(id => id !== colId));
+    }
+  };
+
+  const handleBulkDeleteCollections = () => {
+    if (selectedCollectionIds.length === 0) return;
+    triggerConfirm(`Are you sure you want to bulk delete the ${selectedCollectionIds.length} selected collections?`, () => {
+      onUpdateCollections(collections.filter(c => !selectedCollectionIds.includes(c.id)));
+      setSelectedCollectionIds([]);
+    }, "Bulk Delete Collections");
   };
 
   // Pages & Section Builder Handlers
@@ -1394,6 +1426,17 @@ export default function AdminDashboard({
               <Globe className="h-4 w-4 shrink-0" />
               <span>View Online Store</span>
             </a>
+
+            {onLogoutAdmin && (
+              <button
+                type="button"
+                onClick={onLogoutAdmin}
+                className="mt-2 w-full flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3.5 py-2 rounded-xl text-rose-700 font-bold text-[11px] uppercase tracking-wider shadow-2xs transition-colors cursor-pointer select-none text-center"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                <span>Sign Out Admin</span>
+              </button>
+            )}
           </div>
 
           {/* Foot of sidebar */}
@@ -2063,15 +2106,21 @@ export default function AdminDashboard({
               <>
                 {/* Header menu filter */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-                  <div className="relative w-full sm:w-64">
-                    <input
-                      type="text"
-                      placeholder="Search collections..."
-                      value={collectionQuery}
-                      onChange={(e) => setCollectionQuery(e.target.value)}
-                      className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
-                    />
-                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-64">
+                      <input
+                        type="text"
+                        placeholder="Search collections..."
+                        value={collectionQuery}
+                        onChange={(e) => setCollectionQuery(e.target.value)}
+                        className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
+                      />
+                      <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                    </div>
+                    <div className="px-3 py-1.5 bg-slate-100 rounded-lg text-slate-600 text-xs font-bold whitespace-nowrap self-start sm:self-auto flex items-center gap-1.5 border border-slate-150">
+                      <FolderHeart className="h-3.5 w-3.5 text-slate-500" />
+                      <span>{filteredCollections.length} collections on list</span>
+                    </div>
                   </div>
 
                   <button
@@ -2091,10 +2140,44 @@ export default function AdminDashboard({
 
                 {/* Collections Table Grid list */}
                 <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                  {/* Bulk Actions Bar */}
+                  {selectedCollectionIds.length > 0 && (
+                    <div className="bg-slate-50 border-b border-slate-200 p-3 px-4 flex flex-wrap items-center justify-between gap-2 animate-fadeIn">
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="checkbox"
+                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-500 h-4 w-4 cursor-pointer"
+                          checked={filteredCollections.filter(c => c.id !== 'all').length > 0 && filteredCollections.filter(c => c.id !== 'all').every(c => selectedCollectionIds.includes(c.id))}
+                          onChange={(e) => handleSelectAllCollections(e.target.checked)}
+                        />
+                        <span className="text-xs font-bold text-slate-700">
+                          {selectedCollectionIds.length} selected <span className="text-slate-400 font-normal">({filteredCollections.filter(c => c.id !== 'all').length} total deletable)</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleBulkDeleteCollections}
+                          className="px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-extrabold text-red-650 transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete bulk
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
                         <tr className="bg-slate-50/75 border-b border-slate-200 text-[10px] text-slate-450 font-semibold uppercase tracking-widest">
+                          <th className="p-4 w-12 text-center">
+                            <input 
+                              type="checkbox"
+                              className="rounded border-slate-300 text-slate-900 focus:ring-slate-500 h-4 w-4 cursor-pointer"
+                              checked={filteredCollections.filter(c => c.id !== 'all').length > 0 && filteredCollections.filter(c => c.id !== 'all').every(c => selectedCollectionIds.includes(c.id))}
+                              onChange={(e) => handleSelectAllCollections(e.target.checked)}
+                            />
+                          </th>
                           <th className="p-4">Image</th>
                           <th className="p-4">Collection Title</th>
                           <th className="p-4">Type</th>
@@ -2105,7 +2188,7 @@ export default function AdminDashboard({
                       <tbody className="divide-y divide-slate-150/70">
                         {filteredCollections.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="text-center py-12 text-slate-400">No collections match the criteria or configured yet.</td>
+                            <td colSpan={6} className="text-center py-12 text-slate-400">No collections match the criteria or configured yet.</td>
                           </tr>
                         ) : (
                           filteredCollections.map(col => (
@@ -2117,6 +2200,18 @@ export default function AdminDashboard({
                                 setNewCollectionForm(col);
                               }}
                             >
+                              <td className="p-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
+                                {col.id !== 'all' ? (
+                                  <input 
+                                    type="checkbox"
+                                    className="rounded border-slate-300 text-slate-900 focus:ring-slate-500 h-4 w-4 cursor-pointer"
+                                    checked={selectedCollectionIds.includes(col.id)}
+                                    onChange={(e) => handleSelectCollection(col.id, e.target.checked)}
+                                  />
+                                ) : (
+                                  <span className="text-slate-300 text-[9px] font-bold uppercase">System</span>
+                                )}
+                              </td>
                               <td className="p-4 shrink-0">
                                 <img
                                   src={col.image}

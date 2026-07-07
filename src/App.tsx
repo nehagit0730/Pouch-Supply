@@ -14,6 +14,7 @@ import CustomerAccount from './components/CustomerAccount';
 import CartDrawer from './components/CartDrawer';
 import CustomerDrawer from './components/CustomerDrawer';
 import AdminDashboard from './components/AdminDashboard';
+import AdminLogin from './components/AdminLogin';
 import PageRenderer from './components/PageRenderer';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import ShippingPolicy from './components/ShippingPolicy';
@@ -179,6 +180,9 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('frontend-home');
   const [activeCollectionId, setActiveCollectionId] = useState<string>('all');
   const [isAdminActive, setIsAdminActive] = useState<boolean>(false);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return sessionStorage.getItem('ps_admin_authenticated') === 'true';
+  });
   const [cartOpen, setCartOpen] = useState<boolean>(false);
   const [customerDrawerOpen, setCustomerDrawerOpen] = useState<boolean>(false);
   const [customerDrawerTab, setCustomerDrawerTab] = useState<'orders' | 'addresses' | 'wishlist'>('orders');
@@ -663,7 +667,7 @@ export default function App() {
       cardBrand: paymentDetails.cardBrand,
       total: paymentDetails.total,
       destination: paymentDetails.address,
-      date: 'Today at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       deliveryMethod: 'Priority Courier Shipping via Worldpay | Tracked',
       items: paymentDetails.items
     };
@@ -769,51 +773,67 @@ export default function App() {
       {/* Primary view content sandbox */}
       <main className="flex-1">
         {isAdminActive ? (
-          
-          /* VIEW 1: ADMIN REPLICA DASHBOARD */
-          <AdminDashboard
-            products={products}
-            onUpdateProducts={setProducts}
-            collections={collections}
-            onUpdateCollections={setCollections}
-            orders={orders}
-            onUpdateOrders={setOrders}
-            files={files}
-            onUpdateFiles={setFiles}
-            customers={customers}
-            onUpdateCustomers={setCustomers}
-            discounts={discounts}
-            onUpdateDiscounts={setDiscounts}
-            customPages={customPages}
-            onUpdateCustomPages={setCustomPages}
-            blogs={blogs}
-            onUpdateBlogs={setBlogs}
-            onDirtyChange={setIsAdminDirty}
-            adminActionTrigger={adminActionTrigger}
-            onAdminActionComplete={(actionHandled) => {
-              setIsAdminDirty(false);
-              setAdminActionTrigger(null);
-              setShowUnsavedModal(false);
-
-              if (pendingNavAction) {
-                if (pendingNavAction.type === 'toggle-admin') {
-                  setIsAdminActive(!isAdminActive);
-                } else if (pendingNavAction.type === 'change-tab' && pendingNavAction.payload) {
-                  const tab = pendingNavAction.payload;
-                  navigateToTab(tab);
-                }
-                setPendingNavAction(null);
-              }
-            }}
-            onExitAdmin={() => {
-              if (isAdminDirty) {
-                setPendingNavAction({ type: 'toggle-admin' });
-                setShowUnsavedModal(true);
-              } else {
+          !isAdminAuthenticated ? (
+            <AdminLogin
+              onLoginSuccess={() => {
+                setIsAdminAuthenticated(true);
+                sessionStorage.setItem('ps_admin_authenticated', 'true');
+              }}
+              onCancel={() => {
                 setIsAdminActive(false);
-              }
-            }}
-          />
+              }}
+            />
+          ) : (
+            /* VIEW 1: ADMIN REPLICA DASHBOARD */
+            <AdminDashboard
+              products={products}
+              onUpdateProducts={setProducts}
+              collections={collections}
+              onUpdateCollections={setCollections}
+              orders={orders}
+              onUpdateOrders={setOrders}
+              files={files}
+              onUpdateFiles={setFiles}
+              customers={customers}
+              onUpdateCustomers={setCustomers}
+              discounts={discounts}
+              onUpdateDiscounts={setDiscounts}
+              customPages={customPages}
+              onUpdateCustomPages={setCustomPages}
+              blogs={blogs}
+              onUpdateBlogs={setBlogs}
+              onDirtyChange={setIsAdminDirty}
+              adminActionTrigger={adminActionTrigger}
+              onAdminActionComplete={(actionHandled) => {
+                setIsAdminDirty(false);
+                setAdminActionTrigger(null);
+                setShowUnsavedModal(false);
+
+                if (pendingNavAction) {
+                  if (pendingNavAction.type === 'toggle-admin') {
+                    setIsAdminActive(!isAdminActive);
+                  } else if (pendingNavAction.type === 'change-tab' && pendingNavAction.payload) {
+                    const tab = pendingNavAction.payload;
+                    navigateToTab(tab);
+                  }
+                  setPendingNavAction(null);
+                }
+              }}
+              onExitAdmin={() => {
+                if (isAdminDirty) {
+                  setPendingNavAction({ type: 'toggle-admin' });
+                  setShowUnsavedModal(true);
+                } else {
+                  setIsAdminActive(false);
+                }
+              }}
+              onLogoutAdmin={() => {
+                setIsAdminAuthenticated(false);
+                sessionStorage.removeItem('ps_admin_authenticated');
+                setIsAdminActive(false);
+              }}
+            />
+          )
         ) : (
           
           /* VIEW 2: FRONTEND VIEW NAVIGATION */
