@@ -76,6 +76,14 @@ export interface Order {
     quantity: number;
     image?: string;
   }[];
+  trackingId?: string;
+  carrier?: string;
+  trackingHistory?: {
+    status: string;
+    date: string;
+    location: string;
+    description: string;
+  }[];
 }
 
 export interface FileEntry {

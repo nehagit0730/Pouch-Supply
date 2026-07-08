@@ -621,6 +621,10 @@ export default function App() {
     setCustomers(prev => prev.map(c => c.id === updated.id ? updated : c));
   };
 
+  const handleUpdateOrder = (updated: Order) => {
+    setOrders(prev => prev.map(o => o.id === updated.id ? updated : o));
+  };
+
   const handleAddAddress = (address: string) => {
     if (!loggedInCustomer) return;
     setLoggedInCustomer(prev => {
@@ -663,6 +667,9 @@ export default function App() {
     worldpayAuthCode: string;
     cardBrand: string;
   }) => {
+    // Generate Royal Mail Track & Trace ID
+    const generatedTrackingId = 'RN' + Math.floor(100000000 + Math.random() * 900000000) + 'GB';
+
     // Construct order
     const newOrder: Order = {
       id: paymentDetails.orderId,
@@ -678,10 +685,127 @@ export default function App() {
       destination: paymentDetails.address,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       deliveryMethod: 'Priority Courier Shipping via Worldpay | Tracked',
-      items: paymentDetails.items
+      items: paymentDetails.items,
+      trackingId: generatedTrackingId,
+      carrier: 'Royal Mail',
+      trackingHistory: [
+        {
+          status: 'Sender dispatching item',
+          date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          location: 'Pouch Supply Hub, London MC',
+          description: 'We have received sender advice. Royal Mail is awaiting receipt of the physical package.'
+        }
+      ]
     };
 
     setOrders(prev => [newOrder, ...prev]);
+
+    // Send Simulated Outbound Emails to Customer and scott@pouch-supply.com
+    const itemsHtml = paymentDetails.items.map(item => `
+      <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
+        <span style="color: #334155; font-weight: 600;">${item.productTitle} &times; ${item.quantity}</span>
+        <span style="font-family: monospace; font-weight: bold; color: #1e293b;">£${(item.price * item.quantity).toFixed(2)}</span>
+      </div>
+    `).join('');
+
+    const emailHtml = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 550px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); color: #334155;">
+        <div style="background-color: #e1192e; padding: 25px 20px; text-align: center;">
+          <span style="font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">ROYAL MAIL TRACK & TRACE</span>
+          <div style="font-size: 10px; font-weight: bold; color: #ffd6d9; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">Pouch Supply Order Confirmation Advice</div>
+        </div>
+        
+        <div style="padding: 24px; text-align: left;">
+          <p style="font-size: 14px; font-weight: bold; color: #0f172a; margin-top: 0;">Dear ${paymentDetails.customerName || 'Customer'},</p>
+          <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
+            Thank you for shopping with <strong>Pouch Supply</strong>. Your order has been securely processed via <strong>Worldpay Secure Gateway</strong> and is preparing for immediate delivery partner handoff.
+          </p>
+
+          <!-- Royal Mail Tracking Box -->
+          <div style="background-color: #fef2f2; border: 1px solid #fee2e2; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #fecaca; padding-bottom: 8px;">
+              <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #dc2626; letter-spacing: 0.5px;">Delivery Partner Integration</span>
+              <span style="font-size: 10px; font-weight: bold; color: #991b1b; background-color: #fca5a5; padding: 2px 8px; border-radius: 4px;">ROYAL MAIL TRACKED</span>
+            </div>
+            
+            <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
+              <tr>
+                <td style="color: #64748b; padding: 4px 0;">Carrier service:</td>
+                <td style="font-weight: bold; color: #0f172a; text-align: right; padding: 4px 0;">Royal Mail 1st Class Tracked</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; padding: 4px 0;">Tracking reference number:</td>
+                <td style="font-family: monospace; font-weight: 900; color: #dc2626; text-align: right; padding: 4px 0; font-size: 13px; letter-spacing: 0.5px;">${generatedTrackingId}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; padding: 4px 0;">Parcel Status:</td>
+                <td style="font-weight: bold; color: #15803d; text-align: right; padding: 4px 0;">Sender advice received</td>
+              </tr>
+            </table>
+
+            <div style="margin-top: 15px; text-align: center;">
+              <span style="display: inline-block; background-color: #dc2626; color: #ffffff; font-size: 11px; font-weight: bold; text-transform: uppercase; padding: 10px 20px; border-radius: 8px; letter-spacing: 1px;">
+                Royal Mail Tracked 24
+              </span>
+            </div>
+          </div>
+
+          <div style="background-color: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+            <div style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #94a3b8; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 10px; letter-spacing: 0.5px;">
+              Purchased Items Summary
+            </div>
+            <div style="margin-bottom: 12px;">
+              ${itemsHtml}
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #0f172a; padding-top: 8px; border-top: 1px dashed #e2e8f0;">
+              <span>Total Payment Confirmed:</span>
+              <span>£${paymentDetails.total.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div style="font-size: 11.5px; color: #64748b; line-height: 1.5; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 12px; margin-bottom: 15px;">
+            <strong>Secure Worldpay Reference:</strong><br/>
+            Tx ID: <span style="font-family: monospace;">${paymentDetails.worldpayTxId}</span><br/>
+            Auth Code: <span style="font-family: monospace;">${paymentDetails.worldpayAuthCode}</span>
+          </div>
+
+          <p style="font-size: 11.5px; color: #64748b; line-height: 1.5; margin-bottom: 0;">
+            If you have any questions, please contact our helpline or reach us directly at <a href="mailto:scott@pouch-supply.com" style="color: #dc2626; font-weight: bold; text-decoration: none;">scott@pouch-supply.com</a>.
+          </p>
+        </div>
+        
+        <div style="background-color: #f8fafc; padding: 15px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8;">
+          Thank you for choosing Pouch Supply UK Ltd.
+        </div>
+      </div>
+    `;
+
+    const customerEmailObj = {
+      to: paymentDetails.customerEmail,
+      subject: `Your Pouch Supply Order Despatch Advice [Royal Mail: ${generatedTrackingId}]`,
+      preview: `Your order #${paymentDetails.orderId} is being prepared. Royal Mail tracking reference: ${generatedTrackingId}.`,
+      body: emailHtml,
+      date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    const adminEmailObj = {
+      to: 'scott@pouch-supply.com',
+      subject: `[Copy] Pouch Supply Order Dispatch Reference #${paymentDetails.orderId} [Royal Mail: ${generatedTrackingId}]`,
+      preview: `Dispatched notification for customer ${paymentDetails.customerName} (${paymentDetails.customerEmail}) with RM ID: ${generatedTrackingId}.`,
+      body: emailHtml,
+      date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    try {
+      const stored = localStorage.getItem('ps_simulated_emails');
+      const emails = stored ? JSON.parse(stored) : [];
+      localStorage.setItem('ps_simulated_emails', JSON.stringify([customerEmailObj, adminEmailObj, ...emails]));
+    } catch (err) {
+      console.error("Failed to save simulated emails", err);
+    }
+
+    // Dispatch global event for visual updates
+    window.dispatchEvent(new CustomEvent('ps-emails-updated'));
 
     // Handle coupon used increase
     if (paymentDetails.discountApplied) {
@@ -1314,6 +1438,7 @@ export default function App() {
                 onAddAddress={handleAddAddress}
                 onRemoveAddress={handleRemoveAddress}
                 onUpdateProfile={handleUpdateProfile}
+                onUpdateOrder={handleUpdateOrder}
               />
             )}
 
