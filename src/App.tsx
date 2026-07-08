@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, CartItem, BlogPost 
 } from './types';
@@ -25,7 +26,7 @@ import CollectionDetailView from './components/CollectionDetailView';
 import CheckoutView from './components/CheckoutView';
 import { WorldpayGatewaySimulator, PaymentSuccessScreen, PaymentFailedScreen, PaymentCancelledScreen } from './components/PaymentStatusScreens';
 import { 
-  Sparkles, ShieldCheck, Truck, RefreshCw, Star, ArrowRight, Package, ShoppingCart, Check, Heart, User, CheckCircle2, Save, AlertTriangle, Search, Undo
+  Sparkles, ShieldCheck, Truck, RefreshCw, Star, ArrowRight, Package, ShoppingCart, Check, Heart, User, CheckCircle2, Save, AlertTriangle, Search, Undo, Mail, X
 } from 'lucide-react';
 import OrderWithdrawalModal from './components/OrderWithdrawalModal';
 
@@ -186,8 +187,9 @@ export default function App() {
   });
   const [cartOpen, setCartOpen] = useState<boolean>(false);
   const [customerDrawerOpen, setCustomerDrawerOpen] = useState<boolean>(false);
-  const [customerDrawerTab, setCustomerDrawerTab] = useState<'orders' | 'addresses' | 'wishlist'>('orders');
+  const [customerDrawerTab, setCustomerDrawerTab] = useState<'orders' | 'addresses' | 'wishlist' | 'emails'>('orders');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [emailToast, setEmailToast] = useState<{ to: string; subject: string; refund: number } | null>(null);
 
   // Worldpay checkout persistent states
   const [checkoutDiscount, setCheckoutDiscount] = useState<Discount | null>(null);
@@ -718,6 +720,90 @@ export default function App() {
         return o;
       });
     });
+
+    // Generate simulated HTML email copy and save to simulated logs
+    const targetOrder = orders.find(o => o.id === orderId);
+    if (targetOrder) {
+      const withdrawnProducts = targetOrder.items.filter(i => selectedItems.includes(i.productId));
+      const totalRefund = withdrawnProducts.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+      const itemsHtml = withdrawnProducts.map(item => `
+        <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
+          <span style="color: #334155; font-weight: 600;">${item.productTitle} &times; ${item.quantity}</span>
+          <span style="font-family: monospace; font-weight: bold; color: #1e293b;">£${(item.price * item.quantity).toFixed(2)}</span>
+        </div>
+      `).join('');
+
+      const emailHtml = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); color: #334155;">
+          <div style="background-color: #0d1117; padding: 25px 20px; text-align: center;">
+            <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">PERFUME SAMPLER</span>
+            <div style="font-size: 9px; font-weight: bold; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">Order withdrawal receipt</div>
+          </div>
+          
+          <div style="padding: 24px; text-align: left;">
+            <p style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 0;">Hi ${name || targetOrder.customerName || 'Value Member'},</p>
+            <p style="font-size: 12.5px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
+              Your formal request to withdraw products from Order <strong>#${orderId}</strong> has been successfully registered. Our team has received this request and is manually reviewing it to match transactions quickly.
+            </p>
+
+            <div style="background-color: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+              <div style="font-size: 9.5px; font-weight: bold; text-transform: uppercase; color: #94a3b8; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 10px; letter-spacing: 0.5px;">
+                Withdrawn Products Summary
+              </div>
+              
+              <div style="margin-bottom: 12px;">
+                ${itemsHtml}
+              </div>
+
+              <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #e11d48; padding-top: 8px;">
+                <span>Total Estimated Credit:</span>
+                <span>£${totalRefund.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 11.5px; line-height: 1.5; color: #b45309;">
+              <strong>Manual Verification Status:</strong><br/>
+              No manual action is required from you! An administrator will review your withdrawal list, adjust shipping parameters, and process any transaction balance back onto your primary card brand.
+            </div>
+
+            <p style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
+              If you have any questions, please visit your account dashboard online or reach out to our Customer Operations Desk.
+            </p>
+          </div>
+          
+          <div style="background-color: #f8fafc; padding: 15px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8;">
+            Thank you for shopping with PerfumeSampler.
+          </div>
+        </div>
+      `;
+
+      const newEmail = {
+        to: email || targetOrder.customerEmail,
+        subject: `Order Withdrawal Confirmation - #${orderId}`,
+        preview: `Your request to withdraw products from Order #${orderId} is registered. Estimated Credit: £${totalRefund.toFixed(2)}.`,
+        body: emailHtml,
+        date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      try {
+        const stored = localStorage.getItem('ps_simulated_emails');
+        const emails = stored ? JSON.parse(stored) : [];
+        localStorage.setItem('ps_simulated_emails', JSON.stringify([newEmail, ...emails]));
+      } catch (err) {
+        console.error("Failed to save simulated email", err);
+      }
+
+      // Dispatch real-time global listener alert
+      window.dispatchEvent(new CustomEvent('ps-emails-updated'));
+
+      // Show beautiful interactive notification banner
+      setEmailToast({
+        to: email || targetOrder.customerEmail,
+        subject: `Order Withdrawal Confirmation - #${orderId}`,
+        refund: totalRefund
+      });
+    }
   };
 
   if (!isInitialLoadDone) {
@@ -1868,6 +1954,55 @@ export default function App() {
         orders={orders}
         onConfirmWithdrawal={handleConfirmWithdrawal}
       />
+
+      {/* Interactive Simulated Email Dispatch Toast */}
+      <AnimatePresence>
+        {emailToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-6 right-6 z-50 max-w-sm w-full bg-slate-900 text-white border border-slate-700/80 p-4 rounded-2xl shadow-2xl flex gap-3.5 items-start font-sans"
+          >
+            <div className="p-2.5 bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded-xl shrink-0 mt-0.5 animate-pulse">
+              <Mail className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <div className="flex justify-between items-start">
+                <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Sandbox Mail Dispatched</span>
+                <button 
+                  onClick={() => setEmailToast(null)}
+                  className="p-0.5 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <h4 className="font-extrabold text-xs text-white mt-1">Order Withdrawal Confirmation</h4>
+              <p className="text-[10.5px] text-slate-300 leading-normal mt-1">
+                A sandbox email for refund value <strong>£{emailToast.refund.toFixed(2)}</strong> has been sent to <strong>{emailToast.to}</strong>!
+              </p>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => {
+                    setEmailToast(null);
+                    setCustomerDrawerTab('emails');
+                    setCustomerDrawerOpen(true);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[8.5px] tracking-wider py-1.5 px-3 rounded-lg transition-colors cursor-pointer"
+                >
+                  Open Inbox 📬
+                </button>
+                <button
+                  onClick={() => setEmailToast(null)}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold uppercase text-[8.5px] tracking-wider py-1.5 px-3 rounded-lg transition-colors cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

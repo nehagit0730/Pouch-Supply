@@ -3,7 +3,7 @@ import { Customer, Product, Order } from '../types';
 import { 
   X, User, LogIn, Heart, MapPin, Package, ShoppingBag, 
   Plus, Trash2, Eye, ShieldCheck, Sparkles, Smile, ArrowRight,
-  Truck, Check, Clock
+  Truck, Check, Clock, Mail
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import SubscriptionIcon from './SubscriptionIcon';
@@ -22,7 +22,7 @@ interface CustomerDrawerProps {
   onAddAddress: (address: string) => void;
   onRemoveAddress: (index: number) => void;
   onOpenCart: () => void;
-  initialTab?: 'orders' | 'addresses' | 'wishlist';
+  initialTab?: 'orders' | 'addresses' | 'wishlist' | 'emails';
 }
 
 export default function CustomerDrawer({
@@ -41,13 +41,37 @@ export default function CustomerDrawer({
   onOpenCart,
   initialTab = 'orders'
 }: CustomerDrawerProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'addresses' | 'wishlist'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'orders' | 'addresses' | 'wishlist' | 'emails'>(initialTab);
+
+  const [emailsList, setEmailsList] = useState<any[]>([]);
+  const [selectedEmail, setSelectedEmail] = useState<any | null>(null);
+
+  const loadEmails = () => {
+    try {
+      const stored = localStorage.getItem('ps_simulated_emails');
+      if (stored) {
+        setEmailsList(JSON.parse(stored));
+      } else {
+        setEmailsList([]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
-    if (isOpen && initialTab) {
+    if (isOpen) {
+      loadEmails();
       setActiveTab(initialTab);
     }
   }, [isOpen, initialTab]);
+
+  useEffect(() => {
+    window.addEventListener('ps-emails-updated', loadEmails);
+    return () => {
+      window.removeEventListener('ps-emails-updated', loadEmails);
+    };
+  }, []);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [nameInput, setNameInput] = useState('');
   const [emailInput, setEmailInput] = useState('');
@@ -166,7 +190,8 @@ export default function CustomerDrawer({
   };
 
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           {/* Dark backdrop blur */}
@@ -394,39 +419,50 @@ export default function CustomerDrawer({
                     </div>
 
                     {/* Navigation Tabs for the Account drawer */}
-                    <div className="flex border-b border-slate-150 bg-slate-50 p-1 gap-1 shrink-0">
+                    <div className="flex border-b border-slate-150 bg-slate-50 p-1 gap-1 shrink-0 overflow-x-auto">
                       <button
                         onClick={() => setActiveTab('orders')}
-                        className={`flex-1 py-2 text-center text-[10px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer ${
+                        className={`flex-1 min-w-[75px] py-2 text-center text-[10px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer ${
                           activeTab === 'orders' 
                             ? 'bg-white text-indigo-650 shadow-xs border border-slate-200' 
                             : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                         }`}
                       >
-                        <Package className="h-3.5 w-3.5 inline-block mr-1 -mt-0.5 text-slate-500" />
-                        My Orders ({myOrders.length})
+                        <Package className="h-3 w-3 inline-block mr-1 -mt-0.5 text-slate-500" />
+                        Orders ({myOrders.length})
                       </button>
                       <button
                         onClick={() => setActiveTab('addresses')}
-                        className={`flex-1 py-1 px-1.5 text-center text-[10px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer ${
+                        className={`flex-1 min-w-[75px] py-2 text-center text-[10px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer ${
                           activeTab === 'addresses' 
                             ? 'bg-white text-indigo-650 shadow-xs border border-slate-200' 
                             : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                         }`}
                       >
-                        <MapPin className="h-3.5 w-3.5 inline-block mr-1 -mt-0.5 text-slate-500" />
+                        <MapPin className="h-3 w-3 inline-block mr-1 -mt-0.5 text-slate-500" />
                         Addresses
                       </button>
                       <button
                         onClick={() => setActiveTab('wishlist')}
-                        className={`flex-1 py-1 px-1.5 text-center text-[10px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer ${
+                        className={`flex-1 min-w-[75px] py-2 text-center text-[10px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer ${
                           activeTab === 'wishlist' 
                             ? 'bg-white text-indigo-650 shadow-xs border border-slate-200' 
                             : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                         }`}
                       >
-                        <Heart className="h-3.5 w-3.5 inline-block mr-1 -mt-0.5 text-slate-500" />
+                        <Heart className="h-3 w-3 inline-block mr-1 -mt-0.5 text-slate-500" />
                         Wishlist
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('emails')}
+                        className={`flex-1 min-w-[75px] py-2 text-center text-[10px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer ${
+                          activeTab === 'emails' 
+                            ? 'bg-white text-indigo-650 shadow-xs border border-slate-200' 
+                            : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                        }`}
+                      >
+                        <Mail className="h-3 w-3 inline-block mr-1 -mt-0.5 text-slate-500" />
+                        Inbox ({loggedInCustomer ? emailsList.filter(e => e.to.toLowerCase() === loggedInCustomer.email.toLowerCase()).length : 0})
                       </button>
                     </div>
 
@@ -453,7 +489,7 @@ export default function CustomerDrawer({
                                   {/* Order Header Summary Row */}
                                   <div className="flex justify-between items-center gap-2">
                                     <div className="space-y-0.5">
-                                      <div className="flex items-center gap-1.5">
+                                      <div className="flex flex-wrap items-center gap-1.5">
                                         <span className="font-extrabold text-xs text-slate-900">{order.id}</span>
                                         <span className={`text-[8.5px] font-black uppercase py-0.5 px-2 rounded-full leading-none shrink-0 ${
                                           order.fulfillmentStatus === 'Fulfilled' || order.fulfillmentStatus === 'Delivered'
@@ -462,6 +498,11 @@ export default function CustomerDrawer({
                                         }`}>
                                           {order.fulfillmentStatus}
                                         </span>
+                                        {Array.isArray(order.tags) && order.tags.includes('Withdrawal Requested') && (
+                                          <span className="text-[8.5px] font-black uppercase py-0.5 px-2 rounded-full leading-none shrink-0 bg-rose-50 text-rose-700 border border-rose-200 animate-pulse">
+                                            Withdrawal Requested
+                                          </span>
+                                        )}
                                       </div>
                                       <p className="text-[9.5px] text-slate-400 font-mono">{order.date}</p>
                                     </div>
@@ -746,6 +787,53 @@ export default function CustomerDrawer({
                         </div>
                       )}
 
+                      {/* 4. EMAILS / INBOX TAB */}
+                      {activeTab === 'emails' && (
+                        <div className="space-y-3">
+                          {!loggedInCustomer ? (
+                            <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                              <Mail className="h-8 w-8 text-neutral-300 mx-auto mb-2" />
+                              <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Authentication Required</p>
+                              <p className="text-[10px] text-slate-400 mt-1 leading-relaxed max-w-[200px] mx-auto">Please sign in to view simulated dispatched emails sent to your address.</p>
+                            </div>
+                          ) : (() => {
+                            const myEmails = emailsList.filter(e => e.to.toLowerCase() === loggedInCustomer.email.toLowerCase());
+                            return myEmails.length === 0 ? (
+                              <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                <Mail className="h-8 w-8 text-neutral-300 mx-auto mb-2" />
+                                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Inbox Empty</p>
+                                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed max-w-[200px] mx-auto">Dispatched transaction and withdrawal emails will show up here as live copies.</p>
+                              </div>
+                            ) : (
+                              <div className="space-y-2.5">
+                                <div className="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl text-[10px] text-indigo-800 font-medium leading-relaxed">
+                                  📬 <strong>Simulated Sandbox Inbox</strong>: Since actual transactional emails require live SMTP credentials, all confirmation emails are intercepted and mirrored below in real-time.
+                                </div>
+                                {myEmails.map((email, idx) => (
+                                  <div 
+                                    key={idx} 
+                                    onClick={() => setSelectedEmail(email)}
+                                    className="bg-white border border-slate-200 hover:border-slate-300 p-3.5 rounded-xl cursor-pointer text-left transition-all shadow-3xs flex gap-3 items-start"
+                                  >
+                                    <div className="p-2 bg-slate-50 rounded-lg text-indigo-600 border border-slate-100 shrink-0 mt-0.5">
+                                      <Mail className="h-4 w-4" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 text-left">
+                                      <div className="flex justify-between items-baseline">
+                                        <span className="text-[9px] font-black text-indigo-650 uppercase tracking-wide">From: PerfumeSampler</span>
+                                        <span className="text-[8.5px] font-mono text-slate-400 font-semibold">{email.date || 'Just now'}</span>
+                                      </div>
+                                      <h4 className="font-bold text-slate-800 text-xs mt-1 truncate">{email.subject}</h4>
+                                      <p className="text-[10px] text-slate-450 truncate mt-0.5 font-medium">{email.preview || 'Click to view full HTML email message.'}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+
                     </div>
                   </div>
                 )}
@@ -761,5 +849,53 @@ export default function CustomerDrawer({
         </div>
       )}
     </AnimatePresence>
+
+    {/* FULL HTML EMAIL PREVIEW MODAL */}
+    <AnimatePresence>
+      {selectedEmail && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-slate-50 border border-slate-200 p-6 rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl space-y-4"
+          >
+            <div className="flex justify-between items-center pb-3 border-b border-slate-250">
+              <div>
+                <span className="text-[8.5px] font-black uppercase tracking-widest text-indigo-650">SIMULATED SANDBOX EMAIL</span>
+                <h4 className="text-xs font-extrabold text-slate-850 mt-0.5">Subject: {selectedEmail.subject}</h4>
+              </div>
+              <button
+                onClick={() => setSelectedEmail(null)}
+                className="p-1.5 bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-600 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Fake Email client envelope headers */}
+            <div className="bg-white border border-slate-200 p-3 rounded-xl text-[10.5px] space-y-1 text-slate-600 font-medium text-left">
+              <p><strong>From:</strong> PerfumeSampler Support &lt;support@perfumesampler.com&gt;</p>
+              <p><strong>To:</strong> {selectedEmail.to}</p>
+              <p><strong>Date:</strong> {selectedEmail.date || 'Just now'}</p>
+            </div>
+
+            {/* Email message body content */}
+            <div 
+              className="bg-white border border-slate-250 p-6 rounded-xl overflow-hidden shadow-inner text-slate-800 text-xs leading-relaxed space-y-4 text-left"
+              dangerouslySetInnerHTML={{ __html: selectedEmail.body }}
+            />
+
+            <button
+              onClick={() => setSelectedEmail(null)}
+              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-wider text-[10.5px] rounded-xl cursor-pointer"
+            >
+              Close Message
+            </button>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }

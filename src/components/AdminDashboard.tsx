@@ -1912,7 +1912,14 @@ export default function AdminDashboard({
                     ) : (
                       filteredOrders.map(order => (
                         <tr key={order.id} className="hover:bg-slate-50/50">
-                          <td className="p-4 font-extrabold text-slate-900">{order.id}</td>
+                          <td className="p-4 font-extrabold text-slate-900">
+                            <div>{order.id}</div>
+                            {Array.isArray(order.tags) && order.tags.includes('Withdrawal Requested') && (
+                              <span className="inline-block text-[8.5px] bg-rose-50 text-rose-700 border border-rose-150 uppercase font-black px-1.5 py-0.5 rounded mt-1 animate-pulse select-none">
+                                Withdrawal Pending
+                              </span>
+                            )}
+                          </td>
                           <td className="p-4 text-slate-500">{order.date}</td>
                           <td className="p-4">
                             <p className="font-bold text-slate-850">{order.customerName}</p>
@@ -1962,6 +1969,173 @@ export default function AdminDashboard({
                   </div>
 
                   <div className="space-y-6 text-xs text-slate-650">
+
+                    {/* WITHDRAWAL ACTION BANNER FOR ADMINS */}
+                    {Array.isArray(selectedOrder.tags) && selectedOrder.tags.includes('Withdrawal Requested') && (
+                      <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl space-y-3.5 text-left shadow-2xs">
+                        <div className="flex items-center gap-2 text-rose-800">
+                          <AlertTriangle className="h-4.5 w-4.5 text-rose-600 shrink-0 animate-pulse" />
+                          <span className="font-extrabold text-xs uppercase tracking-wide">Customer Order Withdrawal Requested</span>
+                        </div>
+                        <p className="text-[11px] text-rose-700/90 leading-relaxed">
+                          The customer has formally requested to withdraw items from this transaction. The transaction payment state has been provisionally flagged, and is awaiting physical approval or rejection by a store supervisor.
+                        </p>
+                        
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              // APPROVE WITHDRAWAL
+                              const updatedTags = selectedOrder.tags.filter(t => t !== 'Withdrawal Requested' && !t.startsWith('Withdraw:'));
+                              updatedTags.push('Withdrawal Approved');
+                              
+                              const updatedOrders = parentOrders.map(o => {
+                                if (o.id === selectedOrder.id) {
+                                  return {
+                                    ...o,
+                                    tags: updatedTags,
+                                    paymentStatus: 'Refunded' as const
+                                  };
+                                }
+                                return o;
+                              });
+
+                              // Draft Approved email copy
+                              const emailHtml = `
+                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #334155;">
+                                  <div style="background-color: #10b981; padding: 25px 20px; text-align: center;">
+                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">PERFUME SAMPLER</span>
+                                    <div style="font-size: 9px; font-weight: bold; color: #ecfdf5; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">WITHDRAWAL APPROVED</div>
+                                  </div>
+                                  
+                                  <div style="padding: 24px; text-align: left;">
+                                    <p style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 0;">Dear ${selectedOrder.customerName || 'Value Member'},</p>
+                                    <p style="font-size: 12.5px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
+                                      We are pleased to inform you that your withdrawal request for Order <strong>#${selectedOrder.id}</strong> has been <strong>approved</strong> by our store administrator.
+                                    </p>
+
+                                    <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 11.5px; line-height: 1.5; color: #065f46;">
+                                      <strong>Refund Processed Successfully:</strong><br/>
+                                      The refund value has been processed back to your original payment card. It will typically clear into your account balance in 2-3 business banking days depending on your issuer.
+                                    </div>
+
+                                    <p style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
+                                      If you require further assistance or would like to make other purchases, please do not hesitate to reach out!
+                                    </p>
+                                  </div>
+                                  
+                                  <div style="background-color: #f8fafc; padding: 15px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8;">
+                                    Thank you for choosing PerfumeSampler.
+                                  </div>
+                                </div>
+                              `;
+
+                              const newEmail = {
+                                to: selectedOrder.customerEmail,
+                                subject: `Withdrawal APPROVED - Order #${selectedOrder.id}`,
+                                preview: `Your withdrawal request for Order #${selectedOrder.id} has been approved. Refund processed.`,
+                                body: emailHtml,
+                                date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                              };
+
+                              try {
+                                const stored = localStorage.getItem('ps_simulated_emails');
+                                const emails = stored ? JSON.parse(stored) : [];
+                                localStorage.setItem('ps_simulated_emails', JSON.stringify([newEmail, ...emails]));
+                                window.dispatchEvent(new CustomEvent('ps-emails-updated'));
+                              } catch (e) {
+                                console.error(e);
+                              }
+
+                              parentOnUpdateOrders(updatedOrders);
+                              setSelectedOrder({
+                                ...selectedOrder,
+                                tags: updatedTags,
+                                paymentStatus: 'Refunded' as const
+                              });
+                            }}
+                            className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[9.5px] tracking-wider rounded-lg text-center transition-colors cursor-pointer select-none border border-emerald-700"
+                          >
+                            Approve & Refund
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              // DECLINE WITHDRAWAL
+                              const updatedTags = selectedOrder.tags.filter(t => t !== 'Withdrawal Requested' && !t.startsWith('Withdraw:'));
+                              updatedTags.push('Withdrawal Declined');
+                              
+                              const updatedOrders = parentOrders.map(o => {
+                                if (o.id === selectedOrder.id) {
+                                  return {
+                                    ...o,
+                                    tags: updatedTags,
+                                    paymentStatus: 'Paid' as const
+                                  };
+                                }
+                                return o;
+                              });
+
+                              // Draft Declined email copy
+                              const emailHtml = `
+                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #334155;">
+                                  <div style="background-color: #ef4444; padding: 25px 20px; text-align: center;">
+                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">PERFUME SAMPLER</span>
+                                    <div style="font-size: 9px; font-weight: bold; color: #fee2e2; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">WITHDRAWAL DECLINED</div>
+                                  </div>
+                                  
+                                  <div style="padding: 24px; text-align: left;">
+                                    <p style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 0;">Hi ${selectedOrder.customerName || 'Value Member'},</p>
+                                    <p style="font-size: 12.5px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
+                                      We are writing to update you regarding your withdrawal request for Order <strong>#${selectedOrder.id}</strong>.
+                                    </p>
+
+                                    <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 11.5px; line-height: 1.5; color: #991b1b;">
+                                      <strong>Request Status: Declined</strong><br/>
+                                      Unfortunately, we were unable to complete your withdrawal request because the package containing your items has already been securely packed, labeled, and transferred to our postal partner for delivery. 
+                                    </div>
+
+                                    <p style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
+                                      Once you receive the package, you are welcome to utilize our hassle-free 14-day returns policy to send any unwanted samples back to our depot for a full refund.
+                                    </p>
+                                  </div>
+                                  
+                                  <div style="background-color: #f8fafc; padding: 15px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8;">
+                                    Thank you for your understanding.
+                                  </div>
+                                </div>
+                              `;
+
+                              const newEmail = {
+                                to: selectedOrder.customerEmail,
+                                subject: `Withdrawal Request Declined - Order #${selectedOrder.id}`,
+                                preview: `Your withdrawal request for Order #${selectedOrder.id} was declined as the shipment has dispatched.`,
+                                body: emailHtml,
+                                date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                              };
+
+                              try {
+                                const stored = localStorage.getItem('ps_simulated_emails');
+                                const emails = stored ? JSON.parse(stored) : [];
+                                localStorage.setItem('ps_simulated_emails', JSON.stringify([newEmail, ...emails]));
+                                window.dispatchEvent(new CustomEvent('ps-emails-updated'));
+                              } catch (e) {
+                                console.error(e);
+                              }
+
+                              parentOnUpdateOrders(updatedOrders);
+                              setSelectedOrder({
+                                ...selectedOrder,
+                                tags: updatedTags,
+                                paymentStatus: 'Paid' as const
+                              });
+                            }}
+                            className="flex-1 py-2 bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[9.5px] tracking-wider rounded-lg text-center transition-colors cursor-pointer select-none border border-slate-750"
+                          >
+                            Decline Request
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     
                     {/* Customer info */}
                     <div className="grid grid-cols-2 gap-4">
