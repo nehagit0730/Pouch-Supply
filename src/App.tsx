@@ -25,8 +25,9 @@ import CollectionDetailView from './components/CollectionDetailView';
 import CheckoutView from './components/CheckoutView';
 import { WorldpayGatewaySimulator, PaymentSuccessScreen, PaymentFailedScreen, PaymentCancelledScreen } from './components/PaymentStatusScreens';
 import { 
-  Sparkles, ShieldCheck, Truck, RefreshCw, Star, ArrowRight, Package, ShoppingCart, Check, Heart, User, CheckCircle2, Save, AlertTriangle, Search
+  Sparkles, ShieldCheck, Truck, RefreshCw, Star, ArrowRight, Package, ShoppingCart, Check, Heart, User, CheckCircle2, Save, AlertTriangle, Search, Undo
 } from 'lucide-react';
+import OrderWithdrawalModal from './components/OrderWithdrawalModal';
 
 export default function App() {
   // Helper for safe JSON parsing from LocalStorage
@@ -191,6 +192,7 @@ export default function App() {
   // Worldpay checkout persistent states
   const [checkoutDiscount, setCheckoutDiscount] = useState<Discount | null>(null);
   const [checkoutTotal, setCheckoutTotal] = useState<number>(0);
+  const [isWithdrawalOpen, setIsWithdrawalOpen] = useState<boolean>(false);
 
   // Unified SPA navigation helper mapping state shifts to matching browser URLs
   const navigateToTab = (tab: string, productId?: string, collectionId?: string) => {
@@ -693,6 +695,29 @@ export default function App() {
     // Clear cart
     setCartItems([]);
     setCartOpen(false);
+  };
+
+  const handleConfirmWithdrawal = (orderId: string, email: string, name: string, selectedItems: string[]) => {
+    setOrders(prevOrders => {
+      return prevOrders.map(o => {
+        if (o.id === orderId) {
+          const currentTags = Array.isArray(o.tags) ? [...o.tags] : [];
+          if (!currentTags.includes('Withdrawal Requested')) {
+            currentTags.push('Withdrawal Requested');
+          }
+          const itemSpecTag = `Withdraw: ${selectedItems.length} item(s)`;
+          if (!currentTags.includes(itemSpecTag)) {
+            currentTags.push(itemSpecTag);
+          }
+          return {
+            ...o,
+            tags: currentTags,
+            paymentStatus: 'Refunded' // Display Refunded status for completed withdrawal request
+          };
+        }
+        return o;
+      });
+    });
   };
 
   if (!isInitialLoadDone) {
@@ -1821,6 +1846,28 @@ export default function App() {
 
       {/* Universal Footer layout */}
       {!isAdminActive && <Footer onNavigate={navigateToTab} />}
+
+      {/* Floating Order Withdrawal Button (Bottom Left) */}
+      {!isAdminActive && (
+        <div className="fixed bottom-6 left-6 z-40 select-none">
+          <button
+            onClick={() => setIsWithdrawalOpen(true)}
+            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white border border-slate-700/60 p-3 px-4 rounded-full text-xs font-black uppercase tracking-wider shadow-lg hover:shadow-xl active:scale-95 hover:scale-105 transition-all cursor-pointer"
+            title="Request Order Withdrawal"
+          >
+            <Undo className="h-4 w-4" />
+            <span>Order Withdrawal</span>
+          </button>
+        </div>
+      )}
+
+      {/* Order Withdrawal Modal popup */}
+      <OrderWithdrawalModal
+        isOpen={isWithdrawalOpen}
+        onClose={() => setIsWithdrawalOpen(false)}
+        orders={orders}
+        onConfirmWithdrawal={handleConfirmWithdrawal}
+      />
 
     </div>
   );
