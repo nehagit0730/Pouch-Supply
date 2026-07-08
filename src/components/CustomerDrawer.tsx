@@ -48,8 +48,11 @@ export default function CustomerDrawer({
       setActiveTab(initialTab);
     }
   }, [isOpen, initialTab]);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [nameInput, setNameInput] = useState('');
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -62,56 +65,51 @@ export default function CustomerDrawer({
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
+
+    if (authMode === 'signup' && !nameInput.trim()) {
+      setErrorMsg('Please enter your full name.');
+      return;
+    }
     if (!emailInput.trim()) {
-      setErrorMsg('Please enter an email.');
+      setErrorMsg('Please enter your email.');
+      return;
+    }
+    if (!passwordInput) {
+      setErrorMsg('Please enter your password.');
+      return;
+    }
+    if (authMode === 'signup' && passwordInput !== confirmPasswordInput) {
+      setErrorMsg('Passwords do not match.');
       return;
     }
     
     setIsSubmitting(true);
-    setErrorMsg('');
 
     try {
-      const password = passwordInput || 'password123';
       const email = emailInput.toLowerCase().trim();
+      const endpoint = authMode === 'signup' ? '/api/customers/signup' : '/api/customers/login';
+      const bodyPayload = authMode === 'signup' 
+        ? { name: nameInput.trim(), email, password: passwordInput }
+        : { email, password: passwordInput };
 
-      // First try to login
-      const loginResponse = await fetch('/api/customers/login', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify(bodyPayload)
       });
 
-      const loginData = await loginResponse.json();
+      const data = await response.json();
 
-      if (loginResponse.ok) {
-        onLogin(loginData.customer);
+      if (response.ok) {
+        onLogin(data.customer);
         setErrorMsg('');
         setEmailInput('');
         setPasswordInput('');
-      } else if (loginResponse.status === 404 || (loginData.error && (loginData.error.includes('not found') || loginData.error.includes('register')))) {
-        // User not found, automatically register them! (Quick Create)
-        const mockName = email.split('@')[0];
-        const signupResponse = await fetch('/api/customers/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: mockName.charAt(0).toUpperCase() + mockName.slice(1),
-            email,
-            password
-          })
-        });
-
-        const signupData = await signupResponse.json();
-        if (signupResponse.ok) {
-          onLogin(signupData.customer);
-          setErrorMsg('');
-          setEmailInput('');
-          setPasswordInput('');
-        } else {
-          throw new Error(signupData.error || 'Failed to auto-create account.');
-        }
+        setNameInput('');
+        setConfirmPasswordInput('');
       } else {
-        throw new Error(loginData.error || 'Incorrect credentials.');
+        throw new Error(data.error || 'Authentication failed.');
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Server connection error.');
@@ -218,15 +216,57 @@ export default function CustomerDrawer({
                       <div className="bg-gradient-to-r from-emerald-50 to-indigo-50 border border-slate-200 p-4 rounded-2xl text-center space-y-1">
                         <Smile className="h-8 w-8 text-indigo-600 mx-auto" />
                         <h3 className="font-extrabold text-[#0D0F12] text-[13px] uppercase mt-1">Unlock Member Perks!</h3>
-                        <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
-                          Sign in to manage addresses, monitor order delivery status, and save your curated wishlist flavors instantly.
+                        <p className="text-[11px] text-slate-500 leading-relaxed font-semibold font-sans">
+                          Sign in or register an account to manage addresses, monitor order delivery status, and save your curated wishlist flavors instantly.
                         </p>
                       </div>
 
+                      {/* Mode Toggle Switcher */}
+                      <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl w-full">
+                        <button
+                          type="button"
+                          onClick={() => { setAuthMode('login'); setErrorMsg(''); }}
+                          className={`py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer text-center ${
+                            authMode === 'login'
+                              ? 'bg-white text-slate-900 shadow-3xs'
+                              : 'text-slate-500 hover:text-slate-850'
+                          }`}
+                        >
+                          Sign In
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setAuthMode('signup'); setErrorMsg(''); }}
+                          className={`py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer text-center ${
+                            authMode === 'signup'
+                              ? 'bg-white text-slate-900 shadow-3xs'
+                              : 'text-slate-500 hover:text-slate-850'
+                          }`}
+                        >
+                          Create Account
+                        </button>
+                      </div>
+
                       <form onSubmit={handleLoginSubmit} className="space-y-4">
+                        {authMode === 'signup' && (
+                          <div>
+                            <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                              Full Name
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Kayla Canty"
+                              value={nameInput}
+                              onChange={(e) => setNameInput(e.target.value)}
+                              className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50"
+                              required
+                            />
+                          </div>
+                        )}
+
                         <div>
                           <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                            Email / Account Name
+                            Email Address
                           </label>
                           <input
                             type="email"
@@ -248,8 +288,25 @@ export default function CustomerDrawer({
                             value={passwordInput}
                             onChange={(e) => setPasswordInput(e.target.value)}
                             className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50"
+                            required
                           />
                         </div>
+
+                        {authMode === 'signup' && (
+                          <div>
+                            <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                              Confirm Password
+                            </label>
+                            <input
+                              type="password"
+                              placeholder="••••••••"
+                              value={confirmPasswordInput}
+                              onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                              className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50"
+                              required
+                            />
+                          </div>
+                        )}
 
                         {errorMsg && (
                           <p className="text-[11px] text-red-500 font-semibold">{errorMsg}</p>
@@ -268,7 +325,7 @@ export default function CustomerDrawer({
                           ) : (
                             <>
                               <LogIn className="h-4 w-4" /> 
-                              <span>Sign In / Quick Create</span>
+                              <span>{authMode === 'login' ? 'Sign In' : 'Create Account'}</span>
                             </>
                           )}
                         </button>
