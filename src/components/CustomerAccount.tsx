@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Customer, Product, Order } from '../types';
-import { User, LogIn, Heart, PlusCircle, Trash2, MapPin, Package, ShoppingBag, Eye, X, Search, Truck, Check, Clock, Calendar, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  User, LogIn, Heart, PlusCircle, Trash2, MapPin, Package, ShoppingBag, 
+  Eye, X, Search, Truck, Check, Clock, Calendar, RefreshCw, Award, 
+  Copy, Share2, HelpCircle, ShieldAlert, CreditCard, Star, ChevronRight, 
+  CheckCircle2, AlertTriangle, Play, Pause, ChevronDown, CheckCircle, Tag, LifeBuoy,
+  Layout, LogOut
+} from 'lucide-react';
 
 interface CustomerAccountProps {
   customers: Customer[];
@@ -35,30 +42,79 @@ export default function CustomerAccount({
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<Order | null>(null);
 
-  // Order Tracker State Variables
+  // Active view tab state (mimicking the sidebar items)
+  const [activeTab, setActiveTab] = useState<string>('dashboard');
+
+  // Track order in customer portal
   const [trackerInput, setTrackerInput] = useState('');
   const [trackedOrder, setTrackedOrder] = useState<Order | null>(null);
   const [trackerError, setTrackerError] = useState('');
 
+  // Local storage state helper for customer properties
+  const custKey = loggedInCustomer ? `cust_db_${loggedInCustomer.email}` : '';
+  const [custState, setCustState] = useState<any>(null);
+
+  useEffect(() => {
+    if (!loggedInCustomer) {
+      setCustState(null);
+      return;
+    }
+    const saved = localStorage.getItem(custKey);
+    if (saved) {
+      try {
+        setCustState(JSON.parse(saved));
+        return;
+      } catch (e) {}
+    }
+    // Set default mockup state
+    const defaultState = {
+      subPlan: 'core',
+      subStatus: 'Active',
+      subFrequency: 'Every 4 Weeks',
+      subCansCount: 8,
+      subPrice: 35.99,
+      nextPayment: '19 June 2026',
+      nextDelivery: '24 June 2026',
+      unlockedRewards: [
+        { id: 'reward_1', title: 'Free Express Delivery', desc: 'Complimentary shipping upgrade', redeemed: false, code: 'FREESHIP' },
+        { id: 'reward_2', title: '£5.00 Off Order', desc: 'Direct cash discount voucher', redeemed: false, code: 'POUCH5OFF' },
+        { id: 'reward_3', title: 'Free Extra Can', desc: 'Unlock a free sample in next box', redeemed: false, code: 'FREECAN' }
+      ],
+      referralCode: `pouch-supply.com/ref/${loggedInCustomer.name.toLowerCase().replace(/\s+/g, '')}`,
+      referredCount: 3,
+      referralCredit: 15.00,
+      referralsList: [
+        { name: 'David M.', date: '14 May 2026', status: 'Subscribed', credit: '£5.00' },
+        { name: 'Sophie L.', date: '02 June 2026', status: 'Subscribed', credit: '£5.00' },
+        { name: 'Alex K.', date: '18 June 2026', status: 'Registered', credit: 'Pending' }
+      ],
+      savedCards: [
+        { id: 'card_1', brand: 'Visa', last4: '4242', exp: '12/28', default: true }
+      ],
+      ordersCount: orders.filter(o => o.customerEmail.toLowerCase() === loggedInCustomer.email.toLowerCase()).length
+    };
+    setCustState(defaultState);
+    localStorage.setItem(custKey, JSON.stringify(defaultState));
+  }, [loggedInCustomer, custKey]);
+
+  const updateCustState = (newVal: any) => {
+    setCustState(newVal);
+    localStorage.setItem(custKey, JSON.stringify(newVal));
+  };
+
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-
     if (authMode === 'signup' && !nameInput.trim()) {
       setErrorMsg('Please enter your full name.');
       return;
     }
-    if (!emailInput.trim()) {
-      setErrorMsg('Please enter your email.');
-      return;
-    }
-    if (!passwordInput) {
-      setErrorMsg('Please enter your password.');
+    if (!emailInput.trim() || !passwordInput) {
+      setErrorMsg('Please fill in all credentials.');
       return;
     }
 
     setIsSubmitting(true);
-
     try {
       const endpoint = authMode === 'signup' ? '/api/customers/signup' : '/api/customers/login';
       const bodyPayload = authMode === 'signup' 
@@ -70,17 +126,10 @@ export default function CustomerAccount({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bodyPayload)
       });
-
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Authentication failed.');
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Authentication failed. Please check your credentials.');
-      }
-
-      // Login success
       onLogin(data.customer);
-      setErrorMsg('');
-      // Clean inputs
       setNameInput('');
       setPasswordInput('');
     } catch (err: any) {
@@ -94,194 +143,123 @@ export default function CustomerAccount({
     ? orders.filter(o => o.customerEmail.toLowerCase() === loggedInCustomer.email.toLowerCase()) 
     : [];
 
-  const handleAddAddressSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAddress.trim()) return;
-    onAddAddress(newAddress.trim());
-    setNewAddress('');
-    setShowAddressModal(false);
-  };
-
-  // Run tracking lookup on orders list
   const handleTrackOrder = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setTrackerError('');
     setTrackedOrder(null);
-
     const checkId = trackerInput.trim().toUpperCase();
     if (!checkId) {
       setTrackerError('Please enter an Order ID.');
       return;
     }
-
     const found = orders.find(o => o.id.toUpperCase() === checkId);
     if (found) {
       setTrackedOrder(found);
     } else {
-      setTrackerError(`No order found matching "${checkId}". Check your details and try again.`);
+      setTrackerError(`No order found matching "${checkId}".`);
     }
   };
 
-  // Convert fulfillment state into a rich 4-step history log
   const getTimelineSteps = (order: Order) => {
     const isUnfulfilled = order.fulfillmentStatus === 'Unfulfilled';
     const isFulfilled = order.fulfillmentStatus === 'Fulfilled';
     const isDelivered = order.fulfillmentStatus === 'Delivered';
-
     return [
-      {
-        key: 'placed',
-        label: 'Placed',
-        description: 'Order received and payment confirmed.',
-        status: 'completed',
-        date: order.date
-      },
-      {
-        key: 'processing',
-        label: 'Processing',
-        description: 'Active assembly, testing, and recipe personalization.',
-        status: isUnfulfilled ? 'current' : 'completed',
-        date: isUnfulfilled ? 'Current step' : `${order.date} (Success)`
-      },
-      {
-        key: 'dispatched',
-        label: 'Dispatched',
-        description: 'Packed, labeled, and departed warehouse facility.',
-        status: isUnfulfilled ? 'pending' : (isFulfilled ? 'current' : 'completed'),
-        date: isUnfulfilled ? 'Pending shipment' : (isFulfilled ? 'In Transit' : 'Departed hub')
-      },
-      {
-        key: 'delivered',
-        label: 'Delivered',
-        description: 'Arrived at shipping destination successfully.',
-        status: isDelivered ? 'completed' : 'pending',
-        date: isDelivered ? 'Handed to customer' : 'Awaiting delivery estimates'
-      }
+      { key: 'placed', label: 'Placed', description: 'Order received and payment confirmed.', status: 'completed', date: order.date },
+      { key: 'processing', label: 'Processing', description: 'Active assembly & quality inspection.', status: isUnfulfilled ? 'current' : 'completed', date: isUnfulfilled ? 'Current step' : `${order.date} (Success)` },
+      { key: 'dispatched', label: 'Dispatched', description: 'Departed sorting facility.', status: isUnfulfilled ? 'pending' : (isFulfilled ? 'current' : 'completed'), date: isUnfulfilled ? 'Pending shipment' : (isFulfilled ? 'In Transit' : 'Departed hub') },
+      { key: 'delivered', label: 'Delivered', description: 'Arrived at your doorstep successfully.', status: isDelivered ? 'completed' : 'pending', date: isDelivered ? 'Handed to customer' : 'Awaiting delivery estimates' }
     ];
   };
 
-  // If not logged in, show Login Screen
+  // Logged Out Screen
   if (!loggedInCustomer) {
     return (
-      <div id="login-container" className="max-w-5xl mx-auto my-12 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-slate-100">
-          
-          {/* COLUMN 1: LOGIN / SIGNUP FORM */}
-          <div className="p-8 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-full w-12 h-12 flex items-center justify-center">
-                <User className="h-6 w-6" />
+      <div className="max-w-5xl mx-auto my-12 bg-white border border-slate-200 rounded-3xl shadow-lg overflow-hidden font-sans">
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          {/* Sign In / Sign Up form */}
+          <div className="p-8 lg:p-12 space-y-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-black text-[#071d37] tracking-wider uppercase">Pouch Supply</span>
+                <span className="w-1.5 h-1.5 bg-[#dfa047] rounded-full self-end mb-1"></span>
               </div>
-
-              {/* Mode Toggle Tabs */}
-              <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-48">
+              <div className="flex bg-slate-100 p-1 rounded-xl">
                 <button
-                  type="button"
                   onClick={() => { setAuthMode('login'); setErrorMsg(''); }}
-                  className={`py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
-                    authMode === 'login'
-                      ? 'bg-white text-slate-900 shadow-3xs font-extrabold'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
+                  className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all ${authMode === 'login' ? 'bg-white text-[#071d37] shadow-sm' : 'text-slate-500'}`}
                 >
                   Sign In
                 </button>
                 <button
-                  type="button"
                   onClick={() => { setAuthMode('signup'); setErrorMsg(''); }}
-                  className={`py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
-                    authMode === 'signup'
-                      ? 'bg-white text-slate-900 shadow-3xs font-extrabold'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
+                  className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all ${authMode === 'signup' ? 'bg-white text-[#071d37] shadow-sm' : 'text-slate-500'}`}
                 >
                   Sign Up
                 </button>
               </div>
             </div>
 
-            <div className="space-y-1">
-              <h2 className="text-xl font-bold text-slate-800">
-                {authMode === 'login' ? 'Customer Sign In' : 'Create Customer Account'}
+            <div className="space-y-2">
+              <h2 className="text-2xl font-extrabold text-[#071d37]">
+                {authMode === 'login' ? 'Welcome Back' : 'Create an Account'}
               </h2>
-              <p className="text-slate-500 text-xs leading-relaxed">
+              <p className="text-slate-500 text-xs">
                 {authMode === 'login' 
-                  ? 'Sign in to view your order history, manage saved delivery points, and access your custom wishlist.'
-                  : 'Join Pouch Supply to save shipping preferences, earn loyal shop points, and checkout faster.'}
+                  ? 'Access your personalized subscription portal, track order progress, and unlock free premium rewards.'
+                  : 'Join Pouch Supply today to get 15% off subscription boxes and start unlocking direct premium gifts.'}
               </p>
             </div>
 
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               {authMode === 'signup' && (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
-                    Full Name
-                  </label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Full Name</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Kayla Canty"
+                    placeholder="Valentina Gomez"
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
-                    className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-505 bg-slate-50/50"
+                    className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-[#071d37] focus:outline-none bg-slate-50/50"
                   />
                 </div>
               )}
-
               <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
-                  Email Address
-                </label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Email Address</label>
                 <input
-                  id="cust-login-email"
                   type="email"
                   required
-                  placeholder="kayla.canty@yahoo.com"
+                  placeholder="valentina@example.com"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-505 bg-slate-50/50"
+                  className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-[#071d37] focus:outline-none bg-slate-50/50"
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
-                  Password
-                </label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Password</label>
                 <input
-                  id="cust-login-pass"
                   type="password"
                   required
                   placeholder="••••••••"
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-505 bg-slate-50/50"
+                  className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-[#071d37] focus:outline-none bg-slate-50/50"
                 />
               </div>
-
-              {errorMsg && (
-                <p className="text-xs text-red-500 font-bold">{errorMsg}</p>
-              )}
-
+              {errorMsg && <p className="text-xs text-rose-500 font-bold">{errorMsg}</p>}
               <button
-                id="cust-login-btn"
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white font-medium text-xs uppercase tracking-widest py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 mt-4 cursor-pointer disabled:cursor-not-allowed"
+                className="w-full bg-[#071d37] hover:bg-[#0c2e56] disabled:bg-slate-300 text-white font-bold text-xs uppercase tracking-widest py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
-                {isSubmitting ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 animate-spin" /> Authenticating...
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="h-4 w-4" /> {authMode === 'login' ? 'Sign In' : 'Create Account'}
-                  </>
-                )}
+                {isSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+                {authMode === 'login' ? 'Sign In To Account' : 'Register Now'}
               </button>
             </form>
 
-            <div className="pt-6 border-t border-slate-100 text-center bg-slate-50 rounded-lg p-4">
-              <p className="text-xs text-slate-500 mb-2 font-semibold">Quick Sign-in suggestions:</p>
+            <div className="pt-6 border-t border-slate-100 text-center">
+              <p className="text-xs text-slate-400 mb-2 font-medium">Quick sign-in suggestions:</p>
               <div className="flex flex-wrap justify-center gap-2">
                 {customers.slice(0, 3).map((cust) => (
                   <button
@@ -290,7 +268,7 @@ export default function CustomerAccount({
                       setEmailInput(cust.email);
                       setPasswordInput('password123');
                     }}
-                    className="text-xs hover:border-indigo-400 hover:text-indigo-600 bg-white border border-slate-200 text-slate-700 py-1.5 px-3 rounded-xl font-bold cursor-pointer transition-all shadow-3xs"
+                    className="text-[11px] font-semibold text-slate-600 bg-slate-100 hover:bg-slate-250 py-1 px-3 rounded-full transition-all cursor-pointer"
                   >
                     {cust.name}
                   </button>
@@ -299,495 +277,1189 @@ export default function CustomerAccount({
             </div>
           </div>
 
-          {/* COLUMN 2: TRACK MY ORDER (GUEST OR REGISTERED) */}
-          <div className="p-8 space-y-6 bg-slate-50/30">
-            <div className="flex justify-center md:justify-start">
-              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-full">
+          {/* Quick Tracking Panel */}
+          <div className="p-8 lg:p-12 bg-slate-50/80 flex flex-col justify-center border-t md:border-t-0 md:border-l border-slate-100">
+            <div className="space-y-6">
+              <div className="p-3 bg-blue-50 text-[#071d37] rounded-full w-12 h-12 flex items-center justify-center shadow-xs">
                 <Truck className="h-6 w-6 animate-pulse" />
               </div>
-            </div>
-            <h2 className="text-xl font-bold text-slate-800 text-center md:text-left">Track an Order</h2>
-            <p className="text-slate-500 text-xs text-center md:text-left leading-relaxed">
-              Track your shipping status instantly. Enter your Order ID below to view its live status and timeline updates.
-            </p>
-
-            <form onSubmit={handleTrackOrder} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
-                  Order ID Reference
-                </label>
+              <h2 className="text-xl font-extrabold text-[#071d37]">Guest Order Tracking</h2>
+              <p className="text-slate-500 text-xs">
+                You do not need to sign in to check your order shipment status. Enter your Order ID reference below to visualize real-time progress.
+              </p>
+              <form onSubmit={handleTrackOrder} className="space-y-4">
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="e.g. PS48884"
                     value={trackerInput}
                     onChange={(e) => setTrackerInput(e.target.value)}
-                    className="w-full text-xs font-mono font-bold border border-slate-200 p-3 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase bg-white"
+                    className="w-full text-xs font-mono font-bold border border-slate-200 p-3 pr-10 rounded-xl focus:ring-2 focus:ring-[#071d37] focus:outline-none uppercase bg-white"
                   />
-                  <button
-                    type="submit"
-                    className="absolute right-3 top-3 text-slate-400 hover:text-indigo-600 cursor-pointer"
-                  >
-                    <Search className="h-4 w-4" />
-                  </button>
+                  <Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" />
                 </div>
-              </div>
+                {trackerError && <p className="text-xs text-rose-500 font-bold">{trackerError}</p>}
+                <button
+                  type="submit"
+                  className="w-full bg-[#dfa047] hover:bg-[#c98e3b] text-white font-bold text-xs uppercase tracking-widest py-3 px-4 rounded-xl transition-all cursor-pointer shadow-xs"
+                >
+                  Track Shipment Status
+                </button>
+              </form>
 
-              {trackerError && (
-                <p className="text-xs text-red-500 font-medium">{trackerError}</p>
-              )}
-
-              <button
-                type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-              >
-                <Search className="h-4 w-4" /> Go Track Status
-              </button>
-            </form>
-
-            {/* Tracking Results Inline Visualizer */}
-            {trackedOrder && (
-              <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-3xs space-y-4 animate-scaleUp">
-                <div className="flex justify-between items-start border-b border-slate-100 pb-3">
-                  <div>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Live Tracking Info</span>
-                    <h3 className="font-extrabold text-[#0D0F12] text-xs font-mono">{trackedOrder.id}</h3>
+              {trackedOrder && (
+                <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-xs space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span className="font-mono text-xs font-bold text-[#071d37]">{trackedOrder.id}</span>
+                    <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">{trackedOrder.fulfillmentStatus}</span>
                   </div>
-                  <div className="text-right">
-                    <span className={`text-[10px] font-bold py-0.5 px-2 rounded-full border uppercase tracking-wider block ${
-                      trackedOrder.fulfillmentStatus === 'Delivered'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
-                        : trackedOrder.fulfillmentStatus === 'Fulfilled'
-                        ? 'bg-indigo-50 text-indigo-705 border-indigo-150'
-                        : 'bg-amber-100 text-amber-800 border-amber-205'
-                    }`}>
-                      {trackedOrder.fulfillmentStatus}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Timeline Render */}
-                <div id="order-tracker-timeline" className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-1.5 before:bottom-1.5 before:w-0.5 before:bg-slate-250">
-                  {getTimelineSteps(trackedOrder).map((step) => {
-                    const isCompleted = step.status === 'completed';
-                    const isCurrent = step.status === 'current';
-                    return (
-                      <div key={step.key} className="relative text-left">
-                        <div className={`absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 transition-all flex items-center justify-center ${
-                          isCompleted 
-                            ? 'bg-indigo-600 border-indigo-600 text-white' 
-                            : isCurrent
-                            ? 'bg-amber-500 border-amber-500 animate-pulse text-white'
-                            : 'bg-white border-slate-300'
-                        }`}>
-                          {isCompleted && <Check className="h-1.5 w-1.5 stroke-[3.5px]" />}
-                        </div>
-                        <div>
-                          <p className={`text-[11px] font-bold ${
-                            isCompleted ? 'text-indigo-950' : isCurrent ? 'text-amber-600' : 'text-slate-400'
-                          }`}>
-                            {step.label}
-                          </p>
-                          <p className="text-[10px] text-slate-500 mt-0.5 max-w-[280px] leading-snug">{step.description}</p>
-                          <span className="text-[9px] font-mono text-slate-400 mt-0.5 block font-semibold">{step.date}</span>
-                        </div>
+                  <div className="space-y-3 pl-4 border-l border-slate-200 relative">
+                    {getTimelineSteps(trackedOrder).map((step) => (
+                      <div key={step.key} className="text-xs">
+                        <p className={`font-bold ${step.status === 'completed' ? 'text-[#071d37]' : step.status === 'current' ? 'text-[#dfa047]' : 'text-slate-400'}`}>{step.label}</p>
+                        <p className="text-[10px] text-slate-500">{step.description}</p>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-
         </div>
       </div>
     );
   }
 
-  // Logged-in view
-  return (
-    <div id="account-page-wrapper" className="max-w-6xl mx-auto px-4 py-8">
-      {/* Account welcome header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900 text-white p-6 md:p-8 rounded-2xl mb-8">
-        <div>
-          <span className="text-xs text-indigo-300 font-semibold uppercase tracking-wider">Welcome back</span>
-          <h1 className="text-2xl md:text-3xl font-bold mt-1 text-white">{loggedInCustomer.name}</h1>
-          <p className="text-slate-400 text-sm mt-1">{loggedInCustomer.email}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="text-xs bg-slate-800 border border-slate-700 text-slate-300 py-1 px-3 rounded-full">
-            Plan: {loggedInCustomer.subscriptionStatus}
-          </div>
-          <button
-            id="cust-logout-btn"
-            onClick={onLogout}
-            className="text-xs bg-red-950/40 hover:bg-red-900/50 text-red-300 font-medium py-2 px-4 rounded-full border border-red-800/40 cursor-pointer transition-colors"
-          >
-            Sign Out
-          </button>
-        </div>
+  // Loaded state helper to verify layout safety
+  if (!custState) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <RefreshCw className="h-8 w-8 text-[#071d37] animate-spin" />
       </div>
+    );
+  }
 
-      {/* Real-time Order Tracker Widget */}
-      <div id="order-tracker-section" className="bg-white border border-slate-205 rounded-2xl p-6 shadow-xs mb-8 transition-all">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5 pb-4 border-b border-slate-100">
-          <div>
-            <h2 className="text-base font-extrabold text-slate-850 flex items-center gap-2">
-              <Truck className="h-5 w-5 text-indigo-650 animate-pulse" />
-              Real-time Order Tracker
-            </h2>
-            <p className="text-slate-500 text-xs mt-0.5">
-              Paste or type your Order ID to visualize step-by-step courier updates.
-            </p>
-          </div>
+  // Sidebar items configuration
+  const sidebarItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: Layout },
+    { id: 'orders', label: 'Orders', icon: Package },
+    { id: 'subscriptions', label: 'Subscriptions', icon: RefreshCw },
+    { id: 'loyalty', label: 'Loyalty Rewards', icon: Award },
+    { id: 'referrals', label: 'Referrals', icon: User },
+    { id: 'payments', label: 'Payment Methods', icon: CreditCard },
+    { id: 'addresses', label: 'Delivery Addresses', icon: MapPin },
+    { id: 'support', label: 'Help & Support', icon: LifeBuoy }
+  ];
 
-          <form onSubmit={handleTrackOrder} className="flex gap-2 w-full md:w-auto">
-            <div className="relative flex-1 md:w-64">
-              <input
-                type="text"
-                placeholder="Enter Order ID (e.g. PS48884)"
-                value={trackerInput}
-                onChange={(e) => setTrackerInput(e.target.value)}
-                className="w-full text-xs font-mono font-bold border border-slate-200 p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase bg-slate-50/50"
-              />
-              <button
-                type="submit"
-                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-indigo-650 cursor-pointer"
-              >
-                <Search className="h-4 w-4" />
-              </button>
-            </div>
-            <button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded-lg cursor-pointer flex items-center gap-1 shadow-3xs"
-            >
-              Track
-            </button>
-          </form>
-        </div>
-
-        {trackerError && (
-          <p className="text-xs text-red-500 font-semibold mb-4">{trackerError}</p>
-        )}
-
-        {trackedOrder ? (
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-50 border border-slate-150 rounded-xl p-4 gap-4">
-              <div className="space-y-0.5">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Currently Tracking</span>
-                <p className="font-extrabold text-sm text-indigo-950 font-mono">{trackedOrder.id}</p>
+  return (
+    <div className="min-h-screen bg-[#f4f6f9] py-6 px-4 md:px-8 font-sans">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
+        
+        {/* Left Side Navigation Sidebar */}
+        <aside className="w-full lg:w-64 bg-[#071d37] text-white rounded-3xl p-6 flex flex-col justify-between shrink-0 shadow-lg">
+          <div className="space-y-8">
+            {/* Store Brand / Logo */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-1">
+                <span className="text-2xl font-black text-white tracking-widest uppercase">Pouch Supply</span>
+                <span className="w-2 h-2 bg-[#dfa047] rounded-full self-end mb-1"></span>
               </div>
-              <div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Shipping To</span>
-                <p className="font-bold text-xs text-slate-705">{trackedOrder.destination}</p>
-              </div>
-              <div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Current Phase</span>
-                <span className={`inline-block text-[10px] uppercase font-black py-0.5 px-2.5 border rounded-full tracking-wider mt-0.5 ${
-                  trackedOrder.fulfillmentStatus === 'Delivered'
-                    ? 'bg-teal-50 text-teal-700 border-teal-150'
-                    : trackedOrder.fulfillmentStatus === 'Fulfilled'
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
-                    : 'bg-amber-50 text-amber-800 border border-amber-200 animate-pulse'
-                }`}>
-                  {trackedOrder.fulfillmentStatus}
-                </span>
+              {/* Golden dots under name matching the mockup */}
+              <div className="flex gap-1.5 pl-1.5">
+                {[1, 2, 3, 4, 5].map(d => (
+                  <span key={d} className="w-1.5 h-1.5 bg-[#dfa047] rounded-full opacity-80"></span>
+                ))}
               </div>
             </div>
 
-            {/* Dynamic Shipping Timeline with Horizontal & Vertical Layout */}
-            <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-8 md:gap-4 pt-4 pb-4 px-2">
-              
-              {/* Desktop connecting line */}
-              <div className="absolute hidden md:block left-6 right-6 top-[2.25rem] h-0.5 bg-slate-200 -z-1" />
-              
-              {/* Desktop connecting filled tracker */}
-              <div 
-                className="absolute hidden md:block left-6 top-[2.25rem] h-0.5 bg-indigo-650 -z-1 transition-all duration-500" 
-                style={{
-                  width: `${
-                    trackedOrder.fulfillmentStatus === 'Delivered' 
-                      ? '90%' 
-                      : trackedOrder.fulfillmentStatus === 'Fulfilled' 
-                      ? '60%' 
-                      : '30%'
-                  }`
-                }}
-              />
-
-              {getTimelineSteps(trackedOrder).map((step) => {
-                const isCompleted = step.status === 'completed';
-                const isCurrent = step.status === 'current';
+            {/* Sidebar Navigation Items */}
+            <nav className="space-y-1">
+              {sidebarItems.map(item => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
                 return (
-                  <div key={step.key} className="flex md:flex-col items-center gap-4 md:gap-2 flex-1 text-left md:text-center w-full relative group">
-                    {/* Circle badge */}
-                    <div className={`h-9 w-9 rounded-full border-2 transition-all flex items-center justify-center shrink-0 z-10 ${
-                      isCompleted 
-                        ? 'bg-indigo-650 border-indigo-650 text-white shadow-3xs' 
-                        : isCurrent
-                        ? 'bg-white border-amber-500 text-amber-500 shadow-sm'
-                        : 'bg-white border-slate-200 text-slate-400'
-                    }`}>
-                      {isCompleted ? (
-                        <Check className="h-4 w-4 stroke-[3.5px]" />
-                      ) : isCurrent ? (
-                        <Clock className="h-4 w-4 animate-scaleUp" />
-                      ) : (
-                        <div className="h-2 w-2 rounded-full bg-slate-300" />
-                      )}
-                    </div>
-
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-1.5 md:justify-center">
-                        <h4 className={`text-xs font-black uppercase tracking-wider ${
-                          isCompleted ? 'text-indigo-950' : isCurrent ? 'text-amber-600' : 'text-slate-400'
-                        }`}>
-                          {step.label}
-                        </h4>
-                      </div>
-                      <p className="text-[11px] text-slate-500 max-w-[160px] leading-tight md:mx-auto">
-                        {step.description}
-                      </p>
-                      <span className="text-[10px] font-mono text-indigo-650 font-bold block pt-0.5">
-                        {step.date}
-                      </span>
-                    </div>
-                  </div>
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center gap-3.5 py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      isActive 
+                        ? 'bg-[#dfa047] text-white shadow-md' 
+                        : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    <Icon className="h-4.5 w-4.5 shrink-0" />
+                    <span>{item.label}</span>
+                  </button>
                 );
               })}
+            </nav>
+          </div>
+
+          {/* Need Help Box & Footer */}
+          <div className="mt-12 space-y-6">
+            <div className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-3">
+              <h4 className="text-xs font-black uppercase text-[#dfa047] tracking-wider">Need help?</h4>
+              <p className="text-[10px] text-slate-300 leading-relaxed">
+                We're here for you. Get in touch with our specialist support team.
+              </p>
+              <button 
+                onClick={() => setActiveTab('support')}
+                className="w-full bg-white hover:bg-slate-100 text-[#071d37] font-bold text-[10px] uppercase tracking-wider py-2 rounded-xl transition-colors cursor-pointer"
+              >
+                Contact Support
+              </button>
+            </div>
+
+            <div className="text-center pt-2 border-t border-white/10">
+              <span className="inline-block bg-white/10 text-[9px] border border-white/20 py-0.5 px-2 rounded-full text-slate-200 font-bold mb-1.5">18+ Only</span>
+              <p className="text-[9px] text-slate-400 leading-snug">
+                Nicotine pouches are for adult consumers only. Please consume responsibly.
+              </p>
             </div>
           </div>
-        ) : (
-          <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-            <p className="text-xs text-slate-400">Search for any order ID above to reveal its real-time shipping progress.</p>
-          </div>
-        )}
-      </div>
+        </aside>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Wishlist Column */}
-        <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <Heart className="h-5 w-5 text-red-500 fill-red-500" />
-              My Wishlist ({loggedInCustomer.wishlist.length})
-            </h2>
-
-            {loggedInCustomer.wishlist.length === 0 ? (
-              <div className="text-center py-8 bg-slate-50 border border-dashed border-slate-200 rounded-lg">
-                <p className="text-sm text-slate-400">Your wishlist is currently empty.</p>
-                <p className="text-xs text-slate-400 mt-1">Explore our product catalog and click the heart icon on your favorite items.</p>
+        {/* Right Side Main Content Panel */}
+        <main className="flex-1 space-y-6">
+          
+          {/* Top Welcome Bar */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl md:text-2xl font-black text-[#071d37]">Welcome back, {loggedInCustomer.name} 👋</h1>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {loggedInCustomer.wishlist.map(wId => {
-                  const prod = allProducts.find(p => p.id === wId);
-                  if (!prod) return null;
-                  return (
-                    <div key={prod.id} className="flex gap-3 bg-slate-50 border border-slate-200/60 p-3 rounded-lg relative hover:shadow-sm transition-all">
-                      <img
-                        src={prod.image}
-                        alt={prod.title}
-                        className="w-16 h-16 object-cover rounded-md bg-white border border-slate-100"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase block">{prod.vendor}</span>
-                        <h4 className="text-xs font-semibold text-slate-700 truncate mb-1">{prod.title}</h4>
-                        <p className="text-xs font-bold text-slate-900">£{prod.price.toFixed(2)}</p>
+              <p className="text-slate-500 text-xs mt-0.5">Here's what's happening with your Pouch Supply account today.</p>
+            </div>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button 
+                onClick={() => { setActiveTab('orders'); setTrackerInput(myOrders[0]?.id || ''); setTrackedOrder(myOrders[0] || null); }}
+                className="flex items-center gap-1.5 text-xs font-bold text-[#071d37] bg-slate-100 hover:bg-slate-200 py-2 px-3.5 rounded-xl transition-all cursor-pointer"
+              >
+                <Truck className="h-4 w-4" /> Track order
+              </button>
+              <button 
+                onClick={() => setActiveTab('details')}
+                className="flex items-center gap-1.5 text-xs font-bold text-[#071d37] bg-slate-100 hover:bg-slate-200 py-2 px-3.5 rounded-xl transition-all cursor-pointer"
+              >
+                <User className="h-4 w-4" /> Account
+              </button>
+              <button 
+                onClick={onLogout}
+                className="flex items-center gap-1.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 py-2 px-3.5 rounded-xl transition-all cursor-pointer"
+              >
+                <LogOut className="h-4 w-4" /> Log out
+              </button>
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.2 }}
+            >
+              
+              {/* TAB 1: DASHBOARD (Rich Bento Grid Layout similar to the mockup) */}
+              {activeTab === 'dashboard' && (
+                <div className="space-y-6">
+                  
+                  {/* Top Row: Loyalty Scheme Header & Rewards Quick Look */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    {/* VIP Progress Tracker (2/3 width) */}
+                    <div className="lg:col-span-2 bg-[#071d37] text-white rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between shadow-md">
+                      {/* Ambient circle background overlay */}
+                      <div className="absolute right-[-40px] top-[-40px] w-48 h-48 rounded-full bg-white/5 border border-white/5" />
+                      
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <h2 className="text-xl font-black uppercase tracking-wider text-white">You're doing great!</h2>
+                          <p className="text-slate-300 text-xs">
+                            You are just one order away from unlocking your next <strong className="text-[#dfa047] font-black">Free Can of Premium Pouches</strong>.
+                          </p>
+                        </div>
+                        {/* Interactive circle dial */}
+                        <div className="relative shrink-0 flex flex-col items-center justify-center w-24 h-24 rounded-full border-4 border-[#dfa047] bg-black/20 text-center shadow-lg">
+                          <Star className="h-4 w-4 text-[#dfa047] fill-[#dfa047]" />
+                          <span className="text-lg font-black text-white mt-0.5">80%</span>
+                          <span className="text-[7px] text-slate-300 uppercase tracking-widest font-bold">VIP Member</span>
+                        </div>
+                      </div>
+
+                      {/* Stars Milestone Timeline */}
+                      <div className="mt-8">
+                        <div className="relative flex items-center justify-between">
+                          <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-1 bg-white/20" />
+                          <div className="absolute left-2 top-1/2 -translate-y-1/2 h-1 bg-[#dfa047] transition-all duration-500" style={{ width: '80%' }} />
+                          
+                          {[1, 2, 3, 4].map(idx => (
+                            <div key={idx} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center z-10 ${idx <= 3 ? 'bg-[#dfa047] border-[#dfa047] text-white' : 'bg-[#071d37] border-slate-500 text-slate-400'}`}>
+                              <Star className="h-3 w-3 fill-current" />
+                            </div>
+                          ))}
+                          <div className="w-10 h-10 rounded-full border-2 border-[#dfa047] bg-white text-[#dfa047] flex items-center justify-center z-10 animate-pulse">
+                            <Award className="h-4 w-4" />
+                          </div>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-slate-300 font-bold uppercase tracking-wider mt-2.5 px-1">
+                          <span>4/5 Orders Completed</span>
+                          <span className="text-[#dfa047]">Free gift pending</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 flex justify-start">
+                        <button 
+                          onClick={() => setActiveTab('loyalty')}
+                          className="bg-[#dfa047] hover:bg-[#c98e3b] text-[#071d37] font-black text-[10px] uppercase tracking-widest py-2 px-5 rounded-xl transition-all cursor-pointer"
+                        >
+                          Ways to earn rewards
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* VIP Loyalty Card Stats Panel (1/3 width) */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                          <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Loyalty Rewards</h3>
+                          <button onClick={() => setActiveTab('loyalty')} className="text-[10px] font-bold text-[#dfa047] uppercase hover:underline">View all rewards</button>
+                        </div>
                         
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() => onUpdateWishlist(prod.id, 'remove')}
-                            className="text-[10px] text-red-500 hover:text-red-700 font-medium flex items-center gap-1 bg-white hover:bg-red-50/50 py-1 px-1.5 rounded border border-slate-200 shadow-xs cursor-pointer"
-                          >
-                            <Trash2 className="h-3 w-3" /> Remove
-                          </button>
+                        <div className="flex gap-3 items-center bg-[#f4f6f9] p-3 rounded-2xl border border-slate-100">
+                          <div className="p-2 bg-[#071d37]/5 text-[#071d37] rounded-xl">
+                            <Award className="h-6 w-6 text-[#dfa047]" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-black text-[#071d37] uppercase">VIP Gold Tier</p>
+                            <p className="text-[10px] text-slate-500">Earn premium rewards, free cans, & secret discounts.</p>
+                          </div>
+                        </div>
+
+                        {/* Stats grid */}
+                        <div className="grid grid-cols-3 gap-2 text-center pt-2">
+                          <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-2xl">
+                            <p className="text-base font-black text-[#071d37]">Tier 2</p>
+                            <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">Status Level</p>
+                          </div>
+                          <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-2xl">
+                            <p className="text-base font-black text-[#071d37]">3</p>
+                            <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">Free Gifts</p>
+                          </div>
+                          <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-2xl">
+                            <p className="text-base font-black text-[#071d37]">£40</p>
+                            <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">Saved Total</p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                  </div>
 
-          {/* Orders Column */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <Package className="h-5 w-5 text-indigo-600" />
-              Order History ({myOrders.length})
-            </h2>
+                  {/* Middle Row: Next Order & Subscription Visualizers */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    {/* Next Order visualizer */}
+                    <div className="lg:col-span-2 space-y-6">
+                      
+                      {/* Next Order details card */}
+                      <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs relative">
+                        <div className="flex justify-between items-center pb-4 border-b border-slate-100 mb-4">
+                          <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider flex items-center gap-1.5">
+                            <Truck className="h-4.5 w-4.5 text-[#dfa047]" />
+                            Your next order
+                          </h3>
+                          <span className="text-[10px] font-bold text-slate-500 bg-slate-150 py-1 px-3 rounded-full">Scheduled</span>
+                        </div>
 
-            {myOrders.length === 0 ? (
-              <div className="text-center py-8 bg-slate-50 border border-dashed border-slate-200 rounded-lg">
-                <p className="text-sm text-slate-400">You haven't placed any orders yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {myOrders.map(order => (
-                  <div key={order.id} className="border border-slate-200 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-slate-300 transition-colors">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-slate-800">{order.id}</span>
-                        <span className={`text-[10px] font-semibold py-0.5 px-2 rounded-full uppercase tracking-wider ${
-                          order.fulfillmentStatus === 'Fulfilled' || order.fulfillmentStatus === 'Delivered'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                            : 'bg-amber-100 text-amber-800 border border-amber-200'
-                        }`}>
-                          {order.fulfillmentStatus}
-                        </span>
+                        <div className="grid grid-cols-3 gap-4 text-xs font-semibold py-2">
+                          <div>
+                            <p className="text-[9px] text-slate-400 uppercase font-bold">Delivering On</p>
+                            <p className="text-xs font-extrabold text-[#071d37] mt-0.5">{custState.nextDelivery}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] text-slate-400 uppercase font-bold">Box Items</p>
+                            <p className="text-xs font-extrabold text-[#071d37] mt-0.5">{custState.subCansCount} canisters</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] text-slate-400 uppercase font-bold">Total Price</p>
+                            <p className="text-xs font-extrabold text-slate-900 mt-0.5">£{custState.subPrice.toFixed(2)}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-100 mt-4">
+                          <button 
+                            onClick={() => { setSelectedOrderDetails(myOrders[0] || null); }}
+                            className="flex-1 bg-[#071d37] hover:bg-[#0c2e56] text-white font-bold text-xs uppercase tracking-wider py-2.5 rounded-xl transition-colors cursor-pointer text-center"
+                          >
+                            View Order Details
+                          </button>
+                          <button 
+                            onClick={() => setActiveTab('subscriptions')}
+                            className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-[#071d37] font-bold text-xs uppercase tracking-wider py-2.5 rounded-xl transition-colors cursor-pointer text-center"
+                          >
+                            Manage Subscription
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-[11px] text-slate-500">{order.date} • {order.items.reduce((acc, i) => acc + i.quantity, 0)} pouch canisters</p>
-                      <p className="text-xs text-slate-700">Destination: <span className="font-medium">{order.destination}</span></p>
+
+                      {/* Active subscription summary card */}
+                      <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
+                        <div className="flex justify-between items-center pb-4 border-b border-slate-100 mb-4">
+                          <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider flex items-center gap-1.5">
+                            <RefreshCw className="h-4.5 w-4.5 text-[#dfa047]" />
+                            Your active subscription
+                          </h3>
+                          <span className="text-[10px] font-bold text-[#071d37] bg-emerald-50 text-emerald-700 py-1 px-3 rounded-full border border-emerald-100">Active</span>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row gap-6 items-center">
+                          {/* Left: overlapping canisters preview */}
+                          <div className="flex -space-x-4 shrink-0">
+                            {[
+                              'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=120&q=80',
+                              'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&w=120&q=80',
+                              'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=120&q=80'
+                            ].map((imgSrc, i) => (
+                              <img 
+                                key={i} 
+                                src={imgSrc} 
+                                className="w-14 h-14 object-cover rounded-full border-2 border-white shadow-md bg-slate-100" 
+                                alt="canister preview" 
+                                referrerPolicy="no-referrer"
+                              />
+                            ))}
+                          </div>
+
+                          <div className="flex-1 space-y-1 text-center md:text-left">
+                            <h4 className="text-sm font-black text-[#071d37] uppercase tracking-wide">{custState.subPlan.toUpperCase()} BOX PLAN</h4>
+                            <p className="text-xs text-slate-500">{custState.subCansCount} items • Deliver {custState.subFrequency}</p>
+                            <p className="text-xs font-bold text-[#dfa047]">£{custState.subPrice.toFixed(2)} per delivery • Next charge: {custState.nextPayment}</p>
+                          </div>
+
+                          <div className="flex md:flex-col gap-2 w-full md:w-auto shrink-0">
+                            <button 
+                              onClick={() => setActiveTab('subscriptions')}
+                              className="flex-1 md:w-44 bg-white hover:bg-slate-50 border border-slate-200 text-[#071d37] font-bold text-xs py-2 rounded-xl cursor-pointer text-center"
+                            >
+                              Manage Plan
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
                     </div>
 
-                    <div className="flex sm:flex-col items-end justify-between w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 gap-1.5">
-                      <span className="text-sm font-extrabold text-slate-900">£{order.total.toFixed(2)}</span>
-                      <div className="flex sm:flex-col gap-1 w-full sm:w-auto">
-                        <button
-                          onClick={() => setSelectedOrderDetails(order)}
-                          className="text-xs w-full justify-center bg-slate-50 hover:bg-slate-100 border border-slate-200 py-1.5 px-3 rounded-lg text-slate-600 hover:text-slate-900 font-medium flex items-center gap-1 cursor-pointer transition-colors"
-                        >
-                          <Eye className="h-3 w-3" /> View Details
-                        </button>
-                        <button
+                    {/* Right Side Column: Free Rewards Redemptions list & Friends Invites */}
+                    <div className="space-y-6">
+                      
+                      {/* Redeem rewards list */}
+                      <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                        <div className="border-b border-slate-100 pb-3">
+                          <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Redeem Your Free Gifts</h3>
+                          <p className="text-slate-400 text-[10px] mt-0.5">Select a premium unlocked loyalty gift below.</p>
+                        </div>
+
+                        <div className="space-y-3">
+                          {custState.unlockedRewards.map((rew: any) => (
+                            <div key={rew.id} className="flex items-center justify-between p-2.5 bg-[#f4f6f9] rounded-2xl border border-slate-100">
+                              <div className="flex gap-2 items-center">
+                                <div className="p-1.5 bg-[#071d37]/5 text-[#dfa047] rounded-xl">
+                                  <Tag className="h-4 w-4" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-[11px] font-black text-[#071d37] truncate">{rew.title}</p>
+                                  <p className="text-[9px] text-slate-400 truncate">{rew.desc}</p>
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() => {
+                                  if (rew.redeemed) return;
+                                  const updatedRewards = custState.unlockedRewards.map((r: any) => 
+                                    r.id === rew.id ? { ...r, redeemed: true } : r
+                                  );
+                                  updateCustState({ ...custState, unlockedRewards: updatedRewards });
+                                  alert(`Successfully redeemed! Use promo code "${rew.code}" at checkout or enjoy automatically in your next sub delivery.`);
+                                }}
+                                className={`text-[9px] font-black uppercase py-1.5 px-3 rounded-lg border cursor-pointer transition-colors ${
+                                  rew.redeemed 
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-150 cursor-not-allowed' 
+                                    : 'bg-[#071d37] text-white hover:bg-[#dfa047] border-slate-200'
+                                }`}
+                              >
+                                {rew.redeemed ? 'Redeemed' : 'Redeem'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Invite Friends Referral Card */}
+                      <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                        <div className="space-y-1">
+                          <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Invite your friends</h3>
+                          <p className="text-slate-500 text-[10.5px] leading-relaxed">
+                            Give your friends <strong className="text-[#071d37]">10% off</strong> their first order and get <strong className="text-emerald-700">£5.00 credit</strong> when they subscribe.
+                          </p>
+                        </div>
+
+                        {/* Copyable referral input */}
+                        <div className="flex items-center gap-2 bg-[#f4f6f9] p-2.5 rounded-2xl border border-slate-100">
+                          <input 
+                            type="text" 
+                            readOnly 
+                            value={custState.referralCode} 
+                            className="bg-transparent text-slate-600 text-[10px] font-semibold flex-1 outline-none select-all" 
+                          />
+                          <button 
+                            onClick={() => {
+                              navigator.clipboard.writeText(custState.referralCode);
+                              alert('Referral link copied to clipboard!');
+                            }}
+                            className="p-1.5 hover:bg-slate-200 text-[#071d37] rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        <button 
                           onClick={() => {
-                            setTrackerInput(order.id);
-                            setTrackedOrder(order);
-                            document.getElementById('order-tracker-section')?.scrollIntoView({ behavior: 'smooth' });
+                            if (navigator.share) {
+                              navigator.share({
+                                title: 'Join Pouch Supply',
+                                text: 'Join me on Pouch Supply for the ultimate subscription box experience!',
+                                url: custState.referralCode
+                              }).catch(() => {});
+                            } else {
+                              navigator.clipboard.writeText(custState.referralCode);
+                              alert('Referral link copied! Share it with your friends.');
+                            }
                           }}
-                          className="text-xs w-full justify-center bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 py-1.5 px-3 rounded-lg text-indigo-650 hover:text-indigo-800 font-extrabold flex items-center gap-1 cursor-pointer transition-colors"
+                          className="w-full bg-[#071d37] hover:bg-[#0c2e56] text-white font-bold text-xs uppercase py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                         >
-                          <Truck className="h-3 w-3" /> Track Status
+                          <Share2 className="h-4 w-4" />
+                          Share your link
                         </button>
                       </div>
+
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Addresses list and defaults */}
-        <div className="space-y-6">
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-emerald-600" />
-                Shipping Addresses
-              </h3>
-              <button
-                onClick={() => setShowAddressModal(true)}
-                className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-semibold cursor-pointer"
-              >
-                <PlusCircle className="h-3.5 w-3.5" /> Add
-              </button>
-            </div>
+                  {/* Bottom Row: Recent Order Log */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
+                    <div className="flex justify-between items-center pb-4 border-b border-slate-100 mb-4">
+                      <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Recent Order Log</h3>
+                      <button onClick={() => setActiveTab('orders')} className="text-[10px] font-bold text-[#dfa047] uppercase hover:underline">View all orders</button>
+                    </div>
 
-            {loggedInCustomer.addresses.length === 0 ? (
-              <p className="text-xs text-slate-400 py-3 text-center">No addresses saved. Add one above.</p>
-            ) : (
-              <div className="space-y-3">
-                {loggedInCustomer.addresses.map((addr, idx) => (
-                  <div key={idx} className="bg-slate-50 border border-slate-200 p-3 rounded-lg relative group">
-                    <span className="absolute top-2.5 right-2.5 bg-slate-200 text-slate-600 text-[9px] font-bold py-0.5 px-2 rounded-md">
-                      {idx === 0 ? 'Primary' : 'Secondary'}
-                    </span>
-                    <p className="text-xs text-slate-700 leading-relaxed font-medium pr-14">{addr}</p>
-                    {idx > 0 && (
-                      <button
-                        onClick={() => onRemoveAddress(idx)}
-                        className="text-xs text-red-500 hover:text-red-700 font-medium mt-2 flex items-center gap-0.5 cursor-pointer"
+                    {myOrders.length === 0 ? (
+                      <div className="text-center py-6">
+                        <p className="text-xs text-slate-400">No purchase records registered yet.</p>
+                      </div>
+                    ) : (
+                      <div 
+                        onClick={() => setSelectedOrderDetails(myOrders[0])}
+                        className="flex justify-between items-center bg-[#f4f6f9] hover:bg-slate-100 p-4 rounded-2xl border border-slate-100 transition-colors cursor-pointer"
                       >
-                        Delete Address
-                      </button>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-500 font-mono font-bold text-xs">
+                            #PS
+                          </div>
+                          <div>
+                            <p className="text-xs font-black text-[#071d37]">Order {myOrders[0].id}</p>
+                            <p className="text-[10px] text-slate-500">{myOrders[0].date} • {myOrders[0].items.reduce((sum, item) => sum + item.quantity, 0)} canisters</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100 uppercase">{myOrders[0].fulfillmentStatus}</span>
+                          <span className="text-xs font-black text-[#071d37]">£{myOrders[0].total.toFixed(2)}</span>
+                          <ChevronRight className="h-4.5 w-4.5 text-slate-400" />
+                        </div>
+                      </div>
                     )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
 
-          {/* Quick shop instructions banner */}
-          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5">
-            <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wide mb-1.5 flex items-center gap-1">
-              <ShoppingBag className="h-3.5 w-3.5" />
-              Easy Subscription
-            </h4>
-            <p className="text-xs text-indigo-700 leading-relaxed">
-              Subscribing is easy and saves you 15% on any customized pack. Check our **Subscribe builder** to configure your next pack.
-            </p>
-          </div>
-        </div>
+                  {/* Horizontal Trust Badges row matching mockup */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                    <div className="bg-white border border-slate-200 py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-xs">
+                      <Tag className="h-4.5 w-4.5 text-[#dfa047]" />
+                      <span className="text-xs font-black text-[#071d37] uppercase tracking-wider">Save up to £55/mo</span>
+                    </div>
+                    <div className="bg-white border border-slate-200 py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-xs">
+                      <Package className="h-4.5 w-4.5 text-[#dfa047]" />
+                      <span className="text-xs font-black text-[#071d37] uppercase tracking-wider">Discreet delivery</span>
+                    </div>
+                    <div className="bg-white border border-slate-200 py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-xs">
+                      <Clock className="h-4.5 w-4.5 text-[#dfa047]" />
+                      <span className="text-xs font-black text-[#071d37] uppercase tracking-wider">Cancel anytime</span>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* TAB 2: ORDERS (Order history list and detailed shipment timeline) */}
+              {activeTab === 'orders' && (
+                <div className="space-y-6">
+                  
+                  {/* Shipment visualizer widget */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                    <div className="border-b border-slate-100 pb-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                      <div>
+                        <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Real-Time Order Tracker</h3>
+                        <p className="text-slate-400 text-[10.5px]">Provide your Order ID code to visualize shipping history logs.</p>
+                      </div>
+                      <form onSubmit={handleTrackOrder} className="flex gap-2 w-full md:w-auto">
+                        <input
+                          type="text"
+                          placeholder="e.g. PS48884"
+                          value={trackerInput}
+                          onChange={(e) => setTrackerInput(e.target.value)}
+                          className="text-xs font-mono font-bold border border-slate-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-[#071d37] focus:outline-none uppercase bg-slate-50/50"
+                        />
+                        <button type="submit" className="bg-[#dfa047] text-white font-bold text-xs py-2 px-4 rounded-xl cursor-pointer">Track</button>
+                      </form>
+                    </div>
+
+                    {trackerError && <p className="text-xs text-rose-500 font-bold">{trackerError}</p>}
+
+                    {trackedOrder ? (
+                      <div className="space-y-6">
+                        <div className="bg-[#f4f6f9] border border-slate-100 p-4 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-semibold">
+                          <div>
+                            <span className="text-[9px] text-slate-400 uppercase font-bold">Currently Tracking</span>
+                            <p className="font-bold text-[#071d37] mt-0.5">{trackedOrder.id}</p>
+                          </div>
+                          <div>
+                            <span className="text-[9px] text-slate-400 uppercase font-bold">Recipient Address</span>
+                            <p className="font-bold text-slate-600 mt-0.5">{trackedOrder.destination}</p>
+                          </div>
+                          <div>
+                            <span className="text-[9px] text-slate-400 uppercase font-bold">Courier Status</span>
+                            <p className="text-emerald-700 font-black mt-0.5">{trackedOrder.fulfillmentStatus.toUpperCase()}</p>
+                          </div>
+                        </div>
+
+                        {/* Interactive Timeline layout */}
+                        <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pt-2 pb-4">
+                          <div className="absolute hidden md:block left-6 right-6 top-[2rem] h-0.5 bg-slate-200" />
+                          {getTimelineSteps(trackedOrder).map((step) => {
+                            const isCompleted = step.status === 'completed';
+                            const isCurrent = step.status === 'current';
+                            return (
+                              <div key={step.key} className="flex md:flex-col items-center gap-3 flex-1 text-left md:text-center z-10 w-full">
+                                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                  isCompleted ? 'bg-[#071d37] border-[#071d37] text-white' : isCurrent ? 'bg-white border-[#dfa047] text-[#dfa047] animate-pulse' : 'bg-white border-slate-200 text-slate-400'
+                                }`}>
+                                  {isCompleted ? <Check className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
+                                </div>
+                                <div>
+                                  <h4 className="text-[11px] font-black uppercase tracking-wider text-[#071d37]">{step.label}</h4>
+                                  <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">{step.description}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 text-center py-4">Search for an order ID above to preview your custom shipping timelines.</p>
+                    )}
+                  </div>
+
+                  {/* Full Order history table */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                    <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Purchase History List</h3>
+                    
+                    {myOrders.length === 0 ? (
+                      <p className="text-xs text-slate-400 py-4 text-center">You haven't placed any order transactions yet.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {myOrders.map(order => (
+                          <div key={order.id} className="bg-[#f4f6f9] border border-slate-100 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-slate-300 transition-all">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-black text-xs text-[#071d37] font-mono">{order.id}</span>
+                                <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-100 uppercase">{order.fulfillmentStatus}</span>
+                              </div>
+                              <p className="text-[10px] text-slate-500">{order.date} • {order.items.length} unique lines • {order.deliveryMethod}</p>
+                            </div>
+                            <div className="flex sm:flex-col items-end gap-2 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
+                              <span className="text-xs font-black text-slate-900">£{order.total.toFixed(2)}</span>
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => setSelectedOrderDetails(order)}
+                                  className="text-[10px] font-bold text-[#071d37] bg-white border border-slate-200 py-1 px-2.5 rounded-lg cursor-pointer hover:bg-slate-50"
+                                >
+                                  Invoice
+                                </button>
+                                <button 
+                                  onClick={() => { setTrackerInput(order.id); setTrackedOrder(order); }}
+                                  className="text-[10px] font-bold text-white bg-[#071d37] py-1 px-2.5 rounded-lg cursor-pointer hover:bg-[#dfa047]"
+                                >
+                                  Track
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              )}
+
+              {/* TAB 3: SUBSCRIPTIONS (Interactive controls for active sub, swaps, pause/resume) */}
+              {activeTab === 'subscriptions' && (
+                <div className="space-y-6">
+                  
+                  {/* Subscription management console */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-6">
+                    <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                      <div>
+                        <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Configure Subscription Plan</h3>
+                        <p className="text-slate-400 text-[10.5px] mt-0.5">Pause, swap, reschedule or upgrade your box items in real-time.</p>
+                      </div>
+                      <span className={`text-[10px] font-bold px-3 py-1 rounded-full border ${custState.subStatus === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>
+                        {custState.subStatus.toUpperCase()}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      
+                      {/* Form inputs */}
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Box Size (Plan tier)</label>
+                          <select 
+                            value={custState.subPlan} 
+                            onChange={(e) => {
+                              const plan = e.target.value;
+                              let cans = 8, price = 35.99;
+                              if (plan === 'lite') { cans = 6; price = 27.99; }
+                              else if (plan === 'pro') { cans = 10; price = 40.99; }
+                              else if (plan === 'ultimate') { cans = 12; price = 46.99; }
+                              updateCustState({ ...custState, subPlan: plan, subCansCount: cans, subPrice: price });
+                            }}
+                            className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-xl focus:ring-2 focus:ring-[#071d37] bg-white outline-none"
+                          >
+                            <option value="lite">LITE (6 Canisters - £27.99)</option>
+                            <option value="core">CORE (8 Canisters - £35.99)</option>
+                            <option value="pro">PRO (10 Canisters - £40.99)</option>
+                            <option value="ultimate">ULTIMATE (12 Canisters - £46.99)</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Delivery Frequency</label>
+                          <select 
+                            value={custState.subFrequency} 
+                            onChange={(e) => updateCustState({ ...custState, subFrequency: e.target.value })}
+                            className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-xl focus:ring-2 focus:ring-[#071d37] bg-white outline-none"
+                          >
+                            <option value="Every 2 Weeks">Every 2 Weeks (Fast delivery)</option>
+                            <option value="Every 4 Weeks">Every 4 Weeks (Most popular)</option>
+                            <option value="Every 6 Weeks">Every 6 Weeks</option>
+                            <option value="Every 8 Weeks">Every 8 Weeks</option>
+                          </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Next Payment</span>
+                            <p className="font-extrabold text-[#071d37] mt-1">{custState.nextPayment}</p>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Estimated Delivery</span>
+                            <p className="font-extrabold text-[#071d37] mt-1">{custState.nextDelivery}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Interactive Visual controls */}
+                      <div className="bg-[#f4f6f9] p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
+                        <div className="space-y-2">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Estimated box value</span>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-2xl font-black text-[#071d37]">£{custState.subPrice.toFixed(2)}</span>
+                            <span className="text-[10px] text-slate-500 font-bold">/ delivery</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 leading-relaxed">
+                            Includes personalized nicotine strength choices, custom flavor ratios, priority shipping, and complimentary VIP loyalty rewards.
+                          </p>
+                        </div>
+
+                        <div className="flex gap-2 mt-6">
+                          <button
+                            onClick={() => {
+                              const toggleStatus = custState.subStatus === 'Active' ? 'Paused' : 'Active';
+                              updateCustState({ ...custState, subStatus: toggleStatus });
+                            }}
+                            className={`flex-1 font-bold text-xs uppercase py-2.5 rounded-xl border transition-all cursor-pointer text-center ${
+                              custState.subStatus === 'Active' 
+                                ? 'bg-white border-slate-200 text-[#071d37] hover:bg-slate-50' 
+                                : 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700'
+                            }`}
+                          >
+                            {custState.subStatus === 'Active' ? 'Pause subscription' : 'Resume subscription'}
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              if (confirm('Are you sure you want to cancel your box subscription? All pending free gifts will be lost.')) {
+                                updateCustState({ ...custState, subStatus: 'Cancelled' });
+                              }
+                            }}
+                            className="text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 font-bold text-xs uppercase px-4 py-2.5 rounded-xl cursor-pointer text-center"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {/* Interactive product Swapper */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                    <div>
+                      <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Custom Product Swapper</h3>
+                      <p className="text-slate-400 text-[10.5px]">Select your preferred premium can types to include in your next recurring shipment.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {allProducts.slice(0, 4).map(prod => (
+                        <div key={prod.id} className="flex gap-3 bg-[#f4f6f9] border border-slate-100 p-3 rounded-2xl relative hover:shadow-xs transition-all">
+                          <img 
+                            src={prod.image} 
+                            alt={prod.title} 
+                            className="w-14 h-14 object-cover rounded-xl bg-white border border-slate-100 shrink-0" 
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="flex-1 min-w-0 flex flex-col justify-between">
+                            <div>
+                              <span className="text-[9px] text-[#dfa047] font-bold uppercase tracking-wider">{prod.vendor}</span>
+                              <h4 className="text-xs font-black text-[#071d37] truncate">{prod.title}</h4>
+                            </div>
+                            <span className="text-xs font-extrabold text-slate-800 mt-1">£{prod.price.toFixed(2)}</span>
+                          </div>
+                          
+                          <button
+                            onClick={() => alert(`${prod.title} has been successfully added/swapped into your active box lineup!`)}
+                            className="absolute right-3 bottom-3 text-[10px] font-bold text-[#071d37] bg-white border border-slate-200 py-1 px-2.5 rounded-lg hover:border-[#dfa047] transition-all cursor-pointer"
+                          >
+                            Swap
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* TAB 4: LOYALTY REWARDS (Complete rewards list, vouchers, status info) */}
+              {activeTab === 'loyalty' && (
+                <div className="space-y-6">
+                  
+                  {/* Loyalty header stats */}
+                  <div className="bg-[#071d37] text-white rounded-3xl p-8 relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6 shadow-lg">
+                    <div className="absolute left-[-20px] top-[-20px] w-40 h-40 rounded-full bg-white/5 border border-white/5" />
+                    
+                    <div className="space-y-2 text-center md:text-left">
+                      <span className="text-[10px] font-bold bg-[#dfa047] text-[#071d37] py-1 px-3 rounded-full uppercase tracking-wider inline-block">Loyalty Club</span>
+                      <h2 className="text-2xl font-black uppercase text-white tracking-wide">Pouch Supply VIP Scheme</h2>
+                      <p className="text-slate-300 text-xs max-w-lg leading-relaxed">
+                        No complex formulas, math points, or expiration clocks. Simply complete shop orders to trigger direct premium gifts, complimentary deliveries, and discount credit codes.
+                      </p>
+                    </div>
+
+                    <div className="bg-white/10 border border-white/20 p-5 rounded-3xl text-center min-w-[160px]">
+                      <p className="text-[10px] text-slate-300 uppercase font-black tracking-widest">Rewards Unlocked</p>
+                      <p className="text-3xl font-black text-[#dfa047] mt-1">3 Gifts</p>
+                      <span className="text-[9px] text-slate-400 block pt-1">Level 2 Status Member</span>
+                    </div>
+                  </div>
+
+                  {/* Complete rewards grid list */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                    <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Available Loyalty Benefits</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {custState.unlockedRewards.map((rew: any) => (
+                        <div key={rew.id} className="bg-[#f4f6f9] border border-slate-100 p-4 rounded-2xl flex justify-between items-center gap-4">
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="p-1 bg-[#dfa047]/10 text-[#dfa047] rounded-md"><Award className="h-4 w-4" /></span>
+                              <h4 className="text-xs font-black text-[#071d37] truncate">{rew.title}</h4>
+                            </div>
+                            <p className="text-[10.5px] text-slate-500 leading-relaxed">{rew.desc}</p>
+                            <span className="text-[9px] font-mono text-slate-400 font-bold block pt-1">Code Voucher: {rew.code}</span>
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              if (rew.redeemed) return;
+                              const updatedRewards = custState.unlockedRewards.map((r: any) => 
+                                r.id === rew.id ? { ...r, redeemed: true } : r
+                              );
+                              updateCustState({ ...custState, unlockedRewards: updatedRewards });
+                              alert(`Loyalty gift redeemed! Check your inbox or apply promo code "${rew.code}" at checkout.`);
+                            }}
+                            className={`text-[10px] font-black uppercase tracking-wider py-1.5 px-3 rounded-lg border cursor-pointer transition-colors ${
+                              rew.redeemed 
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-150 cursor-not-allowed' 
+                                : 'bg-[#071d37] text-white hover:bg-[#dfa047]'
+                            }`}
+                          >
+                            {rew.redeemed ? 'Redeemed' : 'Claim Reward'}
+                          </button>
+                        </div>
+                      ))}
+
+                      {/* Locked future rewards */}
+                      {[
+                        { title: 'Buy 5 Get 1 Free', desc: 'Unlocks automatically after your next verified purchase.', target: '5th Order Reward' },
+                        { title: '£15.00 Account Gift Code', desc: 'Unlock complimentary cash wallet credentials automatically.', target: '10th Order Milestone' }
+                      ].map((lock, idx) => (
+                        <div key={idx} className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl flex justify-between items-center gap-4 opacity-75">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 text-slate-400">
+                              <span className="p-1 bg-slate-100 text-slate-400 rounded-md"><ShieldAlert className="h-4 w-4" /></span>
+                              <h4 className="text-xs font-black uppercase tracking-wider">{lock.title}</h4>
+                            </div>
+                            <p className="text-[10.5px] text-slate-500 leading-relaxed">{lock.desc}</p>
+                            <span className="text-[9px] text-[#dfa047] font-bold uppercase tracking-wider block pt-1">{lock.target}</span>
+                          </div>
+                          <span className="text-[9px] font-black uppercase text-slate-400 bg-slate-100 py-1.5 px-3 rounded-lg border border-slate-200">Locked</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* TAB 5: REFERRALS (Invite page, stats, pending rewards list) */}
+              {activeTab === 'referrals' && (
+                <div className="space-y-6">
+                  
+                  {/* Referral Header */}
+                  <div className="bg-[#071d37] text-white rounded-3xl p-8 relative overflow-hidden shadow-lg flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div className="absolute right-[-10px] top-[-10px] w-36 h-36 rounded-full bg-white/5 border border-white/5" />
+                    <div className="space-y-2 text-center md:text-left">
+                      <span className="text-[10px] font-bold bg-[#dfa047] text-[#071d37] py-1 px-3 rounded-full uppercase tracking-wider inline-block">Referrals Hub</span>
+                      <h2 className="text-2xl font-black uppercase tracking-wide">Invite Friends, Earn Wallet Credit</h2>
+                      <p className="text-slate-300 text-xs max-w-lg leading-relaxed">
+                        Earn cash credit directly into your Pouch Supply wallet! For every friend who registers and triggers a box subscription, we reward you with £5.00 in direct credits.
+                      </p>
+                    </div>
+
+                    <div className="bg-white/10 border border-white/20 p-5 rounded-3xl text-center min-w-[160px] shrink-0">
+                      <p className="text-[10px] text-slate-300 uppercase font-black tracking-widest">Available Credit</p>
+                      <p className="text-3xl font-black text-emerald-400 mt-1">£{custState.referralCredit.toFixed(2)}</p>
+                      <span className="text-[9px] text-slate-400 block pt-1">{custState.referredCount} Friends Invited</span>
+                    </div>
+                  </div>
+
+                  {/* Stats & Invite Action Card */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Link Generator */}
+                    <div className="md:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                      <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Your Referral Credentials</h3>
+                      <p className="text-slate-500 text-xs">
+                        Copy and distribute this personalized link to family or colleagues.
+                      </p>
+                      
+                      <div className="flex items-center gap-2 bg-[#f4f6f9] p-3 rounded-2xl border border-slate-100">
+                        <input 
+                          type="text" 
+                          readOnly 
+                          value={custState.referralCode} 
+                          className="bg-transparent text-slate-600 text-xs font-semibold flex-1 outline-none" 
+                        />
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(custState.referralCode);
+                            alert('Referral link copied to clipboard!');
+                          }}
+                          className="p-1.5 hover:bg-slate-200 text-[#071d37] rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(custState.referralCode);
+                            alert('Copied link!');
+                          }}
+                          className="flex-1 bg-[#071d37] hover:bg-[#0c2e56] text-white font-bold text-xs uppercase py-2.5 rounded-xl transition-all cursor-pointer text-center"
+                        >
+                          Copy Invite Code
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Referrals summary block */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+                      <div className="space-y-4">
+                        <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Referral Stats</h3>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
+                            <span className="text-slate-500 font-medium">Referred Friends</span>
+                            <span className="font-black text-[#071d37]">{custState.referredCount}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
+                            <span className="text-slate-500 font-medium">Credits Earned</span>
+                            <span className="font-black text-emerald-700">£10.00</span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-500 font-medium">Pending Credits</span>
+                            <span className="font-black text-amber-600">£5.00</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Referrals table list */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                    <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Invited Friends Log</h3>
+                    
+                    <div className="space-y-3">
+                      {custState.referralsList.map((ref: any, idx: number) => (
+                        <div key={idx} className="bg-[#f4f6f9] border border-slate-100 p-4 rounded-2xl flex justify-between items-center text-xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-[#071d37]/5 text-[#dfa047] flex items-center justify-center font-bold font-sans text-xs uppercase">
+                              {ref.name.substring(0, 2)}
+                            </div>
+                            <div>
+                              <p className="font-black text-[#071d37]">{ref.name}</p>
+                              <p className="text-[10px] text-slate-400">Registered on {ref.date}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-4">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ref.status === 'Subscribed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                              {ref.status}
+                            </span>
+                            <span className="font-black text-slate-800">{ref.credit}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* TAB 6: PAYMENT METHODS */}
+              {activeTab === 'payments' && (
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-6">
+                  <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <div>
+                      <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Saved Payment Cards</h3>
+                      <p className="text-slate-400 text-[10.5px]">Manage your saved billing methods for seamless automatic box charges.</p>
+                    </div>
+                    <button 
+                      onClick={() => alert('New card authorization form loading... (Simulated)')}
+                      className="text-xs font-black text-[#dfa047] uppercase tracking-wider flex items-center gap-1 hover:underline"
+                    >
+                      <PlusCircle className="h-4 w-4" /> Add Card
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {custState.savedCards.map((card: any) => (
+                      <div key={card.id} className="bg-gradient-to-br from-[#071d37] to-[#123157] text-white p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between h-36 shadow-md">
+                        <div className="absolute right-[-10px] bottom-[-10px] w-24 h-24 rounded-full bg-white/5 border border-white/5" />
+                        <div className="flex justify-between items-start">
+                          <span className="text-xs font-bold uppercase tracking-widest text-[#dfa047]">{card.brand} CARD</span>
+                          {card.default && <span className="text-[9px] bg-white/20 px-2 py-0.5 rounded-full font-bold">DEFAULT</span>}
+                        </div>
+                        <p className="font-mono text-base font-bold tracking-widest mt-4">•••• •••• •••• {card.last4}</p>
+                        <div className="flex justify-between text-[10px] text-slate-300 font-semibold mt-2">
+                          <span>EXPIRY: {card.exp}</span>
+                          <span>POUCH SUPPLY CUSTOMER</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 7: ADDRESSES (Integrated seamlessly with onAddAddress/onRemoveAddress callbacks) */}
+              {activeTab === 'addresses' && (
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-6">
+                  <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <div>
+                      <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Delivery Addresses</h3>
+                      <p className="text-slate-400 text-[10.5px]">Configure your shipping points for regular deliveries.</p>
+                    </div>
+                    <button 
+                      onClick={() => setShowAddressModal(true)}
+                      className="text-xs font-black text-[#dfa047] uppercase tracking-wider flex items-center gap-1 hover:underline"
+                    >
+                      <PlusCircle className="h-4 w-4" /> Add Address
+                    </button>
+                  </div>
+
+                  {loggedInCustomer.addresses.length === 0 ? (
+                    <p className="text-xs text-slate-400 text-center py-4">No addresses saved yet. Click add address above.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {loggedInCustomer.addresses.map((addr, idx) => (
+                        <div key={idx} className="bg-[#f4f6f9] border border-slate-150 p-4 rounded-2xl flex flex-col justify-between relative group">
+                          <span className="absolute top-3 right-3 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase py-0.5 px-2 rounded-md">
+                            {idx === 0 ? 'Primary' : 'Secondary'}
+                          </span>
+                          <div className="space-y-1">
+                            <h4 className="text-xs font-bold text-[#071d37] uppercase tracking-wide">Destination #{idx + 1}</h4>
+                            <p className="text-xs text-slate-600 leading-relaxed font-semibold pr-12">{addr}</p>
+                          </div>
+                          {idx > 0 && (
+                            <button
+                              onClick={() => onRemoveAddress(idx)}
+                              className="text-[10px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-0.5 mt-4 self-start cursor-pointer"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" /> Remove Shipping Address
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 8: HELP & SUPPORT (Interactive Support ticketing form & beautiful FAQ visualizer) */}
+              {activeTab === 'support' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  
+                  {/* Support form */}
+                  <div className="md:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                    <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Contact Specialist Support</h3>
+                    <p className="text-slate-400 text-[10.5px]">Send a direct message below. Our average client response speed is 15 minutes.</p>
+                    
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        alert('Message sent successfully! Our client support agents are reviewing your request.');
+                      }} 
+                      className="space-y-4"
+                    >
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Your Name</label>
+                          <input type="text" readOnly value={loggedInCustomer.name} className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-xl bg-slate-50 text-slate-500" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Email Address</label>
+                          <input type="email" readOnly value={loggedInCustomer.email} className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-xl bg-slate-50 text-slate-500" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Subject Topic</label>
+                        <input type="text" required placeholder="e.g., Subscription Swapping question" className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-xl focus:ring-2 focus:ring-[#071d37]" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Detailed Message</label>
+                        <textarea required rows={4} placeholder="Tell us how we can help you today..." className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-xl focus:ring-2 focus:ring-[#071d37]"></textarea>
+                      </div>
+                      <button type="submit" className="bg-[#071d37] hover:bg-[#0c2e56] text-white font-bold text-xs uppercase py-2.5 px-6 rounded-xl cursor-pointer">Submit Request</button>
+                    </form>
+                  </div>
+
+                  {/* Compact FAQs */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                    <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Quick FAQs</h3>
+                    
+                    <div className="space-y-3 text-xs">
+                      {[
+                        { q: 'Can I swap can flavors?', a: 'Yes! Simply use the Swapper in your Subscriptions tab before shipment day.' },
+                        { q: 'How do loyalty gifts work?', a: 'Place regular orders to unlock free delivery coupons or premium extra pouch cans.' },
+                        { q: 'How do referrals trigger?', a: 'When friends join using your unique code, a £5.00 wallet discount applies automatically.' }
+                      ].map((faq, idx) => (
+                        <div key={idx} className="space-y-1 p-2 bg-slate-50 border border-slate-100 rounded-xl">
+                          <p className="font-black text-[#071d37]">{faq.q}</p>
+                          <p className="text-[10px] text-slate-500 leading-relaxed">{faq.a}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+            </motion.div>
+          </AnimatePresence>
+
+        </main>
       </div>
 
-      {/* Order Details Modal */}
+      {/* Invoice Detail Modal overlay */}
       {selectedOrderDetails && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-xl border border-slate-200">
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-xl">
+        <div className="fixed inset-0 z-50 bg-[#071d37]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-slate-200 animate-scaleUp">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-[#f4f6f9] rounded-t-3xl">
               <div>
-                <h3 className="font-bold text-slate-800 text-base">Order Details: {selectedOrderDetails.id}</h3>
-                <p className="text-xs text-slate-400">{selectedOrderDetails.date}</p>
+                <h3 className="font-black text-[#071d37] text-base">Invoice Ref: {selectedOrderDetails.id}</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase">{selectedOrderDetails.date}</p>
               </div>
-              <button
+              <button 
                 onClick={() => setSelectedOrderDetails(null)}
-                className="p-1.5 hover:bg-slate-200 rounded-full text-slate-500 hover:text-slate-800 cursor-pointer"
+                className="p-1.5 hover:bg-slate-200 rounded-full text-slate-500 cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            
-            <div className="p-6 space-y-6">
-              {/* Customer info */}
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="bg-slate-50 p-3 rounded-lg">
-                  <span className="font-semibold text-slate-400 uppercase tracking-widest text-[9px] block mb-1">Customer info</span>
-                  <p className="font-bold text-slate-700">{selectedOrderDetails.customerName}</p>
+
+            <div className="p-6 space-y-6 text-xs">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                  <span className="font-bold text-slate-400 uppercase tracking-widest text-[8px] block mb-1">Customer Details</span>
+                  <p className="font-black text-[#071d37]">{selectedOrderDetails.customerName}</p>
                   <p className="text-slate-500">{selectedOrderDetails.customerEmail}</p>
                 </div>
-                <div className="bg-slate-50 p-3 rounded-lg">
-                  <span className="font-semibold text-slate-400 uppercase tracking-widest text-[9px] block mb-1">Delivery destination</span>
-                  <p className="font-medium text-slate-700 leading-relaxed">{selectedOrderDetails.destination}</p>
+                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                  <span className="font-bold text-slate-400 uppercase tracking-widest text-[8px] block mb-1">Delivery Destination</span>
+                  <p className="font-semibold text-slate-600 leading-relaxed">{selectedOrderDetails.destination}</p>
                 </div>
               </div>
 
-              {/* Items List */}
               <div>
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Items list</h4>
-                <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
-                  {selectedOrderDetails.items.map((item, id) => {
-                    // find a valid product image or fallback
-                    const mainImage = allProducts.find(p => p.id === item.productId)?.image || item.image || '';
+                <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Itemized list</h4>
+                <div className="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden bg-white">
+                  {selectedOrderDetails.items.map((item, idx) => {
+                    const prodImage = allProducts.find(p => p.id === item.productId)?.image || item.image || '';
                     return (
-                      <div key={id} className="flex gap-3 items-center justify-between p-3 bg-white text-xs">
+                      <div key={idx} className="flex gap-3 items-center justify-between p-3">
                         <div className="flex gap-2 items-center min-w-0">
-                          {mainImage && (
-                            <img src={mainImage} className="w-10 h-10 object-cover rounded bg-slate-50" alt="" referrerPolicy="no-referrer" />
-                          )}
+                          {prodImage && <img src={prodImage} className="w-8 h-8 object-cover rounded bg-slate-50 border border-slate-100" alt="" referrerPolicy="no-referrer" />}
                           <div className="min-w-0">
-                            <p className="font-semibold text-slate-700 truncate">{item.productTitle}</p>
-                            <p className="text-slate-400 text-[11px]">Qty: {item.quantity}</p>
+                            <p className="font-bold text-[#071d37] truncate">{item.productTitle}</p>
+                            <p className="text-slate-400 text-[10px]">Qty: {item.quantity}</p>
                           </div>
                         </div>
-                        <p className="font-bold text-slate-800">£{(item.price * item.quantity).toFixed(2)}</p>
+                        <p className="font-extrabold text-slate-850">£{(item.price * item.quantity).toFixed(2)}</p>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Summary */}
-              <div className="border-t border-slate-100 pt-4 space-y-2 text-xs">
+              <div className="border-t border-slate-150 pt-4 space-y-2 text-xs">
                 <div className="flex justify-between text-slate-500">
-                  <span>Shipping ({selectedOrderDetails.deliveryMethod})</span>
-                  <span className="font-medium text-slate-700">Free</span>
+                  <span>Shipping Delivery ({selectedOrderDetails.deliveryMethod})</span>
+                  <span className="font-bold text-emerald-700">Free</span>
                 </div>
                 <div className="flex justify-between text-slate-800 text-sm font-extrabold pt-2 border-t border-slate-100">
-                  <span>Total amount</span>
+                  <span>Total Amount</span>
                   <span>£{selectedOrderDetails.total.toFixed(2)}</span>
                 </div>
               </div>
@@ -796,31 +1468,40 @@ export default function CustomerAccount({
         </div>
       )}
 
-      {/* Save address modal */}
+      {/* Save Address Modal */}
       {showAddressModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-lg border border-slate-200">
-            <h3 className="font-bold text-slate-800 text-sm mb-3">Add Custom Shipping Address</h3>
-            <form onSubmit={handleAddAddressSubmit} className="space-y-4">
+        <div className="fixed inset-0 z-50 bg-[#071d37]/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 animate-scaleUp">
+            <h3 className="font-black text-[#071d37] text-sm mb-3 uppercase tracking-wide">Add Custom Shipping Address</h3>
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!newAddress.trim()) return;
+                onAddAddress(newAddress.trim());
+                setNewAddress('');
+                setShowAddressModal(false);
+              }} 
+              className="space-y-4"
+            >
               <input
-                id="address-modal-input"
                 type="text"
-                placeholder="Apartment, Street Name, City, Zip, US"
+                required
+                placeholder="Apartment, Street, City, ZIP, UK"
                 value={newAddress}
                 onChange={(e) => setNewAddress(e.target.value)}
-                className="w-full text-xs p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
               />
               <div className="flex justify-end gap-2 text-xs">
                 <button
                   type="button"
                   onClick={() => setShowAddressModal(false)}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-600 py-1.5 px-3 rounded-lg font-medium cursor-pointer"
+                  className="bg-slate-100 hover:bg-slate-250 text-slate-600 py-1.5 px-4 rounded-xl font-bold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 px-3 rounded-lg font-medium cursor-pointer"
+                  className="bg-[#071d37] hover:bg-[#0c2e56] text-white py-1.5 px-4 rounded-xl font-bold cursor-pointer"
                 >
                   Save Address
                 </button>
