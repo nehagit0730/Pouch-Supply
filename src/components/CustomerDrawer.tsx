@@ -23,6 +23,7 @@ interface CustomerDrawerProps {
   onRemoveAddress: (index: number) => void;
   onOpenCart: () => void;
   initialTab?: 'orders' | 'addresses' | 'wishlist' | 'emails';
+  onNavigateToPortal?: () => void;
 }
 
 export default function CustomerDrawer({
@@ -39,7 +40,8 @@ export default function CustomerDrawer({
   onAddAddress,
   onRemoveAddress,
   onOpenCart,
-  initialTab = 'orders'
+  initialTab = 'orders',
+  onNavigateToPortal
 }: CustomerDrawerProps) {
   const [activeTab, setActiveTab] = useState<'orders' | 'addresses' | 'wishlist' | 'emails'>(initialTab);
 
@@ -416,6 +418,16 @@ export default function CustomerDrawer({
                           <span className="text-[10px] font-extrabold text-emerald-400 block mt-0.5">£{loggedInCustomer.amountSpent.toFixed(2)}</span>
                         </div>
                       </div>
+
+                      {onNavigateToPortal && (
+                        <button
+                          onClick={onNavigateToPortal}
+                          className="w-full bg-[#dfa047] hover:bg-[#c98e3b] text-[#071d37] font-black text-xs uppercase tracking-widest py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm border border-transparent hover:scale-[1.02] active:scale-[0.98]"
+                        >
+                          <span>Open Customer Portal</span>
+                          <ArrowRight className="h-4 w-4 animate-bounce-right" />
+                        </button>
+                      )}
                     </div>
 
                     {/* Navigation Tabs for the Account drawer */}

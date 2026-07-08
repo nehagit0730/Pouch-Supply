@@ -616,6 +616,11 @@ export default function App() {
     setLoggedInCustomer(null);
   };
 
+  const handleUpdateProfile = (updated: Customer) => {
+    setLoggedInCustomer(updated);
+    setCustomers(prev => prev.map(c => c.id === updated.id ? updated : c));
+  };
+
   const handleAddAddress = (address: string) => {
     if (!loggedInCustomer) return;
     setLoggedInCustomer(prev => {
@@ -1308,6 +1313,7 @@ export default function App() {
                 orders={orders}
                 onAddAddress={handleAddAddress}
                 onRemoveAddress={handleRemoveAddress}
+                onUpdateProfile={handleUpdateProfile}
               />
             )}
 
@@ -1841,6 +1847,10 @@ export default function App() {
         onRemoveAddress={handleRemoveAddress}
         onOpenCart={() => setCartOpen(true)}
         initialTab={customerDrawerTab}
+        onNavigateToPortal={() => {
+          setCustomerDrawerOpen(false);
+          navigateToTab('frontend-account');
+        }}
       />
 
       {/* Checkout Successful Modal */}
