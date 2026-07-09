@@ -686,19 +686,24 @@ export default function CustomerAccount({
                         <div className="flex flex-col md:flex-row gap-6 items-center">
                           {/* Left: overlapping canisters preview */}
                           <div className="flex -space-x-4 shrink-0">
-                            {[
-                              'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=120&q=80',
-                              'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&w=120&q=80',
-                              'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=120&q=80'
-                            ].map((imgSrc, i) => (
-                              <img 
-                                key={i} 
-                                src={imgSrc} 
-                                className="w-14 h-14 object-cover rounded-full border-2 border-white shadow-md bg-slate-100" 
-                                alt="canister preview" 
-                                referrerPolicy="no-referrer"
-                              />
-                            ))}
+                            {(() => {
+                              const images = allProducts.filter(p => p.image).map(p => p.image);
+                              const defaults = [
+                                'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=120&q=80',
+                                'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&w=120&q=80',
+                                'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=120&q=80'
+                              ];
+                              const subscriptionImages = images.length > 0 ? [...images, ...defaults].slice(0, 3) : defaults;
+                              return subscriptionImages.map((imgSrc, i) => (
+                                <img 
+                                  key={i} 
+                                  src={imgSrc} 
+                                  className="w-14 h-14 object-cover rounded-full border-2 border-white shadow-md bg-slate-100" 
+                                  alt="canister preview" 
+                                  referrerPolicy="no-referrer"
+                                />
+                              ));
+                            })()}
                           </div>
 
                           <div className="flex-1 space-y-1 text-center md:text-left">
