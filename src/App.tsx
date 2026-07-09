@@ -515,6 +515,89 @@ export default function App() {
     }
   }, [loggedInCustomer]);
 
+  // Synchronize customers list with any completed order records automatically
+  useEffect(() => {
+    if (!isInitialLoadDone) return;
+
+    setCustomers(prevCustomers => {
+      let changed = false;
+      const updatedCustomers = prevCustomers.map(cust => {
+        const emailLower = cust.email.toLowerCase();
+        const custOrders = orders.filter(o => o.customerEmail.toLowerCase() === emailLower);
+        const actualOrdersCount = custOrders.length;
+        const actualAmountSpent = custOrders.reduce((sum, o) => sum + (o.paymentStatus === 'Failed' ? 0 : o.total), 0);
+        
+        // Collect any unique non-placeholder destinations from their orders
+        const orderAddresses = custOrders
+          .map(o => o.destination.trim())
+          .filter(dest => dest && dest !== "100 Main Street, New York, NY, 10001");
+        
+        // Merge with existing addresses
+        const existingAddresses = cust.addresses || [];
+        const mergedAddresses = Array.from(new Set([...existingAddresses, ...orderAddresses]))
+          .filter(addr => addr !== "100 Main Street, New York, NY, 10001");
+
+        const addressesChanged = JSON.stringify(cust.addresses) !== JSON.stringify(mergedAddresses);
+        if (
+          cust.ordersCount !== actualOrdersCount ||
+          Math.abs(cust.amountSpent - actualAmountSpent) > 0.01 ||
+          addressesChanged
+        ) {
+          changed = true;
+          return {
+            ...cust,
+            ordersCount: actualOrdersCount,
+            amountSpent: actualAmountSpent,
+            addresses: mergedAddresses
+          };
+        }
+        return cust;
+      });
+
+      // Find any emails in orders that do not exist in customers list
+      const existingEmails = new Set(prevCustomers.map(c => c.email.toLowerCase()));
+      const newCustomersToAdd: Customer[] = [];
+
+      orders.forEach(order => {
+        const emailLower = order.customerEmail.toLowerCase();
+        if (emailLower && !existingEmails.has(emailLower)) {
+          // Construct customer object from this order
+          const custOrders = orders.filter(o => o.customerEmail.toLowerCase() === emailLower);
+          const actualOrdersCount = custOrders.length;
+          const actualAmountSpent = custOrders.reduce((sum, o) => sum + (o.paymentStatus === 'Failed' ? 0 : o.total), 0);
+          
+          const orderAddresses = custOrders
+            .map(o => o.destination.trim())
+            .filter(dest => dest && dest !== "100 Main Street, New York, NY, 10001");
+          const uniqueAddresses = Array.from(new Set(orderAddresses)) as string[];
+
+          const cleanName = order.customerName || emailLower.split('@')[0];
+
+          newCustomersToAdd.push({
+            id: `cust-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            name: cleanName,
+            email: order.customerEmail.toLowerCase().trim(),
+            subscriptionStatus: 'Not subscribed',
+            location: order.destination || 'United Kingdom',
+            ordersCount: actualOrdersCount,
+            amountSpent: actualAmountSpent,
+            addresses: uniqueAddresses,
+            wishlist: []
+          });
+
+          // Prevent duplicates if multiple orders for this email are processed in the same loop
+          existingEmails.add(emailLower);
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        return [...updatedCustomers, ...newCustomersToAdd];
+      }
+      return prevCustomers;
+    });
+  }, [orders, isInitialLoadDone]);
+
   // --- Cart actions handlers ---
   const handleAddToCart = (product: Product, quantity: number) => {
     setCartItems(prev => {
