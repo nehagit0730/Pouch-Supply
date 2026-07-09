@@ -1189,13 +1189,19 @@ export default function CustomerAccount({
                               <div className="flex gap-2">
                                 <button 
                                   onClick={() => setSelectedOrderDetails(order)}
-                                  className="text-[10px] font-bold text-[#071d37] bg-white border border-slate-200 py-1 px-2.5 rounded-lg cursor-pointer hover:bg-slate-50"
+                                  className="text-[10px] font-bold text-white bg-slate-800 hover:bg-slate-700 py-1 px-2.5 rounded-lg cursor-pointer flex items-center gap-1 transition-all"
+                                >
+                                  <Eye className="h-3 w-3" /> View Order
+                                </button>
+                                <button 
+                                  onClick={() => setSelectedOrderDetails(order)}
+                                  className="text-[10px] font-bold text-[#071d37] bg-white border border-slate-200 py-1 px-2.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all"
                                 >
                                   Invoice
                                 </button>
                                 <button 
                                   onClick={() => { setTrackerInput(order.id); setTrackedOrder(order); }}
-                                  className="text-[10px] font-bold text-white bg-[#071d37] py-1 px-2.5 rounded-lg cursor-pointer hover:bg-[#dfa047]"
+                                  className="text-[10px] font-bold text-white bg-[#071d37] py-1 px-2.5 rounded-lg cursor-pointer hover:bg-[#dfa047] transition-all"
                                 >
                                   Track
                                 </button>

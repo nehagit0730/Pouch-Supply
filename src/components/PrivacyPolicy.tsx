@@ -352,13 +352,13 @@ export default function PrivacyPolicy({ onNavigate }: PrivacyPolicyProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-24 font-sans text-slate-800 animate-fade-in">
+    <div className="min-h-screen bg-[#FDFDFD] pb-10 font-sans text-slate-800 animate-fade-in">
       
       {/* Decorative top micro layout row */}
       <div className="h-1 bg-gradient-to-r from-indigo-500 via-indigo-650 to-teal-500" />
 
       {/* Header Area */}
-      <div className="bg-slate-900 text-white py-16 px-4 border-b border-slate-800 relative overflow-hidden">
+      <div className="bg-slate-900 text-white py-8 px-4 border-b border-slate-800 relative overflow-hidden">
         {/* Background ambient accents */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute left-12 bottom-0 w-64 h-64 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />

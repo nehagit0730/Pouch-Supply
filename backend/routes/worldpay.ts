@@ -145,6 +145,13 @@ router.post("/session", async (req, res) => {
       const host = req.get('host') || 'localhost:3000';
       const shopperResultUrl = `${protocol}://${host}/api/worldpay/callback?orderId=${orderId}`;
 
+      // Sanitize given and surname fields to prevent validation errors with Oppwa
+      let givenName = customerName.trim().split(/\s+/)[0] || 'Customer';
+      let surname = customerName.trim().split(/\s+/).slice(1).join(' ') || 'Customer';
+
+      givenName = givenName.replace(/[^a-zA-Z]/g, '') || 'Customer';
+      surname = surname.replace(/[^a-zA-Z]/g, '') || 'Customer';
+
       const params = new URLSearchParams();
       params.append('entityId', WORLDPAY_ENTITY_ID);
       params.append('amount', parseFloat(amount).toFixed(2));
@@ -152,12 +159,18 @@ router.post("/session", async (req, res) => {
       params.append('paymentType', 'DB');
       params.append('merchantTransactionId', orderId);
       params.append('customer.email', customerEmail);
-      params.append('customer.givenName', customerName.split(' ')[0] || customerName);
-      params.append('customer.surname', customerName.split(' ').slice(1).join(' ') || 'Customer');
+      params.append('customer.givenName', givenName);
+      params.append('customer.surname', surname);
       params.append('shopperResultUrl', shopperResultUrl);
 
       try {
-        const authHeader = 'Basic ' + Buffer.from(`${WORLDPAY_API_USERNAME}:${WORLDPAY_API_PASSWORD}`).toString('base64');
+        // ACI Worldwide (Oppwa) typically expects standard Bearer authorization header.
+        // We support both Bearer (default/modern) and Basic formats.
+        const useBasic = WORLDPAY_API_USERNAME.toLowerCase() === 'basic';
+        const authHeader = useBasic 
+          ? 'Basic ' + Buffer.from(`${WORLDPAY_API_USERNAME}:${WORLDPAY_API_PASSWORD}`).toString('base64')
+          : `Bearer ${WORLDPAY_API_PASSWORD}`;
+
         const apiResponse = await fetch('https://test.oppwa.com/v1/checkouts', {
           method: 'POST',
           headers: {
@@ -180,7 +193,7 @@ router.post("/session", async (req, res) => {
             redirectUrl,
           });
         } else {
-          console.error("[Worldpay Session] Oppwa API error details:", data);
+          console.warn("[Worldpay Session] Oppwa API connection returned status error:", data);
           // Fallback to simulator if API responds with error
           const redirectUrl = `/payment/worldpay-gateway?orderId=${orderId}&amount=${amount}&sessionId=${sessionId}`;
           return res.json({
@@ -189,11 +202,11 @@ router.post("/session", async (req, res) => {
             amount: parseFloat(amount),
             currency,
             redirectUrl,
-            warning: "API connection rejected. Falling back to secure sandbox simulator."
+            warning: "API credentials or parameters rejected. Falling back to secure sandbox simulator."
           });
         }
       } catch (apiErr: any) {
-        console.error("[Worldpay Session] Failed to connect to Oppwa API:", apiErr);
+        console.warn("[Worldpay Session] Failed to connect to Oppwa API:", apiErr);
         // Fallback to simulator if network / other error
         const redirectUrl = `/payment/worldpay-gateway?orderId=${orderId}&amount=${amount}&sessionId=${sessionId}`;
         return res.json({
@@ -237,7 +250,11 @@ router.get("/callback", async (req, res) => {
     console.log(`[Worldpay Callback] Verifying real transaction for Checkout ID: ${checkoutId}, Order ID: ${orderId}`);
 
     // Call GET https://test.oppwa.com/v1/checkouts/${checkoutId}/payment?entityId=${entityId}
-    const authHeader = 'Basic ' + Buffer.from(`${WORLDPAY_API_USERNAME}:${WORLDPAY_API_PASSWORD}`).toString('base64');
+    const useBasic = WORLDPAY_API_USERNAME.toLowerCase() === 'basic';
+    const authHeader = useBasic 
+      ? 'Basic ' + Buffer.from(`${WORLDPAY_API_USERNAME}:${WORLDPAY_API_PASSWORD}`).toString('base64')
+      : `Bearer ${WORLDPAY_API_PASSWORD}`;
+
     const verificationUrl = `https://test.oppwa.com/v1/checkouts/${checkoutId}/payment?entityId=${WORLDPAY_ENTITY_ID}`;
 
     const response = await fetch(verificationUrl, {

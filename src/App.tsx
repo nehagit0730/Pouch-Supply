@@ -1111,10 +1111,10 @@ export default function App() {
                 );
               }
               return (
-                <div className="space-y-16 pb-16">
+                <div className="space-y-6 pb-6">
                   
                   {/* Hero section */}
-                  <section className="bg-slate-900 text-white min-h-[50vh] flex items-center relative overflow-hidden px-6 lg:px-12 py-16">
+                  <section className="bg-slate-900 text-white min-h-[40vh] flex items-center relative overflow-hidden px-6 lg:px-12 py-8">
                     <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
                       <div className="space-y-6">
                         <span className="text-xs bg-indigo-600 text-white font-extrabold py-1 px-3.5 rounded-full uppercase tracking-widest inline-flex items-center gap-1.5 animate-pulse">
@@ -1513,7 +1513,7 @@ export default function App() {
                 <div className="bg-slate-50 min-h-screen">
                   
                   {/* Hero Banner Header */}
-                  <div className="bg-slate-900 text-white relative py-16 px-4 overflow-hidden">
+                  <div className="bg-slate-900 text-white relative py-8 px-4 overflow-hidden">
                     <div className="absolute inset-0 opacity-15 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-slate-200 via-slate-900 to-black pointer-events-none" />
                     <div className="max-w-6xl mx-auto space-y-4 relative z-10 text-center sm:text-left">
                       <span className="text-[10px] bg-slate-800 text-slate-300 font-extrabold uppercase tracking-widest py-1.5 px-3 rounded-full border border-slate-700">
@@ -1638,7 +1638,7 @@ export default function App() {
                       )}
 
                       {filteredFrontBlogs.length === 0 ? (
-                        <div className="bg-white border rounded-2xl py-16 px-4 text-center space-y-4">
+                        <div className="bg-white border rounded-2xl py-8 px-4 text-center space-y-4">
                           <span className="text-5xl block">🗒️</span>
                           <h4 className="font-bold text-slate-800 text-sm">No Publications Match Filter Criteria</h4>
                           <p className="text-slate-400 text-xs max-w-sm mx-auto">Try resetting categories or typing a different keyword to browse our research pouch index.</p>

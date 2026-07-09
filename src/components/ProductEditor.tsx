@@ -37,6 +37,7 @@ export default function ProductEditor({
   const [weightUnit, setWeightUnit] = useState<'g' | 'kg' | 'oz' | 'lb'>('g');
   const [isPhysicalProduct, setIsPhysicalProduct] = useState(true);
   const [inventoryTracked, setInventoryTracked] = useState(true);
+  const [flavour, setFlavour] = useState('Mint');
 
   // Tags & Collections State
   const [tags, setTags] = useState<string[]>([]);
@@ -109,6 +110,7 @@ export default function ProductEditor({
       setVariantsList(product.variants || []);
       setConcreteVariantsList(product.concreteVariants || []);
       setCustomSlug(product.slug || product.id || '');
+      setFlavour(product.flavour || 'Mint');
       setSeoTitle(product.seoTitle || product.title || '');
       setSeoDescription(product.seoDescription || product.description.slice(0, 155) || '');
 
@@ -138,6 +140,7 @@ export default function ProductEditor({
       setVariantsList([]);
       setConcreteVariantsList([]);
       setCustomSlug('');
+      setFlavour('Mint');
       setSeoTitle('');
       setSeoDescription('');
       setSelectedColIds(['all']);
@@ -495,7 +498,9 @@ export default function ProductEditor({
       seoTitle: seoTitle.trim() || title.trim(),
       seoDescription: seoDescription.trim() || description.trim().slice(0, 155),
       createdAt: product?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      flavour: flavour,
+      strength: (title.match(/(\d+(?:\.\d+)?)\s*mg/i) ? title.match(/(\d+(?:\.\d+)?)\s*mg/i)![1] + 'mg' : '') || product?.strength || ''
     };
 
     onSave(cleanProduct, selectedColIds);
@@ -1370,6 +1375,31 @@ export default function ProductEditor({
                   <ChevronDown className="h-3.5 w-3.5" />
                 </div>
               </div>
+            </div>
+
+            {/* Flavour selection */}
+            <div className="space-y-1.5">
+              <label className="block text-[#475569] font-bold uppercase tracking-wider text-[9px]">
+                Flavour
+              </label>
+              <div className="relative">
+                <select
+                  value={flavour}
+                  onChange={(e) => setFlavour(e.target.value)}
+                  className="w-full text-xs font-bold pl-3.5 pr-8 py-2.5 border border-slate-350 bg-white rounded-xl focus:outline-none cursor-pointer appearance-none"
+                >
+                  <option value="Mint">Mint</option>
+                  <option value="Berry">Berry</option>
+                  <option value="Citrus">Citrus</option>
+                  <option value="Fruit">Fruit</option>
+                  <option value="Cola">Cola</option>
+                  <option value="Coffee">Coffee</option>
+                </select>
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </div>
+              </div>
+              <p className="text-[8px] text-slate-400 font-medium">Select primary flavour to match catalog filters.</p>
             </div>
 
             {/* Collection Select check list */}

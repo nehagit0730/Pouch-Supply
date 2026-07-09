@@ -21,6 +21,59 @@ export default function ProductDetailView({
   const [addedMessage, setAddedMessage] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
 
+  // Helper to extract numeric strength and flavour
+  const getProductStrengthLabel = (p: Product): string => {
+    if (p.strength) return p.strength;
+    const titleMatch = p.title.match(/(\d+(?:\.\d+)?)\s*mg/i);
+    if (titleMatch) return titleMatch[1] + 'mg';
+    
+    // Check tags or title fallback
+    const titleL = p.title.toLowerCase();
+    if (titleL.includes('1mg') || titleL.includes('2mg') || titleL.includes('3mg') || titleL.includes('4mg') || titleL.includes('5mg')) {
+      const match = titleL.match(/(\d+mg)/);
+      if (match) return match[1];
+    }
+    if (titleL.includes('6mg') || titleL.includes('7mg') || titleL.includes('8mg') || titleL.includes('9mg') || titleL.includes('10mg')) {
+      const match = titleL.match(/(\d+mg)/);
+      if (match) return match[1];
+    }
+    if (titleL.includes('11mg') || titleL.includes('12mg') || titleL.includes('13mg') || titleL.includes('14mg') || titleL.includes('15mg') || titleL.includes('16mg')) {
+      const match = titleL.match(/(\d+mg)/);
+      if (match) return match[1];
+    }
+    const fallbackMatch = p.title.match(/(\d+mg)/i);
+    if (fallbackMatch) return fallbackMatch[1];
+
+    return 'Regular';
+  };
+
+  const getProductFlavourLabel = (p: Product): string => {
+    if (p.flavour) return p.flavour;
+    
+    const titleL = p.title.toLowerCase();
+    const tagString = (p.tags || []).join(' ').toLowerCase();
+    
+    if (titleL.includes('mint') || titleL.includes('menthol') || titleL.includes('ice') || tagString.includes('mint')) {
+      return 'Mint';
+    }
+    if (titleL.includes('berry') || titleL.includes('cherry') || titleL.includes('strawberry') || titleL.includes('raspberry') || tagString.includes('berry')) {
+      return 'Berry';
+    }
+    if (titleL.includes('citrus') || titleL.includes('lemon') || titleL.includes('lime') || titleL.includes('orange') || tagString.includes('citrus')) {
+      return 'Citrus';
+    }
+    if (titleL.includes('fruit') || titleL.includes('grape') || titleL.includes('mango') || titleL.includes('apple') || titleL.includes('peach') || tagString.includes('fruit')) {
+      return 'Fruit';
+    }
+    if (titleL.includes('cola') || titleL.includes('soda') || tagString.includes('cola')) {
+      return 'Cola';
+    }
+    if (titleL.includes('coffee') || titleL.includes('latte') || titleL.includes('mocha') || tagString.includes('coffee')) {
+      return 'Coffee';
+    }
+    return 'Mint'; // Fallback
+  };
+
   // State to hold selected variant options, e.g. { "Strength": "Strong", "Size": "Large" }
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
 
@@ -213,20 +266,28 @@ export default function ProductDetailView({
               </div>
             )}
             
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-center space-y-1">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+              <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-2.5 text-center space-y-1">
                 <span className="text-slate-400 block text-[8px] font-black uppercase tracking-wider">SKU Code</span>
                 <span className="font-mono font-extrabold text-[#1a1c1d] text-[10px] block truncate" title={activeVariant ? activeVariant.id : (product.sku || 'N/A')}>
                   {activeVariant ? activeVariant.id : (product.sku || 'N/A')}
                 </span>
               </div>
-              <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-center space-y-1">
+              <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-2.5 text-center space-y-1">
                 <span className="text-slate-400 block text-[8px] font-black uppercase tracking-wider">Weight</span>
                 <span className="font-extrabold text-[#1a1c1d] text-xs block">{product.weight || 12}g</span>
               </div>
-              <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-3 text-center space-y-1">
+              <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-2.5 text-center space-y-1">
                 <span className="text-slate-400 block text-[8px] font-black uppercase tracking-wider">Category</span>
                 <span className="font-extrabold text-[#1a1c1d] text-xs truncate block">{product.category || 'Supplements'}</span>
+              </div>
+              <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-2.5 text-center space-y-1">
+                <span className="text-slate-400 block text-[8px] font-black uppercase tracking-wider">Strength</span>
+                <span className="font-extrabold text-indigo-650 text-xs truncate block">{getProductStrengthLabel(product)}</span>
+              </div>
+              <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-2.5 text-center space-y-1">
+                <span className="text-slate-400 block text-[8px] font-black uppercase tracking-wider">Flavour</span>
+                <span className="font-extrabold text-emerald-650 text-xs truncate block">{getProductFlavourLabel(product)}</span>
               </div>
             </div>
           </div>

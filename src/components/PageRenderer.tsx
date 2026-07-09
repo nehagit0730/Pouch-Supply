@@ -65,7 +65,7 @@ export default function PageRenderer({
           };
           
           const isFullBleed = (sec.type === 'Slideshow' || sec.type === 'Image banner' || sec.type === 'Marquee text' || sec.type === 'Video banner') && sec.settings.fullWidth;
-          const paddingClass = isFullBleed ? 'py-0' : 'py-12 sm:py-16 md:py-20';
+          const paddingClass = isFullBleed ? 'py-0' : 'py-3 sm:py-4 md:py-5';
           const containerClass = sec.settings.fullWidth ? 'w-full' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
 
           return (
@@ -224,7 +224,7 @@ export default function PageRenderer({
                       </div>
 
                       {/* Content Overlay */}
-                      <div className="relative z-10 max-w-5xl mx-auto px-6 py-16 sm:py-24 text-center text-white space-y-6 flex flex-col items-center">
+                      <div className="relative z-10 max-w-5xl mx-auto px-6 py-6 sm:py-8 text-center text-white space-y-4 flex flex-col items-center">
                         <span className="inline-flex items-center gap-1.5 bg-indigo-650/85 text-white font-extrabold uppercase tracking-widest text-[8px] sm:text-[9.5px] py-1 px-3.5 rounded-full border border-indigo-400/25">
                           <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping mr-0.5" />
                           🎥 Laboratory Loop Showcase
@@ -348,7 +348,7 @@ export default function PageRenderer({
 
                 {/* 5. RICH TEXT */}
                 {sec.type === 'Rich text' && (
-                  <div className="text-center max-w-3xl mx-auto space-y-6 py-10 px-4 sm:px-6">
+                  <div className="text-center max-w-3xl mx-auto space-y-4 py-4 px-4 sm:px-6">
                     <div className="inline-flex items-center gap-1.5 justify-center py-1 px-3 bg-teal-50 border border-teal-100 text-teal-800 rounded-full text-[9px] tracking-widest uppercase font-extrabold">
                       <TrendingUp className="h-3 w-3" />
                       <span>Certified Quality Standard</span>
@@ -821,7 +821,7 @@ export default function PageRenderer({
 
                 {/* 15. BRAND LIST */}
                 {sec.type === 'Brand list' && (
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-10 py-12">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 py-4">
                     <div className="text-center space-y-3">
                       <span className="text-[10px] tracking-widest font-black uppercase text-indigo-650 bg-indigo-50 px-3 py-1 rounded-full inline-block font-sans">
                         Compounding Series Catalog
@@ -900,7 +900,7 @@ export default function PageRenderer({
                   // Duplicate items multiple times to create an absolute seamless continuous scroll loop
                   const doubledItems = items.length > 0 ? [...items, ...items, ...items, ...items] : [];
                   return (
-                    <div className="py-16 space-y-12 bg-white w-full overflow-hidden">
+                    <div className="py-4 space-y-6 bg-white w-full overflow-hidden">
                       <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center space-y-3">
                         {sec.settings.title && (
                           <h2 
@@ -960,7 +960,7 @@ export default function PageRenderer({
                   const steps = sec.settings.stepItems || [];
                   return (
                     <div 
-                      className="py-20 w-full font-sans transition-all duration-300"
+                      className="py-6 w-full font-sans transition-all duration-300"
                       style={{ backgroundColor: sec.settings.backgroundColor || '#F4F7FC' }}
                     >
                       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
@@ -1054,7 +1054,7 @@ export default function PageRenderer({
                   ];
 
                   return (
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-12 py-12">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 py-4">
                       <div className="text-center space-y-3">
                         {sec.settings.title && (
                           <h2 

@@ -37,6 +37,8 @@ export interface Product {
   seoDescription?: string;
   createdAt?: string;
   updatedAt?: string;
+  strength?: string;
+  flavour?: string;
 }
 
 export interface Collection {
