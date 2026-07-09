@@ -43,6 +43,12 @@ export default function CustomerAccount({
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newAddress, setNewAddress] = useState('');
+  const [addrStreet, setAddrStreet] = useState('');
+  const [addrApt, setAddrApt] = useState('');
+  const [addrCity, setAddrCity] = useState('');
+  const [addrState, setAddrState] = useState('');
+  const [addrZip, setAddrZip] = useState('');
+  const [addrCountry, setAddrCountry] = useState('United Kingdom');
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<Order | null>(null);
 
@@ -1856,37 +1862,122 @@ export default function CustomerAccount({
       {/* Save Address Modal */}
       {showAddressModal && (
         <div className="fixed inset-0 z-50 bg-[#071d37]/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 animate-scaleUp">
-            <h3 className="font-black text-[#071d37] text-sm mb-3 uppercase tracking-wide">Add Custom Shipping Address</h3>
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-scaleUp text-left">
+            <h3 className="font-black text-[#071d37] text-sm mb-4 uppercase tracking-wide flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-[#071d37]" />
+              <span>Add Custom Shipping Address</span>
+            </h3>
             <form 
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!newAddress.trim()) return;
-                onAddAddress(newAddress.trim());
-                setNewAddress('');
+                if (!addrStreet.trim() || !addrCity.trim() || !addrZip.trim()) {
+                  return;
+                }
+                const combined = [
+                  addrStreet.trim(),
+                  addrApt.trim() ? addrApt.trim() : null,
+                  addrCity.trim(),
+                  addrState.trim() ? addrState.trim() : null,
+                  addrZip.trim(),
+                  addrCountry.trim()
+                ].filter(Boolean).join(', ');
+                
+                onAddAddress(combined);
+                
+                // Reset fields
+                setAddrStreet('');
+                setAddrApt('');
+                setAddrCity('');
+                setAddrState('');
+                setAddrZip('');
+                setAddrCountry('United Kingdom');
                 setShowAddressModal(false);
               }} 
               className="space-y-4"
             >
-              <input
-                type="text"
-                required
-                placeholder="Apartment, Street, City, ZIP, UK"
-                value={newAddress}
-                onChange={(e) => setNewAddress(e.target.value)}
-                className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
-              />
-              <div className="flex justify-end gap-2 text-xs">
+              <div>
+                <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">Street Address *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 24 London Road"
+                  value={addrStreet}
+                  onChange={(e) => setAddrStreet(e.target.value)}
+                  className="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">Apartment, suite, unit, etc. (optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Flat 3B"
+                  value={addrApt}
+                  onChange={(e) => setAddrApt(e.target.value)}
+                  className="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">City *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. London"
+                    value={addrCity}
+                    onChange={(e) => setAddrCity(e.target.value)}
+                    className="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">State / Province</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Greater London"
+                    value={addrState}
+                    onChange={(e) => setAddrState(e.target.value)}
+                    className="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">ZIP / Postal Code *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. EC1A 1BB"
+                    value={addrZip}
+                    onChange={(e) => setAddrZip(e.target.value)}
+                    className="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">Country *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. United Kingdom"
+                    value={addrCountry}
+                    onChange={(e) => setAddrCountry(e.target.value)}
+                    className="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 text-xs pt-2">
                 <button
                   type="button"
                   onClick={() => setShowAddressModal(false)}
-                  className="bg-slate-100 hover:bg-slate-250 text-slate-600 py-1.5 px-4 rounded-xl font-bold cursor-pointer"
+                  className="bg-slate-100 hover:bg-slate-205 text-slate-600 py-2 px-4 rounded-xl font-bold cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#071d37] hover:bg-[#0c2e56] text-white py-1.5 px-4 rounded-xl font-bold cursor-pointer"
+                  className="bg-[#071d37] hover:bg-[#0c2e56] text-white py-2 px-4 rounded-xl font-bold cursor-pointer transition-colors shadow-sm"
                 >
                   Save Address
                 </button>

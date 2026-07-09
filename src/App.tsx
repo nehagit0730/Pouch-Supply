@@ -503,8 +503,15 @@ export default function App() {
   useEffect(() => {
     safeSaveToLocalStorage('ps_logged_in_customer', loggedInCustomer);
     if (loggedInCustomer) {
-      // Keep customer object in the master listing synced as well
-      setCustomers(prev => prev.map(c => c.id === loggedInCustomer.id ? loggedInCustomer : c));
+      // Keep customer object in the master listing synced as well, adding them if they do not exist
+      setCustomers(prev => {
+        const exists = prev.some(c => c.id === loggedInCustomer.id || c.email.toLowerCase() === loggedInCustomer.email.toLowerCase());
+        if (exists) {
+          return prev.map(c => (c.id === loggedInCustomer.id || c.email.toLowerCase() === loggedInCustomer.email.toLowerCase()) ? loggedInCustomer : c);
+        } else {
+          return [...prev, loggedInCustomer];
+        }
+      });
     }
   }, [loggedInCustomer]);
 
@@ -629,9 +636,11 @@ export default function App() {
     if (!loggedInCustomer) return;
     setLoggedInCustomer(prev => {
       if (!prev) return null;
+      // Filter out any default placeholder addresses if the customer adds a proper one
+      const filtered = prev.addresses.filter(addr => addr !== "100 Main Street, New York, NY, 10001");
       return {
         ...prev,
-        addresses: [...prev.addresses, address]
+        addresses: [...filtered, address]
       };
     });
   };

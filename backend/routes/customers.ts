@@ -74,7 +74,7 @@ router.post("/signup", async (req, res) => {
       location: location.trim(),
       ordersCount: 0,
       amountSpent: 0,
-      addresses: ["100 Main Street, New York, NY, 10001"], // default initial placeholder
+      addresses: [], // Start with empty addresses array, no mock placeholder
       wishlist: [],
       passwordHash: hashPassword(password),
     };
