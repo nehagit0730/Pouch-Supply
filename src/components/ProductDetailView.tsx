@@ -23,6 +23,19 @@ export default function ProductDetailView({
 
   // Helper to extract numeric strength and flavour
   const getProductStrengthLabel = (p: Product): string => {
+    if (selectedVariants) {
+      const keys = Object.keys(selectedVariants);
+      const strengthKey = keys.find(k => k.toLowerCase().includes('strength') || k.toLowerCase().includes('nicotine'));
+      if (strengthKey && selectedVariants[strengthKey]) {
+        return selectedVariants[strengthKey];
+      }
+    }
+    
+    if (activeVariant) {
+      const nameMatch = activeVariant.name.match(/(\d+(?:\.\d+)?)\s*mg/i);
+      if (nameMatch) return nameMatch[0];
+    }
+
     if (p.strength) return p.strength;
     const titleMatch = p.title.match(/(\d+(?:\.\d+)?)\s*mg/i);
     if (titleMatch) return titleMatch[1] + 'mg';
@@ -48,6 +61,18 @@ export default function ProductDetailView({
   };
 
   const getProductFlavourLabel = (p: Product): string => {
+    if (selectedVariants) {
+      const keys = Object.keys(selectedVariants);
+      const flavorKey = keys.find(k => k.toLowerCase().includes('flavour') || k.toLowerCase().includes('flavor') || k.toLowerCase().includes('taste'));
+      if (flavorKey && selectedVariants[flavorKey]) {
+        return selectedVariants[flavorKey];
+      }
+    }
+
+    if (activeVariant && activeVariant.flavour) {
+      return activeVariant.flavour;
+    }
+
     if (p.flavour) return p.flavour;
     
     const titleL = p.title.toLowerCase();

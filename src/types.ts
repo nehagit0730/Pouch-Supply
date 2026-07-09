@@ -11,6 +11,7 @@ export interface VariantDetail {
   inventory: number;
   description: string;
   images: string[]; // Upload different images for each variant
+  flavour?: string;
 }
 
 export interface Product {

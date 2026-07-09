@@ -181,7 +181,8 @@ export default function ProductEditor({
             price: price || 0,
             inventory: 0,
             description: '',
-            images: []
+            images: [],
+            flavour: flavour || 'Mint'
           };
         }
       });
@@ -1175,7 +1176,7 @@ export default function ProductEditor({
 
                       {/* Right Side: Inputs for price, stock, and description */}
                       <div className="md:col-span-7 space-y-3.5">
-                        <div className="grid grid-cols-2 gap-3.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                           <div>
                             <label className="block text-slate-550 font-bold uppercase tracking-wider text-[9px] mb-1.5">Price (£ GBP)</label>
                             <input
@@ -1194,6 +1195,21 @@ export default function ProductEditor({
                               onChange={(e) => handleUpdateConcreteVariant(vIdx, { inventory: Math.max(0, parseInt(e.target.value) || 0) })}
                               className="w-full text-xs font-bold px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
                             />
+                          </div>
+                          <div>
+                            <label className="block text-slate-550 font-bold uppercase tracking-wider text-[9px] mb-1.5">Flavour</label>
+                            <select
+                              value={variant.flavour || 'Mint'}
+                              onChange={(e) => handleUpdateConcreteVariant(vIdx, { flavour: e.target.value })}
+                              className="w-full text-xs font-bold px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                            >
+                              <option value="Mint">Mint</option>
+                              <option value="Berry">Berry</option>
+                              <option value="Citrus">Citrus</option>
+                              <option value="Fruit">Fruit</option>
+                              <option value="Cola">Cola</option>
+                              <option value="Coffee">Coffee</option>
+                            </select>
                           </div>
                         </div>
 
