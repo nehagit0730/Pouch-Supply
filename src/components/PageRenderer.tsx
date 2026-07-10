@@ -3,7 +3,7 @@ import { CustomPage, PageSection, Product, Collection, Customer, BlogPost } from
 import { 
   ArrowRight, ShoppingCart, Star, Heart, FileText, Check, 
   ChevronDown, ChevronUp, Play, Sparkles, TrendingUp, Plus, Minus, ShieldCheck, Award, Eye, Flame, ArrowUpRight, BookOpen, Layers,
-  Truck, Zap, Shield, Clock, Package, HelpCircle, Globe, Tag, ChevronLeft, ChevronRight
+  Truck, Zap, Shield, Clock, Package, HelpCircle, Globe, Tag, ChevronLeft, ChevronRight, Lock, Gift, RefreshCw
 } from 'lucide-react';
 import PremiumSlideshow from './PremiumSlideshow';
 
@@ -152,6 +152,390 @@ function BrandsWeOfferSection({ sec, handleLinkClick }: BrandsWeOfferSectionProp
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+interface HowItWorksSectionProps {
+  sec: PageSection;
+  handleLinkClick: (link?: string) => void;
+}
+
+function HowItWorksSection({ sec, handleLinkClick }: HowItWorksSectionProps) {
+  const steps = (sec.settings.stepItems && sec.settings.stepItems.length > 0) 
+    ? sec.settings.stepItems 
+    : [
+        { number: 1, title: 'Choose Your Plan', description: 'Pick the plan that suits you best. Flexible. Simple. No commitment.' },
+        { number: 2, title: 'Pick Your Favourite Brands', description: 'Mix and match from 20+ premium brands, flavours and strengths.' },
+        { number: 3, title: 'Relax, We Handle The Rest', description: 'We pack and deliver to your door, automatically. You focus on life.' }
+      ];
+
+  const renderStepVisualMockup = (sidx: number, step: any) => {
+    if (step.imageUrl && step.imageUrl !== '/placeholder.png' && step.imageUrl !== '') {
+      return (
+        <div className="w-full my-4 flex items-center justify-center overflow-hidden rounded-xl">
+          <img 
+            src={step.imageUrl} 
+            className="w-full max-h-60 object-contain filter drop-shadow-md group-hover:scale-[1.03] transition-transform duration-500" 
+            alt={step.title} 
+            referrerPolicy="no-referrer"
+          />
+        </div>
+      );
+    }
+
+    if (sidx === 0) {
+      return (
+        <div className="w-full bg-slate-50/50 rounded-2xl p-4 border border-slate-100 flex flex-col items-center my-4">
+          <div className="grid grid-cols-4 gap-1 w-full">
+            {/* LITE */}
+            <div className="bg-white rounded-lg border border-slate-200/60 p-1.5 flex flex-col items-center justify-between text-center shadow-2xs h-32">
+              <span className="text-[8px] font-black tracking-wider text-slate-400">LITE</span>
+              <div className="my-1 text-center">
+                <span className="block text-[11px] font-black text-slate-800 leading-tight">5 Cans</span>
+                <span className="block text-[10px] font-bold text-[#D4AF37] leading-tight">£27.99</span>
+                <span className="text-[7px] text-slate-400 block -mt-0.5">per month</span>
+              </div>
+            </div>
+            
+            {/* CORE */}
+            <div className="bg-white rounded-lg border border-slate-200/60 p-1.5 flex flex-col items-center justify-between text-center shadow-2xs h-32">
+              <span className="text-[8px] font-black tracking-wider text-slate-450">CORE</span>
+              <div className="my-1 text-center">
+                <span className="block text-[11px] font-black text-slate-800 leading-tight">8 Cans</span>
+                <span className="block text-[10px] font-bold text-[#D4AF37] leading-tight">£35.99</span>
+                <span className="text-[7px] text-slate-400 block -mt-0.5">per month</span>
+              </div>
+            </div>
+
+            {/* PRO */}
+            <div className="bg-[#0C1017] rounded-lg border border-[#D4AF37] p-1.5 flex flex-col items-center justify-between text-center shadow-sm h-32 relative overflow-hidden transform scale-105 z-10">
+              <div className="absolute top-0 left-0 right-0 bg-[#D4AF37] text-[5px] font-black text-slate-950 py-0.5 uppercase tracking-wider text-center">
+                MOST POPULAR
+              </div>
+              <span className="text-[8px] font-black tracking-wider text-white mt-1.5">PRO</span>
+              <div className="my-1 text-center">
+                <span className="block text-[11px] font-black text-white leading-tight">10 Cans</span>
+                <span className="block text-[10px] font-bold text-[#D4AF37] leading-tight">£40.99</span>
+                <span className="text-[7px] text-slate-350 block -mt-0.5">per month</span>
+              </div>
+              <span className="text-[4px] font-bold text-emerald-400 tracking-wider uppercase">FREE DEV</span>
+            </div>
+
+            {/* ULTIMATE */}
+            <div className="bg-white rounded-lg border border-[#D4AF37]/50 p-1.5 flex flex-col items-center justify-between text-center shadow-2xs h-32">
+              <span className="text-[8px] font-black tracking-wider text-slate-450">ULTIMATE</span>
+              <div className="my-1 text-center">
+                <span className="block text-[11px] font-black text-slate-800 leading-tight">12 Cans</span>
+                <span className="block text-[10px] font-bold text-[#D4AF37] leading-tight">£46.99</span>
+                <span className="text-[7px] text-slate-400 block -mt-0.5">per month</span>
+              </div>
+              <span className="text-[4px] font-bold text-[#D4AF37] tracking-wider uppercase">FREE DEV</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (sidx === 1) {
+      return (
+        <div className="w-full h-40 relative my-4 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full max-w-[260px] h-full flex items-center justify-center">
+            {/* CAN 1: ZYN */}
+            <div className="absolute left-1 top-4 w-[64px] h-[64px] rounded-full bg-white border border-slate-200 shadow-md flex flex-col items-center justify-center p-0.5 transform -rotate-12 z-10 transition-transform duration-300 hover:scale-105">
+              <div className="w-[56px] h-[56px] rounded-full border border-sky-400/30 flex flex-col items-center justify-center bg-sky-50/20">
+                <span className="text-[9px] font-extrabold text-sky-600 tracking-tight leading-none">ZYN</span>
+                <span className="text-[4px] font-bold text-sky-400 uppercase tracking-widest mt-0.5">COOL MINT</span>
+              </div>
+            </div>
+
+            {/* CAN 2: VELO */}
+            <div className="absolute right-1 top-4 w-[64px] h-[64px] rounded-full bg-white border border-slate-200 shadow-md flex flex-col items-center justify-center p-0.5 transform rotate-12 z-10 transition-transform duration-300 hover:scale-105">
+              <div className="w-[56px] h-[56px] rounded-full border border-blue-500/30 flex flex-col items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600">
+                <span className="text-[9px] font-extrabold text-white tracking-tight leading-none">VELO</span>
+                <span className="text-[3px] font-bold text-sky-200 uppercase tracking-widest mt-0.5">FREEZE</span>
+              </div>
+            </div>
+
+            {/* CAN 3: FUMI */}
+            <div className="absolute left-9 bottom-2 w-[60px] h-[60px] rounded-full bg-white border border-slate-200 shadow-md flex flex-col items-center justify-center p-0.5 transform rotate-6 z-20 transition-transform duration-300 hover:scale-105">
+              <div className="w-[52px] h-[52px] rounded-full border border-purple-500/20 flex flex-col items-center justify-center bg-gradient-to-br from-purple-500 to-purple-700">
+                <span className="text-[8px] font-extrabold text-white tracking-tight leading-none">FUMI</span>
+                <span className="text-[3px] font-bold text-purple-200 uppercase tracking-widest mt-0.5">BERRY</span>
+              </div>
+            </div>
+
+            {/* CAN 4: PABLO */}
+            <div className="absolute right-9 bottom-2 w-[60px] h-[60px] rounded-full bg-white border border-slate-200 shadow-md flex flex-col items-center justify-center p-0.5 transform -rotate-6 z-20 transition-transform duration-300 hover:scale-105">
+              <div className="w-[52px] h-[52px] rounded-full border border-red-650/30 flex flex-col items-center justify-center bg-slate-50">
+                <span className="text-[8px] font-black text-red-650 tracking-tighter leading-none italic">PABLO</span>
+                <span className="text-[3px] font-black text-slate-800 uppercase tracking-widest mt-0.5">EXCLUSIVE</span>
+              </div>
+            </div>
+
+            {/* CAN 5: 77 */}
+            <div className="absolute left-[38%] top-2 w-[70px] h-[70px] rounded-full bg-white border border-slate-200 shadow-lg flex flex-col items-center justify-center p-0.5 transform -translate-x-1/2 -rotate-3 z-30 transition-transform duration-300 hover:scale-105">
+              <div className="w-[62px] h-[62px] rounded-full border border-slate-900 flex flex-col items-center justify-center bg-[#0C1017]">
+                <span className="text-[14px] font-black text-white tracking-tighter leading-none">77</span>
+                <span className="text-[3.5px] font-bold text-[#D4AF37] uppercase tracking-widest -mt-0.5">NICOTINE</span>
+              </div>
+            </div>
+
+            {/* CAN 6: CUBA */}
+            <div className="absolute right-[38%] top-2 w-[70px] h-[70px] rounded-full bg-white border border-slate-200 shadow-lg flex flex-col items-center justify-center p-0.5 transform translate-x-1/2 rotate-3 z-30 transition-transform duration-300 hover:scale-105">
+              <div className="w-[62px] h-[62px] rounded-full border border-amber-500 flex flex-col items-center justify-center bg-slate-900">
+                <span className="text-[11px] font-black text-amber-400 tracking-wider leading-none">CUBA</span>
+                <span className="text-[3.5px] font-bold text-white uppercase tracking-widest mt-0.5">BLACK</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (sidx === 2) {
+      return (
+        <div className="w-full h-40 relative my-4 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
+            <div className="w-40 h-20 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 blur-xl rounded-full" />
+            <span className="text-emerald-500 text-sm absolute left-12 top-6 animate-pulse">🌿</span>
+            <span className="text-emerald-500 text-xs absolute right-12 bottom-6 animate-pulse" style={{ animationDelay: '1s' }}>🌿</span>
+          </div>
+
+          <div className="w-48 h-28 bg-[#0C1017] rounded-xl border border-slate-800 shadow-[0_12px_24px_rgba(0,0,0,0.25)] relative overflow-hidden transform rotate-2 hover:rotate-0 transition-transform duration-500 flex flex-col justify-between p-2.5 select-none">
+            <div className="absolute top-2 right-3 w-12 h-10 bg-white/95 rounded-sm p-0.5 shadow-2xs flex flex-col justify-between border-l border-b border-slate-200 text-slate-800">
+              <div className="w-full h-0.5 bg-slate-400 rounded-2xs" />
+              <div className="space-y-[1.5px]">
+                <div className="w-6 h-[1.5px] bg-slate-300" />
+                <div className="w-8 h-[1.5px] bg-slate-300" />
+              </div>
+              <div className="flex gap-[0.5px] h-2 items-end">
+                <div className="w-[1px] h-full bg-slate-800" />
+                <div className="w-[1.5px] h-full bg-slate-800" />
+                <div className="w-[1px] h-[70%] bg-slate-800" />
+                <div className="w-[1px] h-full bg-slate-800" />
+              </div>
+            </div>
+
+            <div className="mt-1 space-y-0.5 text-left">
+              <span className="block text-[11px] font-black tracking-[0.12em] text-[#D4AF37] leading-none">POUCH</span>
+              <span className="block text-[11px] font-black tracking-[0.12em] text-[#D4AF37] leading-none">SUPPLY</span>
+            </div>
+
+            <div className="border-t border-slate-800/65 pt-1.5 flex items-center justify-between">
+              <span className="text-[4.5px] font-bold text-slate-450 uppercase tracking-[0.18em]">NICOTINE ON AUTOPILOT</span>
+              <div className="flex gap-0.5">
+                <div className="w-0.5 h-0.5 rounded-full bg-slate-800" />
+                <div className="w-0.5 h-0.5 rounded-full bg-slate-800" />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-8 w-36 h-36 flex items-center justify-center bg-slate-50/50 rounded-2xl p-4 shrink-0 border border-slate-100/50 group-hover:border-slate-200 group-hover:bg-white transition-all duration-300">
+        {step.imageUrl ? (
+          <img 
+            src={step.imageUrl} 
+            className="max-h-28 max-w-full object-contain filter drop-shadow-sm group-hover:scale-105 transition-transform duration-300" 
+            alt={step.title} 
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">No Image Asset</span>
+        )}
+      </div>
+    );
+  };
+
+  const renderStepCheckmarks = (sidx: number) => {
+    const checkmarks = sidx === 0 
+      ? ["Weekly, Fortnightly or Monthly", "Change anytime"]
+      : sidx === 1 
+      ? ["Change brands or flavours anytime"]
+      : ["Automatic deliveries", "Skip or pause anytime"];
+
+    return (
+      <div className="mt-4 space-y-2 w-full text-left">
+        {checkmarks.map((text, cidx) => (
+          <div key={cidx} className="flex items-center gap-2 text-xs font-bold text-slate-850 justify-center">
+            <div className="w-4 h-4 rounded-full bg-amber-50 border border-amber-250 text-[#D4AF37] flex items-center justify-center shrink-0">
+              <Check className="h-2.5 w-2.5 stroke-[3]" />
+            </div>
+            <span className="text-[11.5px] text-slate-650 font-extrabold">{text}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div 
+      className="py-16 w-full font-sans transition-all duration-300 overflow-hidden"
+      style={{ backgroundColor: sec.settings.backgroundColor || '#F8FAFC' }}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 relative">
+        {/* Section Header */}
+        <div className="text-center space-y-4 max-w-3xl mx-auto flex flex-col items-center">
+          <div className="flex items-center justify-center gap-4 animate-fade-in">
+            <div className="w-10 h-[1px] bg-[#D4AF37]" />
+            <span className="text-xs font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+              HOW IT WORKS
+            </span>
+            <div className="w-10 h-[1px] bg-[#D4AF37]" />
+          </div>
+          
+          <h2 
+            className="text-3xl md:text-[42px] font-black uppercase tracking-tight text-[#0C1017] leading-none"
+            style={{ color: sec.settings.headingColor || '#0C1017' }}
+          >
+            {sec.settings.title || 'Get Started In Under 60 Seconds'}
+          </h2>
+          
+          {sec.settings.description && (
+            <p 
+              className="text-xs sm:text-sm leading-relaxed text-slate-550 font-semibold opacity-90"
+              style={{ color: sec.settings.textColor || '#64748B' }}
+            >
+              {sec.settings.description}
+            </p>
+          )}
+
+          {/* Reassuring timing badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50/75 border border-amber-100 text-[#D4AF37] text-xs font-black animate-fade-in">
+            <Clock className="h-3.5 w-3.5 stroke-[2.5]" />
+            <span>Takes less than 60 seconds</span>
+          </div>
+        </div>
+
+        {/* Steps Grid */}
+        <div className="relative max-w-6xl mx-auto pt-6">
+          {/* Gold Connecting Dotted Line */}
+          <div className="absolute top-[180px] left-[15%] right-[15%] h-[2px] border-t-2 border-dashed border-[#D4AF37]/45 hidden md:block z-0" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10 relative z-10">
+            {steps.map((step, sidx) => (
+              <div 
+                key={sidx}
+                className="bg-white rounded-[24px] border border-slate-100 p-8 flex flex-col items-center justify-between text-center shadow-[0_15px_40px_rgba(147,197,253,0.1)] hover:shadow-[0_24px_50px_rgba(147,197,253,0.16)] hover:-translate-y-1.5 transition-all duration-500 min-h-[440px] group relative"
+              >
+                {/* Gold step circle overlapping border */}
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-[#D4AF37] text-white font-black text-base flex items-center justify-center shadow-md border-4 border-white transition-all duration-300 group-hover:scale-110">
+                  {step.number || (sidx + 1)}
+                </div>
+
+                <div className="space-y-4 flex-1 flex flex-col items-center pt-3 w-full">
+                  <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight leading-snug">
+                    {step.title || 'Step Title'}
+                  </h3>
+                  
+                  <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed max-w-[250px] font-semibold">
+                    {step.description || 'Step description details.'}
+                  </p>
+
+                  {/* Render High-Fidelity Custom Visual Mockups */}
+                  {renderStepVisualMockup(sidx, step)}
+                </div>
+
+                {/* Render corresponding green checkmarks */}
+                {renderStepCheckmarks(sidx)}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Reassurance Objections Grid */}
+        <div className="max-w-6xl mx-auto pt-4">
+          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-[0_12px_40px_rgba(147,197,253,0.04)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 divide-y sm:divide-y-0 lg:divide-y-0 lg:divide-x divide-slate-100">
+            {/* CANCEL ANYTIME */}
+            <div className="flex items-center gap-4 py-4 sm:py-2 md:px-4 first:pt-0 sm:first:pt-2 justify-center lg:justify-start">
+              <div className="shrink-0 p-3 rounded-xl bg-slate-50 flex items-center justify-center text-slate-800 shadow-2xs">
+                <ShieldCheck className="h-6 w-6 text-slate-800" />
+              </div>
+              <div className="text-left">
+                <h4 className="text-[11px] font-black tracking-wider text-slate-900 uppercase">
+                  CANCEL ANYTIME
+                </h4>
+                <p className="text-[11px] text-slate-400 font-bold leading-normal">
+                  No ties, no fuss. You're in control.
+                </p>
+              </div>
+            </div>
+
+            {/* CHANGE ANYTIME */}
+            <div className="flex items-center gap-4 py-4 sm:py-2 md:px-4 lg:pl-6 justify-center lg:justify-start">
+              <div className="shrink-0 p-3 rounded-xl bg-slate-50 flex items-center justify-center text-slate-850 shadow-2xs">
+                <RefreshCw className="h-6 w-6 text-slate-850 animate-spin" style={{ animationDuration: '8s' }} />
+              </div>
+              <div className="text-left">
+                <h4 className="text-[11px] font-black tracking-wider text-slate-900 uppercase">
+                  CHANGE ANYTIME
+                </h4>
+                <p className="text-[11px] text-slate-400 font-bold leading-normal">
+                  Swap plans, brands or flavours.
+                </p>
+              </div>
+            </div>
+
+            {/* SKIP DELIVERIES */}
+            <div className="flex items-center gap-4 py-4 sm:py-2 md:px-4 lg:pl-6 justify-center lg:justify-start">
+              <div className="shrink-0 p-3 rounded-xl bg-slate-50 flex items-center justify-center text-slate-800 shadow-2xs">
+                <Truck className="h-6 w-6 text-slate-800" />
+              </div>
+              <div className="text-left">
+                <h4 className="text-[11px] font-black tracking-wider text-slate-900 uppercase">
+                  SKIP DELIVERIES
+                </h4>
+                <p className="text-[11px] text-slate-400 font-bold leading-normal">
+                  Skip, pause or delay anytime.
+                </p>
+              </div>
+            </div>
+
+            {/* NO CONTRACTS */}
+            <div className="flex items-center gap-4 py-4 sm:py-2 md:px-4 lg:pl-6 last:pb-0 justify-center lg:justify-start">
+              <div className="shrink-0 p-3 rounded-xl bg-slate-50 flex items-center justify-center text-slate-800 shadow-2xs">
+                <Lock className="h-6 w-6 text-slate-800" />
+              </div>
+              <div className="text-left">
+                <h4 className="text-[11px] font-black tracking-wider text-slate-900 uppercase">
+                  NO CONTRACTS
+                </h4>
+                <p className="text-[11px] text-slate-400 font-bold leading-normal">
+                  No commitments, cancel 1-click.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Conversion Area */}
+        <div className="mt-12 flex flex-col items-center justify-center space-y-4 text-center pb-6">
+          <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Ready to get started?</h4>
+          <button
+            type="button"
+            onClick={() => handleLinkClick('/pages/subscribe')}
+            className="px-8 py-4 bg-[#D4AF37] hover:bg-[#bfa032] active:scale-98 transition-all duration-300 text-white font-extrabold uppercase tracking-[0.2em] text-xs rounded-xl shadow-lg shadow-amber-500/10 cursor-pointer flex items-center gap-2"
+          >
+            Start your subscription
+            <ArrowRight className="h-4 w-4 stroke-[2.5]" />
+          </button>
+          
+          {/* Small secure badges */}
+          <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-semibold">
+            <span className="flex items-center gap-1">
+              <Lock className="h-3 w-3 text-slate-400" />
+              Secure checkout
+            </span>
+            <span>•</span>
+            <span>18+ Age Verified</span>
+            <span>•</span>
+            <span>Your data is protected</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1049,91 +1433,9 @@ export default function PageRenderer({
                 )}
 
                 {/* 18. HOW IT WORKS */}
-                {sec.type === 'How it works' && (() => {
-                  const steps = sec.settings.stepItems || [];
-                  return (
-                    <div 
-                      className="py-6 w-full font-sans transition-all duration-300"
-                      style={{ backgroundColor: sec.settings.backgroundColor || '#F4F7FC' }}
-                    >
-                      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-                        {/* Section Header */}
-                        <div className="text-center space-y-4 max-w-3xl mx-auto">
-                          <h2 
-                            className="text-3xl md:text-5xl font-black uppercase tracking-tight text-slate-900 animate-fade-in"
-                            style={{ color: sec.settings.headingColor || '#0C1017' }}
-                          >
-                            {sec.settings.title || 'How it works'}
-                          </h2>
-                          {sec.settings.description && (
-                            <p 
-                              className="text-xs sm:text-base leading-relaxed text-slate-500 opacity-90"
-                              style={{ color: sec.settings.textColor || '#475569' }}
-                            >
-                              {sec.settings.description}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Steps Grid */}
-                        <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 lg:gap-8 max-w-6xl mx-auto relative">
-                          {steps.map((step, sidx) => (
-                            <React.Fragment key={sidx}>
-                              <div className="flex-1 bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl border border-slate-100 p-8 flex flex-col items-center justify-between text-center min-h-[380px] group">
-                                <div className="space-y-4 flex-1 flex flex-col items-center">
-                                  {/* Step Number */}
-                                  <div className="w-10 h-10 bg-indigo-50 text-indigo-700 font-black text-lg rounded-full flex items-center justify-center shadow-xs group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
-                                    {step.number || (sidx + 1)}
-                                  </div>
-                                  
-                                  {/* Step Title */}
-                                  <h3 className="text-xl font-extrabold text-slate-800 tracking-tight leading-snug">
-                                    {step.title || 'Step Title'}
-                                  </h3>
-                                  
-                                  {/* Step Description */}
-                                  <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-[240px]">
-                                    {step.description || 'Step description text details.'}
-                                  </p>
-                                </div>
-
-                                {/* Step Image Frame */}
-                                <div className="mt-8 w-36 h-36 flex items-center justify-center bg-slate-50/50 rounded-2xl p-4 shrink-0 border border-slate-100/50 group-hover:border-slate-200 group-hover:bg-white transition-all duration-300">
-                                  {step.imageUrl ? (
-                                    <img 
-                                      src={step.imageUrl} 
-                                      className="max-h-28 max-w-full object-contain filter drop-shadow-sm group-hover:scale-105 transition-transform duration-300" 
-                                      alt={step.title} 
-                                      referrerPolicy="no-referrer"
-                                    />
-                                  ) : (
-                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">No Image Asset</span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Curved connection arrow on desktop */}
-                              {sidx < steps.length - 1 && (
-                                <div className="hidden md:flex items-center justify-center shrink-0 self-center px-2 z-10">
-                                  <svg className="w-16 h-8 text-indigo-500 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 44 12" style={{ animationDuration: '4s' }}>
-                                    <path d="M2 10 C 12 2, 32 2, 42 10" strokeLinecap="round" strokeLinejoin="round" />
-                                    <path d="M35 7 L42 10 L37 13" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                </div>
-                              )}
-                            </React.Fragment>
-                          ))}
-
-                          {steps.length === 0 && (
-                            <div className="text-slate-500 text-center py-12 w-full italic text-sm">
-                              No workflow steps created. Configure them in the Admin Dashboard!
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
+                {sec.type === 'How it works' && (
+                  <HowItWorksSection sec={sec} handleLinkClick={handleLinkClick} />
+                )}
 
                 {/* 16. ICON WITH TEXT */}
                 {sec.type === 'Icon with text' && (() => {

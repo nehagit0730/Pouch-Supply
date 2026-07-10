@@ -6,7 +6,7 @@ import {
   Trash2, Filter, Save, Sparkles, Building, Settings, Image as ImageIcon, 
   X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw, AlertTriangle,
   Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass, ShieldCheck, ChevronLeft,
-  ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server,
+  ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server, Lock, Gift, Check, Clock, Truck, ArrowRight,
   Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit, LogOut
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
@@ -229,6 +229,319 @@ function BrandsWeOfferSectionAdmin({ sec }: BrandsWeOfferSectionAdminProps) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+interface HowItWorksSectionAdminProps {
+  sec: PageSection;
+}
+
+function HowItWorksSectionAdmin({ sec }: HowItWorksSectionAdminProps) {
+  const steps = (sec.settings.stepItems && sec.settings.stepItems.length > 0) 
+    ? sec.settings.stepItems 
+    : [
+        { number: 1, title: 'Choose Your Plan', description: 'Pick the plan that suits you best. Flexible. Simple. No commitment.' },
+        { number: 2, title: 'Pick Your Favourite Brands', description: 'Mix and match from 20+ premium brands, flavours and strengths.' },
+        { number: 3, title: 'Relax, We Handle The Rest', description: 'We pack and deliver to your door, automatically. You focus on life.' }
+      ];
+
+  const renderStepVisualMockup = (sidx: number, step: any) => {
+    if (step.imageUrl && step.imageUrl !== '/placeholder.png' && step.imageUrl !== '') {
+      return (
+        <div className="w-full my-4 flex items-center justify-center overflow-hidden rounded-xl">
+          <img 
+            src={step.imageUrl} 
+            className="w-full max-h-48 object-contain filter drop-shadow-md" 
+            alt={step.title} 
+            referrerPolicy="no-referrer"
+          />
+        </div>
+      );
+    }
+
+    if (sidx === 0) {
+      return (
+        <div className="w-full bg-slate-50/50 rounded-2xl p-4 border border-slate-100 flex flex-col items-center my-4">
+          <div className="grid grid-cols-4 gap-1 w-full">
+            {/* LITE */}
+            <div className="bg-white rounded-lg border border-slate-200/60 p-1 flex flex-col items-center justify-between text-center shadow-2xs h-24">
+              <span className="text-[6px] font-black tracking-wider text-slate-400">LITE</span>
+              <div className="my-0.5 text-center">
+                <span className="block text-[8px] font-black text-slate-800 leading-tight">5 Cans</span>
+                <span className="block text-[7px] font-bold text-[#D4AF37] leading-tight">£27.99</span>
+                <span className="text-[5px] text-slate-400 block -mt-0.5">per month</span>
+              </div>
+            </div>
+            
+            {/* CORE */}
+            <div className="bg-white rounded-lg border border-slate-200/60 p-1 flex flex-col items-center justify-between text-center shadow-2xs h-24">
+              <span className="text-[6px] font-black tracking-wider text-slate-450">CORE</span>
+              <div className="my-0.5 text-center">
+                <span className="block text-[8px] font-black text-slate-800 leading-tight">8 Cans</span>
+                <span className="block text-[7px] font-bold text-[#D4AF37] leading-tight">£35.99</span>
+                <span className="text-[5px] text-slate-400 block -mt-0.5">per month</span>
+              </div>
+            </div>
+
+            {/* PRO */}
+            <div className="bg-[#0C1017] rounded-lg border border-[#D4AF37] p-1 flex flex-col items-center justify-between text-center shadow-sm h-24 relative overflow-hidden transform scale-105 z-10">
+              <div className="absolute top-0 left-0 right-0 bg-[#D4AF37] text-[4px] font-black text-slate-950 py-0.5 uppercase tracking-wider text-center">
+                MOST POPULAR
+              </div>
+              <span className="text-[6px] font-black tracking-wider text-white mt-1">PRO</span>
+              <div className="my-0.5 text-center">
+                <span className="block text-[8px] font-black text-white leading-tight">10 Cans</span>
+                <span className="block text-[7px] font-bold text-[#D4AF37] leading-tight">£40.99</span>
+                <span className="text-[5px] text-slate-350 block -mt-0.5">per month</span>
+              </div>
+            </div>
+
+            {/* ULTIMATE */}
+            <div className="bg-white rounded-lg border border-[#D4AF37]/50 p-1 flex flex-col items-center justify-between text-center shadow-2xs h-24">
+              <span className="text-[6px] font-black tracking-wider text-slate-450">ULTIMATE</span>
+              <div className="my-0.5 text-center">
+                <span className="block text-[8px] font-black text-slate-800 leading-tight">12 Cans</span>
+                <span className="block text-[7px] font-bold text-[#D4AF37] leading-tight">£46.99</span>
+                <span className="text-[5px] text-slate-400 block -mt-0.5">per month</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (sidx === 1) {
+      return (
+        <div className="w-full h-32 relative my-4 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full max-w-[200px] h-full flex items-center justify-center">
+            {/* CAN 1: ZYN */}
+            <div className="absolute left-1 top-2 w-[48px] h-[48px] rounded-full bg-white border border-slate-200 shadow-md flex flex-col items-center justify-center p-0.5 transform -rotate-12 z-10">
+              <div className="w-[42px] h-[42px] rounded-full border border-sky-400/30 flex flex-col items-center justify-center bg-sky-50/20">
+                <span className="text-[7px] font-extrabold text-sky-600 tracking-tight leading-none">ZYN</span>
+              </div>
+            </div>
+
+            {/* CAN 2: VELO */}
+            <div className="absolute right-1 top-2 w-[48px] h-[48px] rounded-full bg-white border border-slate-200 shadow-md flex flex-col items-center justify-center p-0.5 transform rotate-12 z-10">
+              <div className="w-[42px] h-[42px] rounded-full border border-blue-500/30 flex flex-col items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600">
+                <span className="text-[7px] font-extrabold text-white tracking-tight leading-none">VELO</span>
+              </div>
+            </div>
+
+            {/* CAN 5: 77 */}
+            <div className="absolute left-[50%] top-1 w-[52px] h-[52px] rounded-full bg-white border border-slate-200 shadow-lg flex flex-col items-center justify-center p-0.5 transform -translate-x-1/2 -rotate-3 z-30">
+              <div className="w-[46px] h-[46px] rounded-full border border-slate-900 flex flex-col items-center justify-center bg-[#0C1017]">
+                <span className="text-[10px] font-black text-white tracking-tighter leading-none">77</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (sidx === 2) {
+      return (
+        <div className="w-full h-32 relative my-4 flex items-center justify-center">
+          <div className="w-36 h-20 bg-[#0C1017] rounded-xl border border-slate-800 shadow-md relative overflow-hidden flex flex-col justify-between p-2 select-none">
+            <div className="mt-1 space-y-0.5 text-left">
+              <span className="block text-[8px] font-black tracking-[0.12em] text-[#D4AF37] leading-none">POUCH</span>
+              <span className="block text-[8px] font-black tracking-[0.12em] text-[#D4AF37] leading-none">SUPPLY</span>
+            </div>
+            <div className="border-t border-slate-800/65 pt-1 flex items-center justify-between">
+              <span className="text-[3px] font-bold text-slate-450 uppercase tracking-[0.18em]">NICOTINE ON AUTOPILOT</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-4 w-24 h-24 flex items-center justify-center bg-slate-50 rounded-xl p-2 shrink-0 border border-slate-100">
+        {step.imageUrl ? (
+          <img 
+            src={step.imageUrl} 
+            className="max-h-20 max-w-full object-contain" 
+            alt={step.title} 
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <span className="text-[10px] font-bold text-slate-450">No Image</span>
+        )}
+      </div>
+    );
+  };
+
+  const renderStepCheckmarks = (sidx: number) => {
+    const checkmarks = sidx === 0 
+      ? ["Weekly, Fortnightly or Monthly", "Change anytime"]
+      : sidx === 1 
+      ? ["Change brands or flavours anytime"]
+      : ["Automatic deliveries", "Skip or pause anytime"];
+
+    return (
+      <div className="mt-2 space-y-1 w-full text-left">
+        {checkmarks.map((text, cidx) => (
+          <div key={cidx} className="flex items-center gap-1.5 text-[10px] font-bold text-slate-850 justify-center">
+            <div className="w-3 h-3 rounded-full bg-amber-50 border border-amber-250 text-[#D4AF37] flex items-center justify-center shrink-0">
+              <Check className="h-2 w-2 stroke-[3]" />
+            </div>
+            <span className="text-[10px] text-slate-650 font-extrabold">{text}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div 
+      className="py-12 w-full font-sans transition-all duration-300 overflow-hidden"
+      style={{ backgroundColor: sec.settings.backgroundColor || '#F8FAFC' }}
+    >
+      <div className="max-w-7xl mx-auto px-4 space-y-10 relative">
+        {/* Section Header */}
+        <div className="text-center space-y-3 max-w-3xl mx-auto flex flex-col items-center">
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-8 h-[1px] bg-[#D4AF37]" />
+            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#D4AF37]">
+              HOW IT WORKS
+            </span>
+            <div className="w-8 h-[1px] bg-[#D4AF37]" />
+          </div>
+          
+          <h2 
+            className="text-2xl md:text-3xl font-black uppercase tracking-tight text-[#0C1017] leading-none"
+            style={{ color: sec.settings.headingColor || '#0C1017' }}
+          >
+            {sec.settings.title || 'Get Started In Under 60 Seconds'}
+          </h2>
+          
+          {sec.settings.description && (
+            <p className="text-[10px] leading-relaxed text-slate-500 font-semibold opacity-90">
+              {sec.settings.description}
+            </p>
+          )}
+
+          {/* Reassuring timing badge */}
+          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50/75 border border-amber-100 text-[#D4AF37] text-[10px] font-black">
+            <Clock className="h-3 w-3 stroke-[2.5]" />
+            <span>Takes less than 60 seconds</span>
+          </div>
+        </div>
+
+        {/* Steps Grid */}
+        <div className="relative max-w-6xl mx-auto pt-4">
+          {/* Gold Connecting Dotted Line */}
+          <div className="absolute top-[140px] left-[15%] right-[15%] h-[2px] border-t-2 border-dashed border-[#D4AF37]/45 hidden md:block z-0" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+            {steps.map((step, sidx) => (
+              <div 
+                key={sidx}
+                className="bg-white rounded-[20px] border border-slate-100 p-6 flex flex-col items-center justify-between text-center shadow-[0_10px_30px_rgba(147,197,253,0.08)] min-h-[360px] group relative"
+              >
+                {/* Gold step circle overlapping border */}
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#D4AF37] text-white font-black text-xs flex items-center justify-center shadow-md border-2 border-white">
+                  {step.number || (sidx + 1)}
+                </div>
+
+                <div className="space-y-3 flex-1 flex flex-col items-center pt-2 w-full">
+                  <h3 className="text-base font-black text-slate-900 tracking-tight leading-snug">
+                    {step.title || 'Step Title'}
+                  </h3>
+                  
+                  <p className="text-[10px] text-slate-500 leading-relaxed max-w-[200px] font-semibold">
+                    {step.description || 'Step description details.'}
+                  </p>
+
+                  {/* Render High-Fidelity Custom Visual Mockups */}
+                  {renderStepVisualMockup(sidx, step)}
+                </div>
+
+                {/* Render corresponding green checkmarks */}
+                {renderStepCheckmarks(sidx)}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Reassurance Objections Grid */}
+        <div className="max-w-6xl mx-auto pt-2">
+          <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-[0_10px_30px_rgba(147,197,253,0.03)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 divide-y sm:divide-y-0 lg:divide-y-0 lg:divide-x divide-slate-100">
+            {/* CANCEL ANYTIME */}
+            <div className="flex items-center gap-3 py-2 justify-center lg:justify-start">
+              <div className="shrink-0 p-2 rounded-lg bg-slate-50 flex items-center justify-center text-slate-800">
+                <ShieldCheck className="h-5 w-5 text-slate-800" />
+              </div>
+              <div className="text-left">
+                <h4 className="text-[9px] font-black tracking-wider text-slate-900 uppercase">
+                  CANCEL ANYTIME
+                </h4>
+                <p className="text-[9px] text-slate-400 font-bold leading-none">
+                  No ties, no fuss.
+                </p>
+              </div>
+            </div>
+
+            {/* CHANGE ANYTIME */}
+            <div className="flex items-center gap-3 py-2 justify-center lg:justify-start">
+              <div className="shrink-0 p-2 rounded-lg bg-slate-50 flex items-center justify-center text-slate-850">
+                <RefreshCw className="h-5 w-5 text-slate-850 animate-spin" style={{ animationDuration: '8s' }} />
+              </div>
+              <div className="text-left">
+                <h4 className="text-[9px] font-black tracking-wider text-slate-900 uppercase">
+                  CHANGE ANYTIME
+                </h4>
+                <p className="text-[9px] text-slate-400 font-bold leading-none">
+                  Swap plans or brands.
+                </p>
+              </div>
+            </div>
+
+            {/* SKIP DELIVERIES */}
+            <div className="flex items-center gap-3 py-2 justify-center lg:justify-start">
+              <div className="shrink-0 p-2 rounded-lg bg-slate-50 flex items-center justify-center text-slate-800">
+                <Truck className="h-5 w-5 text-slate-800" />
+              </div>
+              <div className="text-left">
+                <h4 className="text-[9px] font-black tracking-wider text-slate-900 uppercase">
+                  SKIP DELIVERIES
+                </h4>
+                <p className="text-[9px] text-slate-400 font-bold leading-none">
+                  Skip or delay anytime.
+                </p>
+              </div>
+            </div>
+
+            {/* NO CONTRACTS */}
+            <div className="flex items-center gap-3 py-2 justify-center lg:justify-start">
+              <div className="shrink-0 p-2 rounded-lg bg-slate-50 flex items-center justify-center text-slate-800">
+                <Lock className="h-5 w-5 text-slate-800" />
+              </div>
+              <div className="text-left">
+                <h4 className="text-[9px] font-black tracking-wider text-slate-900 uppercase">
+                  NO CONTRACTS
+                </h4>
+                <p className="text-[9px] text-slate-400 font-bold leading-none">
+                  No commitments, 1-click.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Conversion Area */}
+        <div className="mt-8 flex flex-col items-center justify-center space-y-3 text-center pb-4">
+          <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Ready to get started?</h4>
+          <button
+            type="button"
+            className="px-6 py-3 bg-[#D4AF37] text-white font-extrabold uppercase tracking-[0.2em] text-[10px] rounded-lg shadow-md cursor-pointer flex items-center gap-1.5"
+          >
+            Start your subscription
+            <ArrowRight className="h-3.5 w-3.5 stroke-[2.5]" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -3856,68 +4169,9 @@ export default function AdminDashboard({
                                 })()}
 
                                 {/* 18. HOW IT WORKS */}
-                                {sec.type === 'How it works' && (() => {
-                                  const steps = sec.settings.stepItems || [];
-                                  return (
-                                    <div className="py-8 px-4 space-y-6 font-sans bg-[#F4F7FC] border border-slate-100 rounded-2xl relative shadow-xs text-center">
-                                      <div>
-                                        <h3 className="text-sm font-extrabold uppercase tracking-tight text-slate-800" style={{ color: sec.settings.headingColor || '#1E293B' }}>
-                                          {sec.settings.title || 'How it works'}
-                                        </h3>
-                                        {sec.settings.description && (
-                                          <p className="text-[10px] text-slate-400 mt-0.5 max-w-md mx-auto leading-relaxed">{sec.settings.description}</p>
-                                        )}
-                                      </div>
-
-                                      <div className="flex flex-col md:flex-row items-stretch justify-center gap-4 pt-2">
-                                        {steps.map((step, sidx) => (
-                                          <React.Fragment key={sidx}>
-                                            <div className="flex-1 bg-white p-4 rounded-xl border border-slate-100 hover:shadow-md transition-all flex flex-col items-center justify-between text-center relative max-w-sm mx-auto">
-                                              <div className="space-y-2 flex-1 flex flex-col items-center">
-                                                <div className="w-7 h-7 bg-indigo-50 text-indigo-700 rounded-full font-black text-xs flex items-center justify-center mb-1">
-                                                  {step.number || (sidx + 1)}
-                                                </div>
-                                                <h4 className="text-xs font-bold text-slate-800 leading-tight">
-                                                  {step.title || 'Step Title'}
-                                                </h4>
-                                                <p className="text-[9px] text-slate-450 leading-relaxed max-w-[180px]">
-                                                  {step.description || 'Step description text details.'}
-                                                </p>
-                                              </div>
-
-                                              <div className="mt-4 w-20 h-20 flex items-center justify-center bg-slate-50 rounded-lg p-2 shrink-0 border border-slate-50">
-                                                {step.imageUrl ? (
-                                                  <img 
-                                                    src={step.imageUrl} 
-                                                    className="max-h-16 max-w-full object-contain" 
-                                                    alt={step.title} 
-                                                    referrerPolicy="no-referrer"
-                                                  />
-                                                ) : (
-                                                  <span className="text-[8px] font-semibold text-slate-400">No Image</span>
-                                                )}
-                                              </div>
-                                            </div>
-
-                                            {/* Connecting curves between steps */}
-                                            {sidx < steps.length - 1 && (
-                                              <div className="hidden md:flex items-center justify-center shrink-0 self-center py-2">
-                                                <svg className="w-12 h-6 text-indigo-500/80 rotate-12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 44 12">
-                                                  <path d="M2 10 C 12 2, 32 2, 42 10" strokeLinecap="round" strokeLinejoin="round"/>
-                                                  <path d="M36 8 L42 10 L38 12" strokeLinecap="round" strokeLinejoin="round"/>
-                                                </svg>
-                                              </div>
-                                            )}
-                                          </React.Fragment>
-                                        ))}
-
-                                        {steps.length === 0 && (
-                                          <p className="text-[10px] text-slate-400 italic py-4">No steps added. Click "+ Add Step" in sidebar.</p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })()}
+                                {sec.type === 'How it works' && (
+                                  <HowItWorksSectionAdmin sec={sec} />
+                                )}
 
                                 {/* 18. TRUST BADGES */}
                                 {sec.type === 'Trust badges' && (() => {
