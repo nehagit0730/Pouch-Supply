@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { CartItem, Discount, Customer, Order } from '../types';
 import { 
   ShieldCheck, ArrowLeft, CreditCard, Lock, Terminal, 
-  CheckCircle, AlertTriangle, AlertCircle, RefreshCw, Send, HelpCircle, Truck, ShoppingCart
+  CheckCircle, AlertTriangle, AlertCircle, RefreshCw, Send, HelpCircle, Truck, ShoppingCart,
+  Camera, QrCode, UserCheck, Smartphone, Upload, Activity, Check, X
 } from 'lucide-react';
 import SubscriptionIcon from './SubscriptionIcon';
 
@@ -68,6 +69,31 @@ export default function CheckoutView({
   const [threeDsOtp, setThreeDsOtp] = useState('');
   const [threeDsError, setThreeDsError] = useState<string | null>(null);
 
+  // Yoti Age Verification States
+  const [yotiVerified, setYotiVerified] = useState<boolean>(() => {
+    return sessionStorage.getItem('yoti_verified') === 'true';
+  });
+  const [yotiVerifyingDetails, setYotiVerifyingDetails] = useState<{
+    method: 'ESTIMATION' | 'APP' | 'DOC';
+    timestamp: string;
+    token: string;
+    estimatedAge?: number;
+    docType?: string;
+    name?: string;
+  } | null>(() => {
+    const saved = sessionStorage.getItem('yoti_details');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [yotiActiveMethod, setYotiActiveMethod] = useState<'ESTIMATION' | 'APP' | 'DOC' | null>(null);
+  const [yotiStep, setYotiStep] = useState<'select' | 'scanning' | 'details_extracted' | 'success'>('select');
+  const [yotiSelfieFile, setYotiSelfieFile] = useState<string | null>(null);
+  const [yotiDocFile, setYotiDocFile] = useState<string | null>(null);
+  const [yotiDocType, setYotiDocType] = useState<'Passport' | 'Driving License' | 'Citizen Card'>('Passport');
+  const [yotiScanningProgress, setYotiScanningProgress] = useState<number>(0);
+  const [yotiAgeEstimate, setYotiAgeEstimate] = useState<number>(23);
+  const [yotiExtractedName, setYotiExtractedName] = useState<string>('');
+  const [yotiLocalStream, setYotiLocalStream] = useState<MediaStream | null>(null);
+
   // Auto-fill customer details when they change
   useEffect(() => {
     if (loggedInCustomer) {
@@ -79,6 +105,131 @@ export default function CheckoutView({
       }
     }
   }, [loggedInCustomer]);
+
+  // --- Yoti Age Verification Simulations ---
+
+  // Camera integration for Facial Age Estimation
+  useEffect(() => {
+    if (yotiActiveMethod === 'ESTIMATION' && yotiStep === 'scanning') {
+      let activeStream: MediaStream | null = null;
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+        .then(stream => {
+          setYotiLocalStream(stream);
+          activeStream = stream;
+        })
+        .catch(err => {
+          console.warn("Camera hardware not available, using high-fidelity face mesh scan simulation:", err);
+        });
+
+      // Animate progress bar from 0 to 100
+      setYotiScanningProgress(0);
+      const interval = setInterval(() => {
+        setYotiScanningProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            // After scanning, transit to detail extraction approval screen
+            setTimeout(() => {
+              setYotiStep('details_extracted');
+            }, 600);
+            return 100;
+          }
+          return prev + 4;
+        });
+      }, 100);
+
+      return () => {
+        clearInterval(interval);
+        if (activeStream) {
+          activeStream.getTracks().forEach(track => track.stop());
+        }
+        setYotiLocalStream(null);
+      };
+    }
+  }, [yotiActiveMethod, yotiStep]);
+
+  // QR Code / Yoti App Verification simulation progress
+  useEffect(() => {
+    if (yotiActiveMethod === 'APP' && yotiStep === 'scanning') {
+      setYotiScanningProgress(0);
+      const interval = setInterval(() => {
+        setYotiScanningProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + 1;
+        });
+      }, 150);
+
+      return () => clearInterval(interval);
+    }
+  }, [yotiActiveMethod, yotiStep]);
+
+  // Document Scan Verification simulation progress
+  useEffect(() => {
+    if (yotiActiveMethod === 'DOC' && yotiStep === 'scanning') {
+      setYotiScanningProgress(0);
+      const interval = setInterval(() => {
+        setYotiScanningProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+              setYotiExtractedName(fullName || 'Alexander Sterling');
+              setYotiStep('details_extracted');
+            }, 500);
+            return 100;
+          }
+          return prev + 6;
+        });
+      }, 100);
+
+      return () => clearInterval(interval);
+    }
+  }, [yotiActiveMethod, yotiStep]);
+
+  // Handle finalize and save Yoti verification to session
+  const handleConfirmYotiVerification = (estimatedAge: number, method: 'ESTIMATION' | 'APP' | 'DOC', optionalName?: string) => {
+    const token = `yoti_v2_f${Math.floor(100000 + Math.random() * 900000)}_${method.toLowerCase()}`;
+    const verificationObj = {
+      method,
+      timestamp: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('en-GB'),
+      token,
+      estimatedAge,
+      docType: method === 'DOC' ? yotiDocType : undefined,
+      name: method === 'DOC' ? (optionalName || yotiExtractedName || fullName || 'Verified Pouch Client') : (fullName || 'Verified Pouch Client')
+    };
+
+    setYotiVerifyingDetails(verificationObj);
+    setYotiVerified(true);
+    setYotiStep('success');
+
+    sessionStorage.setItem('yoti_verified', 'true');
+    sessionStorage.setItem('yoti_details', JSON.stringify(verificationObj));
+    
+    // Also sync verification state with loggedInCustomer if they exist
+    if (loggedInCustomer) {
+      // Dispatch custom event to notify App.tsx if needed
+      const event = new CustomEvent('yoti-status-updated', { detail: { verified: true, details: verificationObj } });
+      window.dispatchEvent(event);
+    }
+  };
+
+  // Reset/Reset verification (for simulation & admin clarity)
+  const handleResetYotiVerification = () => {
+    setYotiVerified(false);
+    setYotiVerifyingDetails(null);
+    setYotiActiveMethod(null);
+    setYotiStep('select');
+    setYotiScanningProgress(0);
+    setYotiSelfieFile(null);
+    setYotiDocFile(null);
+
+    sessionStorage.removeItem('yoti_verified');
+    sessionStorage.removeItem('yoti_details');
+
+    const event = new CustomEvent('yoti-status-updated', { detail: { verified: false, details: null } });
+    window.dispatchEvent(event);
+  };
 
   // Detected card type
   const getCardBrand = (num: string) => {
@@ -137,6 +288,16 @@ export default function CheckoutView({
     e.preventDefault();
     if (!fullName || !email || !addressLine) {
       setPaymentError('Please fill in your shipping and contact information.');
+      return;
+    }
+
+    if (!yotiVerified) {
+      setPaymentError('Age Verification Required: Under tobacco & nicotine regulation, you must verify you are 18+ via Yoti before completing your order.');
+      // Smooth scroll to Yoti block
+      const element = document.getElementById('yoti-verification-section');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
 

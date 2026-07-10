@@ -907,6 +907,11 @@ export default function AdminDashboard({
   const [blogTagsInput, setBlogTagsInput] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState<'All' | 'Unfulfilled' | 'Fulfilled'>('All');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [trackingNumberInput, setTrackingNumberInput] = useState('');
+  const [carrierInput, setCarrierInput] = useState('Royal Mail');
+  const [timelineComment, setTimelineComment] = useState('');
+  const [timelineComments, setTimelineComments] = useState<Record<string, {text: string, date: string}[]>>({});
 
   const [productQuery, setProductQuery] = useState('');
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
@@ -2419,24 +2424,106 @@ export default function AdminDashboard({
               </div>
             </div>
 
-            {/* Selected Order Detailed Drawer Modal side panel */}
+            {/* Selected Order Detailed Shopify-Style Full Overlay Page */}
             {selectedOrder && (
-              <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl border border-slate-200 p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-                  <div className="flex justify-between items-center pb-4 border-b border-slate-100 mb-6">
-                    <div>
-                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Order Receipt: {selectedOrder.id}</h3>
-                      <p className="text-xs text-slate-400 mt-0.5">Purchased on {selectedOrder.date}</p>
+              <div className="fixed inset-0 z-50 bg-[#F6F6F7] overflow-y-auto font-sans text-slate-800">
+                
+                {/* Header Top Bar */}
+                <div className="border-b border-slate-200 bg-white sticky top-0 z-10 shadow-3xs">
+                  <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setSelectedOrder(null)}
+                        className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-700 cursor-pointer select-none transition-all border border-slate-200 bg-white shadow-3xs"
+                        title="Back to Orders"
+                      >
+                        <ArrowLeft className="h-4 w-4 stroke-[2.5]" />
+                      </button>
+                      
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">#{selectedOrder.id}</h1>
+                        <span className="text-[10px] font-black uppercase py-1 px-3.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-full tracking-wider shadow-3xs select-none">
+                          {selectedOrder.paymentStatus || 'Paid'}
+                        </span>
+                        <span className="text-[10px] font-black uppercase py-1 px-3.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-full tracking-wider shadow-3xs select-none">
+                          {selectedOrder.fulfillmentStatus}
+                        </span>
+                        <span className="text-[10px] font-black uppercase py-1 px-3.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-full tracking-wider shadow-3xs select-none">
+                          Archived
+                        </span>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => setSelectedOrder(null)}
-                      className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600 cursor-pointer"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
 
-                  <div className="space-y-6 text-xs text-slate-650">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          const updated = parentOrders.map(o => {
+                            if (o.id === selectedOrder.id) {
+                              return { ...o, paymentStatus: 'Refunded' as const };
+                            }
+                            return o;
+                          });
+                          parentOnUpdateOrders(updated);
+                          setSelectedOrder({ ...selectedOrder, paymentStatus: 'Refunded' });
+                          
+                          // Log refund event to simulated emails / timeline
+                          const refundComment = "Order was fully refunded.";
+                          setTimelineComments(prev => ({
+                            ...prev,
+                            [selectedOrder.id]: [{ text: refundComment, date: 'Just now' }, ...(prev[selectedOrder.id] || [])]
+                          }));
+                        }}
+                        className="py-1.5 px-3 bg-white hover:bg-slate-50 border border-slate-300 hover:border-slate-400 text-slate-700 rounded-lg text-xs font-bold transition-all shadow-3xs cursor-pointer"
+                      >
+                        Refund
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          // Simple Return notification
+                          const returnComment = "Customer initiated a return for items.";
+                          setTimelineComments(prev => ({
+                            ...prev,
+                            [selectedOrder.id]: [{ text: returnComment, date: 'Just now' }, ...(prev[selectedOrder.id] || [])]
+                          }));
+                        }}
+                        className="py-1.5 px-3 bg-white hover:bg-slate-50 border border-slate-300 hover:border-slate-400 text-slate-700 rounded-lg text-xs font-bold transition-all shadow-3xs cursor-pointer"
+                      >
+                        Return
+                      </button>
+                      
+                      <div className="relative group">
+                        <button className="py-1.5 px-3 bg-white hover:bg-slate-50 border border-slate-300 hover:border-slate-400 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1 transition-all shadow-3xs cursor-pointer">
+                          <span>More actions</span>
+                          <ChevronDown className="h-3 w-3" />
+                        </button>
+                      </div>
+
+                      <div className="flex border border-slate-300 rounded-lg overflow-hidden divide-x divide-slate-300 shadow-3xs">
+                        <button disabled className="p-1.5 bg-white text-slate-400 cursor-not-allowed">
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button disabled className="p-1.5 bg-white text-slate-400 cursor-not-allowed">
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2">
+                  <p className="text-xs text-slate-500 font-medium pl-10">
+                    {selectedOrder.date || 'July 7, 2026 at 6:08 am'} from Draft Orders
+                  </p>
+                </div>
+
+                {/* Main 2-Column Grid */}
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  
+                  {/* Left Column (Fulfillments, Payments, Timeline) */}
+                  <div className="lg:col-span-2 space-y-6">
 
                     {/* WITHDRAWAL ACTION BANNER FOR ADMINS */}
                     {Array.isArray(selectedOrder.tags) && selectedOrder.tags.includes('Withdrawal Requested') && (
@@ -2471,7 +2558,7 @@ export default function AdminDashboard({
                               const emailHtml = `
                                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #334155;">
                                   <div style="background-color: #10b981; padding: 25px 20px; text-align: center;">
-                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">PERFUME SAMPLER</span>
+                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">POUCH SUPPLY</span>
                                     <div style="font-size: 9px; font-weight: bold; color: #ecfdf5; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">WITHDRAWAL APPROVED</div>
                                   </div>
                                   
@@ -2487,12 +2574,12 @@ export default function AdminDashboard({
                                     </div>
 
                                     <p style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
-                                      If you require further assistance or would like to make other purchases, please do not hesitate to reach out!
+                                      If you require further assistance, please do not hesitate to reach out!
                                     </p>
                                   </div>
                                   
                                   <div style="background-color: #f8fafc; padding: 15px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8;">
-                                    Thank you for choosing PerfumeSampler.
+                                    Thank you for choosing PouchSupply.
                                   </div>
                                 </div>
                               `;
@@ -2547,7 +2634,7 @@ export default function AdminDashboard({
                               const emailHtml = `
                                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #334155;">
                                   <div style="background-color: #ef4444; padding: 25px 20px; text-align: center;">
-                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">PERFUME SAMPLER</span>
+                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">POUCH SUPPLY</span>
                                     <div style="font-size: 9px; font-weight: bold; color: #fee2e2; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">WITHDRAWAL DECLINED</div>
                                   </div>
                                   
@@ -2563,7 +2650,7 @@ export default function AdminDashboard({
                                     </div>
 
                                     <p style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
-                                      Once you receive the package, you are welcome to utilize our hassle-free 14-day returns policy to send any unwanted samples back to our depot for a full refund.
+                                      Once you receive the package, you are welcome to utilize our hassle-free returns policy to send any unwanted items back for a full refund.
                                     </p>
                                   </div>
                                   
@@ -2604,105 +2691,448 @@ export default function AdminDashboard({
                         </div>
                       </div>
                     )}
-                    
-                    {/* Customer info */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-1">Customer Delivery Name</span>
-                        <p className="font-extrabold text-slate-800">{selectedOrder.customerName}</p>
-                        <p className="text-[11px] text-slate-500 mt-0.5">{selectedOrder.customerEmail}</p>
+
+                    {/* FULFILLMENT CARD (Identical to Shopify #1001-F1) */}
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+                      <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-md bg-slate-100 text-slate-500 flex items-center justify-center text-xs border border-slate-200">
+                            📦
+                          </span>
+                          <span className="font-extrabold text-xs text-slate-800 uppercase tracking-wide">Fulfilled</span>
+                          <span className="text-xs text-slate-400 font-semibold">#{selectedOrder.id}-F1</span>
+                        </div>
+                        <button className="text-slate-400 hover:text-slate-650 cursor-pointer">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
                       </div>
-                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-1">Shipping Destination</span>
-                        <p className="font-semibold text-slate-700 leading-normal">{selectedOrder.destination}</p>
+
+                      <div className="p-5 space-y-4">
+                        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                          <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                          <span>{selectedOrder.date || 'July 7, 2026'}</span>
+                        </div>
+
+                        {/* Order Items List */}
+                        <div className="divide-y divide-slate-100 border-t border-b border-slate-100">
+                          {selectedOrder.items.map((item, idx) => {
+                            const isKupanac = item.productTitle.toLowerCase().includes('kupanac');
+                            const variantLabel = isKupanac ? 'M / Green' : 'Default Title';
+                            const skuLabel = isKupanac ? '010401015' : `SKU-00${idx + 1}928`;
+                            return (
+                              <div key={idx} className="py-4 flex justify-between items-center gap-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-12 h-12 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center p-1 relative shrink-0">
+                                    <img
+                                      src={item.image || 'https://images.unsplash.com/photo-1589984662646-e7b2e4962f18?auto=format&fit=crop&w=80&q=80'}
+                                      alt={item.productTitle}
+                                      className="h-full object-contain filter drop-shadow-sm"
+                                      referrerPolicy="no-referrer"
+                                    />
+                                  </div>
+                                  <div>
+                                    <p className="font-extrabold text-xs text-slate-900 uppercase tracking-tight hover:text-indigo-600 transition-colors">
+                                      {item.productTitle}
+                                    </p>
+                                    <div className="flex items-center gap-2 text-[10px] text-slate-405 font-bold mt-0.5">
+                                      <span>{variantLabel}</span>
+                                      <span>•</span>
+                                      <span>{skuLabel}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right whitespace-nowrap">
+                                  <div className="text-xs font-semibold text-slate-500">
+                                    £{item.price.toFixed(2)} × {item.quantity}
+                                  </div>
+                                  <div className="text-xs font-black text-slate-900 font-mono mt-0.5">
+                                    £{(item.price * item.quantity).toFixed(2)}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Optional Tracking details displayed inside fulfillment container */}
+                        {selectedOrder.trackingId && (
+                          <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3.5 flex items-center justify-between text-xs font-medium text-left">
+                            <div>
+                              <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-bold">Simulated Carrier & Tracking</span>
+                              <span className="font-extrabold text-slate-800">{selectedOrder.carrier || 'Royal Mail'}</span>
+                              <span className="text-slate-300 mx-2">•</span>
+                              <span className="font-mono font-bold text-indigo-600 underline cursor-pointer">{selectedOrder.trackingId}</span>
+                            </div>
+                            <span className="text-[9px] bg-emerald-150 border border-emerald-200 text-emerald-800 font-extrabold uppercase py-0.5 px-2 rounded">
+                              Dispatched
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Action buttons */}
+                        <div className="flex justify-end gap-3 pt-2">
+                          <button
+                            onClick={() => {
+                              const updated = parentOrders.map(o => {
+                                if (o.id === selectedOrder.id) {
+                                  return { ...o, fulfillmentStatus: 'Delivered' as const };
+                                }
+                                return o;
+                              });
+                              parentOnUpdateOrders(updated);
+                              setSelectedOrder({ ...selectedOrder, fulfillmentStatus: 'Delivered' });
+
+                              // Add system notification to comments
+                              setTimelineComments(prev => ({
+                                ...prev,
+                                [selectedOrder.id]: [{ text: "Package status updated to: Delivered.", date: 'Just now' }, ...(prev[selectedOrder.id] || [])]
+                              }));
+                            }}
+                            className="py-2 px-4 bg-white hover:bg-slate-50 border border-slate-300 hover:border-slate-400 text-slate-700 text-xs font-bold rounded-lg transition-all shadow-3xs cursor-pointer select-none"
+                          >
+                            Mark as delivered
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              setTrackingNumberInput(selectedOrder.trackingId || '');
+                              setCarrierInput(selectedOrder.carrier || 'Royal Mail');
+                              setShowTrackingModal(true);
+                            }}
+                            className="py-2 px-4 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-black rounded-lg transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer select-none"
+                          >
+                            <span>+ Add tracking</span>
+                          </button>
+                        </div>
+
                       </div>
                     </div>
 
-                    {/* Worldpay Payment Gateway details */}
-                    <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-xl space-y-2.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700 block">Worldpay Gateway Transaction</span>
-                        <span className="bg-emerald-100 border border-emerald-150 text-emerald-800 font-extrabold py-0.5 px-2.5 rounded text-[8px] uppercase tracking-wider">
-                          {selectedOrder.paymentStatus || 'Paid'}
+                    {/* PAYMENT DETAILS CARD (Identical to Shopify Paid section) */}
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 space-y-4">
+                      <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] bg-emerald-50 border border-emerald-200 text-emerald-800 font-extrabold py-0.5 px-2.5 rounded uppercase tracking-wider select-none">
+                            Paid
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-black tracking-widest text-indigo-600 block uppercase font-mono">
+                          Worldpay Secure Gateway
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10.5px]">
-                        <div>
-                          <span className="text-[9px] text-slate-400 block uppercase tracking-wider font-bold">Transaction Ref</span>
-                          <span className="font-mono font-bold text-slate-800">{selectedOrder.worldpayTxId || 'wp-tx-4819028'}</span>
+
+                      <div className="space-y-3.5 text-xs text-left">
+                        <div className="flex justify-between text-slate-500 font-semibold">
+                          <span>Subtotal ({selectedOrder.items.reduce((sum, item) => sum + item.quantity, 0)} item)</span>
+                          <span className="font-mono text-slate-800">£{selectedOrder.total.toFixed(2)}</span>
                         </div>
-                        <div>
-                          <span className="text-[9px] text-slate-400 block uppercase tracking-wider font-bold">Auth Code</span>
-                          <span className="font-mono font-bold text-slate-800">{selectedOrder.worldpayAuthCode || 'WPY201994'}</span>
+                        
+                        <div className="flex justify-between font-extrabold text-slate-900 text-sm border-t border-slate-100 pt-3">
+                          <span>Total</span>
+                          <span className="font-mono">£{selectedOrder.total.toFixed(2)}</span>
                         </div>
-                        <div>
-                          <span className="text-[9px] text-slate-450 block uppercase tracking-wider font-bold">Card Brand</span>
-                          <span className="font-extrabold text-slate-800">{selectedOrder.cardBrand || 'Visa Secure'}</span>
-                        </div>
-                        <div>
-                          <span className="text-[9px] text-slate-450 block uppercase tracking-wider font-bold">Network Channel</span>
-                          <span className="font-bold text-slate-800">Sandbox (Simulated)</span>
+
+                        <div className="flex justify-between text-slate-600 font-bold border-t border-slate-100 pt-3">
+                          <span>Paid by customer</span>
+                          <span className="font-mono text-slate-900">£{selectedOrder.total.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Order items */}
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-2">Item Package Details</span>
-                      <div className="border border-slate-200 rounded-lg overflow-hidden divide-y divide-slate-100">
-                        {selectedOrder.items.map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center p-3 bg-white">
-                            <div>
-                              <p className="font-extrabold text-slate-850">{item.productTitle}</p>
-                              <p className="text-[11px] text-slate-400 mt-0.5">Unit price: £{item.price.toFixed(2)} • Qty: {item.quantity}</p>
+                    {/* TIMELINE FEED CARD */}
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 space-y-6 text-left">
+                      <h3 className="font-black text-sm text-slate-900 uppercase tracking-wider">Timeline</h3>
+                      
+                      {/* Leave a comment Input panel */}
+                      <div className="flex gap-3 items-start">
+                        <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center shadow-3xs select-none shrink-0">
+                          NB
+                        </div>
+                        <div className="w-full relative">
+                          <textarea
+                            value={timelineComment}
+                            onChange={(e) => setTimelineComment(e.target.value)}
+                            placeholder="Leave a comment..."
+                            className="w-full text-xs p-3 pb-12 border border-slate-200 focus:border-slate-350 focus:outline-none rounded-xl bg-slate-50/50 resize-none h-20 transition-all focus:bg-white text-slate-800"
+                          />
+                          <div className="absolute bottom-2.5 left-3.5 right-3.5 flex justify-between items-center">
+                            <div className="flex items-center gap-2.5 text-slate-400 select-none">
+                              <span className="hover:text-slate-650 cursor-pointer text-sm">😊</span>
+                              <span className="hover:text-slate-650 cursor-pointer font-bold text-sm">@</span>
+                              <span className="hover:text-slate-650 cursor-pointer font-bold text-sm">#</span>
+                              <span className="hover:text-slate-650 cursor-pointer text-sm">📎</span>
                             </div>
-                            <p className="font-black text-slate-900">£{(item.price * item.quantity).toFixed(2)}</p>
+                            <button
+                              onClick={() => {
+                                if (timelineComment.trim()) {
+                                  const newComment = {
+                                    text: timelineComment,
+                                    date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                  };
+                                  setTimelineComments(prev => ({
+                                    ...prev,
+                                    [selectedOrder.id]: [newComment, ...(prev[selectedOrder.id] || [])]
+                                  }));
+                                  setTimelineComment('');
+                                }
+                              }}
+                              disabled={!timelineComment.trim()}
+                              className="py-1 px-3 bg-[#0F172A] hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none text-white text-[10px] font-black rounded-lg transition-all shadow-3xs cursor-pointer select-none uppercase tracking-widest"
+                            >
+                              Post
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest text-center block border-b border-slate-100 pb-3">
+                        Only you and other staff can see comments
+                      </span>
+
+                      {/* Event logs / feed */}
+                      <div className="space-y-4">
+                        {/* Custom posted comments */}
+                        {(timelineComments[selectedOrder.id] || []).map((comment, cIdx) => (
+                          <div key={cIdx} className="flex justify-between items-start text-xs relative pl-6 pb-2">
+                            <div className="absolute left-2.5 top-1.5 bottom-0 border-l border-slate-200 -z-10" />
+                            <div className="absolute left-1.5 top-1.5 w-2.5 h-2.5 rounded-full bg-indigo-600 border border-white" />
+                            <div className="space-y-0.5 pr-4">
+                              <p className="font-extrabold text-slate-800">You posted a comment:</p>
+                              <p className="text-slate-600 font-medium leading-relaxed bg-slate-50 border border-slate-200/60 p-2 rounded-lg mt-1 italic">
+                                "{comment.text}"
+                              </p>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-semibold whitespace-nowrap">{comment.date}</span>
                           </div>
                         ))}
-                      </div>
-                    </div>
 
-                    {/* Fulfillment Action bar */}
-                    <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4">
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Fulfillment state</span>
-                        <p className={`font-bold mt-0.5 uppercase tracking-wide text-xs ${
-                          selectedOrder.fulfillmentStatus === 'Delivered'
-                            ? 'text-teal-600'
-                            : selectedOrder.fulfillmentStatus === 'Fulfilled'
-                            ? 'text-emerald-600'
-                            : 'text-amber-500'
-                        }`}>
-                          {selectedOrder.fulfillmentStatus}
-                        </p>
+                        {/* Default activity log item 1 */}
+                        <div className="flex justify-between items-center text-xs relative pl-6">
+                          <div className="absolute left-2.5 top-1.5 bottom-0 border-l border-slate-200 -z-10" />
+                          <div className="absolute left-1.5 top-1.5 w-2.5 h-2.5 rounded-full bg-slate-400 border border-white" />
+                          <div>
+                            <span className="font-extrabold text-slate-800">You updated the customer for this order.</span>
+                            <span className="text-slate-400 font-normal ml-1.5 select-none text-[10px] cursor-pointer">▼</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-semibold whitespace-nowrap">Just now</span>
+                        </div>
+
+                        {/* Default activity log item 2 */}
+                        <div className="flex justify-between items-center text-xs relative pl-6 pb-2">
+                          <div className="absolute left-2.5 top-1.5 bottom-0 border-l border-slate-100 -z-10" />
+                          <div className="absolute left-1.5 top-1.5 w-2.5 h-2.5 rounded-full bg-slate-350 border border-white" />
+                          <span className="text-slate-550 font-medium">Order placed from Online Store</span>
+                          <span className="text-[10px] text-slate-400 font-semibold whitespace-nowrap">
+                            {selectedOrder.date || 'July 7, 2026'}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-500 font-semibold">Change Status:</span>
-                        <select
-                          value={selectedOrder.fulfillmentStatus}
-                          onChange={(e) => {
-                            const newStatus = e.target.value as 'Unfulfilled' | 'Fulfilled' | 'Delivered';
-                            const updated = parentOrders.map(o => {
-                              if (o.id === selectedOrder.id) {
-                                return { ...o, fulfillmentStatus: newStatus };
-                              }
-                              return o;
-                            });
-                            parentOnUpdateOrders(updated);
-                            setSelectedOrder({ ...selectedOrder, fulfillmentStatus: newStatus });
-                          }}
-                          className="text-xs border border-slate-200 bg-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-705 cursor-pointer max-w-[170px]"
-                        >
-                          <option value="Unfulfilled">Unfulfilled (Processing)</option>
-                          <option value="Fulfilled">Fulfilled (Dispatched)</option>
-                          <option value="Delivered">Delivered</option>
-                        </select>
-                      </div>
                     </div>
 
                   </div>
+
+                  {/* Right Column (Notes, Channel, Customer information) */}
+                  <div className="space-y-6 text-left">
+
+                    {/* CUSTOMER NOTES CARD */}
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5">
+                      <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Notes</span>
+                        <button className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                          <Pencil className="h-3.5 w-3.5 stroke-[2.5]" />
+                        </button>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-3 font-medium">
+                        No notes from customer
+                      </p>
+                    </div>
+
+                    {/* CHANNEL CARD */}
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5">
+                      <div className="pb-2 border-b border-slate-100">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Channel Information</span>
+                      </div>
+                      <p className="text-xs font-black text-slate-700 mt-3 uppercase tracking-tight">
+                        Channel: Draft Orders
+                      </p>
+                    </div>
+
+                    {/* CUSTOMER PROFILE CARD */}
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 space-y-4">
+                      <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Customer</span>
+                        <button className="text-slate-400 hover:text-slate-650 cursor-pointer">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-4 text-xs">
+                        <div>
+                          <span className="font-extrabold text-[#006e52] hover:underline cursor-pointer block text-[13px]">
+                            {selectedOrder.customerName || 'Rahul Dhiman'}
+                          </span>
+                          <span className="text-slate-500 font-bold mt-0.5 block hover:underline cursor-pointer">
+                            1 order
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[9.5px] font-extrabold text-slate-405 block uppercase tracking-wider">Contact Information</span>
+                          <span className="font-semibold text-slate-700 mt-1 block break-all">
+                            {selectedOrder.customerEmail || 'No email provided'}
+                          </span>
+                          <span className="text-slate-450 font-medium mt-0.5 block">
+                            No phone number
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[9.5px] font-extrabold text-slate-405 block uppercase tracking-wider">Shipping Address</span>
+                          <span className="font-medium text-slate-600 mt-1 block leading-relaxed">
+                            {selectedOrder.destination || 'No shipping address provided'}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[9.5px] font-extrabold text-slate-405 block uppercase tracking-wider">Billing Address</span>
+                          <span className="font-medium text-slate-455 mt-1 block">
+                            No billing address provided
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CONVERSION CARD */}
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 space-y-2">
+                      <div className="pb-2 border-b border-slate-100">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Conversion summary</span>
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium leading-relaxed pt-1">
+                        There aren't any conversion details available for this order.
+                      </p>
+                      <span className="text-xs text-[#006e52] font-black hover:underline cursor-pointer flex items-center gap-0.5 select-none">
+                        Learn more
+                      </span>
+                    </div>
+
+                    {/* RISK CARD */}
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5">
+                      <div className="pb-2 border-b border-slate-100">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Order Risk</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-3 text-xs text-emerald-600 font-bold">
+                        <span className="text-emerald-500">✔</span>
+                        <span>Low Risk</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-semibold mt-1 block">
+                        All simulated checkout checks passed.
+                      </span>
+                    </div>
+
+                  </div>
+
                 </div>
+
+                {/* MODAL OVERLAY: ADD TRACKING DIALOG (Matches screenshot 1) */}
+                {showTrackingModal && (
+                  <div className="fixed inset-0 z-55 bg-slate-950/60 flex items-center justify-center p-4 backdrop-blur-3xs">
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden animate-fade-in text-slate-800">
+                      
+                      {/* Modal Header */}
+                      <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <span className="font-extrabold text-xs text-slate-900 uppercase tracking-wider">Add tracking</span>
+                        <button
+                          onClick={() => setShowTrackingModal(false)}
+                          className="p-1 bg-slate-200 hover:bg-slate-300 rounded-full text-slate-600 cursor-pointer select-none transition-colors"
+                        >
+                          <X className="h-3.5 w-3.5 stroke-[2.5]" />
+                        </button>
+                      </div>
+
+                      {/* Modal Body */}
+                      <div className="p-5 space-y-4 text-xs text-left">
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-[10px] font-black uppercase text-slate-450 block mb-1 tracking-wider">
+                              Tracking number
+                            </label>
+                            <input
+                              type="text"
+                              value={trackingNumberInput}
+                              onChange={(e) => setTrackingNumberInput(e.target.value)}
+                              placeholder="e.g. 1Z9999999999999999"
+                              className="w-full p-2.5 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none rounded-lg bg-slate-50/50 font-medium"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-black uppercase text-slate-450 block mb-1 tracking-wider">
+                              Shipping carrier
+                            </label>
+                            <select
+                              value={carrierInput}
+                              onChange={(e) => setCarrierInput(e.target.value)}
+                              className="w-full p-2.5 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none rounded-lg bg-slate-50 font-bold text-slate-705 cursor-pointer"
+                            >
+                              <option value="Royal Mail">Royal Mail</option>
+                              <option value="Evri">Evri</option>
+                              <option value="DHL">DHL</option>
+                              <option value="FedEx">FedEx</option>
+                              <option value="UPS">UPS</option>
+                              <option value="USPS">USPS</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <button className="text-[#008060] hover:text-[#006e52] font-black text-xs flex items-center gap-1 hover:underline cursor-pointer py-1 mt-1 select-none">
+                          <span className="text-sm">+</span>
+                          <span>Add another tracking number</span>
+                        </button>
+
+                      </div>
+
+                      {/* Modal Footer */}
+                      <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
+                        <button
+                          onClick={() => setShowTrackingModal(false)}
+                          className="py-2 px-4 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold rounded-lg cursor-pointer transition-all shadow-3xs"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (selectedOrder) {
+                              const updated = {
+                                ...selectedOrder,
+                                trackingId: trackingNumberInput,
+                                carrier: carrierInput,
+                                fulfillmentStatus: 'Fulfilled' as const
+                              };
+                              const updatedOrders = parentOrders.map(o => o.id === selectedOrder.id ? updated : o);
+                              parentOnUpdateOrders(updatedOrders);
+                              setSelectedOrder(updated);
+                              setShowTrackingModal(false);
+
+                              // Log comment
+                              const trackingComment = `Added tracking details: ${carrierInput} (${trackingNumberInput}).`;
+                              setTimelineComments(prev => ({
+                                ...prev,
+                                [selectedOrder.id]: [{ text: trackingComment, date: 'Just now' }, ...(prev[selectedOrder.id] || [])]
+                              }));
+                            }
+                          }}
+                          className="py-2 px-4 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-black rounded-lg cursor-pointer transition-all shadow-2xs uppercase tracking-widest"
+                        >
+                          Save
+                        </button>
+                      </div>
+
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
 

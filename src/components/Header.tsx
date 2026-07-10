@@ -272,6 +272,14 @@ export default function Header({
             </span>
           </button>
 
+          {/* Yoti global status badge in header */}
+          {sessionStorage.getItem('yoti_verified') === 'true' && (
+            <div className="hidden lg:flex items-center gap-1.5 py-1.5 px-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Yoti 18+ Verified</span>
+            </div>
+          )}
+
           {/* Cart Drawer triggers */}
           <button
             onClick={onOpenCart}
