@@ -1,11 +1,160 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { CustomPage, PageSection, Product, Collection, Customer, BlogPost } from '../types';
 import { 
   ArrowRight, ShoppingCart, Star, Heart, FileText, Check, 
   ChevronDown, ChevronUp, Play, Sparkles, TrendingUp, Plus, Minus, ShieldCheck, Award, Eye, Flame, ArrowUpRight, BookOpen, Layers,
-  Truck, Zap, Shield, Clock, Package, HelpCircle
+  Truck, Zap, Shield, Clock, Package, HelpCircle, Globe, Tag, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import PremiumSlideshow from './PremiumSlideshow';
+
+interface BrandsWeOfferSectionProps {
+  sec: PageSection;
+  handleLinkClick: (link?: string) => void;
+}
+
+function BrandsWeOfferSection({ sec, handleLinkClick }: BrandsWeOfferSectionProps) {
+  const items = (sec.settings.brandItems || []).filter(b => b.imageUrl && b.imageUrl.trim() !== '');
+  const [activeDot, setActiveDot] = useState(0);
+  const sliderRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    if (!sliderRef.current) return;
+    const { scrollLeft, clientWidth, scrollWidth } = sliderRef.current;
+    const totalWidth = scrollWidth - clientWidth;
+    if (totalWidth <= 0) return;
+    const percentage = Math.max(0, Math.min(1, scrollLeft / totalWidth));
+    const dotCount = Math.min(items.length, 6);
+    const idx = Math.min(Math.floor(percentage * dotCount), dotCount - 1);
+    setActiveDot(idx);
+  };
+
+  const scrollToDot = (idx: number) => {
+    if (!sliderRef.current) return;
+    const { scrollWidth, clientWidth } = sliderRef.current;
+    const totalWidth = scrollWidth - clientWidth;
+    if (totalWidth <= 0) return;
+    const dotCount = Math.min(items.length, 6);
+    const targetScrollLeft = (idx / (dotCount - 1)) * totalWidth;
+    sliderRef.current.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+    setActiveDot(idx);
+  };
+
+  const scrollLeft = () => {
+    if (!sliderRef.current) return;
+    sliderRef.current.scrollBy({ left: -260, behavior: 'smooth' });
+  };
+
+  const scrollRight = () => {
+    if (!sliderRef.current) return;
+    sliderRef.current.scrollBy({ left: 260, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="py-12 bg-white w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center space-y-3 mb-10 animate-fade-in">
+        <div className="flex items-center justify-center gap-4">
+          <div className="w-10 h-[1px] bg-[#D4AF37]" />
+          <span className="block text-xs font-bold uppercase tracking-[0.25em] text-[#D4AF37]">
+            THE BRANDS YOU LOVE
+          </span>
+          <div className="w-10 h-[1px] bg-[#D4AF37]" />
+        </div>
+        {sec.settings.title && (
+          <h2 
+            className="text-3xl md:text-[42px] font-black uppercase tracking-tight text-slate-900 leading-none"
+            style={{ color: sec.settings.headingColor || '#0C1017' }}
+          >
+            {sec.settings.title}
+          </h2>
+        )}
+        {sec.settings.description && (
+          <p 
+            className="max-w-2xl mx-auto text-xs sm:text-sm leading-relaxed text-slate-500 font-medium opacity-85"
+            style={{ color: sec.settings.textColor || '#64748B' }}
+          >
+            {sec.settings.description}
+          </p>
+        )}
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-12">
+        {/* Left Arrow Button */}
+        {items.length > 0 && (
+          <button 
+            type="button"
+            onClick={scrollLeft} 
+            className="absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full border border-[#D4AF37] bg-white flex items-center justify-center text-[#D4AF37] hover:bg-amber-50/55 shadow-md transition-all duration-300 transform active:scale-95 cursor-pointer"
+            aria-label="Previous Brand"
+          >
+            <ChevronLeft className="h-5 w-5 stroke-[2.5]" />
+          </button>
+        )}
+
+        {/* Brand Slider Container */}
+        <div 
+          ref={sliderRef}
+          onScroll={handleScroll}
+          className="flex gap-6 overflow-x-auto scrollbar-none py-6 px-4 scroll-smooth"
+        >
+          {items.map((b, idx) => (
+            <div 
+              key={idx} 
+              onClick={() => b.linkUrl && handleLinkClick(b.linkUrl)}
+              className="group flex flex-col items-center justify-center shrink-0 w-[160px] sm:w-[190px] aspect-square bg-white rounded-[24px] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_24px_50px_rgba(0,0,0,0.12)] border border-slate-50/50 transition-all duration-300 transform hover:-translate-y-1.5 select-none cursor-pointer"
+            >
+              {b.imageUrl ? (
+                <img 
+                  src={b.imageUrl} 
+                  className="max-h-24 max-w-[140px] object-contain transition-transform duration-300 group-hover:scale-105" 
+                  alt={b.title || 'Brand'} 
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className="text-sm font-black text-slate-800 uppercase tracking-tight truncate max-w-full group-hover:scale-105 transition-transform duration-300">
+                  {b.title || 'Brand'}
+                </span>
+              )}
+            </div>
+          ))}
+          {items.length === 0 && (
+            <div className="text-slate-400 italic text-center py-8 w-full text-xs">
+              No brands found. Go to Admin Dashboard to upload brands!
+            </div>
+          )}
+        </div>
+
+        {/* Right Arrow Button */}
+        {items.length > 0 && (
+          <button 
+            type="button"
+            onClick={scrollRight} 
+            className="absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full border border-[#D4AF37] bg-white flex items-center justify-center text-[#D4AF37] hover:bg-amber-50/55 shadow-md transition-all duration-300 transform active:scale-95 cursor-pointer"
+            aria-label="Next Brand"
+          >
+            <ChevronRight className="h-5 w-5 stroke-[2.5]" />
+          </button>
+        )}
+      </div>
+
+      {/* Dot Indicators */}
+      {items.length > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          {Array.from({ length: Math.min(items.length, 6) }).map((_, dIdx) => (
+            <button
+              key={dIdx}
+              type="button"
+              onClick={() => scrollToDot(dIdx)}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                dIdx === activeDot ? 'bg-[#D4AF37] w-5' : 'bg-slate-200 hover:bg-slate-300'
+              }`}
+              aria-label={`Go to slide ${dIdx + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface PageRendererProps {
   page: CustomPage;
@@ -895,65 +1044,9 @@ export default function PageRenderer({
                 )}
 
                 {/* 17. BRANDS WE OFFER */}
-                {sec.type === 'Brands we offer' && (() => {
-                  const items = (sec.settings.brandItems || []).filter(b => b.imageUrl && b.imageUrl.trim() !== '');
-                  // Duplicate items multiple times to create an absolute seamless continuous scroll loop
-                  const doubledItems = items.length > 0 ? [...items, ...items, ...items, ...items] : [];
-                  return (
-                    <div className="py-4 space-y-6 bg-white w-full overflow-hidden">
-                      <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center space-y-3">
-                        {sec.settings.title && (
-                          <h2 
-                            className="text-3xl md:text-4xl font-black uppercase tracking-tight text-slate-900 animate-fade-in"
-                            style={{ color: sec.settings.headingColor || '#0C1017' }}
-                          >
-                            {sec.settings.title}
-                          </h2>
-                        )}
-                        {sec.settings.description && (
-                          <p 
-                            className="max-w-2xl mx-auto text-xs sm:text-sm leading-relaxed text-slate-500 opacity-85"
-                            style={{ color: sec.settings.textColor || '#64748B' }}
-                          >
-                            {sec.settings.description}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="marquee-container py-4 bg-white border-y border-slate-100 relative">
-                        {/* Left & Right gradient fades to create premium cinematic mask */}
-                        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-                        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
-
-                        <div className="animate-marquee-slow whitespace-nowrap flex gap-12 items-center hover:[animation-play-state:paused] cursor-pointer">
-                          {doubledItems.map((b, bidx) => (
-                            <div 
-                              key={bidx} 
-                              onClick={() => b.linkUrl && handleLinkClick(b.linkUrl)}
-                              className="inline-flex flex-col items-center justify-center shrink-0 min-w-[140px] h-20 bg-white rounded-xl p-3 border border-slate-100 hover:border-slate-300 hover:shadow-xs transition-all duration-300 transform hover:-translate-y-0.5 select-none"
-                            >
-                              {b.imageUrl ? (
-                                <img 
-                                  src={b.imageUrl} 
-                                  className="max-h-12 max-w-[120px] object-contain transition-transform duration-300 hover:scale-105" 
-                                  alt={b.title || 'Brand'} 
-                                  referrerPolicy="no-referrer"
-                                />
-                              ) : (
-                                <span className="text-sm font-black text-slate-800 uppercase tracking-tight truncate max-w-full">
-                                  {b.title || 'Brand'}
-                                </span>
-                              )}
-                            </div>
-                          ))}
-                          {items.length === 0 && (
-                            <div className="text-slate-400 italic text-center py-4 text-xs">No brands found. Go to Admin Dashboard to upload brands!</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
+                {sec.type === 'Brands we offer' && (
+                  <BrandsWeOfferSection sec={sec} handleLinkClick={handleLinkClick} />
+                )}
 
                 {/* 18. HOW IT WORKS */}
                 {sec.type === 'How it works' && (() => {
@@ -1125,6 +1218,51 @@ export default function PageRenderer({
                             </div>
                           );
                         })}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* 18. TRUST BADGES */}
+                {sec.type === 'Trust badges' && (() => {
+                  const badges = sec.settings.trustBadges || [
+                    { iconType: 'badge', title: '100% AUTHENTIC', description: 'Direct from official suppliers.' },
+                    { iconType: 'shield', title: 'PREMIUM QUALITY', description: 'Only trusted, proven brands.' },
+                    { iconType: 'globe', title: 'GLOBAL SELECTION', description: 'The best from around the world.' },
+                    { iconType: 'tag', title: 'MEMBER PRICING', description: 'Better prices, always.' }
+                  ];
+
+                  return (
+                    <div className="py-8 bg-white w-full">
+                      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 py-4 md:py-6 border-y border-slate-100 divide-y md:divide-y-0 md:divide-x divide-slate-150">
+                          {badges.map((b, bIdx) => (
+                            <div 
+                              key={bIdx} 
+                              className="flex items-center gap-4 py-4 md:py-2 md:px-6 first:pl-0 last:pr-0 justify-center md:justify-start first:pt-0 md:first:pt-2 last:pb-0 md:last:pb-2"
+                            >
+                              <div className="shrink-0 p-2 rounded-xl bg-slate-50 flex items-center justify-center shadow-2xs">
+                                {b.iconType === 'badge' ? (
+                                  <Award className="h-7 w-7 text-[#D4AF37]" />
+                                ) : b.iconType === 'shield' ? (
+                                  <ShieldCheck className="h-7 w-7 text-slate-800" />
+                                ) : b.iconType === 'globe' ? (
+                                  <Globe className="h-7 w-7 text-slate-800" />
+                                ) : (
+                                  <Tag className="h-7 w-7 text-slate-800" />
+                                )}
+                              </div>
+                              <div className="text-left space-y-0.5">
+                                <h4 className="text-xs font-black tracking-wide text-slate-900 uppercase">
+                                  {b.title}
+                                </h4>
+                                <p className="text-[11px] text-slate-400 leading-normal font-medium">
+                                  {b.description}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   );

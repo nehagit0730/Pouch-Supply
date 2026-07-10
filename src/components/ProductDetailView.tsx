@@ -345,15 +345,22 @@ export default function ProductDetailView({
               </div>
 
               {/* Price Row */}
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-150/80 flex items-baseline gap-4">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-150/80 flex items-baseline gap-4 flex-wrap">
                 <span className="text-2xl font-black text-slate-900">
-                  £{(activeVariant ? activeVariant.price : product.price).toFixed(2)}
+                  £{((activeVariant ? activeVariant.price : product.price) * quantity).toFixed(2)}
                 </span>
+                {quantity > 1 && (
+                  <span className="text-xs text-slate-500 font-bold">
+                    (£{(activeVariant ? activeVariant.price : product.price).toFixed(2)} each)
+                  </span>
+                )}
                 {product.compareAtPrice > (activeVariant ? activeVariant.price : product.price) && (
                   <>
-                    <span className="text-xs text-slate-400 line-through font-medium">£{product.compareAtPrice.toFixed(2)}</span>
+                    <span className="text-xs text-slate-400 line-through font-medium">
+                      £{(product.compareAtPrice * quantity).toFixed(2)}
+                    </span>
                     <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 uppercase tracking-wide">
-                      Save £{(product.compareAtPrice - (activeVariant ? activeVariant.price : product.price)).toFixed(2)}
+                      Save £{((product.compareAtPrice - (activeVariant ? activeVariant.price : product.price)) * quantity).toFixed(2)}
                     </span>
                   </>
                 )}

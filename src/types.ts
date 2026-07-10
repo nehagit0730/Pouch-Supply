@@ -178,13 +178,18 @@ export interface Discount {
 
 export interface PageSection {
   id: string;
-  type: 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list' | 'Icon with text' | 'Brands we offer' | 'How it works';
+  type: 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list' | 'Icon with text' | 'Brands we offer' | 'How it works' | 'Trust badges';
   settings: {
     fullWidth: boolean;
     backgroundColor: string; // hex
     headingColor: string; // hex
     textColor: string; // hex
     iconColor?: string; // hex
+    trustBadges?: {
+      iconType: 'badge' | 'shield' | 'globe' | 'tag';
+      title: string;
+      description: string;
+    }[];
     iconItems?: {
       iconName: 'Truck' | 'Zap' | 'Shield' | 'Clock' | 'Award' | 'Package' | 'Heart' | 'HelpCircle' | 'Star';
       title: string;

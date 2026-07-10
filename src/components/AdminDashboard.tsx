@@ -1,11 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, PageSection, BlogPost } from '../types';
 import { 
   TrendingUp, BarChart3, Package, Users, Tag, FileCode, HardDrive, Percent, 
   Search, Plus, Eye, CheckCircle2, Clipboard, ArrowUpDown, ChevronRight, 
   Trash2, Filter, Save, Sparkles, Building, Settings, Image as ImageIcon, 
   X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw, AlertTriangle,
-  Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass,
+  Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass, ShieldCheck, ChevronLeft,
   ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server,
   Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit, LogOut
 } from 'lucide-react';
@@ -33,7 +33,8 @@ export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'Brand list', label: 'Brand List', desc: 'Scenic brand logo matrix with interactive links to collections', icon: 'LayoutGrid' },
   { type: 'Icon with text', label: 'Icon with Text', desc: 'Six-item feature display grid with customizable icons and colors', icon: 'Sparkles' },
   { type: 'Brands we offer', label: 'Brands we offer', desc: 'Infinite running marquee of brand logo images with live upload option', icon: 'Layers' },
-  { type: 'How it works', label: 'How it works', desc: 'Dynamic timeline workflow steps with custom images & layouts', icon: 'Compass' }
+  { type: 'How it works', label: 'How it works', desc: 'Dynamic timeline workflow steps with custom images & layouts', icon: 'Compass' },
+  { type: 'Trust badges', label: 'Trust Badges', desc: 'Elegant horizontal grid displaying core store guarantees like authenticity and premium quality', icon: 'Award' }
 ] as const;
 
 export const getSectionLabel = (type: string): string => {
@@ -61,6 +62,7 @@ export const getSectionIcon = (type: string) => {
     case 'Icon with text': return <Sparkles className="h-4 w-4 text-indigo-650 animate-pulse" />;
     case 'Brands we offer': return <Layers className="h-4 w-4 text-amber-600 animate-bounce" />;
     case 'How it works': return <Compass className="h-4 w-4 text-blue-600 animate-spin" style={{ animationDuration: '6s' }} />;
+    case 'Trust badges': return <Award className="h-4 w-4 text-yellow-600 animate-pulse" />;
     default: return <FileCode className="h-4 w-4 text-slate-400" />;
   }
 };
@@ -87,6 +89,148 @@ interface AdminDashboardProps {
   onAdminActionComplete?: (action: 'save' | 'discard') => void;
   onExitAdmin?: () => void;
   onLogoutAdmin?: () => void;
+}
+
+interface BrandsWeOfferSectionAdminProps {
+  sec: PageSection;
+}
+
+function BrandsWeOfferSectionAdmin({ sec }: BrandsWeOfferSectionAdminProps) {
+  const items = (sec.settings.brandItems || []).filter(b => b.imageUrl && b.imageUrl.trim() !== '');
+  const [activeDot, setActiveDot] = useState(0);
+  const sliderRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    if (!sliderRef.current) return;
+    const { scrollLeft, clientWidth, scrollWidth } = sliderRef.current;
+    const totalWidth = scrollWidth - clientWidth;
+    if (totalWidth <= 0) return;
+    const percentage = Math.max(0, Math.min(1, scrollLeft / totalWidth));
+    const dotCount = Math.min(items.length, 6);
+    const idx = Math.min(Math.floor(percentage * dotCount), dotCount - 1);
+    setActiveDot(idx);
+  };
+
+  const scrollToDot = (idx: number) => {
+    if (!sliderRef.current) return;
+    const { scrollWidth, clientWidth } = sliderRef.current;
+    const totalWidth = scrollWidth - clientWidth;
+    if (totalWidth <= 0) return;
+    const dotCount = Math.min(items.length, 6);
+    const targetScrollLeft = (idx / (dotCount - 1)) * totalWidth;
+    sliderRef.current.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+    setActiveDot(idx);
+  };
+
+  const scrollLeft = () => {
+    if (!sliderRef.current) return;
+    sliderRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+  };
+
+  const scrollRight = () => {
+    if (!sliderRef.current) return;
+    sliderRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="py-8 bg-white w-full overflow-hidden border border-slate-100 rounded-2xl shadow-xs my-2 text-center animate-fade-in">
+      <div className="max-w-2xl mx-auto px-4 text-center space-y-1.5 mb-6">
+        <div className="flex items-center justify-center gap-3">
+          <div className="w-8 h-[1px] bg-[#D4AF37]" />
+          <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
+            THE BRANDS YOU LOVE
+          </span>
+          <div className="w-8 h-[1px] bg-[#D4AF37]" />
+        </div>
+        <h3 
+          className="text-lg font-black uppercase tracking-tight text-slate-900 leading-none animate-fade-in"
+          style={{ color: sec.settings.headingColor || '#0C1017' }}
+        >
+          {sec.settings.title || 'Brands we offer'}
+        </h3>
+        {sec.settings.description && (
+          <p 
+            className="text-[10px] max-w-md mx-auto leading-relaxed text-slate-400 font-medium opacity-85"
+            style={{ color: sec.settings.textColor || '#64748B' }}
+          >
+            {sec.settings.description}
+          </p>
+        )}
+      </div>
+
+      <div className="relative px-8">
+        {/* Left Arrow Button */}
+        {items.length > 0 && (
+          <button 
+            type="button"
+            onClick={scrollLeft} 
+            className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full border border-[#D4AF37] bg-white flex items-center justify-center text-[#D4AF37] hover:bg-amber-50/50 shadow-xs transition-all cursor-pointer"
+          >
+            <ChevronLeft className="h-4 w-4 stroke-[2.5]" />
+          </button>
+        )}
+
+        {/* Brand Slider Container */}
+        <div 
+          ref={sliderRef}
+          onScroll={handleScroll}
+          className="flex gap-4 overflow-x-auto scrollbar-none py-4 px-2 scroll-smooth"
+        >
+          {items.map((b, idx) => (
+            <div 
+              key={idx} 
+              className="group flex flex-col items-center justify-center shrink-0 w-32 aspect-square bg-white rounded-2xl p-4 shadow-[0_6px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_25px_rgba(0,0,0,0.08)] border border-slate-50/50 transition-all duration-300 transform hover:-translate-y-1 select-none cursor-pointer"
+            >
+              {b.imageUrl ? (
+                <img 
+                  src={b.imageUrl} 
+                  className="max-h-16 max-w-[90px] object-contain transition-transform duration-300 group-hover:scale-105" 
+                  alt={b.title || 'Brand'} 
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className="text-xs font-black text-slate-800 uppercase tracking-tight truncate max-w-full group-hover:scale-105 transition-transform duration-300">
+                  {b.title || 'Brand'}
+                </span>
+              )}
+            </div>
+          ))}
+          {items.length === 0 && (
+            <div className="text-slate-400 italic text-center py-4 w-full text-[10px]">
+              No brands found. Go to sidebar settings to upload brands!
+            </div>
+          )}
+        </div>
+
+        {/* Right Arrow Button */}
+        {items.length > 0 && (
+          <button 
+            type="button"
+            onClick={scrollRight} 
+            className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full border border-[#D4AF37] bg-white flex items-center justify-center text-[#D4AF37] hover:bg-amber-50/50 shadow-xs transition-all cursor-pointer"
+          >
+            <ChevronRight className="h-4 w-4 stroke-[2.5]" />
+          </button>
+        )}
+      </div>
+
+      {/* Dot Indicators */}
+      {items.length > 1 && (
+        <div className="flex justify-center items-center gap-1.5 mt-4">
+          {Array.from({ length: Math.min(items.length, 6) }).map((_, dIdx) => (
+            <button
+              key={dIdx}
+              type="button"
+              onClick={() => scrollToDot(dIdx)}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                dIdx === activeDot ? 'bg-[#D4AF37] w-3' : 'bg-slate-200 hover:bg-slate-300'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 type SidebarTab = 'analytics' | 'orders' | 'collections' | 'products' | 'pages' | 'blogs' | 'files' | 'customers' | 'discounts';
@@ -1024,6 +1168,12 @@ export default function AdminDashboard({
           { number: '1', title: 'Choose your plan', description: 'Select one of our flexible subscription plans', imageUrl: '/placeholder.png' },
           { number: '2', title: 'Choose your pouches', description: 'Mix and match your favourite brands, flavours and strengths. (these can be changed at anytime)', imageUrl: '/placeholder.png' },
           { number: '3', title: 'We handle the rest', description: 'Delivered automatically to your door hassle free weekly, Bi-weekly or monthly', imageUrl: '/placeholder.png' }
+        ] : undefined,
+        trustBadges: sectionType === 'Trust badges' ? [
+          { iconType: 'badge', title: '100% AUTHENTIC', description: 'Direct from official suppliers.' },
+          { iconType: 'shield', title: 'PREMIUM QUALITY', description: 'Only trusted, proven brands.' },
+          { iconType: 'globe', title: 'GLOBAL SELECTION', description: 'The best from around the world.' },
+          { iconType: 'tag', title: 'MEMBER PRICING', description: 'Better prices, always.' }
         ] : undefined
       }
     };
@@ -3655,13 +3805,20 @@ export default function AdminDashboard({
                                 )}
 
                                 {/* 17. BRANDS WE OFFER */}
-                                {sec.type === 'Brands we offer' && (() => {
+                                {sec.type === 'Brands we offer' && (
+                                   <BrandsWeOfferSectionAdmin sec={sec} />
+                                 )}
+
+                                 {false && sec.type === 'Brands we offer' && (() => {
                                   const items = (sec.settings.brandItems || []).filter(b => b.imageUrl && b.imageUrl.trim() !== '');
                                   // Duplicate items for seamless scrolling loop
                                   const doubledItems = items.length > 0 ? [...items, ...items, ...items] : [];
                                   return (
                                     <div className="py-6 space-y-4 font-sans text-center bg-white border border-slate-100 rounded-2xl overflow-hidden relative shadow-xs">
-                                      <div className="px-4">
+                                      <div className="px-4 space-y-1">
+                                        <span className="block text-[9px] font-bold uppercase tracking-[0.15em] text-[#D4AF37]">
+                                          THE BRANDS YOU KNOW & TRUST
+                                        </span>
                                         <h3 className="text-sm font-extrabold uppercase tracking-tight text-slate-800" style={{ color: sec.settings.headingColor || '#1E293B' }}>
                                           {sec.settings.title || 'Brands we offer'}
                                         </h3>
@@ -3670,22 +3827,22 @@ export default function AdminDashboard({
                                         )}
                                       </div>
                                       
-                                      <div className="marquee-container py-3 bg-white border-y border-slate-50/50 relative">
-                                        <div className="animate-marquee-slow whitespace-nowrap flex gap-8 items-center">
+                                      <div className="marquee-container py-4 bg-white border-y border-slate-50/50 relative">
+                                        <div className="animate-marquee-slow whitespace-nowrap flex gap-10 items-center">
                                           {doubledItems.map((b, bidx) => (
                                             <div 
                                               key={bidx} 
-                                              className="inline-flex flex-col items-center justify-center shrink-0 w-24 h-12 bg-white rounded-lg p-1.5 border border-slate-100/50 hover:border-slate-200 transition-all select-none"
+                                              className="group inline-flex flex-col items-center justify-center shrink-0 w-32 h-20 bg-white rounded-lg p-2 border border-slate-150 hover:border-slate-300 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1.5 select-none"
                                             >
                                               {b.imageUrl ? (
                                                 <img 
                                                   src={b.imageUrl} 
-                                                  className="max-h-8 max-w-[80px] object-contain filter hover:brightness-95 transition-all" 
+                                                  className="max-h-14 max-w-[100px] object-contain transition-transform duration-300 group-hover:scale-105" 
                                                   alt={b.title} 
                                                   referrerPolicy="no-referrer"
                                                 />
                                               ) : (
-                                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight truncate max-w-full">{b.title || 'Brand'}</span>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight truncate max-w-full group-hover:scale-105 transition-transform duration-300">{b.title || 'Brand'}</span>
                                               )}
                                             </div>
                                           ))}
@@ -3757,6 +3914,49 @@ export default function AdminDashboard({
                                         {steps.length === 0 && (
                                           <p className="text-[10px] text-slate-400 italic py-4">No steps added. Click "+ Add Step" in sidebar.</p>
                                         )}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+
+                                {/* 18. TRUST BADGES */}
+                                {sec.type === 'Trust badges' && (() => {
+                                  const badges = sec.settings.trustBadges || [
+                                    { iconType: 'badge', title: '100% AUTHENTIC', description: 'Direct from official suppliers.' },
+                                    { iconType: 'shield', title: 'PREMIUM QUALITY', description: 'Only trusted, proven brands.' },
+                                    { iconType: 'globe', title: 'GLOBAL SELECTION', description: 'The best from around the world.' },
+                                    { iconType: 'tag', title: 'MEMBER PRICING', description: 'Better prices, always.' }
+                                  ];
+
+                                  return (
+                                    <div className="py-6 bg-white w-full border border-slate-100 rounded-xl my-2">
+                                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 px-4 divide-y md:divide-y-0 md:divide-x divide-slate-150">
+                                        {badges.map((b, bIdx) => (
+                                          <div 
+                                            key={bIdx} 
+                                            className="flex items-center gap-3 py-2 md:py-0 md:px-3 first:pl-0 last:pr-0 justify-center md:justify-start"
+                                          >
+                                            <div className="shrink-0">
+                                              {b.iconType === 'badge' ? (
+                                                <Award className="h-7 w-7 text-[#D4AF37]" />
+                                              ) : b.iconType === 'shield' ? (
+                                                <ShieldCheck className="h-7 w-7 text-slate-800" />
+                                              ) : b.iconType === 'globe' ? (
+                                                <Globe className="h-7 w-7 text-slate-800" />
+                                              ) : (
+                                                <Tag className="h-7 w-7 text-[#D4AF37]" />
+                                              )}
+                                            </div>
+                                            <div className="text-left">
+                                              <h4 className="text-[11px] font-black tracking-wide text-slate-900 uppercase">
+                                                {b.title}
+                                              </h4>
+                                              <p className="text-[9.5px] text-slate-400 font-medium leading-tight">
+                                                {b.description}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        ))}
                                       </div>
                                     </div>
                                   );
@@ -4640,6 +4840,98 @@ export default function AdminDashboard({
                               ))}
                               {(currentlyEditingSection.settings.iconItems || []).length === 0 && (
                                 <p className="text-[10px] text-slate-400 text-center py-4">No benefits in the list. Click "+ Add Benefit" above.</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* TRUST BADGES EDITING SETTINGS */}
+                        {currentlyEditingSection.type === 'Trust badges' && (
+                          <div className="space-y-4 pt-1">
+                            <div className="flex justify-between items-center">
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Trust Badge Items</label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const list = currentlyEditingSection.settings.trustBadges || [];
+                                  const updated = [...list, { iconType: 'badge' as const, title: 'NEW TRUST BADGE', description: 'Enter trust description.' }];
+                                  handleUpdateSectionSettings('trustBadges', updated);
+                                }}
+                                className="text-[9px] bg-indigo-50 text-indigo-700 hover:bg-indigo-100 p-1 px-2 rounded-md font-bold transition-all cursor-pointer uppercase tracking-wider"
+                              >
+                                + Add Badge
+                              </button>
+                            </div>
+
+                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
+                              {(currentlyEditingSection.settings.trustBadges || []).map((item, idx) => (
+                                <div key={idx} className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg space-y-2 relative">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const list = [...(currentlyEditingSection.settings.trustBadges || [])];
+                                      list.splice(idx, 1);
+                                      handleUpdateSectionSettings('trustBadges', list);
+                                    }}
+                                    className="absolute top-1.5 right-1.5 text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
+                                    title="Delete Trust Badge"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+
+                                  <div className="text-[9px] font-black uppercase text-indigo-650 mb-1">Badge #{idx + 1}</div>
+
+                                  <div>
+                                    <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">Icon Shape</label>
+                                    <select
+                                      value={item.iconType || 'badge'}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.trustBadges || [])];
+                                        list[idx] = { ...list[idx], iconType: e.target.value as any };
+                                        handleUpdateSectionSettings('trustBadges', list);
+                                      }}
+                                      className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none focus:ring-1 focus:ring-indigo-650 cursor-pointer"
+                                    >
+                                      <option value="badge">Gold Badge (Authentic)</option>
+                                      <option value="shield">Shield Check (Quality)</option>
+                                      <option value="globe">Globe (Global)</option>
+                                      <option value="tag">Price Tag (Member Pricing)</option>
+                                    </select>
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">Title</label>
+                                    <input
+                                      type="text"
+                                      value={item.title || ''}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.trustBadges || [])];
+                                        list[idx] = { ...list[idx], title: e.target.value };
+                                        handleUpdateSectionSettings('trustBadges', list);
+                                      }}
+                                      className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none"
+                                      placeholder="e.g. 100% AUTHENTIC"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">Description</label>
+                                    <textarea
+                                      rows={2}
+                                      value={item.description || ''}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.trustBadges || [])];
+                                        list[idx] = { ...list[idx], description: e.target.value };
+                                        handleUpdateSectionSettings('trustBadges', list);
+                                      }}
+                                      className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none resize-none"
+                                      placeholder="e.g. Direct from official suppliers."
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                              {(currentlyEditingSection.settings.trustBadges || []).length === 0 && (
+                                <p className="text-[10px] text-slate-400 text-center py-4">No trust badges in the list. Click "+ Add Badge" above.</p>
                               )}
                             </div>
                           </div>

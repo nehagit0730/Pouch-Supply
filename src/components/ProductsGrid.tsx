@@ -954,9 +954,11 @@ export default function ProductsGrid({
                           {/* Pricing block */}
                           <div className="flex items-baseline gap-1.5">
                             <span className="text-sm sm:text-base font-black text-slate-900">
-                              £{prod.price.toFixed(2)}
+                              £{(prod.price * localQty).toFixed(2)}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-medium">each</span>
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              {localQty > 1 ? `(£${prod.price.toFixed(2)} each)` : 'each'}
+                            </span>
                           </div>
 
                           {/* Subscription saving badge with dynamic calculation */}
