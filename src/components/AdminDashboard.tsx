@@ -13,7 +13,7 @@ import ImageUploadInput from './ImageUploadInput';
 import CollectionEditor from './CollectionEditor';
 import ProductEditor from './ProductEditor';
 import BlogContentEditor from './BlogContentEditor';
-import OrderDetailView from './OrderDetailView';
+import DiscountEditor from './DiscountEditor';
 
 export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'Image banner', label: 'Image Banner', desc: 'Hero banner with centered headline overlay & CTA buttons', icon: 'ImageIcon' },
@@ -543,6 +543,10 @@ export default function AdminDashboard({
   const [newDiscountForm, setNewDiscountForm] = useState<Partial<Discount>>({
     title: '', type: 'Amount off order', details: '', eligibility: 'All customers', status: 'Active'
   });
+  const [showDiscountTypeSelector, setShowDiscountTypeSelector] = useState(false);
+  const [selectedDiscountType, setSelectedDiscountType] = useState<'Amount off products' | 'Buy X get Y' | 'Amount off order' | 'Free shipping' | null>(null);
+  const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
+  const [isDiscountEditorOpen, setIsDiscountEditorOpen] = useState(false);
 
   // Calculate high-fidelity partner portal metrics
   const stats = useMemo(() => {
@@ -1954,15 +1958,289 @@ export default function AdminDashboard({
 
             {/* Selected Order Detailed Drawer Modal side panel */}
             {selectedOrder && (
-              <OrderDetailView
-                order={selectedOrder}
-                onClose={() => setSelectedOrder(null)}
-                allOrders={orders}
-                onUpdateOrders={onUpdateOrders}
-                customers={localCustomers}
-                onUpdateCustomers={onUpdateCustomers}
-                products={products}
-              />
+              <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
+                <div className="bg-white rounded-xl border border-slate-200 p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                  <div className="flex justify-between items-center pb-4 border-b border-slate-100 mb-6">
+                    <div>
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Order Receipt: {selectedOrder.id}</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">Purchased on {selectedOrder.date}</p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedOrder(null)}
+                      className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600 cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-6 text-xs text-slate-650">
+
+                    {/* WITHDRAWAL ACTION BANNER FOR ADMINS */}
+                    {Array.isArray(selectedOrder.tags) && selectedOrder.tags.includes('Withdrawal Requested') && (
+                      <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl space-y-3.5 text-left shadow-2xs">
+                        <div className="flex items-center gap-2 text-rose-800">
+                          <AlertTriangle className="h-4.5 w-4.5 text-rose-600 shrink-0 animate-pulse" />
+                          <span className="font-extrabold text-xs uppercase tracking-wide">Customer Order Withdrawal Requested</span>
+                        </div>
+                        <p className="text-[11px] text-rose-700/90 leading-relaxed">
+                          The customer has formally requested to withdraw items from this transaction. The transaction payment state has been provisionally flagged, and is awaiting physical approval or rejection by a store supervisor.
+                        </p>
+                        
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              // APPROVE WITHDRAWAL
+                              const updatedTags = selectedOrder.tags.filter(t => t !== 'Withdrawal Requested' && !t.startsWith('Withdraw:'));
+                              updatedTags.push('Withdrawal Approved');
+                              
+                              const updatedOrders = parentOrders.map(o => {
+                                if (o.id === selectedOrder.id) {
+                                  return {
+                                    ...o,
+                                    tags: updatedTags,
+                                    paymentStatus: 'Refunded' as const
+                                  };
+                                }
+                                return o;
+                              });
+
+                              // Draft Approved email copy
+                              const emailHtml = `
+                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #334155;">
+                                  <div style="background-color: #10b981; padding: 25px 20px; text-align: center;">
+                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">PERFUME SAMPLER</span>
+                                    <div style="font-size: 9px; font-weight: bold; color: #ecfdf5; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">WITHDRAWAL APPROVED</div>
+                                  </div>
+                                  
+                                  <div style="padding: 24px; text-align: left;">
+                                    <p style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 0;">Dear ${selectedOrder.customerName || 'Value Member'},</p>
+                                    <p style="font-size: 12.5px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
+                                      We are pleased to inform you that your withdrawal request for Order <strong>#${selectedOrder.id}</strong> has been <strong>approved</strong> by our store administrator.
+                                    </p>
+
+                                    <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 11.5px; line-height: 1.5; color: #065f46;">
+                                      <strong>Refund Processed Successfully:</strong><br/>
+                                      The refund value has been processed back to your original payment card. It will typically clear into your account balance in 2-3 business banking days depending on your issuer.
+                                    </div>
+
+                                    <p style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
+                                      If you require further assistance or would like to make other purchases, please do not hesitate to reach out!
+                                    </p>
+                                  </div>
+                                  
+                                  <div style="background-color: #f8fafc; padding: 15px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8;">
+                                    Thank you for choosing PerfumeSampler.
+                                  </div>
+                                </div>
+                              `;
+
+                              const newEmail = {
+                                to: selectedOrder.customerEmail,
+                                subject: `Withdrawal APPROVED - Order #${selectedOrder.id}`,
+                                preview: `Your withdrawal request for Order #${selectedOrder.id} has been approved. Refund processed.`,
+                                body: emailHtml,
+                                date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                              };
+
+                              try {
+                                const stored = localStorage.getItem('ps_simulated_emails');
+                                const emails = stored ? JSON.parse(stored) : [];
+                                localStorage.setItem('ps_simulated_emails', JSON.stringify([newEmail, ...emails]));
+                                window.dispatchEvent(new CustomEvent('ps-emails-updated'));
+                              } catch (e) {
+                                console.error(e);
+                              }
+
+                              parentOnUpdateOrders(updatedOrders);
+                              setSelectedOrder({
+                                ...selectedOrder,
+                                tags: updatedTags,
+                                paymentStatus: 'Refunded' as const
+                              });
+                            }}
+                            className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[9.5px] tracking-wider rounded-lg text-center transition-colors cursor-pointer select-none border border-emerald-700"
+                          >
+                            Approve & Refund
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              // DECLINE WITHDRAWAL
+                              const updatedTags = selectedOrder.tags.filter(t => t !== 'Withdrawal Requested' && !t.startsWith('Withdraw:'));
+                              updatedTags.push('Withdrawal Declined');
+                              
+                              const updatedOrders = parentOrders.map(o => {
+                                if (o.id === selectedOrder.id) {
+                                  return {
+                                    ...o,
+                                    tags: updatedTags,
+                                    paymentStatus: 'Paid' as const
+                                  };
+                                }
+                                return o;
+                              });
+
+                              // Draft Declined email copy
+                              const emailHtml = `
+                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #334155;">
+                                  <div style="background-color: #ef4444; padding: 25px 20px; text-align: center;">
+                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">PERFUME SAMPLER</span>
+                                    <div style="font-size: 9px; font-weight: bold; color: #fee2e2; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">WITHDRAWAL DECLINED</div>
+                                  </div>
+                                  
+                                  <div style="padding: 24px; text-align: left;">
+                                    <p style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 0;">Hi ${selectedOrder.customerName || 'Value Member'},</p>
+                                    <p style="font-size: 12.5px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
+                                      We are writing to update you regarding your withdrawal request for Order <strong>#${selectedOrder.id}</strong>.
+                                    </p>
+
+                                    <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 11.5px; line-height: 1.5; color: #991b1b;">
+                                      <strong>Request Status: Declined</strong><br/>
+                                      Unfortunately, we were unable to complete your withdrawal request because the package containing your items has already been securely packed, labeled, and transferred to our postal partner for delivery. 
+                                    </div>
+
+                                    <p style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
+                                      Once you receive the package, you are welcome to utilize our hassle-free 14-day returns policy to send any unwanted samples back to our depot for a full refund.
+                                    </p>
+                                  </div>
+                                  
+                                  <div style="background-color: #f8fafc; padding: 15px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8;">
+                                    Thank you for your understanding.
+                                  </div>
+                                </div>
+                              `;
+
+                              const newEmail = {
+                                to: selectedOrder.customerEmail,
+                                subject: `Withdrawal Request Declined - Order #${selectedOrder.id}`,
+                                preview: `Your withdrawal request for Order #${selectedOrder.id} was declined as the shipment has dispatched.`,
+                                body: emailHtml,
+                                date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                              };
+
+                              try {
+                                const stored = localStorage.getItem('ps_simulated_emails');
+                                const emails = stored ? JSON.parse(stored) : [];
+                                localStorage.setItem('ps_simulated_emails', JSON.stringify([newEmail, ...emails]));
+                                window.dispatchEvent(new CustomEvent('ps-emails-updated'));
+                              } catch (e) {
+                                console.error(e);
+                              }
+
+                              parentOnUpdateOrders(updatedOrders);
+                              setSelectedOrder({
+                                ...selectedOrder,
+                                tags: updatedTags,
+                                paymentStatus: 'Paid' as const
+                              });
+                            }}
+                            className="flex-1 py-2 bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[9.5px] tracking-wider rounded-lg text-center transition-colors cursor-pointer select-none border border-slate-750"
+                          >
+                            Decline Request
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Customer info */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-1">Customer Delivery Name</span>
+                        <p className="font-extrabold text-slate-800">{selectedOrder.customerName}</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">{selectedOrder.customerEmail}</p>
+                      </div>
+                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-1">Shipping Destination</span>
+                        <p className="font-semibold text-slate-700 leading-normal">{selectedOrder.destination}</p>
+                      </div>
+                    </div>
+
+                    {/* Worldpay Payment Gateway details */}
+                    <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-xl space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700 block">Worldpay Gateway Transaction</span>
+                        <span className="bg-emerald-100 border border-emerald-150 text-emerald-800 font-extrabold py-0.5 px-2.5 rounded text-[8px] uppercase tracking-wider">
+                          {selectedOrder.paymentStatus || 'Paid'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10.5px]">
+                        <div>
+                          <span className="text-[9px] text-slate-400 block uppercase tracking-wider font-bold">Transaction Ref</span>
+                          <span className="font-mono font-bold text-slate-800">{selectedOrder.worldpayTxId || 'wp-tx-4819028'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-400 block uppercase tracking-wider font-bold">Auth Code</span>
+                          <span className="font-mono font-bold text-slate-800">{selectedOrder.worldpayAuthCode || 'WPY201994'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-450 block uppercase tracking-wider font-bold">Card Brand</span>
+                          <span className="font-extrabold text-slate-800">{selectedOrder.cardBrand || 'Visa Secure'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-450 block uppercase tracking-wider font-bold">Network Channel</span>
+                          <span className="font-bold text-slate-800">Sandbox (Simulated)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Order items */}
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mb-2">Item Package Details</span>
+                      <div className="border border-slate-200 rounded-lg overflow-hidden divide-y divide-slate-100">
+                        {selectedOrder.items.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center p-3 bg-white">
+                            <div>
+                              <p className="font-extrabold text-slate-850">{item.productTitle}</p>
+                              <p className="text-[11px] text-slate-400 mt-0.5">Unit price: £{item.price.toFixed(2)} • Qty: {item.quantity}</p>
+                            </div>
+                            <p className="font-black text-slate-900">£{(item.price * item.quantity).toFixed(2)}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Fulfillment Action bar */}
+                    <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4">
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Fulfillment state</span>
+                        <p className={`font-bold mt-0.5 uppercase tracking-wide text-xs ${
+                          selectedOrder.fulfillmentStatus === 'Delivered'
+                            ? 'text-teal-600'
+                            : selectedOrder.fulfillmentStatus === 'Fulfilled'
+                            ? 'text-emerald-600'
+                            : 'text-amber-500'
+                        }`}>
+                          {selectedOrder.fulfillmentStatus}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500 font-semibold">Change Status:</span>
+                        <select
+                          value={selectedOrder.fulfillmentStatus}
+                          onChange={(e) => {
+                            const newStatus = e.target.value as 'Unfulfilled' | 'Fulfilled' | 'Delivered';
+                            const updated = parentOrders.map(o => {
+                              if (o.id === selectedOrder.id) {
+                                return { ...o, fulfillmentStatus: newStatus };
+                              }
+                              return o;
+                            });
+                            parentOnUpdateOrders(updated);
+                            setSelectedOrder({ ...selectedOrder, fulfillmentStatus: newStatus });
+                          }}
+                          className="text-xs border border-slate-200 bg-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-705 cursor-pointer max-w-[170px]"
+                        >
+                          <option value="Unfulfilled">Unfulfilled (Processing)</option>
+                          <option value="Fulfilled">Fulfilled (Dispatched)</option>
+                          <option value="Delivered">Delivered</option>
+                        </select>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
             )}
 
           </div>
@@ -4729,7 +5007,7 @@ export default function AdminDashboard({
 
                     <button
                       type="submit"
-                      className="w-full bg-slate-900 text-white font-bold py-2.5 rounded-lg cursor-pointer"
+                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg cursor-pointer"
                     >
                       Publish Client Record
                     </button>
@@ -4745,157 +5023,276 @@ export default function AdminDashboard({
         {activeTab === 'discounts' && (
           <div className="space-y-6">
             
-            {/* Header controls select */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-              <div className="relative w-full sm:w-64">
-                <input
-                  type="text"
-                  placeholder="Filter coupons codes..."
-                  value={discountQuery}
-                  onChange={(e) => setDiscountQuery(e.target.value)}
-                  className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
-                />
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
-              </div>
-
-              <button
-                onClick={() => setShowAddDiscount(true)}
-                className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
-              >
-                <Plus className="h-4 w-4" /> Create Discount coupon
-              </button>
-            </div>
-
-            {/* Discounts List database table */}
-            <div className="bg-white border rounded-xl overflow-hidden shadow-xs">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50/75 border-b border-slate-200 text-[10px] text-slate-450 font-bold uppercase tracking-widest">
-                      <th className="p-4">Promo code</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4">Eligibility Method</th>
-                      <th className="p-4">Discount Type</th>
-                      <th className="p-4 text-center">Usage Count</th>
-                      <th className="p-4">Rule summary details</th>
-                      <th className="p-4 text-center">Toggle / Delete</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {filteredDiscounts.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="text-center py-12 text-slate-400">No promo discount campaigns configured.</td>
-                      </tr>
-                    ) : (
-                      filteredDiscounts.map(disc => (
-                        <tr key={disc.id} className="hover:bg-slate-50/50">
-                          <td className="p-4 font-mono font-black text-slate-950 text-xs tracking-wider uppercase bg-slate-50/45 inline-block my-2 border rounded border-dashed px-2 border-slate-300 ml-4">{disc.title}</td>
-                          <td className="p-4">
-                            <span className={`inline-block py-0.5 px-2 rounded-full font-black text-[9px] uppercase tracking-wide border ${
-                              disc.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-150' : 'bg-rose-50 text-rose-700 border-rose-150'
-                            }`}>
-                              {disc.status}
-                            </span>
-                          </td>
-                          <td className="p-4 font-bold text-slate-700">{disc.eligibility}</td>
-                          <td className="p-4 text-indigo-650 font-bold">{disc.type}</td>
-                          <td className="p-4 text-center font-extrabold text-slate-800">{disc.used} redeemed</td>
-                          <td className="p-4 text-slate-500 max-w-xs truncate">{disc.details}</td>
-                          <td className="p-4 text-center text-xs space-x-1.5 whitespace-nowrap">
-                            <button
-                              onClick={() => handleToggleDiscountStatus(disc.id)}
-                              className="text-indigo-600 hover:text-indigo-850 font-extrabold cursor-pointer"
-                            >
-                              {disc.status === 'Active' ? 'Disable' : 'Enable'}
-                            </button>
-                            <span className="text-slate-300">|</span>
-                            <button
-                              onClick={() => handleDeleteDiscount(disc.id)}
-                              className="text-red-500 hover:text-red-700 font-extrabold cursor-pointer"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Create Discount Modal */}
-            {showAddDiscount && (
-              <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl border border-slate-220 p-6 max-w-sm w-full shadow-2xl animate-scale">
-                  <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
-                    <h3 className="font-extrabold text-slate-850 text-sm">Generate Discount Code Coupon</h3>
-                    <button onClick={() => setShowAddDiscount(false)} className="text-slate-400 hover:text-slate-650 cursor-pointer text-xs font-bold">Close</button>
+            {isDiscountEditorOpen ? (
+              <DiscountEditor
+                discount={editingDiscount}
+                discountType={selectedDiscountType || 'Amount off order'}
+                products={localProducts}
+                collections={localCollections}
+                onCancel={() => {
+                  setIsDiscountEditorOpen(false);
+                  setEditingDiscount(null);
+                  setSelectedDiscountType(null);
+                }}
+                onSave={(savedDiscount) => {
+                  if (editingDiscount) {
+                    // Update existing
+                    const updated = discounts.map(d => d.id === savedDiscount.id ? savedDiscount : d);
+                    onUpdateDiscounts(updated);
+                  } else {
+                    // Create new
+                    onUpdateDiscounts([...discounts, savedDiscount]);
+                  }
+                  setIsDiscountEditorOpen(false);
+                  setEditingDiscount(null);
+                  setSelectedDiscountType(null);
+                }}
+              />
+            ) : (
+              <>
+                {/* Header controls select */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
+                  <div className="relative w-full sm:w-64">
+                    <input
+                      type="text"
+                      placeholder="Filter coupons codes..."
+                      value={discountQuery}
+                      onChange={(e) => setDiscountQuery(e.target.value)}
+                      className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
+                    />
+                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                   </div>
 
-                  <form onSubmit={handleCreateDiscountSubmit} className="space-y-4 text-xs">
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Coupon code tag name</label>
-                      <input
-                        id="disc-form-name"
-                        type="text"
-                        required
-                        placeholder="e.g. CRUSHCLUB15"
-                        value={newDiscountForm.title}
-                        onChange={(e) => setNewDiscountForm({ ...newDiscountForm, title: e.target.value })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none text-xs font-bold tracking-wider placeholder:normal-case uppercase"
-                      />
-                    </div>
+                  <button
+                    onClick={() => setShowDiscountTypeSelector(true)}
+                    className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" /> Create Discount
+                  </button>
+                </div>
 
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Discount Type category</label>
-                      <select
-                        id="disc-form-type"
-                        value={newDiscountForm.type}
-                        onChange={(e) => setNewDiscountForm({ ...newDiscountForm, type: e.target.value as any })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none"
-                      >
-                        <option value="Amount off products">Amount off products</option>
-                        <option value="Buy X get Y">Buy X get Y</option>
-                        <option value="Amount off order">Amount off order</option>
-                        <option value="Free shipping">Free shipping</option>
-                      </select>
-                    </div>
+                {/* Discounts List database table */}
+                <div className="bg-white border rounded-xl overflow-hidden shadow-xs">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50/75 border-b border-slate-200 text-[10px] text-slate-450 font-bold uppercase tracking-widest">
+                          <th className="p-4">Promo code</th>
+                          <th className="p-4">Status</th>
+                          <th className="p-4">Eligibility</th>
+                          <th className="p-4">Discount Type</th>
+                          <th className="p-4 text-center">Combinations</th>
+                          <th className="p-4 text-center">Used</th>
+                          <th className="p-4">Details</th>
+                          <th className="p-4 text-center">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredDiscounts.length === 0 ? (
+                          <tr>
+                            <td colSpan={8} className="text-center py-12 text-slate-400">No promo discount campaigns configured.</td>
+                          </tr>
+                        ) : (
+                          filteredDiscounts.map(disc => {
+                            const hasCombos = disc.combineWithProductDiscounts || disc.combineWithOrderDiscounts || disc.combineWithShippingDiscounts;
+                            return (
+                              <tr key={disc.id} className="hover:bg-slate-50/50">
+                                <td className="p-4">
+                                  <button
+                                    onClick={() => {
+                                      setEditingDiscount(disc);
+                                      setSelectedDiscountType(disc.type);
+                                      setIsDiscountEditorOpen(true);
+                                    }}
+                                    className="font-mono font-black text-slate-900 text-xs tracking-wider uppercase bg-slate-100 hover:bg-slate-200 border rounded border-dashed px-2.5 py-1.5 border-slate-300 transition text-left cursor-pointer"
+                                  >
+                                    {disc.title}
+                                  </button>
+                                </td>
+                                <td className="p-4">
+                                  <span className={`inline-block py-0.5 px-2 rounded-full font-black text-[9px] uppercase tracking-wide border ${
+                                    disc.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-150' : 'bg-rose-50 text-rose-700 border-rose-150'
+                                  }`}>
+                                    {disc.status}
+                                  </span>
+                                </td>
+                                <td className="p-4 font-bold text-slate-700">{disc.eligibility}</td>
+                                <td className="p-4 text-indigo-650 font-bold">{disc.type}</td>
+                                <td className="p-4 text-center">
+                                  <div className="flex justify-center gap-1">
+                                    {disc.combineWithProductDiscounts && (
+                                      <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[9px] font-black" title="Combines with product discounts">PROD</span>
+                                    )}
+                                    {disc.combineWithOrderDiscounts && (
+                                      <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[9px] font-black" title="Combines with order discounts">ORDER</span>
+                                    )}
+                                    {disc.combineWithShippingDiscounts && (
+                                      <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[9px] font-black" title="Combines with shipping discounts">SHIP</span>
+                                    )}
+                                    {!hasCombos && (
+                                      <span className="text-slate-400 text-xs">—</span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="p-4 text-center font-extrabold text-slate-800">{disc.used || 0}</td>
+                                <td className="p-4 text-slate-500 max-w-xs truncate" title={disc.details}>{disc.details}</td>
+                                <td className="p-4 text-center text-xs space-x-1.5 whitespace-nowrap">
+                                  <button
+                                    onClick={() => {
+                                      setEditingDiscount(disc);
+                                      setSelectedDiscountType(disc.type);
+                                      setIsDiscountEditorOpen(true);
+                                    }}
+                                    className="text-indigo-600 hover:text-indigo-850 font-extrabold cursor-pointer"
+                                  >
+                                    Edit
+                                  </button>
+                                  <span className="text-slate-300">|</span>
+                                  <button
+                                    onClick={() => handleToggleDiscountStatus(disc.id)}
+                                    className="text-slate-600 hover:text-slate-800 font-extrabold cursor-pointer"
+                                  >
+                                    {disc.status === 'Active' ? 'Disable' : 'Enable'}
+                                  </button>
+                                  <span className="text-slate-300">|</span>
+                                  <button
+                                    onClick={() => handleDeleteDiscount(disc.id)}
+                                    className="text-red-500 hover:text-red-700 font-extrabold cursor-pointer"
+                                  >
+                                    Delete
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
 
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Rule Summary & Details text</label>
-                      <input
-                        id="disc-form-details"
-                        type="text"
-                        required
-                        placeholder="e.g. 15% off one-time purchase products"
-                        value={newDiscountForm.details}
-                        onChange={(e) => setNewDiscountForm({ ...newDiscountForm, details: e.target.value })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Customer Eligibility</label>
-                      <select
-                        id="disc-form-eligibility"
-                        value={newDiscountForm.title}
-                        onChange={(e) => setNewDiscountForm({ ...newDiscountForm, eligibility: e.target.value })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none"
-                      >
-                        <option value="All customers">All customers</option>
-                        <option value="Megan Matsuoka">Megan Matsuoka (Custom)</option>
-                        <option value="Subscribed members only">Subscribed members only</option>
-                      </select>
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg cursor-pointer"
+            {/* Select Discount Type Modal Popup (matches ss5.png) */}
+            {showDiscountTypeSelector && (
+              <div className="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200">
+                  
+                  {/* Modal Header */}
+                  <div className="flex justify-between items-center p-4 border-b border-slate-100 bg-slate-50">
+                    <h3 className="font-extrabold text-slate-900 text-sm">Select discount type</h3>
+                    <button 
+                      onClick={() => setShowDiscountTypeSelector(false)} 
+                      className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-700 transition cursor-pointer"
                     >
-                      Publish Discount coupon
+                      <X className="h-4 w-4" />
                     </button>
-                  </form>
+                  </div>
+
+                  {/* Options List */}
+                  <div className="divide-y divide-slate-100">
+                    
+                    {/* Option 1: Amount off products */}
+                    <button
+                      onClick={() => {
+                        setShowDiscountTypeSelector(false);
+                        setSelectedDiscountType('Amount off products');
+                        setEditingDiscount(null);
+                        setIsDiscountEditorOpen(true);
+                      }}
+                      className="w-full p-4 hover:bg-slate-50 text-left transition flex items-start gap-3.5 cursor-pointer group"
+                    >
+                      <div className="p-2 bg-slate-100 group-hover:bg-indigo-50 rounded-lg text-slate-600 group-hover:text-indigo-600 shrink-0 mt-0.5">
+                        <Tag className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center">
+                          <p className="font-bold text-xs text-slate-900">Amount off products</p>
+                          <span className="text-slate-300 font-bold text-sm group-hover:translate-x-1 transition-transform">→</span>
+                        </div>
+                        <p className="text-slate-500 text-[11px] mt-0.5 font-medium">Discount specific products or collections of products</p>
+                      </div>
+                    </button>
+
+                    {/* Option 2: Buy X get Y */}
+                    <button
+                      onClick={() => {
+                        setShowDiscountTypeSelector(false);
+                        setSelectedDiscountType('Buy X get Y');
+                        setEditingDiscount(null);
+                        setIsDiscountEditorOpen(true);
+                      }}
+                      className="w-full p-4 hover:bg-slate-50 text-left transition flex items-start gap-3.5 cursor-pointer group"
+                    >
+                      <div className="p-2 bg-slate-100 group-hover:bg-indigo-50 rounded-lg text-slate-600 group-hover:text-indigo-600 shrink-0 mt-0.5">
+                        <Tag className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center">
+                          <p className="font-bold text-xs text-slate-900">Buy X get Y</p>
+                          <span className="text-slate-300 font-bold text-sm group-hover:translate-x-1 transition-transform">→</span>
+                        </div>
+                        <p className="text-slate-500 text-[11px] mt-0.5 font-medium">Discount specific products or collections of products</p>
+                      </div>
+                    </button>
+
+                    {/* Option 3: Amount off order */}
+                    <button
+                      onClick={() => {
+                        setShowDiscountTypeSelector(false);
+                        setSelectedDiscountType('Amount off order');
+                        setEditingDiscount(null);
+                        setIsDiscountEditorOpen(true);
+                      }}
+                      className="w-full p-4 hover:bg-slate-50 text-left transition flex items-start gap-3.5 cursor-pointer group"
+                    >
+                      <div className="p-2 bg-slate-100 group-hover:bg-indigo-50 rounded-lg text-slate-600 group-hover:text-indigo-600 shrink-0 mt-0.5">
+                        <Tag className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center">
+                          <p className="font-bold text-xs text-slate-900">Amount off order</p>
+                          <span className="text-slate-300 font-bold text-sm group-hover:translate-x-1 transition-transform">→</span>
+                        </div>
+                        <p className="text-slate-500 text-[11px] mt-0.5 font-medium">Discount the total order amount</p>
+                      </div>
+                    </button>
+
+                    {/* Option 4: Free shipping */}
+                    <button
+                      onClick={() => {
+                        setShowDiscountTypeSelector(false);
+                        setSelectedDiscountType('Free shipping');
+                        setEditingDiscount(null);
+                        setIsDiscountEditorOpen(true);
+                      }}
+                      className="w-full p-4 hover:bg-slate-50 text-left transition flex items-start gap-3.5 cursor-pointer group"
+                    >
+                      <div className="p-2 bg-slate-100 group-hover:bg-indigo-50 rounded-lg text-slate-600 group-hover:text-indigo-600 shrink-0 mt-0.5">
+                        <Tag className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center">
+                          <p className="font-bold text-xs text-slate-900">Free shipping</p>
+                          <span className="text-slate-300 font-bold text-sm group-hover:translate-x-1 transition-transform">→</span>
+                        </div>
+                        <p className="text-slate-500 text-[11px] mt-0.5 font-medium">Offer free shipping on an order</p>
+                      </div>
+                    </button>
+
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowDiscountTypeSelector(false)}
+                      className="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-250 text-slate-700 text-xs font-bold rounded-lg transition shadow-xs cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
                 </div>
               </div>
             )}

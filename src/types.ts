@@ -120,6 +120,60 @@ export interface Discount {
   type: 'Amount off products' | 'Buy X get Y' | 'Amount off order' | 'Free shipping';
   used: number;
   details: string; // e.g. "15% off one-time purchase products"
+  
+  // Custom Shopify-like properties
+  valueType?: 'Percentage' | 'Fixed amount';
+  valueAmount?: number;
+  
+  // Applies to (for Amount off products)
+  appliesToType?: 'Specific products' | 'Specific collections';
+  appliesToIds?: string[]; // IDs of products or collections
+  
+  // Buy X get Y
+  customerBuysType?: 'Minimum quantity of items' | 'Minimum purchase amount';
+  customerBuysValue?: number;
+  customerBuysAppliesToType?: 'Specific products' | 'Specific collections';
+  customerBuysAppliesToIds?: string[];
+  
+  customerGetsValue?: number;
+  customerGetsAppliesToType?: 'Specific products' | 'Specific collections';
+  customerGetsAppliesToIds?: string[];
+  customerGetsDiscountType?: 'Percentage' | 'Amount off each' | 'Free';
+  customerGetsDiscountValue?: number;
+  maxUsesPerOrder?: number;
+  
+  // Minimum purchase requirements
+  minRequirementsType?: 'No minimum requirements' | 'Minimum purchase amount ($)' | 'Minimum quantity of items';
+  minRequirementsValue?: number;
+  
+  // Maximum discount uses
+  limitTotalUses?: boolean;
+  limitTotalUsesCount?: number;
+  limitOnePerCustomer?: boolean;
+  
+  // Combinations
+  combineWithProductDiscounts?: boolean;
+  combineWithOrderDiscounts?: boolean;
+  combineWithShippingDiscounts?: boolean;
+  
+  // Active dates
+  startDate?: string;
+  startTime?: string;
+  hasEndDate?: boolean;
+  endDate?: string;
+  endTime?: string;
+  
+  // Countries (for Free shipping)
+  countriesType?: 'All countries' | 'Selected countries';
+  selectedCountries?: string[];
+  excludeShippingRatesOverAmount?: boolean;
+  excludeShippingRatesAmount?: number;
+  
+  // Sales channel access
+  allowOnSelectedChannels?: boolean;
+  
+  // Tags
+  tags?: string[];
 }
 
 export interface PageSection {

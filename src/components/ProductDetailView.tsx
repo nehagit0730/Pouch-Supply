@@ -96,6 +96,15 @@ export default function ProductDetailView({
     if (titleL.includes('coffee') || titleL.includes('latte') || titleL.includes('mocha') || tagString.includes('coffee')) {
       return 'Coffee';
     }
+    if (titleL.includes('sweet') || titleL.includes('candy') || tagString.includes('sweet')) {
+      return 'Sweet';
+    }
+    if (titleL.includes('tea') || titleL.includes('chai') || titleL.includes('matcha') || tagString.includes('tea')) {
+      return 'Tea';
+    }
+    if (titleL.includes('other') || tagString.includes('other')) {
+      return 'Other';
+    }
     return 'Mint'; // Fallback
   };
 

@@ -1209,6 +1209,9 @@ export default function ProductEditor({
                               <option value="Fruit">Fruit</option>
                               <option value="Cola">Cola</option>
                               <option value="Coffee">Coffee</option>
+                              <option value="Sweet">Sweet</option>
+                              <option value="Tea">Tea</option>
+                              <option value="Other">Other</option>
                             </select>
                           </div>
                         </div>
@@ -1410,6 +1413,9 @@ export default function ProductEditor({
                   <option value="Fruit">Fruit</option>
                   <option value="Cola">Cola</option>
                   <option value="Coffee">Coffee</option>
+                  <option value="Sweet">Sweet</option>
+                  <option value="Tea">Tea</option>
+                  <option value="Other">Other</option>
                 </select>
                 <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">
                   <ChevronDown className="h-3.5 w-3.5" />

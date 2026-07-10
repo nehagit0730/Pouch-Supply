@@ -3,6 +3,7 @@ import { CartItem, Discount } from '../types';
 import { X, Trash2, Plus, Minus, Ticket, Check, ShieldCheck, ShoppingBag, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import SubscriptionIcon from './SubscriptionIcon';
+import { calculateDiscountAmount } from '../utils';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -12,6 +13,8 @@ interface CartDrawerProps {
   onRemoveItem: (productId: string) => void;
   activeDiscounts: Discount[];
   onTriggerCheckout: (discountApplied: Discount | null, finalTotal: number) => void;
+  products?: any[];
+  collections?: any[];
 }
 
 export default function CartDrawer({
@@ -21,7 +24,9 @@ export default function CartDrawer({
   onUpdateQty,
   onRemoveItem,
   activeDiscounts,
-  onTriggerCheckout
+  onTriggerCheckout,
+  products = [],
+  collections = []
 }: CartDrawerProps) {
   const [promoCodeInput, setPromoCodeInput] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<Discount | null>(null);
@@ -30,9 +35,13 @@ export default function CartDrawer({
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
-  const discountValue = appliedDiscount 
-    ? (appliedDiscount.title.includes('15') || appliedDiscount.details.includes('15') ? subtotal * 0.15 : 5.00) // 15% off typical, or £5 off
-    : 0;
+  const discountValue = calculateDiscountAmount(
+    appliedDiscount,
+    cartItems,
+    subtotal,
+    products,
+    collections
+  );
 
   const total = Math.max(subtotal - discountValue, 0);
 

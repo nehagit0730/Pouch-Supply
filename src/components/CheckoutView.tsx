@@ -129,7 +129,7 @@ export default function CheckoutView({
   };
 
   // Subtotal details
-  const deliveryCost = deliverySpeed === 'priority' ? (totalAmount >= 40 ? 0 : 4.99) : 0;
+  const deliveryCost = discountApplied?.type === 'Free shipping' ? 0 : (deliverySpeed === 'priority' ? (totalAmount >= 40 ? 0 : 4.99) : 0);
   const finalTotal = totalAmount + deliveryCost;
 
   // Process secure Worldpay request

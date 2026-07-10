@@ -184,6 +184,15 @@ export default function ProductsGrid({
       if (titleL.includes('coffee') || titleL.includes('latte') || titleL.includes('mocha') || tagString.includes('coffee')) {
         result.push('coffee');
       }
+      if (titleL.includes('sweet') || titleL.includes('candy') || tagString.includes('sweet')) {
+        result.push('sweet');
+      }
+      if (titleL.includes('tea') || titleL.includes('chai') || titleL.includes('matcha') || tagString.includes('tea')) {
+        result.push('tea');
+      }
+      if (titleL.includes('other') || tagString.includes('other')) {
+        result.push('other');
+      }
     }
     
     if (result.length === 0) {
@@ -624,7 +633,10 @@ export default function ProductsGrid({
                   { id: 'citrus', label: 'Citrus', dotColor: 'bg-amber-400' },
                   { id: 'fruit', label: 'Fruit', dotColor: 'bg-orange-400' },
                   { id: 'cola', label: 'Cola', dotColor: 'bg-amber-800' },
-                  { id: 'coffee', label: 'Coffee', dotColor: 'bg-yellow-800' }
+                  { id: 'coffee', label: 'Coffee', dotColor: 'bg-yellow-800' },
+                  { id: 'sweet', label: 'Sweet', dotColor: 'bg-pink-400' },
+                  { id: 'tea', label: 'Tea', dotColor: 'bg-teal-600' },
+                  { id: 'other', label: 'Other', dotColor: 'bg-slate-400' }
                 ].slice(0, showAllFlavours ? undefined : 6).map(flav => {
                   const isChecked = selectedFlavours.includes(flav.id);
                   const count = filterCounts.flavourCounts[flav.id] || 0;
@@ -649,7 +661,13 @@ export default function ProductsGrid({
               </div>
 
               {/* Show more flavours toggle if list expands */}
-              {/* Added for future proofing but default 6 covers standard list */}
+              <button
+                onClick={() => setShowAllFlavours(!showAllFlavours)}
+                className="text-[10px] text-slate-400 hover:text-slate-600 font-bold flex items-center gap-1 focus:outline-none pt-1"
+              >
+                <span>{showAllFlavours ? 'Show less' : 'Show more'}</span>
+                <span className="text-[8px]">{showAllFlavours ? '▲' : '▼'}</span>
+              </button>
             </div>
 
             {/* 4. PRICE RANGE SLIDER */}
@@ -1211,7 +1229,10 @@ export default function ProductsGrid({
                     { id: 'citrus', label: 'Zesty Citrus 🍋' },
                     { id: 'fruit', label: 'Sweet Fruit 🥭' },
                     { id: 'cola', label: 'Classic Cola 🥤' },
-                    { id: 'coffee', label: 'Warm Coffee ☕' }
+                    { id: 'coffee', label: 'Warm Coffee ☕' },
+                    { id: 'sweet', label: 'Sugary Sweet 🍭' },
+                    { id: 'tea', label: 'Soothing Tea 🍵' },
+                    { id: 'other', label: 'Other Blends 🧪' }
                   ].map(opt => (
                     <button
                       key={opt.id}

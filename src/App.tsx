@@ -2046,6 +2046,8 @@ export default function App() {
         onRemoveItem={handleRemoveCartItem}
         activeDiscounts={discounts}
         onTriggerCheckout={handleTriggerCheckout}
+        products={products}
+        collections={collections}
       />
 
       {/* Global Customer Dashboard slide out drawer panel */}
