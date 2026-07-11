@@ -137,7 +137,7 @@ function BrandsWeOfferSectionAdmin({ sec }: BrandsWeOfferSectionAdminProps) {
   };
 
   return (
-    <div className="py-8 bg-white w-full overflow-hidden border border-slate-100 rounded-2xl shadow-xs my-2 text-center animate-fade-in">
+    <div className="py-4 bg-white w-full overflow-hidden border border-slate-100 rounded-2xl shadow-xs my-2 text-center animate-fade-in">
       <div className="max-w-2xl mx-auto px-4 text-center space-y-1.5 mb-6">
         <div className="flex items-center justify-center gap-3">
           <div className="w-8 h-[1px] bg-[#D4AF37]" />
@@ -399,7 +399,7 @@ function HowItWorksSectionAdmin({ sec }: HowItWorksSectionAdminProps) {
 
   return (
     <div 
-      className="py-12 w-full font-sans transition-all duration-300 overflow-hidden"
+      className="py-8 w-full font-sans transition-all duration-300 overflow-hidden"
       style={{ backgroundColor: sec.settings.backgroundColor || '#F8FAFC' }}
     >
       <div className="max-w-7xl mx-auto px-4 space-y-10 relative">
@@ -4749,7 +4749,7 @@ export default function AdminDashboard({
                                   ];
 
                                   return (
-                                    <div className="py-6 px-3 space-y-4 font-sans text-center rounded-2xl transition-all" style={{ backgroundColor: sec.settings.backgroundColor || '#0F172A', color: '#FFFFFF' }}>
+                                    <div className="py-6 px-3 space-y-4 font-sans text-center rounded-2xl transition-all" style={{ backgroundColor: sec.settings.backgroundColor || '#061229', color: '#FFFFFF' }}>
                                       {promoBannerText && (
                                         <div className="bg-[#D4AF37] text-slate-950 text-[8px] font-black tracking-widest py-1.5 px-3 uppercase rounded">
                                           {promoBannerText}
@@ -5646,13 +5646,13 @@ export default function AdminDashboard({
                               <div className="flex gap-2">
                                 <input
                                   type="color"
-                                  value={currentlyEditingSection.settings.backgroundColor || '#0F172A'}
+                                  value={currentlyEditingSection.settings.backgroundColor || '#061229'}
                                   onChange={(e) => handleUpdateSectionSettings('backgroundColor', e.target.value)}
                                   className="w-10 h-7 border rounded p-0 cursor-pointer bg-transparent"
                                 />
                                 <input
                                   type="text"
-                                  value={currentlyEditingSection.settings.backgroundColor || '#0F172A'}
+                                  value={currentlyEditingSection.settings.backgroundColor || '#061229'}
                                   onChange={(e) => handleUpdateSectionSettings('backgroundColor', e.target.value)}
                                   className="w-24 text-[10px] border p-1 rounded bg-white text-center font-mono focus:outline-none"
                                 />

@@ -67,7 +67,7 @@ export const DEFAULT_PAGES: CustomPage[] = [
         type: 'Plans',
         settings: {
           fullWidth: false,
-          backgroundColor: '#0C1017',
+          backgroundColor: '#061229',
           headingColor: '#FFFFFF',
           textColor: '#E2E8F0',
           title: 'CHOOSE YOUR PLAN',

@@ -277,14 +277,14 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
   // --- RENDERING PLAN CHOICE SCREEN (plan.jpg equivalent) ---
   if (!activePlanSlug) {
     const settings = plansSection?.settings || ({} as any);
-    const bgColor = settings.backgroundColor || '#0C1017';
+    const bgColor = settings.backgroundColor || '#061229';
     const title = settings.title || 'CHOOSE YOUR PLAN';
     const description = settings.description || 'Flexible subscriptions. Premium brands. Serious savings.';
     const alertBadgeText = settings.alertBadgeText || 'Most customers save up to £55/month';
     const promoText = settings.promoBannerText || '★ FIRST 50 SUBSCRIBERS - Get 10% OFF FOR LIFE >';
 
     return (
-      <div className="w-full text-white py-16 px-4" style={{ backgroundColor: bgColor }}>
+      <div className="w-full text-white py-8 px-4" style={{ backgroundColor: bgColor }}>
         <div className="max-w-7xl mx-auto space-y-12">
           {/* Top Promo Banner Pill */}
           {promoText && (

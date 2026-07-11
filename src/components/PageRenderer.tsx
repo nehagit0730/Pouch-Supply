@@ -51,8 +51,8 @@ function BrandsWeOfferSection({ sec, handleLinkClick }: BrandsWeOfferSectionProp
   };
 
   return (
-    <div className="py-12 bg-white w-full overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center space-y-3 mb-10 animate-fade-in">
+    <div className="py-6 bg-white w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center space-y-3 mb-6 animate-fade-in">
         <div className="flex items-center justify-center gap-4">
           <div className="w-10 h-[1px] bg-[#D4AF37]" />
           <span className="block text-xs font-bold uppercase tracking-[0.25em] text-[#D4AF37]">
@@ -164,7 +164,7 @@ interface PlansSectionProps {
 
 function PlansSection({ sec, handleLinkClick }: PlansSectionProps) {
   const settings = sec.settings;
-  const bgColor = settings.backgroundColor || '#0C1017';
+  const bgColor = settings.backgroundColor || '#061229';
   const title = settings.title || 'CHOOSE YOUR PLAN';
   const description = settings.description || 'Flexible subscriptions. Premium brands. Serious savings.';
   const alertBadgeText = settings.alertBadgeText || 'Most customers save up to £55/month';
@@ -225,7 +225,7 @@ function PlansSection({ sec, handleLinkClick }: PlansSectionProps) {
   };
 
   return (
-    <div className="w-full text-white py-16 px-4" style={{ backgroundColor: bgColor }}>
+    <div className="w-full text-white py-8 px-4" style={{ backgroundColor: bgColor }}>
       <div className="max-w-7xl mx-auto space-y-12">
         {/* Top Promo Banner Pill */}
         {promoText && (
@@ -624,7 +624,7 @@ function HowItWorksSection({ sec, handleLinkClick }: HowItWorksSectionProps) {
 
   return (
     <div 
-      className="py-16 w-full font-sans transition-all duration-300 overflow-hidden"
+      className="py-8 w-full font-sans transition-all duration-300 overflow-hidden"
       style={{ backgroundColor: sec.settings.backgroundColor || '#F8FAFC' }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 relative">
