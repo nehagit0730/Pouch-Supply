@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Product, CartItem, Collection } from '../types';
-import { Check, Info, RefreshCw, ShoppingCart, HelpCircle, Package, Sparkles, ArrowRight } from 'lucide-react';
+import { Product, CartItem, Collection, PageSection } from '../types';
+import { 
+  Check, Info, RefreshCw, ShoppingCart, HelpCircle, Package, Sparkles, ArrowRight,
+  Crown, Tag, Flame, ShieldCheck, Lock, Truck, Gift, Clock
+} from 'lucide-react';
+import PlansCanOverlay from './PlansCanOverlay';
 
 interface SubscriptionBuilderProps {
   allProducts: Product[];
   collections: Collection[];
   onAddSubToCart: (packName: string, items: { product: Product; quantity: number }[], frequency: string, flatPrice: number) => void;
+  plansSection?: PageSection;
 }
 
 interface PlanConfig {
@@ -63,7 +68,7 @@ const CanSVG = ({ brand, color }: { brand: string, color: string }) => {
   );
 };
 
-export default function SubscriptionBuilder({ allProducts, collections, onAddSubToCart }: SubscriptionBuilderProps) {
+export default function SubscriptionBuilder({ allProducts, collections, onAddSubToCart, plansSection }: SubscriptionBuilderProps) {
   const userCollections = collections.filter(c => c.id !== 'all');
 
   const [selectedCollectionId, setSelectedCollectionId] = useState<string>(() => {
@@ -78,12 +83,20 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
   const [frequency, setFrequency] = useState('Every 2 weeks');
   const [successAnimation, setSuccessAnimation] = useState(false);
 
-  // Parse path to set active plan state
+  // Parse path to set active plan state (supports both routes /subscribe/lite and query params ?plan=lite)
   const [activePlanSlug, setActivePlanSlug] = useState<'lite' | 'core' | 'pro' | 'ultimate' | null>(() => {
     let p = '';
+    let search = '';
     try {
       p = window.location.pathname;
+      search = window.location.search;
     } catch (e) {}
+
+    if (search.includes('plan=lite')) return 'lite';
+    if (search.includes('plan=core')) return 'core';
+    if (search.includes('plan=pro')) return 'pro';
+    if (search.includes('plan=ultimate')) return 'ultimate';
+
     if (p.includes('/subscribe/lite')) return 'lite';
     if (p.includes('/subscribe/core')) return 'core';
     if (p.includes('/subscribe/pro')) return 'pro';
@@ -95,16 +108,19 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
   useEffect(() => {
     const handlePopState = () => {
       let p = '';
+      let search = '';
       try {
         p = window.location.pathname;
+        search = window.location.search;
       } catch (e) {}
-      if (p.includes('/subscribe/lite')) {
+
+      if (search.includes('plan=lite') || p.includes('/subscribe/lite')) {
         setActivePlanSlug('lite');
-      } else if (p.includes('/subscribe/core')) {
+      } else if (search.includes('plan=core') || p.includes('/subscribe/core')) {
         setActivePlanSlug('core');
-      } else if (p.includes('/subscribe/pro')) {
+      } else if (search.includes('plan=pro') || p.includes('/subscribe/pro')) {
         setActivePlanSlug('pro');
-      } else if (p.includes('/subscribe/ultimate')) {
+      } else if (search.includes('plan=ultimate') || p.includes('/subscribe/ultimate')) {
         setActivePlanSlug('ultimate');
       } else if (p.includes('/subscribe')) {
         setActivePlanSlug(null);
@@ -127,7 +143,50 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
     setAllocatedItems({});
   };
 
-  const activePlan = PLANS.find(p => p.slug === activePlanSlug);
+  // Dynamic Plans resolution from Admin Settings
+  interface ActivePlanItem {
+    slug: 'lite' | 'core' | 'pro' | 'ultimate';
+    name: string;
+    limit: number;
+    price: number;
+    perCan: string;
+    extraLabel?: string;
+    popular?: boolean;
+    subtitle?: string;
+    imageUrl?: string;
+    features?: string[];
+    saveAmountText?: string;
+  }
+
+  const plansSectionItems = plansSection?.settings?.planItems;
+  const activePlans: ActivePlanItem[] = plansSectionItems && plansSectionItems.length > 0
+    ? plansSectionItems.map(p => ({
+        slug: p.slug,
+        name: p.name,
+        limit: p.limit,
+        price: p.price,
+        perCan: `£${(p.price / p.limit).toFixed(2)}`,
+        extraLabel: p.extraText,
+        popular: p.isPopular,
+        subtitle: p.subtitle,
+        imageUrl: p.imageUrl,
+        features: p.features,
+        saveAmountText: p.saveAmountText,
+      }))
+    : PLANS.map(p => ({
+        ...p,
+        subtitle: p.slug === 'lite' ? 'Best for getting started' : p.slug === 'core' ? 'Most flexible' : p.slug === 'pro' ? 'Best value' : 'Maximum savings',
+        features: p.slug === 'lite' 
+          ? ['6 premium cans', 'Flexible delivery', 'Change flavours anytime', 'Skip or pause anytime']
+          : p.slug === 'core'
+          ? ['8 premium cans', 'Lower price per can', 'Change or swap brands', 'Skip or pause anytime']
+          : p.slug === 'pro'
+          ? ['10 premium cans', 'FREE delivery 📦', 'Best price per can', 'Loyalty rewards boost', 'Skip or pause anytime']
+          : ['12 premium cans', 'FREE delivery 📦', 'Lowest price per can', '£3.80 for any extra can', 'Skip or pause anytime'],
+        saveAmountText: p.slug === 'lite' ? 'Save £5.00/month' : p.slug === 'core' ? 'Save £10.00/month' : p.slug === 'pro' ? 'Save £14.00/month' : 'Save £19.00/month',
+      }));
+
+  const activePlan = activePlans.find(p => p.slug === activePlanSlug);
   const activeLimit = activePlan ? activePlan.limit : 6;
   const activePrice = activePlan ? activePlan.price : 27.99;
 
@@ -217,113 +276,182 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
 
   // --- RENDERING PLAN CHOICE SCREEN (plan.jpg equivalent) ---
   if (!activePlanSlug) {
+    const settings = plansSection?.settings || ({} as any);
+    const bgColor = settings.backgroundColor || '#0C1017';
+    const title = settings.title || 'CHOOSE YOUR PLAN';
+    const description = settings.description || 'Flexible subscriptions. Premium brands. Serious savings.';
+    const alertBadgeText = settings.alertBadgeText || 'Most customers save up to £55/month';
+    const promoText = settings.promoBannerText || '★ FIRST 50 SUBSCRIBERS - Get 10% OFF FOR LIFE >';
+
     return (
-      <div className="bg-[#0f172a] text-white min-h-[85vh] py-16 px-4">
+      <div className="w-full text-white py-16 px-4" style={{ backgroundColor: bgColor }}>
         <div className="max-w-7xl mx-auto space-y-12">
-          
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white uppercase">
-              Choose Your Plan
+          {/* Top Promo Banner Pill */}
+          {promoText && (
+            <div className="flex justify-center">
+              <div className="inline-flex items-center gap-2 bg-[#dfb55a]/10 border border-[#dfb55a]/30 text-[#dfb55a] px-5 py-2 rounded-full text-xs font-black tracking-widest uppercase shadow-md animate-pulse">
+                <Crown className="w-3.5 h-3.5" />
+                <span>{promoText}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Section Header */}
+          <div className="text-center space-y-4 max-w-2xl mx-auto">
+            <h1 className="text-4.5xl md:text-5xl font-black tracking-tight uppercase leading-none font-sans">
+              {title.includes('PLAN') ? (
+                <>
+                  {title.substring(0, title.lastIndexOf('PLAN'))}
+                  <span className="text-[#dfb55a]">{title.substring(title.lastIndexOf('PLAN'))}</span>
+                </>
+              ) : (
+                title
+              )}
             </h1>
-            <p className="text-slate-400 text-sm max-w-lg mx-auto">
-              Select one of our ultra-flexible automated subscription plans. Tailor your box size, swap flavors easily, and unlock Scandinavan lab fresh releases.
+            <p className="text-slate-400 text-sm md:text-base font-medium max-w-lg mx-auto">
+              {description}
             </p>
+
+            {/* Savings Alert Badge */}
+            {alertBadgeText && (
+              <div className="inline-flex items-center gap-1.5 bg-slate-900/80 border border-slate-800 px-4 py-1.5 rounded-full text-[11px] font-bold text-emerald-400">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>{alertBadgeText}</span>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {PLANS.map((plan) => {
-              const isPro = plan.slug === 'pro';
+          {/* Switcher Option Buttons */}
+          <div className="flex justify-center">
+            <div className="bg-slate-950 p-1.5 rounded-full border border-slate-800 flex items-center gap-1">
+              <button 
+                onClick={() => setFrequency('Every week')}
+                className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${
+                  frequency === 'Every week' 
+                    ? 'bg-[#dfb55a] text-slate-950 font-black' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Weekly
+              </button>
+              <button 
+                onClick={() => setFrequency('Every 2 weeks')}
+                className={`px-5 py-2 rounded-full text-xs transition-all ${
+                  frequency === 'Every 2 weeks' 
+                    ? 'bg-[#dfb55a] text-slate-950 font-black' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Every 2 Weeks <span className="text-[9px] opacity-75 font-bold ml-1">(POPULAR)</span>
+              </button>
+              <button 
+                onClick={() => setFrequency('Every month')}
+                className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${
+                  frequency === 'Every month' 
+                    ? 'bg-[#dfb55a] text-slate-950 font-black' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Monthly
+              </button>
+            </div>
+          </div>
+
+          {/* 4-Tier Plan Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+            {activePlans.map((plan) => {
+              const isPopular = plan.popular;
               return (
                 <div 
-                  key={plan.slug} 
+                  key={plan.slug}
                   className={`bg-white text-slate-900 rounded-3xl p-6 flex flex-col justify-between relative shadow-2xl transition-all duration-300 hover:scale-[1.03] ${
-                    isPro ? 'ring-4 ring-[#dfb55a]' : 'border border-slate-800/10'
+                    isPopular ? 'ring-4 ring-[#dfb55a]' : 'border border-slate-150'
                   }`}
                 >
-                  {/* "Most Popular" floating label */}
-                  {isPro && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#dfb55a] text-slate-950 font-black text-[10px] tracking-widest uppercase px-4 py-1.5 rounded-full shadow-lg">
-                      Most Popular
+                  {/* Floating Ribbon for highlighted / popular tier */}
+                  {isPopular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#dfb55a] text-slate-950 font-black text-[10px] tracking-widest uppercase px-5 py-1.5 rounded-full shadow-lg flex items-center gap-1 z-20">
+                      <Flame className="w-3.5 h-3.5 fill-slate-950" />
+                      <span>Best Seller</span>
                     </div>
                   )}
 
-                  <div className="space-y-6 text-center">
-                    {/* Plan name */}
-                    <h3 className="text-2xl font-black tracking-widest text-slate-900 mt-2 uppercase">{plan.name}</h3>
+                  <div className="space-y-5">
+                    {/* Card Title Header */}
+                    <div className="text-center">
+                      <h3 className="text-2xl font-black tracking-widest uppercase text-slate-950 leading-none">
+                        {plan.name}
+                      </h3>
+                      <p className="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wider">
+                        {plan.subtitle}
+                      </p>
+                    </div>
 
-                    {/* SVG Illustration of cans on gold shelf / cardboard box */}
-                    {plan.slug !== 'ultimate' ? (
-                      <div className="relative h-28 w-full bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden flex items-center justify-center py-4 shadow-inner">
-                        {/* Shelf */}
-                        <div className="absolute inset-x-3 bottom-3 h-8 bg-gradient-to-t from-[#8c6d2d] to-[#b58d3d] border-t border-[#dfb55a] rounded-b-md shadow-md flex items-center justify-center">
-                          <div className="w-full h-0.5 bg-white/20 absolute top-0" />
-                        </div>
-                        {/* Pouch Cans */}
-                        <div className="flex gap-1 z-10 -mt-1.5 scale-90 px-2 overflow-hidden justify-center w-full">
-                          <CanSVG brand="77" color="#dc2626" />
-                          <CanSVG brand="SNU" color="#0284c7" />
-                          <CanSVG brand="VEL" color="#16a34a" />
-                          {plan.limit >= 8 && <CanSVG brand="FUM" color="#4f46e5" />}
-                          {plan.limit >= 10 && <CanSVG brand="XQS" color="#ea580c" />}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="relative h-28 w-full bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden flex items-center justify-center py-4 shadow-inner">
-                        {/* Cardboard Box */}
-                        <div className="absolute inset-x-4 bottom-2 top-2 bg-amber-100/40 border-2 border-amber-800/30 rounded-lg shadow-inner p-2 flex flex-wrap gap-1 justify-center items-center content-center">
-                          <div className="grid grid-cols-6 gap-0.5 scale-[0.8]">
-                            <CanSVG brand="77" color="#dc2626" />
-                            <CanSVG brand="CLE" color="#0284c7" />
-                            <CanSVG brand="CUB" color="#16a34a" />
-                            <CanSVG brand="FUM" color="#4f46e5" />
-                            <CanSVG brand="KIL" color="#ea580c" />
-                            <CanSVG brand="MAG" color="#8b5cf6" />
-                            <CanSVG brand="NOR" color="#e11d48" />
-                            <CanSVG brand="PAB" color="#d97706" />
-                            <CanSVG brand="SNU" color="#059669" />
-                            <CanSVG brand="VEL" color="#475569" />
-                            <CanSVG brand="FOX" color="#db2777" />
-                            <CanSVG brand="XQS" color="#2563eb" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    {/* Plan image wrapper - uses dynamic custom image if uploaded, or high-fidelity canister overlap */}
+                    <div className="relative h-44 w-full bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden flex items-center justify-center p-2 shadow-inner">
+                      {plan.imageUrl ? (
+                        <img 
+                          src={plan.imageUrl} 
+                          alt={plan.name} 
+                          className="w-full h-full object-contain pointer-events-none rounded-xl"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <PlansCanOverlay type={plan.slug} className="w-full h-full bg-transparent border-0 shadow-none p-0" />
+                      )}
+                    </div>
 
-                    {/* Stats List */}
-                    <div className="space-y-4 pt-4 border-t border-slate-100">
-                      <div className="text-slate-500 font-extrabold uppercase tracking-wider text-[11px]">
-                        QTY(Tubs) - {plan.limit}
+                    {/* Pricing Details */}
+                    <div className="text-center pt-2 border-t border-slate-100 space-y-1">
+                      <div className="text-xs font-extrabold uppercase tracking-widest text-slate-400">
+                        Includes {plan.limit} Cans
                       </div>
-
-                      <div className="text-3xl font-black text-slate-900 tracking-tight">
+                      <div className="text-3xl font-black text-slate-950 tracking-tight leading-none">
                         £{plan.price.toFixed(2)}
+                        <span className="text-xs text-slate-450 font-bold tracking-normal block mt-1 uppercase">
+                          per delivery
+                        </span>
                       </div>
 
-                      <div className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">
-                        PER CAN(INC VAT) - {plan.perCan}
-                      </div>
+                      {plan.saveAmountText && (
+                        <div className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-black tracking-wide uppercase px-3 py-1 rounded-full border border-emerald-100 mt-2">
+                          <Tag className="w-3 h-3 fill-emerald-100" />
+                          <span>{plan.saveAmountText}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bullets feature list */}
+                    <div className="space-y-2 pt-4 border-t border-slate-100">
+                      {plan.features && plan.features.map((feat, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-xs font-semibold text-slate-600">
+                          <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <span>{feat}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Red optional note / choose action */}
-                  <div className="mt-8 space-y-3">
+                  {/* Action Section */}
+                  <div className="mt-6 space-y-3">
                     {plan.extraLabel ? (
-                      <div className="text-center py-1 bg-red-50 text-red-600 font-extrabold text-[10px] tracking-wide uppercase rounded-full border border-red-100">
+                      <div className="text-center py-1.5 bg-rose-50 text-rose-600 font-extrabold text-[9px] tracking-widest uppercase rounded-full border border-rose-100">
                         {plan.extraLabel}
                       </div>
                     ) : (
-                      <div className="h-6" /> // Placeholder for equal sizing
+                      <div className="h-6" />
                     )}
 
                     <button
                       onClick={() => selectPlan(plan.slug)}
-                      className={`w-full py-3 px-6 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer ${
-                        isPro 
-                          ? 'bg-[#dfb55a] text-slate-950 hover:bg-[#cf9e42]' 
-                          : 'bg-black text-white hover:bg-slate-800'
+                      className={`w-full py-3.5 px-6 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5 group ${
+                        isPopular 
+                          ? 'bg-[#dfb55a] text-slate-950 hover:bg-[#cf9e42] shadow-amber-500/10' 
+                          : 'bg-slate-950 text-white hover:bg-slate-850'
                       }`}
                     >
-                      Choose Plan
+                      <span>Choose Plan</span>
+                      <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
                 </div>
@@ -331,6 +459,29 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
             })}
           </div>
 
+          {/* Dynamic footer trust badges */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-12 border-t border-slate-800 text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">
+            <div className="flex flex-col items-center gap-1.5">
+              <Lock className="w-5 h-5 text-[#dfb55a]" />
+              <span>SECURE CHECKOUT</span>
+            </div>
+            <div className="flex flex-col items-center gap-1.5">
+              <Truck className="w-5 h-5 text-[#dfb55a]" />
+              <span>ROYAL MAIL TRACKED</span>
+            </div>
+            <div className="flex flex-col items-center gap-1.5">
+              <Gift className="w-5 h-5 text-[#dfb55a]" />
+              <span>LOYALTY REWARDS</span>
+            </div>
+            <div className="flex flex-col items-center gap-1.5">
+              <RefreshCw className="w-5 h-5 text-[#dfb55a]" />
+              <span>SKIP ANYTIME</span>
+            </div>
+            <div className="col-span-2 md:col-span-1 flex flex-col items-center gap-1.5">
+              <Clock className="w-5 h-5 text-[#dfb55a]" />
+              <span>CANCEL ANYTIME</span>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -345,18 +496,18 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
         
         {/* Rounded Pill Container Topbar */}
         <div className="bg-slate-100 p-1.5 rounded-full flex flex-wrap justify-center items-center gap-1.5 shadow-md border border-slate-200/80 max-w-2xl">
-          {PLANS.map((plan) => {
+          {activePlans.map((plan) => {
             const isSelected = plan.slug === activePlanSlug;
             return (
               <div key={plan.slug} className="relative">
-                {/* Float tag for Pro popular badge */}
-                {plan.slug === 'pro' && (
+                {/* Float tag for popular badge */}
+                {plan.popular && (
                   <span className="absolute -top-3.5 right-2 bg-[#dfb55a] text-slate-950 text-[7.5px] font-black uppercase px-2 py-0.5 rounded-md shadow-xs border border-white/60">
                     Most Popular
                   </span>
                 )}
                 <button
-                  onClick={() => selectPlan(plan.slug)}
+                  onClick={() => selectPlan(plan.slug as any)}
                   className={`py-2 px-5 text-[10px] md:text-xs font-black uppercase tracking-wider rounded-full transition-all duration-300 cursor-pointer ${
                     isSelected 
                       ? 'bg-slate-900 text-white shadow-lg' 

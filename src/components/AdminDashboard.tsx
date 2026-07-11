@@ -34,7 +34,8 @@ export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'Icon with text', label: 'Icon with Text', desc: 'Six-item feature display grid with customizable icons and colors', icon: 'Sparkles' },
   { type: 'Brands we offer', label: 'Brands we offer', desc: 'Infinite running marquee of brand logo images with live upload option', icon: 'Layers' },
   { type: 'How it works', label: 'How it works', desc: 'Dynamic timeline workflow steps with custom images & layouts', icon: 'Compass' },
-  { type: 'Trust badges', label: 'Trust Badges', desc: 'Elegant horizontal grid displaying core store guarantees like authenticity and premium quality', icon: 'Award' }
+  { type: 'Trust badges', label: 'Trust Badges', desc: 'Elegant horizontal grid displaying core store guarantees like authenticity and premium quality', icon: 'Award' },
+  { type: 'Plans', label: 'Subscription Plans', desc: 'Display the customizable 4-tier subscription plans grid', icon: 'LayoutGrid' }
 ] as const;
 
 export const getSectionLabel = (type: string): string => {
@@ -63,6 +64,7 @@ export const getSectionIcon = (type: string) => {
     case 'Brands we offer': return <Layers className="h-4 w-4 text-amber-600 animate-bounce" />;
     case 'How it works': return <Compass className="h-4 w-4 text-blue-600 animate-spin" style={{ animationDuration: '6s' }} />;
     case 'Trust badges': return <Award className="h-4 w-4 text-yellow-600 animate-pulse" />;
+    case 'Plans': return <LayoutGrid className="h-4 w-4 text-amber-500 animate-pulse" />;
     default: return <FileCode className="h-4 w-4 text-slate-400" />;
   }
 };
@@ -1492,6 +1494,55 @@ export default function AdminDashboard({
           { iconType: 'shield', title: 'PREMIUM QUALITY', description: 'Only trusted, proven brands.' },
           { iconType: 'globe', title: 'GLOBAL SELECTION', description: 'The best from around the world.' },
           { iconType: 'tag', title: 'MEMBER PRICING', description: 'Better prices, always.' }
+        ] : undefined,
+        alertBadgeText: sectionType === 'Plans' ? 'Most customers save up to £55/month' : undefined,
+        promoBannerText: sectionType === 'Plans' ? '★ FIRST 50 SUBSCRIBERS - Get 10% OFF FOR LIFE >' : undefined,
+        planItems: sectionType === 'Plans' ? [
+          {
+            slug: 'lite',
+            name: 'LITE',
+            subtitle: 'Best for getting started',
+            price: 27.99,
+            limit: 6,
+            saveAmountText: 'Save £5.00/month',
+            imageUrl: '',
+            features: ['6 premium cans', 'Flexible delivery', 'Change flavours anytime', 'Skip or pause anytime'],
+            isPopular: false
+          },
+          {
+            slug: 'core',
+            name: 'CORE',
+            subtitle: 'Most flexible',
+            price: 35.99,
+            limit: 8,
+            saveAmountText: 'Save £10.00/month',
+            imageUrl: '',
+            features: ['8 premium cans', 'Lower price per can', 'Change or swap brands', 'Skip or pause anytime'],
+            isPopular: false
+          },
+          {
+            slug: 'pro',
+            name: 'PRO',
+            subtitle: 'Best value',
+            price: 40.99,
+            limit: 10,
+            saveAmountText: 'Save £14.00/month',
+            imageUrl: '',
+            features: ['10 premium cans', 'FREE delivery 📦', 'Best price per can', 'Loyalty rewards boost', 'Skip or pause anytime'],
+            isPopular: true
+          },
+          {
+            slug: 'ultimate',
+            name: 'ULTIMATE',
+            subtitle: 'Maximum savings',
+            price: 46.99,
+            limit: 12,
+            saveAmountText: 'Save £19.00/month',
+            imageUrl: '',
+            features: ['12 premium cans', 'FREE delivery 📦', 'Lowest price per can', '£3.80 for any extra can', 'Skip or pause anytime'],
+            extraText: '£3.80 FOR ANY ADDITIONAL CAN',
+            isPopular: false
+          }
         ] : undefined
       }
     };
@@ -5413,6 +5464,215 @@ export default function AdminDashboard({
                               {(currentlyEditingSection.settings.stepItems || []).length === 0 && (
                                 <p className="text-[10px] text-slate-400 text-center py-4">No steps added yet. Click "+ Add Step" above.</p>
                               )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* PLANS SECTION EDITING SETTINGS */}
+                        {currentlyEditingSection.type === 'Plans' && (
+                          <div className="space-y-4 pt-1">
+                            <div>
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">General Title</label>
+                              <input
+                                type="text"
+                                value={currentlyEditingSection.settings.title || ''}
+                                onChange={(e) => handleUpdateSectionSettings('title', e.target.value)}
+                                className="w-full text-[10px] border p-2 rounded bg-white font-semibold focus:outline-none"
+                                placeholder="CHOOSE YOUR PLAN"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">General Subtitle / Description</label>
+                              <textarea
+                                value={currentlyEditingSection.settings.description || ''}
+                                onChange={(e) => handleUpdateSectionSettings('description', e.target.value)}
+                                className="w-full text-[10px] border p-2 rounded bg-white focus:outline-none min-h-[50px] resize-y"
+                                placeholder="Flexible subscriptions. Premium brands. Serious savings."
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">Alert Badge Text</label>
+                              <input
+                                type="text"
+                                value={currentlyEditingSection.settings.alertBadgeText || ''}
+                                onChange={(e) => handleUpdateSectionSettings('alertBadgeText', e.target.value)}
+                                className="w-full text-[10px] border p-2 rounded bg-white focus:outline-none"
+                                placeholder="Most customers save up to £55/month"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">Promo Top Banner Text</label>
+                              <input
+                                type="text"
+                                value={currentlyEditingSection.settings.promoBannerText || ''}
+                                onChange={(e) => handleUpdateSectionSettings('promoBannerText', e.target.value)}
+                                className="w-full text-[10px] border p-2 rounded bg-white focus:outline-none"
+                                placeholder="★ FIRST 50 SUBSCRIBERS - Get 10% OFF FOR LIFE >"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">Background Color</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="color"
+                                  value={currentlyEditingSection.settings.backgroundColor || '#0F172A'}
+                                  onChange={(e) => handleUpdateSectionSettings('backgroundColor', e.target.value)}
+                                  className="w-10 h-7 border rounded p-0 cursor-pointer bg-transparent"
+                                />
+                                <input
+                                  type="text"
+                                  value={currentlyEditingSection.settings.backgroundColor || '#0F172A'}
+                                  onChange={(e) => handleUpdateSectionSettings('backgroundColor', e.target.value)}
+                                  className="w-24 text-[10px] border p-1 rounded bg-white text-center font-mono focus:outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="border-t pt-4">
+                              <label className="block text-slate-650 font-black uppercase tracking-wider text-[10px] mb-2">Edit Subscription Plans (4 tiers)</label>
+                              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin">
+                                {(['lite', 'core', 'pro', 'ultimate'] as const).map((slug) => {
+                                  const plansList = currentlyEditingSection.settings.planItems || [];
+                                  let plan = plansList.find(p => p.slug === slug);
+                                  
+                                  // Fallback initialization if plan entry doesn't exist
+                                  if (!plan) {
+                                    plan = {
+                                      slug,
+                                      name: slug.toUpperCase(),
+                                      subtitle: slug === 'lite' ? 'Best for getting started' : slug === 'core' ? 'Most flexible' : slug === 'pro' ? 'Best value' : 'Maximum savings',
+                                      price: slug === 'lite' ? 27.99 : slug === 'core' ? 35.99 : slug === 'pro' ? 40.99 : 46.99,
+                                      limit: slug === 'lite' ? 6 : slug === 'core' ? 8 : slug === 'pro' ? 10 : 12,
+                                      saveAmountText: slug === 'lite' ? 'Save £5.00/month' : slug === 'core' ? 'Save £10.00/month' : slug === 'pro' ? 'Save £14.00/month' : 'Save £19.00/month',
+                                      imageUrl: '',
+                                      features: slug === 'lite' 
+                                        ? ['6 premium cans', 'Flexible delivery', 'Change flavours anytime', 'Skip or pause anytime']
+                                        : slug === 'core'
+                                        ? ['8 premium cans', 'Lower price per can', 'Change or swap brands', 'Skip or pause anytime']
+                                        : slug === 'pro'
+                                        ? ['10 premium cans', 'FREE delivery 📦', 'Best price per can', 'Loyalty rewards boost', 'Skip or pause anytime']
+                                        : ['12 premium cans', 'FREE delivery 📦', 'Lowest price per can', '£3.80 for any extra can', 'Skip or pause anytime'],
+                                      isPopular: slug === 'pro'
+                                    };
+                                  }
+
+                                  const updatePlanField = (key: string, val: any) => {
+                                    const list = [...(currentlyEditingSection.settings.planItems || [])];
+                                    const pIdx = list.findIndex(p => p.slug === slug);
+                                    const updatedPlan = { ...plan, [key]: val };
+                                    if (pIdx > -1) {
+                                      list[pIdx] = updatedPlan;
+                                    } else {
+                                      list.push(updatedPlan);
+                                    }
+                                    handleUpdateSectionSettings('planItems', list);
+                                  };
+
+                                  return (
+                                    <div key={slug} className="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-2.5">
+                                      <div className="flex justify-between items-center border-b pb-1.5">
+                                        <span className="text-[10px] font-black uppercase text-indigo-650">{slug.toUpperCase()} Plan</span>
+                                        <label className="flex items-center gap-1.5 text-[9px] font-bold text-slate-600 uppercase cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={!!plan.isPopular}
+                                            onChange={(e) => updatePlanField('isPopular', e.target.checked)}
+                                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-3 w-3 cursor-pointer"
+                                          />
+                                          Popular / Highlighted
+                                        </label>
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate-405 uppercase mb-0.5">Plan Name</label>
+                                          <input
+                                            type="text"
+                                            value={plan.name || ''}
+                                            onChange={(e) => updatePlanField('name', e.target.value)}
+                                            className="w-full text-[10px] border p-1 rounded bg-white font-bold focus:outline-none"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate-405 uppercase mb-0.5">Tagline / Subtitle</label>
+                                          <input
+                                            type="text"
+                                            value={plan.subtitle || ''}
+                                            onChange={(e) => updatePlanField('subtitle', e.target.value)}
+                                            className="w-full text-[10px] border p-1 rounded bg-white font-semibold focus:outline-none"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div className="grid grid-cols-3 gap-2">
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate-405 uppercase mb-0.5">Price (£)</label>
+                                          <input
+                                            type="number"
+                                            step="0.01"
+                                            value={plan.price}
+                                            onChange={(e) => updatePlanField('price', parseFloat(e.target.value) || 0)}
+                                            className="w-full text-[10px] border p-1 rounded bg-white text-center font-bold focus:outline-none"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate-405 uppercase mb-0.5">Cans Limit</label>
+                                          <input
+                                            type="number"
+                                            value={plan.limit}
+                                            onChange={(e) => updatePlanField('limit', parseInt(e.target.value) || 0)}
+                                            className="w-full text-[10px] border p-1 rounded bg-white text-center font-bold focus:outline-none"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate-405 uppercase mb-0.5">Savings text</label>
+                                          <input
+                                            type="text"
+                                            value={plan.saveAmountText || ''}
+                                            onChange={(e) => updatePlanField('saveAmountText', e.target.value)}
+                                            className="w-full text-[10px] border p-1 rounded bg-white text-center font-semibold focus:outline-none"
+                                            placeholder="Save £5.00/month"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      {slug === 'ultimate' && (
+                                        <div>
+                                          <label className="block text-[8px] font-bold text-slate-405 uppercase mb-0.5">Extra Info Label (Red ribbon)</label>
+                                          <input
+                                            type="text"
+                                            value={plan.extraText || ''}
+                                            onChange={(e) => updatePlanField('extraText', e.target.value)}
+                                            className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none font-medium"
+                                            placeholder="£3.80 for any additional can"
+                                          />
+                                        </div>
+                                      )}
+
+                                      <div>
+                                        <label className="block text-[8px] font-bold text-slate-405 uppercase mb-0.5">Features (comma separated)</label>
+                                        <input
+                                          type="text"
+                                          value={plan.features ? plan.features.join(', ') : ''}
+                                          onChange={(e) => updatePlanField('features', e.target.value.split(',').map(s => s.trim()))}
+                                          className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none"
+                                          placeholder="6 premium cans, Flexible delivery, Change flavours anytime"
+                                        />
+                                      </div>
+
+                                      <ImageUploadInput
+                                        label="Upload Plan Image Asset"
+                                        value={plan.imageUrl}
+                                        onChange={(base64) => updatePlanField('imageUrl', base64)}
+                                      />
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
                         )}

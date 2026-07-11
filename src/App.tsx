@@ -89,16 +89,23 @@ export default function App() {
 
   const [customPages, setCustomPages] = useState<CustomPage[]>(() => {
     const loaded = safeLoadFromLocalStorage<CustomPage[]>('ps_custom_pages', DEFAULT_PAGES);
-    const guaranteedList = (Array.isArray(loaded) ? loaded : DEFAULT_PAGES)
-      .filter((p: any) => p && p.slug !== 'subscribe' && p.id !== 'subscribe');
+    const list = Array.isArray(loaded) ? loaded : DEFAULT_PAGES;
+    let finalPages = [...list].filter(Boolean);
     // Guaranteed presence check for Homepage in Pages list
-    if (!guaranteedList.some((p: any) => p && p.isHomepage)) {
+    if (!finalPages.some((p: any) => p && p.isHomepage)) {
       const defaultHome = DEFAULT_PAGES.find((p: any) => p.isHomepage);
       if (defaultHome) {
-        return [defaultHome, ...guaranteedList];
+        finalPages = [defaultHome, ...finalPages];
       }
     }
-    return guaranteedList;
+    // Guaranteed presence check for Subscribe page
+    if (!finalPages.some((p: any) => p && p.slug === 'subscribe')) {
+      const defaultSub = DEFAULT_PAGES.find((p: any) => p.slug === 'subscribe');
+      if (defaultSub) {
+        finalPages = [...finalPages, defaultSub];
+      }
+    }
+    return finalPages;
   });
 
   // Shopping Cart & User session statuses
@@ -1453,13 +1460,18 @@ export default function App() {
             })()}
 
             {/* FRONTEND VIEW - SUBSCRIBE BUILDER */}
-            {currentTab === 'frontend-subscribe' && (
-              <SubscriptionBuilder
-                allProducts={products}
-                collections={collections}
-                onAddSubToCart={handleAddSubBoxToCart}
-              />
-            )}
+            {currentTab === 'frontend-subscribe' && (() => {
+              const subPage = customPages.find(p => p.slug === 'subscribe');
+              const plansSection = subPage?.sections.find(s => s.type === 'Plans');
+              return (
+                <SubscriptionBuilder
+                  allProducts={products}
+                  collections={collections}
+                  onAddSubToCart={handleAddSubBoxToCart}
+                  plansSection={plansSection}
+                />
+              );
+            })()}
 
             {/* FRONTEND VIEW - SHOP/CATALOG */}
             {currentTab === 'frontend-shop' && (

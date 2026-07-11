@@ -178,13 +178,16 @@ export interface Discount {
 
 export interface PageSection {
   id: string;
-  type: 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list' | 'Icon with text' | 'Brands we offer' | 'How it works' | 'Trust badges';
+  type: 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list' | 'Icon with text' | 'Brands we offer' | 'How it works' | 'Trust badges' | 'Plans';
   settings: {
+    [key: string]: any;
     fullWidth: boolean;
     backgroundColor: string; // hex
     headingColor: string; // hex
     textColor: string; // hex
     iconColor?: string; // hex
+    alertBadgeText?: string;
+    promoBannerText?: string;
     trustBadges?: {
       iconType: 'badge' | 'shield' | 'globe' | 'tag';
       title: string;
@@ -227,6 +230,18 @@ export interface PageSection {
       imageUrl: string;
       buttonText: string;
       buttonLink: string;
+    }[];
+    planItems?: {
+      slug: 'lite' | 'core' | 'pro' | 'ultimate';
+      name: string;
+      price: number;
+      limit: number;
+      saveAmountText?: string;
+      imageUrl?: string;
+      features?: string[];
+      extraText?: string;
+      subtitle?: string;
+      isPopular?: boolean;
     }[];
   };
   blocks?: any[]; // for columns, items, faqs etc.
