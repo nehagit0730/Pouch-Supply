@@ -14,6 +14,8 @@ import CollectionEditor from './CollectionEditor';
 import ProductEditor from './ProductEditor';
 import BlogContentEditor from './BlogContentEditor';
 import DiscountEditor from './DiscountEditor';
+import PlansCanOverlay from './PlansCanOverlay';
+import { Crown, Flame } from 'lucide-react';
 
 export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'Image banner', label: 'Image Banner', desc: 'Hero banner with centered headline overlay & CTA buttons', icon: 'ImageIcon' },
@@ -4728,6 +4730,131 @@ export default function AdminDashboard({
                                             <p className="text-[8.5px] text-slate-400 leading-snug line-clamp-2">{item.description}</p>
                                           </div>
                                         ))}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+
+                                {/* 17. SUBSCRIPTION PLANS */}
+                                {sec.type === 'Plans' && (() => {
+                                  const title = sec.settings.title || 'CHOOSE YOUR PLAN';
+                                  const description = sec.settings.description || 'Flexible subscriptions. Premium brands. Serious savings.';
+                                  const alertBadgeText = sec.settings.alertBadgeText;
+                                  const promoBannerText = sec.settings.promoBannerText;
+                                  const planItems = sec.settings.planItems || [
+                                    { slug: 'lite', name: 'LITE', subtitle: 'Best for getting started', price: 27.99, limit: 6, saveAmountText: 'Save £5.00/month', imageUrl: '', features: ['6 premium cans', 'Flexible delivery', 'Change flavours anytime', 'Skip or pause anytime'], isPopular: false },
+                                    { slug: 'core', name: 'CORE', subtitle: 'Most flexible', price: 35.99, limit: 8, saveAmountText: 'Save £10.00/month', imageUrl: '', features: ['8 premium cans', 'Lower price per can', 'Change or swap brands', 'Skip or pause anytime'], isPopular: false },
+                                    { slug: 'pro', name: 'PRO', subtitle: 'Best value', price: 40.99, limit: 10, saveAmountText: 'Save £14.00/month', imageUrl: '', features: ['10 premium cans', 'FREE delivery 📦', 'Best price per can', 'Loyalty rewards boost', 'Skip or pause anytime'], isPopular: true },
+                                    { slug: 'ultimate', name: 'ULTIMATE', subtitle: 'Maximum savings', price: 46.99, limit: 12, saveAmountText: 'Save £19.00/month', imageUrl: '', features: ['12 premium cans', 'FREE delivery 📦', 'Lowest price per can', '£3.80 for any extra can', 'Skip or pause anytime'], extraText: '£3.80 FOR ANY ADDITIONAL CAN', isPopular: false }
+                                  ];
+
+                                  return (
+                                    <div className="py-6 px-3 space-y-4 font-sans text-center rounded-2xl transition-all" style={{ backgroundColor: sec.settings.backgroundColor || '#0F172A', color: '#FFFFFF' }}>
+                                      {promoBannerText && (
+                                        <div className="bg-[#D4AF37] text-slate-950 text-[8px] font-black tracking-widest py-1.5 px-3 uppercase rounded">
+                                          {promoBannerText}
+                                        </div>
+                                      )}
+                                      
+                                      <div className="space-y-1 max-w-md mx-auto pt-2">
+                                        {alertBadgeText && (
+                                          <div className="inline-flex items-center gap-1 bg-[#D4AF37]/10 text-[#E5C158] border border-[#D4AF37]/30 text-[8px] font-black tracking-wide uppercase px-2 py-0.5 rounded-full mb-1">
+                                            <Flame className="h-2.5 w-2.5 fill-[#D4AF37]" />
+                                            {alertBadgeText}
+                                          </div>
+                                        )}
+                                        <h3 className="text-xs font-black uppercase tracking-wider text-white">
+                                          {title}
+                                        </h3>
+                                        <p className="text-[9px] text-slate-300 leading-normal font-medium">
+                                          {description}
+                                        </p>
+                                      </div>
+
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-3">
+                                        {planItems.map((plan: any) => {
+                                          return (
+                                            <div 
+                                              key={plan.slug} 
+                                              className={`relative rounded-xl border p-2.5 flex flex-col justify-between text-left transition-all ${
+                                                plan.isPopular 
+                                                  ? 'border-[#D4AF37] bg-slate-900/90 shadow-md ring-1 ring-[#D4AF37]/40' 
+                                                  : 'border-slate-800 bg-slate-950/60'
+                                              }`}
+                                            >
+                                              {plan.isPopular && (
+                                                <span className="absolute -top-2 right-2 bg-[#D4AF37] text-slate-955 text-[6.5px] font-extrabold tracking-widest px-1.5 py-0.5 rounded uppercase flex items-center gap-0.5 shadow-sm z-10">
+                                                  <Crown className="h-2 w-2 fill-slate-955" />
+                                                  POPULAR
+                                                </span>
+                                              )}
+                                              
+                                              <div className="space-y-1.5 font-sans">
+                                                <div>
+                                                  <span className="text-[9px] font-black uppercase text-slate-455 tracking-wider">
+                                                    {plan.name || plan.slug.toUpperCase()}
+                                                  </span>
+                                                  <h4 className="text-[7.5px] font-bold text-slate-500 leading-tight">
+                                                    {plan.subtitle}
+                                                  </h4>
+                                                </div>
+
+                                                <div className="relative h-14 w-full bg-slate-900/80 rounded-lg flex items-center justify-center overflow-hidden border border-slate-850">
+                                                  {plan.imageUrl ? (
+                                                    <img 
+                                                      src={plan.imageUrl} 
+                                                      className="h-full w-full object-contain pointer-events-none rounded-xl" 
+                                                      alt={plan.name} 
+                                                      referrerPolicy="no-referrer"
+                                                    />
+                                                  ) : (
+                                                    <div className="relative scale-50">
+                                                      <PlansCanOverlay type={plan.slug} />
+                                                    </div>
+                                                  )}
+                                                  <div className="absolute bottom-1 right-1 bg-slate-950/85 text-[6px] font-mono font-bold text-slate-400 px-1 py-0.5 rounded">
+                                                    {plan.limit} cans
+                                                  </div>
+                                                </div>
+
+                                                <div className="flex items-baseline gap-0.5 pt-1">
+                                                  <span className="text-[12px] font-black text-white">
+                                                    £{(parseFloat(plan.price) || 0).toFixed(2)}
+                                                  </span>
+                                                  <span className="text-[6.5px] text-slate-455 font-bold uppercase tracking-wider">
+                                                    / MONTH
+                                                  </span>
+                                                </div>
+
+                                                {plan.saveAmountText && (
+                                                  <div className="text-[7.5px] font-extrabold text-[#E5C158] uppercase tracking-wide">
+                                                    {plan.saveAmountText}
+                                                  </div>
+                                                )}
+
+                                                <ul className="space-y-1 pt-1.5 border-t border-slate-900">
+                                                  {(plan.features || []).slice(0, 3).map((f: string, fidx: number) => (
+                                                    <li key={fidx} className="flex items-center gap-1 text-[7.5px] text-slate-350 font-medium">
+                                                      <span className="text-emerald-500 text-[8px]">✓</span>
+                                                      <span className="truncate">{f}</span>
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                              </div>
+
+                                              <button
+                                                type="button"
+                                                className={`w-full mt-3 py-1.5 text-[7px] font-black uppercase tracking-widest rounded-lg transition-all ${
+                                                  plan.isPopular 
+                                                    ? 'bg-[#D4AF37] text-slate-950 hover:bg-[#E5C158]' 
+                                                    : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                                                }`}
+                                              >
+                                                SELECT
+                                              </button>
+                                            </div>
+                                          );
+                                        })}
                                       </div>
                                     </div>
                                   );
