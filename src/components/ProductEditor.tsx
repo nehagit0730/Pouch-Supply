@@ -67,7 +67,7 @@ export default function ProductEditor({
   const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
 
   // Preset vendors/categories for smart search options
-  const defaultVendors = ['Olival', '77', 'Cuba', 'KILLA', 'VELO', 'White Fox', 'Siberia'];
+  const defaultVendors = ['77', 'Clew', 'Cuba', 'Maggie', 'Nordic Spirit', 'XQS', 'Zyn', 'Pablo', 'Killa', 'Fumi', 'Velo', 'White Fox', 'Snu'];
   const defaultCategories = ['Clothing', 'Jwellery', 'Nicotine Pouches', 'Protein', 'Food'];
 
   // Helper to generate combination names from option dimensions
@@ -101,7 +101,7 @@ export default function ProductEditor({
       setSku(product.sku || '');
       setBarcode(product.barcode || '');
       setCategory(product.category || 'Nicotine Pouches');
-      setVendor(product.vendor || 'Olival');
+      setVendor(product.vendor || '77');
       setStatus(product.status || 'Active');
       setWeight(product.weight || 0);
       setWeightUnit(product.weightUnit || 'g');
@@ -129,7 +129,7 @@ export default function ProductEditor({
       setSku(`PCH-${100000 + Math.floor(Math.random() * 900000)}`);
       setBarcode('');
       setCategory('Nicotine Pouches');
-      setVendor('77 Pouches');
+      setVendor('77');
       setStatus('Active');
       setWeight(24);
       setWeightUnit('g');
@@ -428,7 +428,7 @@ export default function ProductEditor({
         sku !== (product.sku || '') ||
         barcode !== (product.barcode || '') ||
         category !== (product.category || 'Nicotine Pouches') ||
-        vendor !== (product.vendor || 'Olival') ||
+        vendor !== (product.vendor || '77') ||
         status !== (product.status || 'Active') ||
         weight !== (product.weight || 0) ||
         weightUnit !== (product.weightUnit || 'g') ||
@@ -1366,7 +1366,6 @@ export default function ProductEditor({
                   {defaultVendors.map(v => (
                     <option key={v} value={v}>{v}</option>
                   ))}
-                  <option value="Olival">Olival (Croatia HQ)</option>
                 </select>
                 <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-500">
                   <ChevronDown className="h-3.5 w-3.5" />

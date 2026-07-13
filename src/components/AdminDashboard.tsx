@@ -4408,7 +4408,7 @@ export default function AdminDashboard({
                                       {sec.settings.title || 'OFFICIAL LAB PARTNER REGISTER'}
                                     </p>
                                     <div className="flex gap-2 justify-center flex-wrap">
-                                      {['77 Pouches', 'CUBA Power', 'CLEW White', 'KILLA Siberian'].map(logo => (
+                                      {['77', 'Cuba', 'Clew', 'Killa', 'Velo', 'XQS', 'Zyn', 'White Fox'].map(logo => (
                                         <span key={logo} className="border border-slate-200 bg-white text-slate-700 font-extrabold text-[8.5px] py-1 px-2.5 rounded-lg shadow-3xs flex items-center gap-1 leading-none">
                                           <span className="text-indigo-600">●</span>
                                           <span>{logo}</span>

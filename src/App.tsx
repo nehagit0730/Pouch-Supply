@@ -30,6 +30,47 @@ import {
 } from 'lucide-react';
 import OrderWithdrawalModal from './components/OrderWithdrawalModal';
 
+const ALLOWED_BRANDS = [
+  '77',
+  'Clew',
+  'Cuba',
+  'Maggie',
+  'Nordic Spirit',
+  'XQS',
+  'Zyn',
+  'Pablo',
+  'Killa',
+  'Fumi',
+  'Velo',
+  'White Fox',
+  'Snu'
+];
+
+export const mapVendorToAllowedBrand = (vendor: string | undefined): string => {
+  if (!vendor) return '77';
+  const vLower = vendor.trim().toLowerCase();
+  if (vLower === '77 pouches' || vLower === '77pouches' || vLower === '77') return '77';
+  if (vLower === 'clew' || vLower === 'clew white') return 'Clew';
+  if (vLower === 'cuba' || vLower === 'cuba power') return 'Cuba';
+  if (vLower === 'maggie') return 'Maggie';
+  if (vLower === 'nordic spirit' || vLower === 'nordic_spirit' || vLower === 'nordic') return 'Nordic Spirit';
+  if (vLower === 'xqs') return 'XQS';
+  if (vLower === 'zyn') return 'Zyn';
+  if (vLower === 'pablo') return 'Pablo';
+  if (vLower === 'killa' || vLower === 'killa siberian') return 'Killa';
+  if (vLower === 'fumi') return 'Fumi';
+  if (vLower === 'velo' || vLower === 'velo eucalyptus') return 'Velo';
+  if (vLower === 'white fox' || vLower === 'whitefox') return 'White Fox';
+  if (vLower === 'snu') return 'Snu';
+
+  for (const b of ALLOWED_BRANDS) {
+    if (vLower.includes(b.toLowerCase()) || b.toLowerCase().includes(vLower)) {
+      return b;
+    }
+  }
+  return '77';
+};
+
 export default function App() {
   // Helper for safe JSON parsing from LocalStorage
   const safeLoadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
@@ -55,9 +96,24 @@ export default function App() {
   };
 
   // --- Persistent Storage State Initialization ---
-  const [products, setProducts] = useState<Product[]>(() => {
-    return safeLoadFromLocalStorage<Product[]>('ps_products', INITIAL_PRODUCTS);
+  const [productsState, setProductsState] = useState<Product[]>(() => {
+    const raw = safeLoadFromLocalStorage<Product[]>('ps_products', INITIAL_PRODUCTS);
+    return raw.map(p => ({
+      ...p,
+      vendor: mapVendorToAllowedBrand(p.vendor)
+    }));
   });
+
+  const products = productsState;
+  const setProducts = (value: Product[] | ((prev: Product[]) => Product[])) => {
+    setProductsState((prev) => {
+      const resolved = typeof value === 'function' ? value(prev) : value;
+      return resolved.map(p => ({
+        ...p,
+        vendor: mapVendorToAllowedBrand(p.vendor)
+      }));
+    });
+  };
 
   const [collections, setCollections] = useState<Collection[]>(() => {
     return safeLoadFromLocalStorage<Collection[]>('ps_collections', INITIAL_COLLECTIONS);
@@ -1262,7 +1318,7 @@ export default function App() {
                       <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Our Premium Partner directory</h3>
                     </div>
                     <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-75">
-                      {['77 Pouches', 'CUBA Power', 'CLEW White', 'KILLA Siberian', 'VELO Eucalyptus'].map((bLabel, index) => (
+                      {['77', 'Cuba', 'Clew', 'Killa', 'Velo', 'XQS', 'Zyn', 'White Fox'].map((bLabel, index) => (
                         <span 
                           key={index} 
                           onClick={() => {

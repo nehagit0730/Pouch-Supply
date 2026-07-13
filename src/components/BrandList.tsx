@@ -14,9 +14,18 @@ export default function BrandList({ collections, onBrandClick }: BrandListProps)
   // Assign aesthetic background gradients and branding icons
   const brandMeta: Record<string, { logoText: string, gradient: string, country: string }> = {
     '77': { logoText: '77', gradient: 'from-blue-650 to-blue-900', country: 'Poland 🇵🇱' },
-    'cuba': { logoText: 'CUBA', gradient: 'from-amber-600 to-red-800', country: 'Lithuania 🇱🇹' },
+    'cuba': { logoText: 'CUBA', gradient: 'from-red-600 to-amber-800', country: 'Lithuania 🇱🇹' },
     'clew': { logoText: 'CLEW', gradient: 'from-teal-600 to-cyan-800', country: 'Sweden 🇸🇪' },
-    'killa': { logoText: 'KILLA', gradient: 'from-slate-700 to-black', country: 'Denmark 🇩🇰' }
+    'killa': { logoText: 'KILLA', gradient: 'from-slate-700 to-black', country: 'Denmark 🇩🇰' },
+    'maggie': { logoText: 'MAGGIE', gradient: 'from-pink-600 to-purple-800', country: 'Sweden 🇸🇪' },
+    'nordic spirit': { logoText: 'NORDIC SPIRIT', gradient: 'from-emerald-600 to-teal-900', country: 'Sweden 🇸🇪' },
+    'xqs': { logoText: 'XQS', gradient: 'from-amber-500 to-amber-800', country: 'Sweden 🇸🇪' },
+    'zyn': { logoText: 'ZYN', gradient: 'from-blue-500 to-indigo-800', country: 'Sweden 🇸🇪' },
+    'pablo': { logoText: 'PABLO', gradient: 'from-rose-700 to-stone-900', country: 'Lithuania 🇱🇹' },
+    'fumi': { logoText: 'FUMI', gradient: 'from-indigo-600 to-pink-500', country: 'Sweden 🇸🇪' },
+    'velo': { logoText: 'VELO', gradient: 'from-sky-500 to-blue-750', country: 'Sweden 🇸🇪' },
+    'white fox': { logoText: 'WHITE FOX', gradient: 'from-slate-350 to-slate-600', country: 'Sweden 🇸🇪' },
+    'snu': { logoText: 'SNU', gradient: 'from-purple-700 to-violet-950', country: 'Norway 🇳🇴' }
   };
 
   return (
@@ -36,7 +45,8 @@ export default function BrandList({ collections, onBrandClick }: BrandListProps)
       {/* Grid of brand Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {brandCollections.map(col => {
-          const meta = brandMeta[col.id] || { logoText: col.title.substring(0, 3), gradient: 'from-slate-650 to-slate-800', country: 'Europe 🇪🇺' };
+          const cleanId = col.id.toLowerCase().replace('collection-', '').replace('-', ' ').trim();
+          const meta = brandMeta[cleanId] || brandMeta[col.title.toLowerCase().trim()] || { logoText: col.title, gradient: 'from-slate-650 to-slate-800', country: 'Europe 🇪🇺' };
           return (
             <div 
               key={col.id}
