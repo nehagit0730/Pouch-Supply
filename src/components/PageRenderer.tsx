@@ -1199,15 +1199,49 @@ export default function PageRenderer({
           };
           
           const isFullBleed = (sec.type === 'Slideshow' || sec.type === 'Image banner' || sec.type === 'Marquee text' || sec.type === 'Video banner') && sec.settings.fullWidth;
-          const paddingClass = isFullBleed ? 'py-0' : 'py-3 sm:py-4 md:py-5';
+          
+          const hasCustomPadding = sec.settings.paddingTop !== undefined || sec.settings.paddingBottom !== undefined;
+          const paddingClass = isFullBleed ? 'py-0' : (hasCustomPadding ? '' : 'py-3 sm:py-4 md:py-5');
           const containerClass = sec.settings.fullWidth ? 'w-full' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
+
+          const customStyles = `
+            #sec-${sec.id} {
+              ${sec.settings.paddingTop !== undefined ? `padding-top: ${sec.settings.paddingTop}px !important;` : ''}
+              ${sec.settings.paddingBottom !== undefined ? `padding-bottom: ${sec.settings.paddingBottom}px !important;` : ''}
+              ${sec.settings.paddingSide !== undefined ? `padding-left: ${sec.settings.paddingSide}px !important; padding-right: ${sec.settings.paddingSide}px !important;` : ''}
+              ${sec.settings.alignment ? `text-align: ${sec.settings.alignment} !important;` : ''}
+            }
+            #sec-${sec.id} h1, #sec-${sec.id} h2, #sec-${sec.id} h3, #sec-${sec.id} h4, #sec-${sec.id} .section-title {
+              ${sec.settings.titleFontSize ? `font-size: ${sec.settings.titleFontSize}px !important;` : ''}
+              ${sec.settings.headingColor ? `color: ${sec.settings.headingColor} !important;` : ''}
+              ${sec.settings.alignment ? `text-align: ${sec.settings.alignment} !important;` : ''}
+            }
+            #sec-${sec.id} p, #sec-${sec.id} .section-desc, #sec-${sec.id} li {
+              ${sec.settings.bodyFontSize ? `font-size: ${sec.settings.bodyFontSize}px !important;` : ''}
+              ${sec.settings.textColor ? `color: ${sec.settings.textColor} !important;` : ''}
+              ${sec.settings.alignment ? `text-align: ${sec.settings.alignment} !important;` : ''}
+            }
+            #sec-${sec.id} button, #sec-${sec.id} .section-btn {
+              ${sec.settings.buttonBgColor ? `background-color: ${sec.settings.buttonBgColor} !important;` : ''}
+              ${sec.settings.buttonTextColor ? `color: ${sec.settings.buttonTextColor} !important;` : ''}
+            }
+            #sec-${sec.id} button {
+              ${sec.settings.buttonRoundness === 'rounded-none' ? 'border-radius: 0px !important;' : ''}
+              ${sec.settings.buttonRoundness === 'rounded' ? 'border-radius: 4px !important;' : ''}
+              ${sec.settings.buttonRoundness === 'rounded-lg' ? 'border-radius: 8px !important;' : ''}
+              ${sec.settings.buttonRoundness === 'rounded-xl' ? 'border-radius: 12px !important;' : ''}
+              ${sec.settings.buttonRoundness === 'rounded-full' ? 'border-radius: 9999px !important;' : ''}
+            }
+          `;
 
           return (
             <section
+              id={`sec-${sec.id}`}
               key={sec.id || idx}
               style={sStyle}
               className={`${paddingClass} relative transition-all duration-300 w-full overflow-hidden`}
             >
+              <style dangerouslySetInnerHTML={{ __html: customStyles }} />
               <div className={containerClass}>
                 
                 {/* 1. IMAGE BANNER */}

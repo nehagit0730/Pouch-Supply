@@ -22,11 +22,39 @@ export default function CollectionDetailView({
 
   // Filter products by collection matching list & brand filter
   const collectionProducts = useMemo(() => {
-    let list = allProducts;
+    const expandedList: Product[] = [];
+    allProducts.forEach(p => {
+      if (p.status !== 'Active') return;
+      if (p.concreteVariants && p.concreteVariants.length > 0) {
+        p.concreteVariants.forEach(variant => {
+          expandedList.push({
+            ...p,
+            id: variant.id,
+            title: `${p.title} - ${variant.name}`,
+            price: variant.price !== undefined ? variant.price : p.price,
+            description: variant.description || p.description,
+            image: (variant.images && variant.images.length > 0) ? variant.images[0] : p.image,
+            inventory: variant.inventory !== undefined ? variant.inventory : p.inventory,
+            flavour: variant.flavour || p.flavour,
+            isVariantCard: true,
+            concreteVariantId: variant.id,
+            parentSlug: p.slug || p.id,
+            parentId: p.id
+          });
+        });
+      } else {
+        expandedList.push(p);
+      }
+    });
+
+    let list = expandedList;
     
     // If not "all" collection, filter by designated productIds list
     if (collection.id !== 'all') {
-      list = allProducts.filter(p => collection.productIds.includes(p.id));
+      list = expandedList.filter(p => {
+        const checkId = p.parentId || p.id;
+        return collection.productIds.includes(checkId);
+      });
     }
 
     if (vendorFilter !== 'All') {
@@ -47,9 +75,29 @@ export default function CollectionDetailView({
 
   // Extract all available brands (vendors) for filters
   const availableVendors = useMemo(() => {
+    const expandedList: Product[] = [];
+    allProducts.forEach(p => {
+      if (p.status !== 'Active') return;
+      if (p.concreteVariants && p.concreteVariants.length > 0) {
+        p.concreteVariants.forEach(variant => {
+          expandedList.push({
+            ...p,
+            id: variant.id,
+            parentId: p.id,
+            isVariantCard: true,
+          });
+        });
+      } else {
+        expandedList.push(p);
+      }
+    });
+
     const list = collection.id === 'all' 
-      ? allProducts 
-      : allProducts.filter(p => collection.productIds.includes(p.id));
+      ? expandedList 
+      : expandedList.filter(p => {
+          const checkId = p.parentId || p.id;
+          return collection.productIds.includes(checkId);
+        });
     
     const brands = list.map(p => p.vendor);
     return ['All', ...Array.from(new Set(brands))];
@@ -160,19 +208,23 @@ export default function CollectionDetailView({
         {/* Curator Listing grid */}
         {collectionProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {collectionProducts.map(prod => (
-              <div 
-                key={prod.id} 
-                onClick={() => {
-                  try {
-                    window.history.pushState({}, '', `/products/${prod.slug || prod.id}`);
-                  } catch (e) {
-                    console.warn('[History] Failed to pushState:', e);
-                  }
-                  onNavigate('product-detail', prod.slug || prod.id);
-                }}
-                className="bg-white border hover:border-slate-350 p-4 rounded-xl space-y-4 cursor-pointer group hover:shadow-md transition-all flex flex-col justify-between"
-              >
+            {collectionProducts.map(prod => {
+              const navArg = prod.isVariantCard
+                ? `${prod.parentSlug || prod.parentId}?variant=${prod.concreteVariantId}`
+                : (prod.slug || prod.id);
+              return (
+                <div 
+                  key={prod.id} 
+                  onClick={() => {
+                    try {
+                      window.history.pushState({}, '', `/products/${navArg}`);
+                    } catch (e) {
+                      console.warn('[History] Failed to pushState:', e);
+                    }
+                    onNavigate('product-detail', navArg);
+                  }}
+                  className="bg-white border hover:border-slate-350 p-4 rounded-xl space-y-4 cursor-pointer group hover:shadow-md transition-all flex flex-col justify-between"
+                >
                 {/* Image block thumbnail */}
                 <div className="aspect-square rounded-lg bg-slate-50 border overflow-hidden relative p-4 flex items-center justify-center">
                   <img 
@@ -234,8 +286,9 @@ export default function CollectionDetailView({
                   </button>
                 </div>
 
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="bg-white border rounded-2xl p-16 text-center space-y-4 max-w-md mx-auto">

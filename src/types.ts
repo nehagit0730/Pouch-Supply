@@ -40,6 +40,10 @@ export interface Product {
   updatedAt?: string;
   strength?: string;
   flavour?: string;
+  isVariantCard?: boolean;
+  concreteVariantId?: string;
+  parentSlug?: string;
+  parentId?: string;
 }
 
 export interface Collection {

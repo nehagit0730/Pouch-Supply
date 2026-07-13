@@ -223,8 +223,9 @@ export default function App() {
     } else if (tab === 'blog-detail' && productId) {
       url = `/blogs/${productId}`;
     } else if (tab === 'product-detail' && productId) {
-      const prod = products.find(p => p.id === productId || p.slug === productId);
-      url = `/products/${prod?.slug || productId}`;
+      const [cleanProdId, queryStr] = productId.split('?');
+      const prod = products.find(p => p.id === cleanProdId || p.slug === cleanProdId);
+      url = `/products/${prod?.slug || cleanProdId}${queryStr ? `?${queryStr}` : ''}`;
     } else if (tab === 'collection-detail' && collectionId) {
       const col = collections.find(c => c.id === collectionId || c.slug === collectionId);
       url = `/collections/${col?.slug || collectionId}`;
@@ -252,7 +253,8 @@ export default function App() {
       setSelectedBlogSlug(productId);
     }
     if (productId !== undefined) {
-      setSelectedProductId(productId);
+      const [cleanProdId] = productId.split('?');
+      setSelectedProductId(cleanProdId);
     }
     if (collectionId !== undefined) {
       setActiveCollectionId(collectionId);

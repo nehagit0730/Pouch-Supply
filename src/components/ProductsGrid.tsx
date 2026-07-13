@@ -201,14 +201,46 @@ export default function ProductsGrid({
     return result;
   };
 
+  // Expand product variants into individual virtual products
+  const expandedProducts = useMemo(() => {
+    const list: Product[] = [];
+    products.forEach(p => {
+      if (p.status !== 'Active') return;
+      if (p.concreteVariants && p.concreteVariants.length > 0) {
+        p.concreteVariants.forEach(variant => {
+          list.push({
+            ...p,
+            id: variant.id,
+            title: `${p.title} - ${variant.name}`,
+            price: variant.price !== undefined ? variant.price : p.price,
+            description: variant.description || p.description,
+            image: (variant.images && variant.images.length > 0) ? variant.images[0] : p.image,
+            inventory: variant.inventory !== undefined ? variant.inventory : p.inventory,
+            flavour: variant.flavour || p.flavour,
+            isVariantCard: true,
+            concreteVariantId: variant.id,
+            parentSlug: p.slug || p.id,
+            parentId: p.id
+          });
+        });
+      } else {
+        list.push(p);
+      }
+    });
+    return list;
+  }, [products]);
+
   // Filtered list implementation
   const filteredProducts = useMemo(() => {
-    let list = products.filter(p => p.status === 'Active');
+    let list = expandedProducts;
 
     // Filter by Active Collection selector (if not 'all')
     const currentCollection = collections.find(c => c.id === activeCollectionId) || collections[0];
     if (currentCollection && currentCollection.id !== 'all') {
-      list = list.filter(p => currentCollection.productIds.includes(p.id));
+      list = list.filter(p => {
+        const checkId = p.parentId || p.id;
+        return currentCollection.productIds.includes(checkId);
+      });
     }
 
     // Search query filter
@@ -264,18 +296,18 @@ export default function ProductsGrid({
     if (sortBy === 'featured') {
       // Default / Featured sequence
     } else if (sortBy === 'price-asc') {
-      list.sort((a, b) => a.price - b.price);
+      list = [...list].sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-desc') {
-      list.sort((a, b) => b.price - a.price);
+      list = [...list].sort((a, b) => b.price - a.price);
     } else if (sortBy === 'title-asc') {
-      list.sort((a, b) => a.title.localeCompare(b.title));
+      list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     } else if (sortBy === 'title-desc') {
-      list.sort((a, b) => b.title.localeCompare(a.title));
+      list = [...list].sort((a, b) => b.title.localeCompare(a.title));
     }
 
     return list;
   }, [
-    products, collections, activeCollectionId, searchTerm, 
+    expandedProducts, collections, activeCollectionId, searchTerm, 
     selectedBrands, selectedStrengths, selectedFlavours, 
     priceRange, inStockOnly, bestSellersOnly, newArrivalsOnly, sortBy
   ]);
@@ -286,9 +318,7 @@ export default function ProductsGrid({
     const strengthCounts: Record<string, number> = { mild: 0, regular: 0, strong: 0, xstrong: 0 };
     const flavourCounts: Record<string, number> = { mint: 0, berry: 0, citrus: 0, fruit: 0, cola: 0, coffee: 0 };
 
-    products.forEach(p => {
-      if (p.status !== 'Active') return;
-      
+    expandedProducts.forEach(p => {
       // Brand count
       if (p.vendor) {
         brandCounts[p.vendor] = (brandCounts[p.vendor] || 0) + 1;
@@ -296,7 +326,9 @@ export default function ProductsGrid({
 
       // Strength count
       const strInfo = getProductStrength(p);
-      strengthCounts[strInfo.id]++;
+      if (strengthCounts[strInfo.id] !== undefined) {
+        strengthCounts[strInfo.id]++;
+      }
 
       // Flavour count
       const flavs = getProductFlavours(p);
@@ -306,7 +338,7 @@ export default function ProductsGrid({
     });
 
     return { brandCounts, strengthCounts, flavourCounts };
-  }, [products]);
+  }, [expandedProducts]);
 
   // Quantity controllers per product card
   const handleQuantityChange = (productId: string, delta: number) => {
@@ -873,7 +905,10 @@ export default function ProductsGrid({
                       <div 
                         onClick={() => {
                           try {
-                            window.history.pushState({}, '', `/products/${prod.slug || prod.id}`);
+                            const navArg = prod.isVariantCard
+                              ? `${prod.parentSlug || prod.parentId}?variant=${prod.concreteVariantId}`
+                              : (prod.slug || prod.id);
+                            window.history.pushState({}, '', `/products/${navArg}`);
                           } catch (e) {}
                           window.dispatchEvent(new Event('popstate'));
                         }}
@@ -922,7 +957,10 @@ export default function ProductsGrid({
                             <h3 
                               onClick={() => {
                                 try {
-                                  window.history.pushState({}, '', `/products/${prod.slug || prod.id}`);
+                                  const navArg = prod.isVariantCard
+                                    ? `${prod.parentSlug || prod.parentId}?variant=${prod.concreteVariantId}`
+                                    : (prod.slug || prod.id);
+                                  window.history.pushState({}, '', `/products/${navArg}`);
                                 } catch (e) {}
                                 window.dispatchEvent(new Event('popstate'));
                               }}

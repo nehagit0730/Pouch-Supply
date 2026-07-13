@@ -4,7 +4,7 @@ import {
   TrendingUp, BarChart3, Package, Users, Tag, FileCode, HardDrive, Percent, 
   Search, Plus, Eye, CheckCircle2, Clipboard, ArrowUpDown, ChevronRight, 
   Trash2, Filter, Save, Sparkles, Building, Settings, Image as ImageIcon, 
-  X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw, AlertTriangle,
+  X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw, AlertTriangle, GripVertical,
   Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass, ShieldCheck, ChevronLeft,
   ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server, Lock, Gift, Check, Clock, Truck, ArrowRight,
   Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit, LogOut
@@ -1649,6 +1649,28 @@ export default function AdminDashboard({
     });
     setLocalPages(updated);
     setHasUnsavedChanges(true);
+  };
+
+  // Move Section to index (drag and drop)
+  const handleMoveSectionTo = (fromIdx: number, toIdx: number) => {
+    if (!selectedBuilderPageId) return;
+    const page = localPages.find(p => p.id === selectedBuilderPageId);
+    if (!page) return;
+    const sections = [...page.sections];
+    if (fromIdx < 0 || fromIdx >= sections.length || toIdx < 0 || toIdx >= sections.length || fromIdx === toIdx) return;
+
+    const [movedSection] = sections.splice(fromIdx, 1);
+    sections.splice(toIdx, 0, movedSection);
+
+    const updated = localPages.map(p => {
+      if (p.id === selectedBuilderPageId) {
+        return { ...p, sections };
+      }
+      return p;
+    });
+    setLocalPages(updated);
+    setHasUnsavedChanges(true);
+    if (onDirtyChange) onDirtyChange(true);
   };
 
   // Add Mock File Upload
@@ -3973,13 +3995,30 @@ export default function AdminDashboard({
                         <div 
                           key={sec.id}
                           onClick={() => setSelectedBuilderSectionId(sec.id)}
-                          className={`p-2 rounded-xl border text-xs flex justify-between items-center transition-all cursor-pointer ${
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('text/plain', idx.toString());
+                            e.dataTransfer.effectAllowed = 'move';
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const dragIdxStr = e.dataTransfer.getData('text/plain');
+                            if (dragIdxStr !== '') {
+                              const dragIdx = parseInt(dragIdxStr, 10);
+                              handleMoveSectionTo(dragIdx, idx);
+                            }
+                          }}
+                          className={`p-2 rounded-xl border text-xs flex justify-between items-center transition-all cursor-grab active:cursor-grabbing ${
                             selectedBuilderSectionId === sec.id 
                               ? 'border-indigo-600 bg-indigo-50/30 text-slate-900 shadow-sm' 
                               : 'bg-slate-50 border-slate-200/70 hover:bg-slate-100 text-slate-700'
                           }`}
                         >
-                          <div className="flex items-center gap-2 truncate pr-1">
+                          <div className="flex items-center gap-1.5 truncate pr-1">
+                            <GripVertical className="h-3 w-3 text-slate-400 shrink-0 cursor-grab" />
                             <div className="shrink-0 p-1 bg-white border border-slate-200 rounded-lg shadow-2xs">
                               {getSectionIcon(sec.type)}
                             </div>
@@ -4117,17 +4156,65 @@ export default function AdminDashboard({
                           };
                           const isFocused = selectedBuilderSectionId === sec.id;
 
+                          const customStyles = `
+                            #sec-${sec.id} {
+                              ${sec.settings.paddingTop !== undefined ? `padding-top: ${sec.settings.paddingTop}px !important;` : ''}
+                              ${sec.settings.paddingBottom !== undefined ? `padding-bottom: ${sec.settings.paddingBottom}px !important;` : ''}
+                              ${sec.settings.paddingSide !== undefined ? `padding-left: ${sec.settings.paddingSide}px !important; padding-right: ${sec.settings.paddingSide}px !important;` : ''}
+                              ${sec.settings.alignment ? `text-align: ${sec.settings.alignment} !important;` : ''}
+                            }
+                            #sec-${sec.id} h1, #sec-${sec.id} h2, #sec-${sec.id} h3, #sec-${sec.id} h4, #sec-${sec.id} .section-title {
+                              ${sec.settings.titleFontSize ? `font-size: ${sec.settings.titleFontSize}px !important;` : ''}
+                              ${sec.settings.headingColor ? `color: ${sec.settings.headingColor} !important;` : ''}
+                              ${sec.settings.alignment ? `text-align: ${sec.settings.alignment} !important;` : ''}
+                            }
+                            #sec-${sec.id} p, #sec-${sec.id} .section-desc, #sec-${sec.id} li {
+                              ${sec.settings.bodyFontSize ? `font-size: ${sec.settings.bodyFontSize}px !important;` : ''}
+                              ${sec.settings.textColor ? `color: ${sec.settings.textColor} !important;` : ''}
+                              ${sec.settings.alignment ? `text-align: ${sec.settings.alignment} !important;` : ''}
+                            }
+                            #sec-${sec.id} button, #sec-${sec.id} .section-btn {
+                              ${sec.settings.buttonBgColor ? `background-color: ${sec.settings.buttonBgColor} !important;` : ''}
+                              ${sec.settings.buttonTextColor ? `color: ${sec.settings.buttonTextColor} !important;` : ''}
+                            }
+                            #sec-${sec.id} button {
+                              ${sec.settings.buttonRoundness === 'rounded-none' ? 'border-radius: 0px !important;' : ''}
+                              ${sec.settings.buttonRoundness === 'rounded' ? 'border-radius: 4px !important;' : ''}
+                              ${sec.settings.buttonRoundness === 'rounded-lg' ? 'border-radius: 8px !important;' : ''}
+                              ${sec.settings.buttonRoundness === 'rounded-xl' ? 'border-radius: 12px !important;' : ''}
+                              ${sec.settings.buttonRoundness === 'rounded-full' ? 'border-radius: 9999px !important;' : ''}
+                            }
+                          `;
+
                           return (
                             <div 
+                              id={`sec-${sec.id}`}
                               key={sec.id}
                               onClick={() => setSelectedBuilderSectionId(sec.id)}
-                              className={`relative group p-6 rounded-2xl border transition-all cursor-pointer ${
+                              draggable
+                              onDragStart={(e) => {
+                                e.dataTransfer.setData('text/plain', sIdx.toString());
+                                e.dataTransfer.effectAllowed = 'move';
+                              }}
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                              }}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                const dragIdxStr = e.dataTransfer.getData('text/plain');
+                                if (dragIdxStr !== '') {
+                                  const dragIdx = parseInt(dragIdxStr, 10);
+                                  handleMoveSectionTo(dragIdx, sIdx);
+                                }
+                              }}
+                              className={`relative group p-6 rounded-2xl border transition-all cursor-grab active:cursor-grabbing ${
                                 isFocused 
                                   ? 'ring-2 ring-indigo-600 border-indigo-600 bg-white shadow-md scale-[1.01]' 
                                   : 'border-slate-200/55 hover:border-slate-400 bg-slate-50/20 hover:bg-white shadow-2xs'
                               }`}
                               style={sStyle}
                             >
+                              <style dangerouslySetInnerHTML={{ __html: customStyles }} />
                               {/* Floating action tools overlay */}
                               <div className="absolute right-3 top-2.5 z-30 opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity bg-slate-900/90 backdrop-blur-md p-1 px-1.5 rounded-lg shadow-lg border border-slate-700">
                                 <button
@@ -6086,6 +6173,163 @@ export default function AdminDashboard({
                               />
                             </div>
                           )}
+                        </div>
+
+                        {/* --- ADVANCED LAYOUT & TYPOGRAPHY BUILDER (PADDINGS, ALIGNMENT, SIZES) --- */}
+                        <div className="border-t border-slate-200/60 pt-4 space-y-3.5">
+                          <span className="block text-slate-800 font-extrabold uppercase tracking-wider text-[9px] flex items-center gap-1">
+                            <Settings className="h-3 w-3 text-indigo-650" />
+                            Layout & Spacing Controls
+                          </span>
+
+                          {/* Padding Adjusters */}
+                          <div className="space-y-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200/55">
+                            <div>
+                              <div className="flex justify-between items-center mb-1 text-[8px] font-bold text-slate-500 uppercase tracking-wider">
+                                <span>Top Padding</span>
+                                <span className="font-mono text-indigo-600">{currentlyEditingSection.settings.paddingTop !== undefined ? currentlyEditingSection.settings.paddingTop : 'Default'} px</span>
+                              </div>
+                              <input
+                                type="range"
+                                min="0"
+                                max="160"
+                                step="8"
+                                value={currentlyEditingSection.settings.paddingTop !== undefined ? currentlyEditingSection.settings.paddingTop : 32}
+                                onChange={(e) => handleUpdateSectionSettings('paddingTop', parseInt(e.target.value, 10))}
+                                className="w-full accent-indigo-600 cursor-pointer"
+                              />
+                            </div>
+
+                            <div>
+                              <div className="flex justify-between items-center mb-1 text-[8px] font-bold text-slate-500 uppercase tracking-wider">
+                                <span>Bottom Padding</span>
+                                <span className="font-mono text-indigo-600">{currentlyEditingSection.settings.paddingBottom !== undefined ? currentlyEditingSection.settings.paddingBottom : 'Default'} px</span>
+                              </div>
+                              <input
+                                type="range"
+                                min="0"
+                                max="160"
+                                step="8"
+                                value={currentlyEditingSection.settings.paddingBottom !== undefined ? currentlyEditingSection.settings.paddingBottom : 32}
+                                onChange={(e) => handleUpdateSectionSettings('paddingBottom', parseInt(e.target.value, 10))}
+                                className="w-full accent-indigo-600 cursor-pointer"
+                              />
+                            </div>
+
+                            <div>
+                              <div className="flex justify-between items-center mb-1 text-[8px] font-bold text-slate-500 uppercase tracking-wider">
+                                <span>Horizontal Spacing (X-Padding)</span>
+                                <span className="font-mono text-indigo-600">{currentlyEditingSection.settings.paddingSide !== undefined ? currentlyEditingSection.settings.paddingSide : 'Default'} px</span>
+                              </div>
+                              <input
+                                type="range"
+                                min="0"
+                                max="80"
+                                step="4"
+                                value={currentlyEditingSection.settings.paddingSide !== undefined ? currentlyEditingSection.settings.paddingSide : 16}
+                                onChange={(e) => handleUpdateSectionSettings('paddingSide', parseInt(e.target.value, 10))}
+                                className="w-full accent-indigo-600 cursor-pointer"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Typography sizes */}
+                          <div className="space-y-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200/55">
+                            <span className="block text-slate-700 font-extrabold text-[8px] uppercase tracking-wider mb-1">Typography & Font Sizes</span>
+                            
+                            <div>
+                              <div className="flex justify-between items-center mb-1 text-[8px] font-bold text-slate-500 uppercase">
+                                <span>Heading Font Size</span>
+                                <span className="font-mono text-indigo-600">{currentlyEditingSection.settings.titleFontSize || 'Default'} px</span>
+                              </div>
+                              <input
+                                type="range"
+                                min="12"
+                                max="64"
+                                step="2"
+                                value={currentlyEditingSection.settings.titleFontSize || 30}
+                                onChange={(e) => handleUpdateSectionSettings('titleFontSize', parseInt(e.target.value, 10))}
+                                className="w-full accent-indigo-600 cursor-pointer"
+                              />
+                            </div>
+
+                            <div>
+                              <div className="flex justify-between items-center mb-1 text-[8px] font-bold text-slate-500 uppercase">
+                                <span>Body / Subtitle Font Size</span>
+                                <span className="font-mono text-indigo-600">{currentlyEditingSection.settings.bodyFontSize || 'Default'} px</span>
+                              </div>
+                              <input
+                                type="range"
+                                min="10"
+                                max="24"
+                                step="1"
+                                value={currentlyEditingSection.settings.bodyFontSize || 14}
+                                onChange={(e) => handleUpdateSectionSettings('bodyFontSize', parseInt(e.target.value, 10))}
+                                className="w-full accent-indigo-600 cursor-pointer"
+                              />
+                            </div>
+
+                            {/* Text Alignment Button Group */}
+                            <div>
+                              <label className="block text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Content Alignment</label>
+                              <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-lg border border-slate-250/50">
+                                {['left', 'center', 'right'].map((align) => (
+                                  <button
+                                    key={align}
+                                    type="button"
+                                    onClick={() => handleUpdateSectionSettings('alignment', align)}
+                                    className={`text-[9px] font-extrabold py-1 px-1.5 rounded-md transition-all cursor-pointer text-center capitalize ${
+                                      (currentlyEditingSection.settings.alignment || 'center') === align
+                                        ? 'bg-white text-indigo-650 shadow-xs border border-slate-250/20'
+                                        : 'text-slate-500 hover:text-slate-800'
+                                    }`}
+                                  >
+                                    {align}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Button styling customizer (if exists or can be toggled) */}
+                          <div className="space-y-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-200/55">
+                            <span className="block text-slate-700 font-extrabold text-[8px] uppercase tracking-wider">Button Customization</span>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Button BG Hex</label>
+                                <input
+                                  type="color"
+                                  value={currentlyEditingSection.settings.buttonBgColor || '#D4AF37'}
+                                  onChange={(e) => handleUpdateSectionSettings('buttonBgColor', e.target.value)}
+                                  className="w-full h-7 border rounded cursor-pointer bg-slate-50 animate-none p-0"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Button Text Hex</label>
+                                <input
+                                  type="color"
+                                  value={currentlyEditingSection.settings.buttonTextColor || '#000000'}
+                                  onChange={(e) => handleUpdateSectionSettings('buttonTextColor', e.target.value)}
+                                  className="w-full h-7 border rounded cursor-pointer bg-slate-50 animate-none p-0"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-[8px] font-bold text-slate-400 uppercase mb-1">Corner Roundness</label>
+                              <select
+                                value={currentlyEditingSection.settings.buttonRoundness || 'rounded-lg'}
+                                onChange={(e) => handleUpdateSectionSettings('buttonRoundness', e.target.value)}
+                                className="w-full text-[9px] border p-1 rounded bg-white cursor-pointer"
+                              >
+                                <option value="rounded-none">Square (rounded-none)</option>
+                                <option value="rounded">Soft (rounded)</option>
+                                <option value="rounded-lg">Regular (rounded-lg)</option>
+                                <option value="rounded-xl">Bubble (rounded-xl)</option>
+                                <option value="rounded-full">Pill (rounded-full)</option>
+                              </select>
+                            </div>
+                          </div>
                         </div>
 
                       </div>
