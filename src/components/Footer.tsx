@@ -1,11 +1,13 @@
 import React from 'react';
 import { Mail, ShieldCheck, Truck, RefreshCw, Sparkles, HelpCircle, ArrowRight } from 'lucide-react';
+import { LayoutSettings } from '../types';
 
 interface FooterProps {
   onNavigate?: (tab: string) => void;
+  layoutSettings?: LayoutSettings;
 }
 
-export default function Footer({ onNavigate }: FooterProps) {
+export default function Footer({ onNavigate, layoutSettings }: FooterProps) {
   return (
     <>
       {/* 60-Second Subscription CTA Transition Banner into Footer */}
@@ -107,14 +109,29 @@ export default function Footer({ onNavigate }: FooterProps) {
         {/* Brand identity column */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-indigo-650 text-white flex items-center justify-center font-black tracking-tighter shadow">P</div>
-            <span className="font-black tracking-widest text-white uppercase text-xs">POUCH SUPPLY</span>
+            {layoutSettings?.footerLogoImage ? (
+              <img 
+                src={layoutSettings.footerLogoImage} 
+                className="max-h-10 max-w-[150px] object-contain rounded" 
+                alt="Footer Logo" 
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <>
+                <div className="h-8 w-8 rounded-full bg-indigo-650 text-white flex items-center justify-center font-black tracking-tighter shadow">
+                  {(layoutSettings?.footerLogoText || 'P').charAt(0).toUpperCase()}
+                </div>
+                <span className="font-black tracking-widest text-white uppercase text-xs">
+                  {layoutSettings?.footerLogoText || 'POUCH SUPPLY'}
+                </span>
+              </>
+            )}
           </div>
           <p className="text-slate-400 leading-relaxed text-[11px]">
-            Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.
+            {layoutSettings?.footerLogoDescription || 'Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.'}
           </p>
           <p className="text-[10px] text-slate-500">
-            © 2026 Pouch Supply UK. All rights reserved.
+            © 2026 {layoutSettings?.headerLogoText || 'Pouch Supply'} UK. All rights reserved.
           </p>
         </div>
 

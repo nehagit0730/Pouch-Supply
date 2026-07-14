@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Customer, CartItem, Product, Collection } from '../types';
+import { Customer, CartItem, Product, Collection, LayoutSettings } from '../types';
 import { ShoppingCart, Heart, User, Sparkles, LayoutDashboard, Menu, Store, Phone, HelpCircle, Search, X } from 'lucide-react';
 
 interface HeaderProps {
@@ -15,6 +15,7 @@ interface HeaderProps {
   allProducts?: Product[];
   allCollections?: Collection[];
   onNavigateDetail?: (tab: string, productId?: string, collectionId?: string) => void;
+  layoutSettings?: LayoutSettings;
 }
 
 export default function Header({
@@ -29,7 +30,8 @@ export default function Header({
   isAdminActive,
   allProducts = [],
   allCollections = [],
-  onNavigateDetail
+  onNavigateDetail,
+  layoutSettings
 }: HeaderProps) {
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const wishlistCount = loggedInCustomer?.wishlist.length || 0;
@@ -160,63 +162,57 @@ export default function Header({
           onClick={() => {
             onTabChange('frontend-home');
           }}
-          className="flex items-center gap-2.5 cursor-pointer group shrink-0"
+          className="flex items-center gap-2.5 cursor-pointer group shrink-0 animate-fade-in"
         >
-          <div className="w-8 h-8 bg-[#008060] rounded flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-            <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-[#1a1c1d] tracking-normal text-sm sm:text-base leading-none">Pouch Supply</span>
-            <span className="text-[8px] sm:text-[9px] text-[#707579] font-semibold uppercase tracking-widest mt-0.5">Premium Nicotine</span>
-          </div>
+          {layoutSettings?.headerLogoImage ? (
+            <img 
+              src={layoutSettings.headerLogoImage} 
+              className="max-h-11 max-w-[150px] object-contain rounded-md" 
+              alt={layoutSettings?.headerLogoText || 'Pouch Supply'} 
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <>
+              <div className="w-8 h-8 bg-[#008060] rounded flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-[#1a1c1d] tracking-normal text-sm sm:text-base leading-none">
+                  {layoutSettings?.headerLogoText || 'Pouch Supply'}
+                </span>
+                <span className="text-[8px] sm:text-[9px] text-[#707579] font-semibold uppercase tracking-widest mt-0.5">
+                  {layoutSettings?.headerLogoSubtext || 'Premium Nicotine'}
+                </span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Center: Navigation options (Desktop/Large screens only) */}
         <nav className="hidden lg:flex items-center gap-6">
-          <button
-            onClick={() => onTabChange('frontend-home')}
-            className={`text-xs font-black uppercase tracking-widest pb-1 transition-colors hover:text-indigo-600 cursor-pointer ${
-              currentTab === 'frontend-home' && !isAdminActive ? 'text-indigo-650 border-b-2 border-indigo-600' : 'text-slate-500'
-            }`}
-          >
-            Home
-          </button>
-          
-          <button
-            onClick={() => onTabChange('frontend-subscribe')}
-            className={`text-xs font-black uppercase tracking-widest pb-1 transition-colors hover:text-indigo-600 cursor-pointer ${
-              currentTab === 'frontend-subscribe' && !isAdminActive ? 'text-indigo-650 border-b-2 border-indigo-600' : 'text-slate-500'
-            }`}
-          >
-            Subscribe
-          </button>
-
-          <button
-            onClick={() => onTabChange('frontend-shop')}
-            className={`text-xs font-black uppercase tracking-widest pb-1 transition-colors hover:text-indigo-600 cursor-pointer ${
-              currentTab === 'frontend-shop' && !isAdminActive ? 'text-indigo-650 border-b-2 border-indigo-600' : 'text-slate-500'
-            }`}
-          >
-            Shop Now
-          </button>
-
-          <button
-            onClick={() => onTabChange('frontend-brands')}
-            className={`text-xs font-black uppercase tracking-widest pb-1 transition-colors hover:text-indigo-600 cursor-pointer ${
-              currentTab === 'frontend-brands' && !isAdminActive ? 'text-indigo-650 border-b-2 border-indigo-600' : 'text-slate-500'
-            }`}
-          >
-            All Brands
-          </button>
-
-          <button
-            onClick={() => onTabChange('about')}
-            className={`text-xs font-black uppercase tracking-widest pb-1 transition-colors hover:text-indigo-600 cursor-pointer ${
-              currentTab === 'about' && !isAdminActive ? 'text-indigo-650 border-b-2 border-indigo-600' : 'text-slate-500'
-            }`}
-          >
-            About
-          </button>
+          {(layoutSettings?.menuItems || [
+            { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
+            { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
+            { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
+            { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
+            { id: '5', label: 'About', tab: 'about', type: 'tab' }
+          ]).map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                if (item.type === 'external' && item.url) {
+                  window.open(item.url, '_blank');
+                } else {
+                  onTabChange(item.tab);
+                }
+              }}
+              className={`text-xs font-black uppercase tracking-widest pb-1 transition-colors hover:text-indigo-600 cursor-pointer ${
+                currentTab === item.tab && !isAdminActive ? 'text-indigo-650 border-b-2 border-indigo-600' : 'text-slate-500'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
         </nav>
 
         {/* Right: Actions block (Dashboard controller, customer logins, basket drawers) */}
@@ -321,13 +317,28 @@ export default function Header({
             {/* Header */}
             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-[#008060] rounded flex items-center justify-center">
-                  <div className="w-3.5 h-3.5 border-2 border-white rounded-xs"></div>
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-slate-800 text-xs leading-none">Pouch Supply</span>
-                  <span className="text-[7px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Premium Nicotine</span>
-                </div>
+                {layoutSettings?.headerLogoImage ? (
+                  <img 
+                    src={layoutSettings.headerLogoImage} 
+                    className="max-h-8 max-w-[100px] object-contain rounded" 
+                    alt="Logo" 
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <>
+                    <div className="w-7 h-7 bg-[#008060] rounded flex items-center justify-center">
+                      <div className="w-3.5 h-3.5 border-2 border-white rounded-xs"></div>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-800 text-xs leading-none">
+                        {layoutSettings?.headerLogoText || 'Pouch Supply'}
+                      </span>
+                      <span className="text-[7px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                        {layoutSettings?.headerLogoSubtext || 'Premium Nicotine'}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -341,21 +352,25 @@ export default function Header({
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
               <div className="space-y-1">
                 <div className="text-[10px] font-black uppercase text-indigo-650 tracking-wider mb-2 px-2.5">Navigation Menu</div>
-                {[
-                  { id: 'frontend-home', label: 'Home' },
-                  { id: 'frontend-subscribe', label: 'Subscribe' },
-                  { id: 'frontend-shop', label: 'Shop Now' },
-                  { id: 'frontend-brands', label: 'All Brands' },
-                  { id: 'about', label: 'About' }
-                ].map((item) => (
+                {(layoutSettings?.menuItems || [
+                  { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
+                  { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
+                  { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
+                  { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
+                  { id: '5', label: 'About', tab: 'about', type: 'tab' }
+                ]).map((item) => (
                   <button
                     key={item.id}
                     onClick={() => {
-                      onTabChange(item.id);
+                      if (item.type === 'external' && item.url) {
+                        window.open(item.url, '_blank');
+                      } else {
+                        onTabChange(item.tab);
+                      }
                       setIsMobileMenuOpen(false);
                     }}
                     className={`w-full text-left font-black uppercase tracking-wider text-xs py-3 px-3.5 rounded-xl transition-all cursor-pointer ${
-                      currentTab === item.id && !isAdminActive
+                      currentTab === item.tab && !isAdminActive
                         ? 'bg-indigo-50 text-indigo-750'
                         : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}

@@ -1615,7 +1615,7 @@ export default function PageRenderer({
                     </div>
 
                     <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6">
-                      {['77', 'Cuba', 'Clew', 'Killa', 'Velo', 'XQS', 'Zyn', 'White Fox'].map((logo, lIdx) => (
+                      {['77', 'clew', 'cuba', 'maggie', 'nordic spirit', 'xqs', 'zyn', 'pablo', 'killa', 'fumi', 'velo', 'white fox', 'snu'].map((logo, lIdx) => (
                         <div 
                           key={lIdx} 
                           onClick={() => onNavigate('frontend-brands')}

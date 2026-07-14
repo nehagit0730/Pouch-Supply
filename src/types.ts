@@ -284,3 +284,22 @@ export interface BlogPost {
   readTime: string;
   tags: string[];
 }
+
+export interface MenuItem {
+  id: string;
+  label: string;
+  tab: string; // tab name e.g. 'frontend-home', 'frontend-subscribe', 'frontend-shop', etc., or custom page tab
+  type: 'tab' | 'external';
+  url?: string;
+}
+
+export interface LayoutSettings {
+  headerLogoText: string;
+  headerLogoSubtext: string;
+  headerLogoImage: string; // Base64 or URL
+  footerLogoText: string;
+  footerLogoDescription: string;
+  footerLogoImage: string; // Base64 or URL
+  menuItems: MenuItem[];
+}
+

@@ -67,7 +67,7 @@ export default function ProductEditor({
   const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
 
   // Preset vendors/categories for smart search options
-  const defaultVendors = ['77', 'Clew', 'Cuba', 'Maggie', 'Nordic Spirit', 'XQS', 'Zyn', 'Pablo', 'Killa', 'Fumi', 'Velo', 'White Fox', 'Snu'];
+  const defaultVendors = ['77', 'clew', 'cuba', 'maggie', 'nordic spirit', 'xqs', 'zyn', 'pablo', 'killa', 'fumi', 'velo', 'white fox', 'snu'];
   const defaultCategories = ['Clothing', 'Jwellery', 'Nicotine Pouches', 'Protein', 'Food'];
 
   // Helper to generate combination names from option dimensions

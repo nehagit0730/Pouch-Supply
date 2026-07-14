@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, CartItem, BlogPost 
+  Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, CartItem, BlogPost, LayoutSettings
 } from './types';
 import { 
   INITIAL_PRODUCTS, INITIAL_COLLECTIONS, INITIAL_ORDERS, INITIAL_FILES, INITIAL_CUSTOMERS, INITIAL_DISCOUNTS, DEFAULT_PAGES, INITIAL_BLOGS 
@@ -32,36 +32,36 @@ import OrderWithdrawalModal from './components/OrderWithdrawalModal';
 
 const ALLOWED_BRANDS = [
   '77',
-  'Clew',
-  'Cuba',
-  'Maggie',
-  'Nordic Spirit',
-  'XQS',
-  'Zyn',
-  'Pablo',
-  'Killa',
-  'Fumi',
-  'Velo',
-  'White Fox',
-  'Snu'
+  'clew',
+  'cuba',
+  'maggie',
+  'nordic spirit',
+  'xqs',
+  'zyn',
+  'pablo',
+  'killa',
+  'fumi',
+  'velo',
+  'white fox',
+  'snu'
 ];
 
 export const mapVendorToAllowedBrand = (vendor: string | undefined): string => {
   if (!vendor) return '77';
   const vLower = vendor.trim().toLowerCase();
   if (vLower === '77 pouches' || vLower === '77pouches' || vLower === '77') return '77';
-  if (vLower === 'clew' || vLower === 'clew white') return 'Clew';
-  if (vLower === 'cuba' || vLower === 'cuba power') return 'Cuba';
-  if (vLower === 'maggie') return 'Maggie';
-  if (vLower === 'nordic spirit' || vLower === 'nordic_spirit' || vLower === 'nordic') return 'Nordic Spirit';
-  if (vLower === 'xqs') return 'XQS';
-  if (vLower === 'zyn') return 'Zyn';
-  if (vLower === 'pablo') return 'Pablo';
-  if (vLower === 'killa' || vLower === 'killa siberian') return 'Killa';
-  if (vLower === 'fumi') return 'Fumi';
-  if (vLower === 'velo' || vLower === 'velo eucalyptus') return 'Velo';
-  if (vLower === 'white fox' || vLower === 'whitefox') return 'White Fox';
-  if (vLower === 'snu') return 'Snu';
+  if (vLower === 'clew' || vLower === 'clew white') return 'clew';
+  if (vLower === 'cuba' || vLower === 'cuba power') return 'cuba';
+  if (vLower === 'maggie') return 'maggie';
+  if (vLower === 'nordic spirit' || vLower === 'nordic_spirit' || vLower === 'nordic') return 'nordic spirit';
+  if (vLower === 'xqs') return 'xqs';
+  if (vLower === 'zyn') return 'zyn';
+  if (vLower === 'pablo') return 'pablo';
+  if (vLower === 'killa' || vLower === 'killa siberian') return 'killa';
+  if (vLower === 'fumi') return 'fumi';
+  if (vLower === 'velo' || vLower === 'velo eucalyptus') return 'velo';
+  if (vLower === 'white fox' || vLower === 'whitefox') return 'white fox';
+  if (vLower === 'snu') return 'snu';
 
   for (const b of ALLOWED_BRANDS) {
     if (vLower.includes(b.toLowerCase()) || b.toLowerCase().includes(vLower)) {
@@ -138,6 +138,32 @@ export default function App() {
   const [blogs, setBlogs] = useState<BlogPost[]>(() => {
     return safeLoadFromLocalStorage<BlogPost[]>('ps_blogs', INITIAL_BLOGS);
   });
+
+  const [layoutSettings, setLayoutSettings] = useState<LayoutSettings>(() => {
+    return safeLoadFromLocalStorage<LayoutSettings>('ps_layout_settings', {
+      headerLogoText: 'Pouch Supply',
+      headerLogoSubtext: 'Premium Nicotine',
+      headerLogoImage: '',
+      footerLogoText: 'POUCH SUPPLY',
+      footerLogoDescription: 'Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.',
+      footerLogoImage: '',
+      menuItems: [
+        { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
+        { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
+        { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
+        { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
+        { id: '5', label: 'About', tab: 'about', type: 'tab' },
+      ]
+    });
+  });
+
+  const handleUpdateLayoutSettings = (newSettings: LayoutSettings | ((prev: LayoutSettings) => LayoutSettings)) => {
+    setLayoutSettings(prev => {
+      const resolved = typeof newSettings === 'function' ? newSettings(prev) : newSettings;
+      localStorage.setItem('ps_layout_settings', JSON.stringify(resolved));
+      return resolved;
+    });
+  };
 
   const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null);
   const [frontendBlogQuery, setFrontendBlogQuery] = useState('');
@@ -1164,6 +1190,7 @@ export default function App() {
           allProducts={products}
           allCollections={collections}
           onNavigateDetail={navigateToTab}
+          layoutSettings={layoutSettings}
         />
       )}
 
@@ -1199,6 +1226,8 @@ export default function App() {
               onUpdateCustomPages={setCustomPages}
               blogs={blogs}
               onUpdateBlogs={setBlogs}
+              layoutSettings={layoutSettings}
+              onUpdateLayoutSettings={handleUpdateLayoutSettings}
               onDirtyChange={setIsAdminDirty}
               adminActionTrigger={adminActionTrigger}
               onAdminActionComplete={(actionHandled) => {
@@ -1318,7 +1347,7 @@ export default function App() {
                       <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Our Premium Partner directory</h3>
                     </div>
                     <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-75">
-                      {['77', 'Cuba', 'Clew', 'Killa', 'Velo', 'XQS', 'Zyn', 'White Fox'].map((bLabel, index) => (
+                      {['77', 'clew', 'cuba', 'maggie', 'nordic spirit', 'xqs', 'zyn', 'pablo', 'killa', 'fumi', 'velo', 'white fox', 'snu'].map((bLabel, index) => (
                         <span 
                           key={index} 
                           onClick={() => {
@@ -2230,7 +2259,7 @@ export default function App() {
       )}
 
       {/* Universal Footer layout */}
-      {!isAdminActive && <Footer onNavigate={navigateToTab} />}
+      {!isAdminActive && <Footer onNavigate={navigateToTab} layoutSettings={layoutSettings} />}
 
       {/* Floating Order Withdrawal Button (Bottom Left) */}
       {!isAdminActive && (

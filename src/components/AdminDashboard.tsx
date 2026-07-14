@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, PageSection, BlogPost } from '../types';
+import { Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, PageSection, BlogPost, LayoutSettings, MenuItem } from '../types';
 import { 
   TrendingUp, BarChart3, Package, Users, Tag, FileCode, HardDrive, Percent, 
   Search, Plus, Eye, CheckCircle2, Clipboard, ArrowUpDown, ChevronRight, 
@@ -88,6 +88,8 @@ interface AdminDashboardProps {
   onUpdateCustomPages: (newPages: CustomPage[]) => void;
   blogs: BlogPost[];
   onUpdateBlogs: (newBlogs: BlogPost[]) => void;
+  layoutSettings?: LayoutSettings;
+  onUpdateLayoutSettings?: (newSettings: LayoutSettings | ((prev: LayoutSettings) => LayoutSettings)) => void;
   onDirtyChange?: (dirty: boolean) => void;
   adminActionTrigger?: { action: 'save' | 'discard'; timestamp: number } | null;
   onAdminActionComplete?: (action: 'save' | 'discard') => void;
@@ -550,7 +552,7 @@ function HowItWorksSectionAdmin({ sec }: HowItWorksSectionAdminProps) {
   );
 }
 
-type SidebarTab = 'analytics' | 'orders' | 'collections' | 'products' | 'pages' | 'blogs' | 'files' | 'customers' | 'discounts';
+type SidebarTab = 'analytics' | 'orders' | 'collections' | 'products' | 'pages' | 'blogs' | 'files' | 'customers' | 'discounts' | 'layout';
 
 export default function AdminDashboard({
   products: parentProducts,
@@ -569,6 +571,8 @@ export default function AdminDashboard({
   onUpdateCustomPages: parentOnUpdateCustomPages,
   blogs: parentBlogs,
   onUpdateBlogs: parentOnUpdateBlogs,
+  layoutSettings,
+  onUpdateLayoutSettings,
   onDirtyChange,
   adminActionTrigger,
   onAdminActionComplete,
@@ -585,6 +589,7 @@ export default function AdminDashboard({
     files: 'files',
     customers: 'customers',
     discounts: 'discounts',
+    layout: 'layout',
   };
 
   const pathToTabMap: Record<string, SidebarTab> = {
@@ -597,6 +602,7 @@ export default function AdminDashboard({
     files: 'files',
     customers: 'customers',
     discounts: 'discounts',
+    layout: 'layout',
   };
 
   const getInitialTab = (): SidebarTab => {
@@ -765,6 +771,131 @@ export default function AdminDashboard({
   const [localFiles, setLocalFiles] = useState<FileEntry[]>(parentFiles);
   const [localCustomers, setLocalCustomers] = useState<Customer[]>(parentCustomers);
   const [localBlogs, setLocalBlogs] = useState<BlogPost[]>(parentBlogs);
+
+  const [localLayoutSettings, setLocalLayoutSettings] = useState<LayoutSettings>(() => {
+    return layoutSettings || {
+      headerLogoText: 'Pouch Supply',
+      headerLogoSubtext: 'Premium Nicotine',
+      headerLogoImage: '',
+      footerLogoText: 'POUCH SUPPLY',
+      footerLogoDescription: 'Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.',
+      footerLogoImage: '',
+      menuItems: [
+        { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
+        { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
+        { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
+        { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
+        { id: '5', label: 'About', tab: 'about', type: 'tab' },
+      ]
+    };
+  });
+
+  useEffect(() => {
+    if (layoutSettings) {
+      setLocalLayoutSettings(layoutSettings);
+    }
+  }, [layoutSettings]);
+
+  const [layoutSavedToast, setLayoutSavedToast] = useState(false);
+  const [isAddingMenuItem, setIsAddingMenuItem] = useState(false);
+  const [newMenuItemLabel, setNewMenuItemLabel] = useState('');
+  const [newMenuItemTarget, setNewMenuItemTarget] = useState('frontend-home');
+  const [newMenuItemType, setNewMenuItemType] = useState<'tab' | 'external'>('tab');
+  const [newMenuItemUrl, setNewMenuItemUrl] = useState('');
+
+  const moveMenuItem = (index: number, direction: 'up' | 'down') => {
+    const items = [...localLayoutSettings.menuItems];
+    if (direction === 'up' && index > 0) {
+      const temp = items[index];
+      items[index] = items[index - 1];
+      items[index - 1] = temp;
+    } else if (direction === 'down' && index < items.length - 1) {
+      const temp = items[index];
+      items[index] = items[index + 1];
+      items[index + 1] = temp;
+    }
+    setLocalLayoutSettings({ ...localLayoutSettings, menuItems: items });
+  };
+
+  const addMenuItem = () => {
+    if (!newMenuItemLabel.trim()) return;
+    const newItem: MenuItem = {
+      id: Date.now().toString(),
+      label: newMenuItemLabel.trim(),
+      tab: newMenuItemType === 'tab' ? newMenuItemTarget : '',
+      type: newMenuItemType,
+      url: newMenuItemType === 'external' ? newMenuItemUrl : undefined
+    };
+    setLocalLayoutSettings({
+      ...localLayoutSettings,
+      menuItems: [...localLayoutSettings.menuItems, newItem]
+    });
+    setNewMenuItemLabel('');
+    setNewMenuItemUrl('');
+    setIsAddingMenuItem(false);
+  };
+
+  const removeMenuItem = (id: string) => {
+    const items = localLayoutSettings.menuItems.filter(item => item.id !== id);
+    setLocalLayoutSettings({ ...localLayoutSettings, menuItems: items });
+  };
+
+  const editMenuItemLabel = (id: string, newLabel: string) => {
+    const items = localLayoutSettings.menuItems.map(item => 
+      item.id === id ? { ...item, label: newLabel } : item
+    );
+    setLocalLayoutSettings({ ...localLayoutSettings, menuItems: items });
+  };
+
+  const editMenuItemTarget = (id: string, newTarget: string) => {
+    const items = localLayoutSettings.menuItems.map(item => 
+      item.id === id ? { ...item, tab: newTarget, url: undefined, type: 'tab' as const } : item
+    );
+    setLocalLayoutSettings({ ...localLayoutSettings, menuItems: items });
+  };
+
+  const editMenuItemUrl = (id: string, newUrl: string) => {
+    const items = localLayoutSettings.menuItems.map(item => 
+      item.id === id ? { ...item, tab: '', url: newUrl, type: 'external' as const } : item
+    );
+    setLocalLayoutSettings({ ...localLayoutSettings, menuItems: items });
+  };
+
+  const handleLogoUpload = (file: File, target: 'header' | 'footer') => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      if (typeof reader.result === 'string') {
+        try {
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: reader.result })
+          });
+          if (res.ok) {
+            const info = await res.json();
+            if (info.url) {
+              setLocalLayoutSettings(prev => ({
+                ...prev,
+                [target === 'header' ? 'headerLogoImage' : 'footerLogoImage']: info.url
+              }));
+              return;
+            }
+          }
+          setLocalLayoutSettings(prev => ({
+            ...prev,
+            [target === 'header' ? 'headerLogoImage' : 'footerLogoImage']: reader.result as string
+          }));
+        } catch (err) {
+          console.warn('[LogoUpload] API upload failed, falling back to base64:', err);
+          setLocalLayoutSettings(prev => ({
+            ...prev,
+            [target === 'header' ? 'headerLogoImage' : 'footerLogoImage']: reader.result as string
+          }));
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -1916,6 +2047,7 @@ export default function AdminDashboard({
                 { id: 'files', label: 'Files Manager', icon: HardDrive },
                 { id: 'customers', label: 'Customers', icon: Users },
                 { id: 'discounts', label: 'Discounts', icon: Percent },
+                { id: 'layout', label: 'Header & Footer', icon: Settings },
               ].map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -4408,7 +4540,7 @@ export default function AdminDashboard({
                                       {sec.settings.title || 'OFFICIAL LAB PARTNER REGISTER'}
                                     </p>
                                     <div className="flex gap-2 justify-center flex-wrap">
-                                      {['77', 'Cuba', 'Clew', 'Killa', 'Velo', 'XQS', 'Zyn', 'White Fox'].map(logo => (
+                                      {['77', 'clew', 'cuba', 'maggie', 'nordic spirit', 'xqs', 'zyn', 'pablo', 'killa', 'fumi', 'velo', 'white fox', 'snu'].map(logo => (
                                         <span key={logo} className="border border-slate-200 bg-white text-slate-700 font-extrabold text-[8.5px] py-1 px-2.5 rounded-lg shadow-3xs flex items-center gap-1 leading-none">
                                           <span className="text-indigo-600">●</span>
                                           <span>{logo}</span>
@@ -7437,6 +7569,448 @@ export default function AdminDashboard({
             );
           })()
         )}
+      </div>
+    )}
+
+    {/* 10. LAYOUT / HEADER FOOTER SETTINGS BLOCK */}
+    {activeTab === 'layout' && (
+      <div className="space-y-6 max-w-5xl mx-auto text-xs text-left animate-fade-in pb-12">
+        
+        {/* Header controls select */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 p-5 rounded-2xl shadow-xs">
+          <div>
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Header & Footer Global Settings</h3>
+            <p className="text-slate-400 text-[10px] font-medium mt-0.5">Configure your brand logos, subtext descriptions, and the header navigation menu.</p>
+          </div>
+          <button
+            onClick={() => {
+              if (onUpdateLayoutSettings) {
+                onUpdateLayoutSettings(localLayoutSettings);
+                setLayoutSavedToast(true);
+                setTimeout(() => setLayoutSavedToast(false), 4000);
+              }
+            }}
+            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-md shadow-indigo-150 transition-all flex items-center gap-2 cursor-pointer shrink-0"
+          >
+            <Save className="h-4 w-4" />
+            <span>Save Header & Footer</span>
+          </button>
+        </div>
+
+        {/* Layout saved toast alert */}
+        {layoutSavedToast && (
+          <div className="bg-emerald-50 border border-emerald-250 p-4 rounded-xl flex items-center gap-3 text-emerald-800 animate-fade-in select-none">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+            <div>
+              <span className="font-bold block text-xs">Settings updated successfully!</span>
+              <span className="text-[10px] font-medium text-emerald-650">Your custom headers, footers, logo graphics, and navigation structure are now live across the storefront.</span>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Left Side: Header & Footer configuration cards */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* 1. HEADER BRAND IDENTITY CARD */}
+            <div className="bg-white border border-slate-200 shadow-xs rounded-2xl p-5 space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                <div className="p-1.5 bg-indigo-50 text-indigo-650 rounded-lg">
+                  <Layout className="h-4 w-4" />
+                </div>
+                <span className="font-extrabold text-slate-900 uppercase tracking-wider text-xs">Header Brand Identity</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Logo Text</label>
+                  <input
+                    type="text"
+                    value={localLayoutSettings.headerLogoText}
+                    onChange={(e) => setLocalLayoutSettings({ ...localLayoutSettings, headerLogoText: e.target.value })}
+                    className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="e.g. Pouch Supply"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Logo Subtext</label>
+                  <input
+                    type="text"
+                    value={localLayoutSettings.headerLogoSubtext}
+                    onChange={(e) => setLocalLayoutSettings({ ...localLayoutSettings, headerLogoSubtext: e.target.value })}
+                    className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="e.g. Premium Nicotine"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1.5">Custom Header Logo Image</label>
+                <div className="flex items-center gap-4">
+                  {localLayoutSettings.headerLogoImage ? (
+                    <div className="relative group shrink-0 border border-slate-150 p-2 rounded-xl bg-slate-50">
+                      <img 
+                        src={localLayoutSettings.headerLogoImage} 
+                        className="h-14 max-w-[160px] object-contain rounded" 
+                        alt="Header Logo Preview" 
+                        referrerPolicy="no-referrer"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setLocalLayoutSettings({ ...localLayoutSettings, headerLogoImage: '' })}
+                        className="absolute -top-1.5 -right-1.5 bg-red-650 text-white p-1 rounded-full shadow hover:bg-red-700 transition animate-in zoom-in-50"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 bg-slate-50 shrink-0">
+                      <ImageIcon className="h-5 w-5" />
+                    </div>
+                  )}
+
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      id="header-logo-upload"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleLogoUpload(file, 'header');
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('header-logo-upload')?.click()}
+                      className="bg-white border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-wider px-4 py-2 rounded-lg shadow-2xs hover:bg-slate-50 transition cursor-pointer"
+                    >
+                      Upload Custom Logo
+                    </button>
+                    <p className="text-[9px] text-slate-400 mt-1">Accepts PNG, JPG, or SVG. Maximum resolution: 320x80px. Background transparency recommended.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. FOOTER BRAND IDENTITY CARD */}
+            <div className="bg-white border border-slate-200 shadow-xs rounded-2xl p-5 space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                <div className="p-1.5 bg-indigo-50 text-indigo-650 rounded-lg">
+                  <Layout className="h-4 w-4" />
+                </div>
+                <span className="font-extrabold text-slate-900 uppercase tracking-wider text-xs">Footer Brand Identity</span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Footer Text Title</label>
+                  <input
+                    type="text"
+                    value={localLayoutSettings.footerLogoText}
+                    onChange={(e) => setLocalLayoutSettings({ ...localLayoutSettings, footerLogoText: e.target.value })}
+                    className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="e.g. POUCH SUPPLY"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Footer Brand Description</label>
+                  <textarea
+                    value={localLayoutSettings.footerLogoDescription}
+                    onChange={(e) => setLocalLayoutSettings({ ...localLayoutSettings, footerLogoDescription: e.target.value })}
+                    rows={3}
+                    className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-y leading-relaxed"
+                    placeholder="Provide a footer blurb describing your brand, Швеция origin, or delivery credentials..."
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1.5">Custom Footer Logo Image</label>
+                <div className="flex items-center gap-4">
+                  {localLayoutSettings.footerLogoImage ? (
+                    <div className="relative group shrink-0 border border-slate-150 p-2 rounded-xl bg-slate-50">
+                      <img 
+                        src={localLayoutSettings.footerLogoImage} 
+                        className="h-14 max-w-[160px] object-contain rounded" 
+                        alt="Footer Logo Preview" 
+                        referrerPolicy="no-referrer"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setLocalLayoutSettings({ ...localLayoutSettings, footerLogoImage: '' })}
+                        className="absolute -top-1.5 -right-1.5 bg-red-650 text-white p-1 rounded-full shadow hover:bg-red-700 transition animate-in zoom-in-50"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 bg-slate-50 shrink-0">
+                      <ImageIcon className="h-5 w-5" />
+                    </div>
+                  )}
+
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      id="footer-logo-upload"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleLogoUpload(file, 'footer');
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('footer-logo-upload')?.click()}
+                      className="bg-white border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-wider px-4 py-2 rounded-lg shadow-2xs hover:bg-slate-50 transition cursor-pointer"
+                    >
+                      Upload Footer Logo
+                    </button>
+                    <p className="text-[9px] text-slate-400 mt-1">Accepts PNG, JPG, or SVG. Visible in the bottom-left column of the footer layout.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Right Side: Header Navigation Menu Builder */}
+          <div className="lg:col-span-1 space-y-6">
+            
+            {/* NAVIGATION MENU ITEMS LIST CARD */}
+            <div className="bg-white border border-slate-200 shadow-xs rounded-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-indigo-50 text-indigo-650 rounded-lg">
+                    <Globe className="h-4 w-4" />
+                  </div>
+                  <span className="font-extrabold text-slate-900 uppercase tracking-wider text-xs">Header Menu</span>
+                </div>
+                
+                {!isAddingMenuItem && (
+                  <button
+                    onClick={() => {
+                      setNewMenuItemLabel('');
+                      setNewMenuItemUrl('');
+                      setNewMenuItemType('tab');
+                      setNewMenuItemTarget('frontend-home');
+                      setIsAddingMenuItem(true);
+                    }}
+                    className="px-2.5 py-1 text-indigo-600 hover:text-indigo-700 font-extrabold text-[10px] uppercase tracking-wider border border-indigo-200 bg-indigo-50 hover:bg-indigo-100/75 rounded-lg flex items-center gap-1 transition-all cursor-pointer"
+                  >
+                    <Plus className="h-3 w-3" />
+                    <span>Add link</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Add link panel */}
+              {isAddingMenuItem && (
+                <div className="bg-slate-50/75 border border-slate-200 rounded-xl p-3.5 space-y-3.5 select-none text-left animate-slide-in-right">
+                  <span className="font-extrabold text-[10px] text-indigo-750 uppercase tracking-wider block">Add Navigation Link</span>
+                  
+                  <div>
+                    <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Link Title / Label</label>
+                    <input
+                      type="text"
+                      required
+                      value={newMenuItemLabel}
+                      onChange={(e) => setNewMenuItemLabel(e.target.value)}
+                      placeholder="e.g. Swedish Pouches"
+                      className="w-full text-xs font-semibold border border-slate-250 p-2 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Target Action Type</label>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-1.5 font-semibold text-slate-700 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="menuType"
+                          checked={newMenuItemType === 'tab'}
+                          onChange={() => setNewMenuItemType('tab')}
+                          className="accent-indigo-650"
+                        />
+                        <span>Internal Tab</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 font-semibold text-slate-700 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="menuType"
+                          checked={newMenuItemType === 'external'}
+                          onChange={() => setNewMenuItemType('external')}
+                          className="accent-indigo-650"
+                        />
+                        <span>External URL</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {newMenuItemType === 'tab' ? (
+                    <div>
+                      <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Internal Navigation Destination</label>
+                      <select
+                        value={newMenuItemTarget}
+                        onChange={(e) => setNewMenuItemTarget(e.target.value)}
+                        className="w-full text-xs font-semibold border border-slate-250 p-2 rounded-lg bg-white focus:outline-none cursor-pointer text-slate-750"
+                      >
+                        <optgroup label="Core Store Tabs">
+                          <option value="frontend-home">Storefront Home</option>
+                          <option value="frontend-subscribe">Subscribe Builder</option>
+                          <option value="frontend-shop">Shop Now grid</option>
+                          <option value="frontend-brands">All Sweden Brands</option>
+                          <option value="about">About us info</option>
+                          <option value="blogs">Pouch Journal / Blogs</option>
+                        </optgroup>
+                        {localPages.length > 0 && (
+                          <optgroup label="Custom Builder Pages">
+                            {localPages.map(page => (
+                              <option key={page.id} value={`page-${page.slug}`}>
+                                Page: {page.title} ({page.slug})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                      </select>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Destination URL Link</label>
+                      <div className="relative">
+                        <input
+                          type="url"
+                          required
+                          value={newMenuItemUrl}
+                          onChange={(e) => setNewMenuItemUrl(e.target.value)}
+                          placeholder="https://example.com"
+                          className="w-full text-xs font-semibold border border-slate-250 p-2 pl-7 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                        <Link className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingMenuItem(false)}
+                      className="px-3 py-1.5 text-slate-500 hover:text-slate-800 font-bold text-[10px] uppercase border border-slate-200 bg-white hover:bg-slate-50 rounded-lg transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={addMenuItem}
+                      className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] uppercase rounded-lg shadow-sm transition"
+                    >
+                      Add Link
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* List of current menu items */}
+              <div className="space-y-2.5">
+                {localLayoutSettings.menuItems.length === 0 ? (
+                  <div className="text-center py-6 text-slate-450 italic border border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
+                    No links in navigation menu. Click "Add link" to start.
+                  </div>
+                ) : (
+                  localLayoutSettings.menuItems.map((item, index) => {
+                    return (
+                      <div 
+                        key={item.id} 
+                        className="border border-slate-200 rounded-xl p-3 bg-slate-50/30 flex items-center justify-between gap-2.5 shadow-3xs"
+                      >
+                        <div className="flex-1 min-w-0 space-y-1 text-left">
+                          <input
+                            type="text"
+                            value={item.label}
+                            onChange={(e) => editMenuItemLabel(item.id, e.target.value)}
+                            className="font-extrabold text-xs text-slate-900 border-none bg-transparent hover:bg-slate-100 p-1 rounded focus:bg-white focus:ring-1 focus:ring-slate-350 w-full focus:outline-none"
+                            title="Click to rename link"
+                          />
+                          <div className="flex items-center gap-1.5 pl-1">
+                            {item.type === 'external' ? (
+                              <>
+                                <Link className="h-3 w-3 text-indigo-500 shrink-0" />
+                                <input
+                                  type="text"
+                                  value={item.url || ''}
+                                  onChange={(e) => editMenuItemUrl(item.id, e.target.value)}
+                                  className="text-[10px] text-slate-400 truncate bg-transparent focus:bg-white p-0.5 rounded border-none w-full font-medium"
+                                  title="Edit URL link"
+                                />
+                              </>
+                            ) : (
+                              <>
+                                <FileCode className="h-3 w-3 text-slate-400 shrink-0" />
+                                <select
+                                  value={item.tab}
+                                  onChange={(e) => editMenuItemTarget(item.id, e.target.value)}
+                                  className="text-[10px] text-slate-400 font-semibold bg-transparent hover:bg-slate-100 p-0.5 rounded border-none cursor-pointer max-w-[150px]"
+                                >
+                                  <option value="frontend-home">Home</option>
+                                  <option value="frontend-subscribe">Subscribe</option>
+                                  <option value="frontend-shop">Shop grid</option>
+                                  <option value="frontend-brands">Sweden Brands</option>
+                                  <option value="about">About info</option>
+                                  <option value="blogs">Blogs</option>
+                                  {localPages.map(p => (
+                                    <option key={p.id} value={`page-${p.slug}`}>Page: {p.title}</option>
+                                  ))}
+                                </select>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0 select-none">
+                          {/* Reordering buttons */}
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => moveMenuItem(index, 'up')}
+                            className="p-1 border border-slate-250 bg-white rounded text-slate-500 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
+                            title="Move up"
+                          >
+                            <MoveUp className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={index === localLayoutSettings.menuItems.length - 1}
+                            onClick={() => moveMenuItem(index, 'down')}
+                            className="p-1 border border-slate-250 bg-white rounded text-slate-500 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
+                            title="Move down"
+                          >
+                            <MoveDown className="h-3 w-3" />
+                          </button>
+                          {/* Remove button */}
+                          <button
+                            type="button"
+                            onClick={() => removeMenuItem(item.id)}
+                            className="p-1 border border-red-200 bg-red-50 text-red-650 rounded hover:bg-red-100 cursor-pointer"
+                            title="Delete link"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
     )}
 
