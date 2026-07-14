@@ -68,6 +68,92 @@ export default function CustomerAccount({
   const [editEmail, setEditEmail] = useState('');
   const [editPassword, setEditPassword] = useState('');
 
+  // Star Progress System definition and calculations
+  const TIERS = [
+    { level: 1, name: "Tier 1", required: 5 },
+    { level: 2, name: "Tier 2", required: 10 },
+    { level: 3, name: "Tier 3", required: 30 },
+    { level: 4, name: "Tier 4", required: 40 },
+    { level: 5, name: "Tier 5 (VIP)", required: 50 }
+  ];
+
+  const myOrders = loggedInCustomer 
+    ? orders.filter(o => o.customerEmail.toLowerCase() === loggedInCustomer.email.toLowerCase()) 
+    : [];
+  const ordersCount = myOrders.length;
+
+  const getTierInfo = (count: number) => {
+    if (count >= 50) {
+      return {
+        level: 5,
+        currentTierName: "Tier 5 (VIP)",
+        badgeName: "VIP Customer",
+        nextTierName: "",
+        ordersNeededForNext: 0,
+        progressPercentage: 100,
+        unlockedCount: 5,
+        description: "Congratulations! You have reached Tier 5 (Final VIP Tier) and unlocked VIP Customer status with 50+ completed orders. You are now officially a VIP Customer!"
+      };
+    } else if (count >= 40) {
+      return {
+        level: 4,
+        currentTierName: "Tier 4",
+        badgeName: "Gold Member",
+        nextTierName: "Tier 5 (VIP)",
+        ordersNeededForNext: 50 - count,
+        progressPercentage: Math.round(((count - 40) / (50 - 40)) * 100),
+        unlockedCount: 4,
+        description: `You are currently at Tier 4. Complete ${50 - count} more order${50 - count > 1 ? 's' : ''} to reach Tier 5 (Final VIP Tier) and unlock VIP Customer status.`
+      };
+    } else if (count >= 30) {
+      return {
+        level: 3,
+        currentTierName: "Tier 3",
+        badgeName: "Silver Member",
+        nextTierName: "Tier 4",
+        ordersNeededForNext: 40 - count,
+        progressPercentage: Math.round(((count - 30) / (40 - 30)) * 100),
+        unlockedCount: 3,
+        description: `You are currently at Tier 3. Complete ${40 - count} more order${40 - count > 1 ? 's' : ''} to reach Tier 4.`
+      };
+    } else if (count >= 10) {
+      return {
+        level: 2,
+        currentTierName: "Tier 2",
+        badgeName: "Bronze Member",
+        nextTierName: "Tier 3",
+        ordersNeededForNext: 30 - count,
+        progressPercentage: Math.round(((count - 10) / (30 - 10)) * 100),
+        unlockedCount: 2,
+        description: `You are currently at Tier 2. Complete ${30 - count} more order${30 - count > 1 ? 's' : ''} to reach Tier 3.`
+      };
+    } else if (count >= 5) {
+      return {
+        level: 1,
+        currentTierName: "Tier 1",
+        badgeName: "Active Member",
+        nextTierName: "Tier 2",
+        ordersNeededForNext: 10 - count,
+        progressPercentage: Math.round(((count - 5) / (10 - 5)) * 100),
+        unlockedCount: 1,
+        description: `You are currently at Tier 1. Complete ${10 - count} more order${10 - count > 1 ? 's' : ''} to reach Tier 2.`
+      };
+    } else {
+      return {
+        level: 0,
+        currentTierName: "Standard Member",
+        badgeName: "New Member",
+        nextTierName: "Tier 1",
+        ordersNeededForNext: 5 - count,
+        progressPercentage: Math.round((count / 5) * 100),
+        unlockedCount: 0,
+        description: `You are currently a Standard Member. Complete ${5 - count} more order${5 - count > 1 ? 's' : ''} to reach Tier 1 and start unlocking loyalty rewards.`
+      };
+    }
+  };
+
+  const tierInfo = getTierInfo(ordersCount);
+
   useEffect(() => {
     if (loggedInCustomer) {
       setEditName(loggedInCustomer.name);
@@ -207,9 +293,6 @@ export default function CustomerAccount({
     }
   };
 
-  const myOrders = loggedInCustomer 
-    ? orders.filter(o => o.customerEmail.toLowerCase() === loggedInCustomer.email.toLowerCase()) 
-    : [];
 
   const handleTrackOrder = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -539,8 +622,13 @@ export default function CustomerAccount({
           {/* Top Welcome Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-xl md:text-2xl font-black text-[#071d37]">Welcome back, {loggedInCustomer.name} 👋</h1>
+                {ordersCount >= 50 && (
+                  <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest bg-[#dfa047] text-[#071d37] px-2.5 py-0.5 rounded-full shadow-sm animate-pulse shrink-0">
+                    <Award className="h-3 w-3 fill-current" /> VIP Customer
+                  </span>
+                )}
               </div>
               <p className="text-slate-500 text-xs mt-0.5">Here's what's happening with your Pouch Supply account today.</p>
             </div>
@@ -623,46 +711,82 @@ export default function CustomerAccount({
                       {/* Ambient circle background overlay */}
                       <div className="absolute right-[-40px] top-[-40px] w-48 h-48 rounded-full bg-white/5 border border-white/5" />
                       
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                          <h2 className="text-xl font-black uppercase tracking-wider text-white">You're doing great!</h2>
-                          <p className="text-slate-300 text-xs">
-                            You are just one order away from unlocking your next <strong className="text-[#dfa047] font-black">Free Can of Premium Pouches</strong>.
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="space-y-1.5">
+                          <h2 className="text-xl font-black uppercase tracking-wider text-white">
+                            {ordersCount >= 50 ? "★ VIP CUSTOMER STATUS" : "STAR PROGRESS SYSTEM"}
+                          </h2>
+                          <p className="text-slate-300 text-xs leading-relaxed max-w-md">
+                            {tierInfo.description}
                           </p>
                         </div>
                         {/* Interactive circle dial */}
-                        <div className="relative shrink-0 flex flex-col items-center justify-center w-24 h-24 rounded-full border-4 border-[#dfa047] bg-black/20 text-center shadow-lg">
+                        <div className="relative shrink-0 flex flex-col items-center justify-center w-24 h-24 rounded-full border-4 border-[#dfa047] bg-black/20 text-center shadow-lg transition-all duration-300 hover:scale-105">
                           <Star className="h-4 w-4 text-[#dfa047] fill-[#dfa047]" />
-                          <span className="text-lg font-black text-white mt-0.5">80%</span>
-                          <span className="text-[7px] text-slate-300 uppercase tracking-widest font-bold">VIP Member</span>
+                          <span className="text-lg font-black text-white mt-0.5">
+                            {tierInfo.progressPercentage}%
+                          </span>
+                          <span className="text-[7px] text-slate-300 uppercase tracking-widest font-extrabold max-w-[80px] truncate">
+                            {ordersCount >= 50 ? "VIP Member" : tierInfo.currentTierName}
+                          </span>
                         </div>
                       </div>
 
                       {/* Stars Milestone Timeline */}
-                      <div className="mt-8">
-                        <div className="relative flex items-center justify-between">
-                          <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-1 bg-white/20" />
-                          <div className="absolute left-2 top-1/2 -translate-y-1/2 h-1 bg-[#dfa047] transition-all duration-500" style={{ width: '80%' }} />
+                      <div className="mt-10 mb-8 relative px-6">
+                        {/* Overall progress background track */}
+                        <div className="relative h-1 bg-white/20 rounded-full">
+                          <div 
+                            className="absolute left-0 top-0 h-full bg-[#dfa047] rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(223,160,71,0.5)]" 
+                            style={{ width: `${Math.min(100, (ordersCount / 50) * 100)}%` }} 
+                          />
                           
-                          {[1, 2, 3, 4].map(idx => (
-                            <div key={idx} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center z-10 ${idx <= 3 ? 'bg-[#dfa047] border-[#dfa047] text-white' : 'bg-[#071d37] border-slate-500 text-slate-400'}`}>
-                              <Star className="h-3 w-3 fill-current" />
-                            </div>
-                          ))}
-                          <div className="w-10 h-10 rounded-full border-2 border-[#dfa047] bg-white text-[#dfa047] flex items-center justify-center z-10 animate-pulse">
-                            <Award className="h-4 w-4" />
-                          </div>
+                          {/* Milestone Nodes */}
+                          {TIERS.map((t) => {
+                            const isUnlocked = ordersCount >= t.required;
+                            const pct = (t.required / 50) * 100;
+                            return (
+                              <div 
+                                key={t.level}
+                                style={{ left: `${pct}%` }}
+                                className="absolute -translate-x-1/2 -translate-y-1/2 top-1/2 z-10 flex flex-col items-center"
+                              >
+                                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                                  isUnlocked 
+                                    ? 'bg-[#dfa047] border-[#dfa047] text-[#071d37] scale-110 shadow-lg' 
+                                    : 'bg-[#071d37] border-slate-500 text-slate-400 hover:border-slate-300'
+                                }`}>
+                                  {t.level === 5 ? (
+                                    <Award className={`h-4 w-4 ${isUnlocked ? 'fill-current text-[#071d37]' : 'text-slate-400'}`} />
+                                  ) : (
+                                    <Star className={`h-3.5 w-3.5 ${isUnlocked ? 'fill-current text-[#071d37]' : 'text-slate-400'}`} />
+                                  )}
+                                </div>
+                                <span className={`text-[8px] font-extrabold mt-1.5 uppercase tracking-wider whitespace-nowrap ${isUnlocked ? 'text-[#dfa047]' : 'text-slate-400'}`}>
+                                  {t.name}
+                                </span>
+                                <span className="text-[7px] text-slate-400 font-bold tracking-tighter">
+                                  {t.required} order{t.required > 1 ? 's' : ''}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
-                        <div className="flex justify-between text-[10px] text-slate-300 font-bold uppercase tracking-wider mt-2.5 px-1">
-                          <span>4/5 Orders Completed</span>
-                          <span className="text-[#dfa047]">Free gift pending</span>
-                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center text-[10px] text-slate-300 font-bold uppercase tracking-wider mt-4 px-1">
+                        <span>{ordersCount} Completed Order{ordersCount !== 1 ? 's' : ''}</span>
+                        <span className="text-[#dfa047] font-black">
+                          {ordersCount >= 50 
+                            ? "★ VIP CUSTOMER LEVEL UNLOCKED" 
+                            : `${tierInfo.ordersNeededForNext} order${tierInfo.ordersNeededForNext > 1 ? 's' : ''} to reach ${tierInfo.nextTierName}`}
+                        </span>
                       </div>
 
                       <div className="mt-6 flex justify-start">
                         <button 
                           onClick={() => setActiveTab('loyalty')}
-                          className="bg-[#dfa047] hover:bg-[#c98e3b] text-[#071d37] font-black text-[10px] uppercase tracking-widest py-2 px-5 rounded-xl transition-all cursor-pointer"
+                          className="bg-[#dfa047] hover:bg-[#c98e3b] text-[#071d37] font-black text-[10px] uppercase tracking-widest py-2 px-5 rounded-xl transition-all cursor-pointer shadow-sm hover:shadow"
                         >
                           Ways to earn rewards
                         </button>
@@ -682,24 +806,28 @@ export default function CustomerAccount({
                             <Award className="h-6 w-6 text-[#dfa047]" />
                           </div>
                           <div>
-                            <p className="text-xs font-black text-[#071d37] uppercase">VIP Gold Tier</p>
-                            <p className="text-[10px] text-slate-500">Earn premium rewards, free cans, & secret discounts.</p>
+                            <p className="text-xs font-black text-[#071d37] uppercase">{tierInfo.badgeName}</p>
+                            <p className="text-[10px] text-slate-500 leading-relaxed">
+                              {ordersCount >= 50 
+                                ? "VIP status active! Lifetime 15% discount and support priority." 
+                                : "Complete purchases to unlock tiers and trigger premium coupons."}
+                            </p>
                           </div>
                         </div>
 
                         {/* Stats grid */}
                         <div className="grid grid-cols-3 gap-2 text-center pt-2">
-                          <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-2xl">
-                            <p className="text-base font-black text-[#071d37]">Tier 2</p>
-                            <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">Status Level</p>
+                          <div className="bg-slate-50 border border-slate-100 p-2 rounded-2xl flex flex-col justify-center min-w-0">
+                            <p className="text-xs font-black text-[#071d37] truncate">{tierInfo.currentTierName}</p>
+                            <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight mt-0.5">Status Level</p>
                           </div>
-                          <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-2xl">
-                            <p className="text-base font-black text-[#071d37]">3</p>
-                            <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">Free Gifts</p>
+                          <div className="bg-slate-50 border border-slate-100 p-2 rounded-2xl flex flex-col justify-center min-w-0">
+                            <p className="text-base font-black text-[#071d37]">{tierInfo.unlockedCount}</p>
+                            <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight mt-0.5">Unlocked Tiers</p>
                           </div>
-                          <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-2xl">
-                            <p className="text-base font-black text-[#071d37]">£40</p>
-                            <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight">Saved Total</p>
+                          <div className="bg-slate-50 border border-slate-100 p-2 rounded-2xl flex flex-col justify-center min-w-0">
+                            <p className="text-base font-black text-[#071d37]">£{(tierInfo.unlockedCount * 15).toFixed(0)}</p>
+                            <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight mt-0.5">Saved Total</p>
                           </div>
                         </div>
                       </div>
@@ -1463,64 +1591,101 @@ export default function CustomerAccount({
 
                     <div className="bg-white/10 border border-white/20 p-5 rounded-3xl text-center min-w-[160px]">
                       <p className="text-[10px] text-slate-300 uppercase font-black tracking-widest">Rewards Unlocked</p>
-                      <p className="text-3xl font-black text-[#dfa047] mt-1">3 Gifts</p>
-                      <span className="text-[9px] text-slate-400 block pt-1">Level 2 Status Member</span>
+                      <p className="text-3xl font-black text-[#dfa047] mt-1">{tierInfo.unlockedCount} Gift{tierInfo.unlockedCount !== 1 ? 's' : ''}</p>
+                      <span className="text-[9px] text-slate-400 block pt-1">{tierInfo.currentTierName} Status</span>
                     </div>
                   </div>
 
                   {/* Complete rewards grid list */}
                   <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
-                    <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Available Loyalty Benefits</h3>
+                    <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Your Star Progress Milestone Rewards</h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {custState.unlockedRewards.map((rew: any) => (
-                        <div key={rew.id} className="bg-[#f4f6f9] border border-slate-100 p-4 rounded-2xl flex justify-between items-center gap-4">
-                          <div className="space-y-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className="p-1 bg-[#dfa047]/10 text-[#dfa047] rounded-md"><Award className="h-4 w-4" /></span>
-                              <h4 className="text-xs font-black text-[#071d37] truncate">{rew.title}</h4>
-                            </div>
-                            <p className="text-[10.5px] text-slate-500 leading-relaxed">{rew.desc}</p>
-                            <span className="text-[9px] font-mono text-slate-400 font-bold block pt-1">Code Voucher: {rew.code}</span>
-                          </div>
+                      {TIERS.map((tier) => {
+                        const isUnlocked = ordersCount >= tier.required;
+                        
+                        // Define reward properties for each tier
+                        let rewardTitle = "";
+                        let rewardDesc = "";
+                        let rewardCode = "";
+                        
+                        if (tier.level === 1) {
+                          rewardTitle = "Buy 5 Get 1 Free Can";
+                          rewardDesc = "Receive a complimentary premium white nicotine pouch canister on your 5th order.";
+                          rewardCode = "PSFREE5";
+                        } else if (tier.level === 2) {
+                          rewardTitle = "£10.00 Account Gift Voucher";
+                          rewardDesc = "A direct £10 cash coupon code to apply at checkout for your loyalty.";
+                          rewardCode = "PSLOYAL10";
+                        } else if (tier.level === 3) {
+                          rewardTitle = "£15.00 Store Discount";
+                          rewardDesc = "Get £15.00 off your order. Sourced directly from partners in Sweden.";
+                          rewardCode = "SWE30";
+                        } else if (tier.level === 4) {
+                          rewardTitle = "Free Extra Can Subscription Bonus";
+                          rewardDesc = "Unlocks a free extra can on all future subscriptions automatically.";
+                          rewardCode = "EXTRACAN";
+                        } else if (tier.level === 5) {
+                          rewardTitle = "VIP Lifetime Status";
+                          rewardDesc = "Unlocks permanent VIP privileges, priority support, and 15% discount on all purchases.";
+                          rewardCode = "VIPLIFETIME";
+                        }
 
-                          <button
-                            onClick={() => {
-                              if (rew.redeemed) return;
-                              const updatedRewards = custState.unlockedRewards.map((r: any) => 
-                                r.id === rew.id ? { ...r, redeemed: true } : r
-                              );
-                              updateCustState({ ...custState, unlockedRewards: updatedRewards });
-                              alert(`Loyalty gift redeemed! Check your inbox or apply promo code "${rew.code}" at checkout.`);
-                            }}
-                            className={`text-[10px] font-black uppercase tracking-wider py-1.5 px-3 rounded-lg border cursor-pointer transition-colors ${
-                              rew.redeemed 
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-150 cursor-not-allowed' 
-                                : 'bg-[#071d37] text-white hover:bg-[#dfa047]'
+                        return (
+                          <div 
+                            key={tier.level} 
+                            className={`p-4 rounded-2xl border flex flex-col justify-between gap-3 transition-all ${
+                              isUnlocked 
+                                ? 'bg-emerald-50/40 border-emerald-200/60 text-[#071d37]' 
+                                : 'bg-slate-50/50 border-slate-200/60 opacity-80'
                             }`}
                           >
-                            {rew.redeemed ? 'Redeemed' : 'Claim Reward'}
-                          </button>
-                        </div>
-                      ))}
-
-                      {/* Locked future rewards */}
-                      {[
-                        { title: 'Buy 5 Get 1 Free', desc: 'Unlocks automatically after your next verified purchase.', target: '5th Order Reward' },
-                        { title: '£15.00 Account Gift Code', desc: 'Unlock complimentary cash wallet credentials automatically.', target: '10th Order Milestone' }
-                      ].map((lock, idx) => (
-                        <div key={idx} className="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl flex justify-between items-center gap-4 opacity-75">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-1.5 text-slate-400">
-                              <span className="p-1 bg-slate-100 text-slate-400 rounded-md"><ShieldAlert className="h-4 w-4" /></span>
-                              <h4 className="text-xs font-black uppercase tracking-wider">{lock.title}</h4>
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className={`p-1 rounded-md ${isUnlocked ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
+                                    {tier.level === 5 ? <Award className="h-4 w-4" /> : <Star className="h-4 w-4 fill-current" />}
+                                  </span>
+                                  <h4 className="text-xs font-black uppercase tracking-wider">{tier.name} Reward</h4>
+                                </div>
+                                <span className={`text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full shrink-0 ${
+                                  isUnlocked 
+                                    ? 'bg-emerald-100 text-emerald-800' 
+                                    : 'bg-slate-200 text-slate-600'
+                                }`}>
+                                  {isUnlocked ? 'Unlocked' : 'Locked'}
+                                </span>
+                              </div>
+                              <p className="text-xs font-bold text-slate-800 pt-1.5">{rewardTitle}</p>
+                              <p className="text-[10.5px] text-slate-500 leading-relaxed">{rewardDesc}</p>
+                              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">Required: {tier.required} Completed Orders</p>
                             </div>
-                            <p className="text-[10.5px] text-slate-500 leading-relaxed">{lock.desc}</p>
-                            <span className="text-[9px] text-[#dfa047] font-bold uppercase tracking-wider block pt-1">{lock.target}</span>
+
+                            {isUnlocked ? (
+                              <div className="flex items-center justify-between gap-2 bg-white p-2 border border-emerald-100 rounded-xl mt-1">
+                                <div className="min-w-0">
+                                  <span className="text-[8px] text-slate-400 font-bold uppercase block">Voucher Promo Code</span>
+                                  <span className="font-mono font-black text-[11px] text-[#071d37] tracking-wider select-all">{rewardCode}</span>
+                                </div>
+                                <button 
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(rewardCode);
+                                    alert(`Voucher code "${rewardCode}" copied to clipboard! Paste at checkout.`);
+                                  }}
+                                  className="text-[9px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 py-1.5 px-3 rounded-lg transition-colors cursor-pointer shrink-0 uppercase"
+                                >
+                                  Copy Code
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium bg-slate-100/50 p-2 rounded-xl mt-1">
+                                <span>Complete {tier.required - ordersCount} more order{tier.required - ordersCount !== 1 ? 's' : ''} to unlock</span>
+                                <span className="p-1"><ShieldAlert className="h-3.5 w-3.5 text-slate-400" /></span>
+                              </div>
+                            )}
                           </div>
-                          <span className="text-[9px] font-black uppercase text-slate-400 bg-slate-100 py-1.5 px-3 rounded-lg border border-slate-200">Locked</span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
 
