@@ -154,6 +154,23 @@ export default function CustomerAccount({
 
   const tierInfo = getTierInfo(ordersCount);
 
+  const customerLoyaltyRewards = (discounts || []).filter(d => {
+    if (d.type !== 'Loyalty Reward' || d.status !== 'Active') return false;
+    
+    // Check eligibility
+    if (!d.loyaltyCustomerSelection || d.loyaltyCustomerSelection === 'All customers') {
+      return true;
+    }
+    
+    if (d.loyaltyCustomerSelection === 'Specific customers' && loggedInCustomer) {
+      return (d.loyaltyCustomerEmails || [])
+        .map(e => e.toLowerCase())
+        .includes(loggedInCustomer.email.toLowerCase());
+    }
+    
+    return false;
+  });
+
   useEffect(() => {
     if (loggedInCustomer) {
       setEditName(loggedInCustomer.name);
@@ -1687,6 +1704,78 @@ export default function CustomerAccount({
                         );
                       })}
                     </div>
+                  </div>
+
+                  {/* Special Personalized VIP Loyalty Discounts */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                      <div>
+                        <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider flex items-center gap-1.5">
+                          <Award className="h-4 w-4 text-[#dfa047]" />
+                          Personalized VIP Loyalty Perks
+                        </h3>
+                        <p className="text-slate-500 text-xs mt-0.5">Special loyalty coupons created specifically for your account tier by the administration team.</p>
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-700 px-3 py-1 rounded-full border border-amber-200">
+                        {customerLoyaltyRewards.length} Perks Active
+                      </span>
+                    </div>
+
+                    {customerLoyaltyRewards.length === 0 ? (
+                      <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-6 text-center space-y-2">
+                        <Award className="h-8 w-8 text-slate-300 mx-auto" />
+                        <p className="text-xs font-bold text-slate-600">No custom administration loyalty perks currently pending.</p>
+                        <p className="text-[10px] text-slate-400 max-w-sm mx-auto">Our support team frequently reviews active members and issues secret discount coupons. Keep ordering to trigger custom perks!</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {customerLoyaltyRewards.map((reward) => (
+                          <div key={reward.id} className="bg-amber-50/25 border border-amber-200/50 p-4 rounded-2xl flex flex-col justify-between gap-3 relative overflow-hidden transition-all hover:border-amber-300/80">
+                            {/* Accent gold corner flare */}
+                            <div className="absolute right-[-15px] top-[-15px] w-12 h-12 rounded-full bg-amber-100/50" />
+                            
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="p-1 bg-amber-100 text-amber-700 rounded-md">
+                                  <Award className="h-3.5 w-3.5" />
+                                </span>
+                                <h4 className="text-xs font-black uppercase tracking-wider text-[#071d37]">{reward.loyaltyRewardType || 'Custom Loyalty Reward'}</h4>
+                              </div>
+                              <p className="text-xs font-extrabold text-slate-900 pt-1.5">{reward.title}</p>
+                              <p className="text-[10.5px] text-slate-600 leading-relaxed font-semibold">Reward: {reward.loyaltyRewardValue || 'Secret perk active'}</p>
+                              
+                              {/* Show product or collection constraints if any */}
+                              {reward.loyaltyProductSelection === 'Specific products' && (reward.loyaltyProductIds || []).length > 0 && (
+                                <p className="text-[9px] bg-white border border-amber-100 text-amber-800 px-2 py-0.5 rounded-md mt-1 inline-block font-bold">
+                                  Applies to {(reward.loyaltyProductIds || []).length} select product(s)
+                                </p>
+                              )}
+                              {reward.loyaltyCollectionSelection === 'Specific collections' && (reward.loyaltyCollectionIds || []).length > 0 && (
+                                <p className="text-[9px] bg-white border border-amber-100 text-amber-800 px-2 py-0.5 rounded-md mt-1 inline-block font-bold">
+                                  Applies to {(reward.loyaltyCollectionIds || []).length} select collection(s)
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2 bg-white p-2 border border-amber-100 rounded-xl mt-1 z-10 shadow-xs">
+                              <div className="min-w-0">
+                                <span className="text-[8px] text-slate-400 font-bold uppercase block">Voucher Code</span>
+                                <span className="font-mono font-black text-[11px] text-[#071d37] tracking-wider select-all">{reward.title}</span>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(reward.title);
+                                  alert(`Loyalty code "${reward.title}" copied to clipboard! Enter at checkout to apply.`);
+                                }}
+                                className="text-[9px] font-black text-amber-800 bg-amber-50 hover:bg-amber-100 py-1.5 px-3 rounded-lg transition-colors cursor-pointer shrink-0 uppercase"
+                              >
+                                Copy Code
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                 </div>

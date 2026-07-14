@@ -125,9 +125,19 @@ export interface Discount {
   status: 'Active' | 'Expired';
   method: string; // e.g. "Code", "1 code"
   eligibility: string; // e.g. "All customers", email
-  type: 'Amount off products' | 'Buy X get Y' | 'Amount off order' | 'Free shipping';
+  type: 'Amount off products' | 'Buy X get Y' | 'Amount off order' | 'Free shipping' | 'Loyalty Reward';
   used: number;
   details: string; // e.g. "15% off one-time purchase products"
+  
+  // Loyalty Reward custom properties
+  loyaltyRewardType?: 'B1G1' | 'Percentage Off' | 'Reward Points' | 'Custom';
+  loyaltyRewardValue?: string | number;
+  loyaltyCustomerSelection?: 'All customers' | 'Specific customers';
+  loyaltyCustomerEmails?: string[];
+  loyaltyProductSelection?: 'All products' | 'Specific products';
+  loyaltyProductIds?: string[];
+  loyaltyCollectionSelection?: 'All collections' | 'Specific collections';
+  loyaltyCollectionIds?: string[];
   
   // Custom Shopify-like properties
   valueType?: 'Percentage' | 'Fixed amount';

@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Discount, Product, Collection } from '../types';
+import { Discount, Product, Collection, Customer } from '../types';
 import { 
   X, Search, Plus, Calendar, Percent, ChevronDown, Check, 
-  MapPin, Users, Tag, ArrowLeft, Globe, HelpCircle, AlertCircle
+  MapPin, Users, Tag, ArrowLeft, Globe, HelpCircle, AlertCircle,
+  Award, Star
 } from 'lucide-react';
 
 interface DiscountEditorProps {
   discount: Discount | null;
-  discountType: 'Amount off products' | 'Buy X get Y' | 'Amount off order' | 'Free shipping';
+  discountType: 'Amount off products' | 'Buy X get Y' | 'Amount off order' | 'Free shipping' | 'Loyalty Reward';
   products: Product[];
   collections: Collection[];
+  customers?: Customer[];
   onSave: (savedDiscount: Discount) => void;
   onCancel: () => void;
 }
@@ -19,6 +21,7 @@ export default function DiscountEditor({
   discountType,
   products = [],
   collections = [],
+  customers = [],
   onSave,
   onCancel
 }: DiscountEditorProps) {
@@ -71,9 +74,22 @@ export default function DiscountEditor({
       excludeShippingRatesOverAmount: false,
       excludeShippingRatesAmount: 0,
       allowOnSelectedChannels: false,
-      tags: []
+      tags: [],
+      loyaltyRewardType: 'Percentage Off',
+      loyaltyRewardValue: '15',
+      loyaltyCustomerSelection: 'All customers',
+      loyaltyCustomerEmails: [],
+      loyaltyProductSelection: 'All products',
+      loyaltyProductIds: [],
+      loyaltyCollectionSelection: 'All collections',
+      loyaltyCollectionIds: []
     };
   });
+
+  // Loyalty reward specific search queries
+  const [loyaltyProductSearch, setLoyaltyProductSearch] = useState('');
+  const [loyaltyCollectionSearch, setLoyaltyCollectionSearch] = useState('');
+  const [loyaltyCustomerSearch, setLoyaltyCustomerSearch] = useState('');
 
   // State for browser picker dialog
   const [pickerConfig, setPickerConfig] = useState<{
@@ -166,6 +182,21 @@ export default function DiscountEditor({
       lines.push(`Buy ${buyQty} items, get ${getQty} items ${discountVal}`);
     } else if (form.type === 'Free shipping') {
       lines.push('Free shipping on order');
+    } else if (form.type === 'Loyalty Reward') {
+      const rewardType = form.loyaltyRewardType || 'Percentage Off';
+      const rewardVal = form.loyaltyRewardValue || '15';
+      const custSel = form.loyaltyCustomerSelection === 'Specific customers' 
+        ? `${form.loyaltyCustomerEmails?.length || 0} selected customers` 
+        : 'All customers';
+      const prodSel = form.loyaltyProductSelection === 'Specific products' 
+        ? `${form.loyaltyProductIds?.length || 0} selected products` 
+        : 'All products';
+      const collSel = form.loyaltyCollectionSelection === 'Specific collections' 
+        ? `${form.loyaltyCollectionIds?.length || 0} selected collections` 
+        : 'All collections';
+      lines.push(`Loyalty Reward: ${rewardType} (${rewardVal})`);
+      lines.push(`Eligible: ${custSel}`);
+      lines.push(`Scope: ${prodSel}, ${collSel}`);
     }
 
     // Eligibility
@@ -836,7 +867,323 @@ export default function DiscountEditor({
             </div>
           )}
 
-          {/* 3. Customer Eligibility panel */}
+          {discountType === 'Loyalty Reward' && (
+            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h2 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Award className="h-4.5 w-4.5 text-amber-500 animate-pulse" />
+                  Loyalty Reward Configuration
+                </h2>
+                <span className="text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  VIP Club Reward
+                </span>
+              </div>
+
+              {/* 1. Select Discount Type inside Loyalty Reward */}
+              <div className="space-y-3">
+                <label className="block text-xs font-bold text-slate-700">1. Select Loyalty Reward Type</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { value: 'B1G1', label: 'Buy 1 Get 1 (B1G1)', desc: 'Free can on next purchase', icon: Tag },
+                    { value: 'Percentage Off', label: 'Percentage Off (%)', desc: 'Direct discount on products/order', icon: Percent },
+                    { value: 'Reward Points', label: 'Reward Points (★)', desc: 'Award points to customer wallet', icon: Star }
+                  ].map((rewardItem) => {
+                    const isSelected = (form.loyaltyRewardType || 'Percentage Off') === rewardItem.value;
+                    const IconComp = rewardItem.icon;
+                    return (
+                      <button
+                        type="button"
+                        key={rewardItem.value}
+                        onClick={() => {
+                          setForm(prev => ({ 
+                            ...prev, 
+                            loyaltyRewardType: rewardItem.value as any,
+                            loyaltyRewardValue: rewardItem.value === 'Percentage Off' ? '15' : (rewardItem.value === 'Reward Points' ? '100' : 'Free Can')
+                          }));
+                        }}
+                        className={`p-3 text-left border rounded-xl transition-all flex flex-col justify-between gap-2 cursor-pointer ${
+                          isSelected 
+                            ? 'bg-amber-50/40 border-amber-300 ring-2 ring-amber-100' 
+                            : 'bg-white border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span className={`p-1.5 rounded-lg ${isSelected ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
+                            <IconComp className="h-3.5 w-3.5" />
+                          </span>
+                          <span className="text-[11px] font-black text-slate-900">{rewardItem.label}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-500 font-medium">{rewardItem.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Reward Value Input */}
+                <div className="pt-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Reward Value Description / Amount</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={form.loyaltyRewardValue || ''}
+                      onChange={(e) => setForm(prev => ({ ...prev, loyaltyRewardValue: e.target.value }))}
+                      placeholder={
+                        form.loyaltyRewardType === 'Percentage Off' 
+                          ? 'e.g. 15 (stands for 15% discount)' 
+                          : form.loyaltyRewardType === 'Reward Points' 
+                            ? 'e.g. 200 (stands for 200 loyalty star points)' 
+                            : 'e.g. Buy 1 Get 1 Free Can'
+                      }
+                      className="w-full border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-1 focus:ring-slate-500 focus:outline-none"
+                    />
+                    <span className="absolute right-3 top-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      {form.loyaltyRewardType}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Select Customers */}
+              <div className="border-t border-slate-100 pt-5 space-y-3">
+                <label className="block text-xs font-bold text-slate-700">2. Customer Scope</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="loyaltyCustomerSelection"
+                      checked={(form.loyaltyCustomerSelection || 'All customers') === 'All customers'}
+                      onChange={() => setForm(prev => ({ ...prev, loyaltyCustomerSelection: 'All customers', loyaltyCustomerEmails: [] }))}
+                      className="text-slate-900 focus:ring-slate-500 h-4 w-4"
+                    />
+                    <span className="text-xs font-bold text-slate-700">All Customers</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="loyaltyCustomerSelection"
+                      checked={form.loyaltyCustomerSelection === 'Specific customers'}
+                      onChange={() => setForm(prev => ({ ...prev, loyaltyCustomerSelection: 'Specific customers', loyaltyCustomerEmails: [] }))}
+                      className="text-slate-900 focus:ring-slate-500 h-4 w-4"
+                    />
+                    <span className="text-xs font-bold text-slate-700">Specific Customers Selection</span>
+                  </label>
+                </div>
+
+                {form.loyaltyCustomerSelection === 'Specific customers' && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-3.5 w-3.5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search customers by name or email..."
+                        value={loyaltyCustomerSearch}
+                        onChange={(e) => setLoyaltyCustomerSearch(e.target.value)}
+                        className="w-full border border-slate-200 rounded-lg p-2 pl-9 text-xs focus:ring-1 focus:ring-slate-500 focus:outline-none bg-white"
+                      />
+                    </div>
+
+                    <div className="max-h-44 overflow-y-auto border border-slate-200/60 rounded-lg divide-y divide-slate-100 bg-white">
+                      {(customers || []).length === 0 ? (
+                        <div className="p-4 text-center text-xs text-slate-400">No customers found in database</div>
+                      ) : (
+                        (customers || [])
+                          .filter(c => c.name.toLowerCase().includes(loyaltyCustomerSearch.toLowerCase()) || c.email.toLowerCase().includes(loyaltyCustomerSearch.toLowerCase()))
+                          .map(c => {
+                            const emails = form.loyaltyCustomerEmails || [];
+                            const isSelected = emails.includes(c.email);
+                            return (
+                              <label key={c.id} className="flex items-center gap-3 p-2.5 hover:bg-slate-50 cursor-pointer text-xs font-medium">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => {
+                                    const updated = isSelected 
+                                      ? emails.filter(e => e !== c.email)
+                                      : [...emails, c.email];
+                                    setForm(prev => ({ ...prev, loyaltyCustomerEmails: updated }));
+                                  }}
+                                  className="text-slate-900 focus:ring-slate-500 rounded-sm h-4.5 w-4.5"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-bold text-slate-950 truncate">{c.name}</p>
+                                  <p className="text-[10px] text-slate-500 truncate">{c.email}</p>
+                                </div>
+                                <span className="text-[10px] font-black bg-slate-100 px-2 py-0.5 rounded text-slate-600 shrink-0">
+                                  {c.ordersCount || 0} orders
+                                </span>
+                              </label>
+                            );
+                          })
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-450 font-medium">
+                      Selected: <strong className="text-slate-900 font-extrabold">{form.loyaltyCustomerEmails?.length || 0}</strong> customer(s)
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Select Products */}
+              <div className="border-t border-slate-100 pt-5 space-y-3">
+                <label className="block text-xs font-bold text-slate-700">3. Product Eligibility</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="loyaltyProductSelection"
+                      checked={(form.loyaltyProductSelection || 'All products') === 'All products'}
+                      onChange={() => setForm(prev => ({ ...prev, loyaltyProductSelection: 'All products', loyaltyProductIds: [] }))}
+                      className="text-slate-900 focus:ring-slate-500 h-4 w-4"
+                    />
+                    <span className="text-xs font-bold text-slate-700">All Products</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="loyaltyProductSelection"
+                      checked={form.loyaltyProductSelection === 'Specific products'}
+                      onChange={() => setForm(prev => ({ ...prev, loyaltyProductSelection: 'Specific products', loyaltyProductIds: [] }))}
+                      className="text-slate-900 focus:ring-slate-500 h-4 w-4"
+                    />
+                    <span className="text-xs font-bold text-slate-700">Specific Products Selection</span>
+                  </label>
+                </div>
+
+                {form.loyaltyProductSelection === 'Specific products' && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-3.5 w-3.5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search products by name..."
+                        value={loyaltyProductSearch}
+                        onChange={(e) => setLoyaltyProductSearch(e.target.value)}
+                        className="w-full border border-slate-200 rounded-lg p-2 pl-9 text-xs focus:ring-1 focus:ring-slate-500 focus:outline-none bg-white"
+                      />
+                    </div>
+
+                    <div className="max-h-44 overflow-y-auto border border-slate-200/60 rounded-lg divide-y divide-slate-100 bg-white">
+                      {(products || []).length === 0 ? (
+                        <div className="p-4 text-center text-xs text-slate-400">No products found in database</div>
+                      ) : (
+                        (products || [])
+                          .filter(p => p.title.toLowerCase().includes(loyaltyProductSearch.toLowerCase()))
+                          .map(p => {
+                            const ids = form.loyaltyProductIds || [];
+                            const isSelected = ids.includes(p.id);
+                            return (
+                              <label key={p.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 cursor-pointer text-xs font-medium">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => {
+                                    const updated = isSelected 
+                                      ? ids.filter(id => id !== p.id)
+                                      : [...ids, p.id];
+                                    setForm(prev => ({ ...prev, loyaltyProductIds: updated }));
+                                  }}
+                                  className="text-slate-900 focus:ring-slate-500 rounded-sm h-4.5 w-4.5"
+                                />
+                                {p.image && (
+                                  <img src={p.image} alt="" className="w-8 h-8 rounded border object-cover bg-slate-50 shrink-0" referrerPolicy="no-referrer" />
+                                )}
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-bold text-slate-950 truncate">{p.title}</p>
+                                  <p className="text-[10px] text-slate-500">Inventory: {p.inventory || 0} in stock</p>
+                                </div>
+                                <span className="text-xs font-black text-slate-900 shrink-0">
+                                  £{p.price?.toFixed(2)}
+                                </span>
+                              </label>
+                            );
+                          })
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-450 font-medium">
+                      Selected: <strong className="text-slate-900 font-extrabold">{form.loyaltyProductIds?.length || 0}</strong> product(s)
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* 4. Select Collections */}
+              <div className="border-t border-slate-100 pt-5 space-y-3">
+                <label className="block text-xs font-bold text-slate-700">4. Collection Scope</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="loyaltyCollectionSelection"
+                      checked={(form.loyaltyCollectionSelection || 'All collections') === 'All collections'}
+                      onChange={() => setForm(prev => ({ ...prev, loyaltyCollectionSelection: 'All collections', loyaltyCollectionIds: [] }))}
+                      className="text-slate-900 focus:ring-slate-500 h-4 w-4"
+                    />
+                    <span className="text-xs font-bold text-slate-700">All Collections</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="loyaltyCollectionSelection"
+                      checked={form.loyaltyCollectionSelection === 'Specific collections'}
+                      onChange={() => setForm(prev => ({ ...prev, loyaltyCollectionSelection: 'Specific collections', loyaltyCollectionIds: [] }))}
+                      className="text-slate-900 focus:ring-slate-500 h-4 w-4"
+                    />
+                    <span className="text-xs font-bold text-slate-700">Specific Collections Selection</span>
+                  </label>
+                </div>
+
+                {form.loyaltyCollectionSelection === 'Specific collections' && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-3.5 w-3.5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search collections by name..."
+                        value={loyaltyCollectionSearch}
+                        onChange={(e) => setLoyaltyCollectionSearch(e.target.value)}
+                        className="w-full border border-slate-200 rounded-lg p-2 pl-9 text-xs focus:ring-1 focus:ring-slate-500 focus:outline-none bg-white"
+                      />
+                    </div>
+
+                    <div className="max-h-44 overflow-y-auto border border-slate-200/60 rounded-lg divide-y divide-slate-100 bg-white">
+                      {(collections || []).length === 0 ? (
+                        <div className="p-4 text-center text-xs text-slate-400">No collections found in database</div>
+                      ) : (
+                        (collections || [])
+                          .filter(col => col.title.toLowerCase().includes(loyaltyCollectionSearch.toLowerCase()))
+                          .map(col => {
+                            const ids = form.loyaltyCollectionIds || [];
+                            const isSelected = ids.includes(col.id);
+                            return (
+                              <label key={col.id} className="flex items-center gap-3 p-2.5 hover:bg-slate-50 cursor-pointer text-xs font-medium">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => {
+                                    const updated = isSelected 
+                                      ? ids.filter(id => id !== col.id)
+                                      : [...ids, col.id];
+                                    setForm(prev => ({ ...prev, loyaltyCollectionIds: updated }));
+                                  }}
+                                  className="text-slate-900 focus:ring-slate-500 rounded-sm h-4.5 w-4.5"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-bold text-slate-950 truncate">{col.title}</p>
+                                  <p className="text-[10px] text-slate-500">{col.productIds?.length || 0} products</p>
+                                </div>
+                              </label>
+                            );
+                          })
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-450 font-medium">
+                      Selected: <strong className="text-slate-900 font-extrabold">{form.loyaltyCollectionIds?.length || 0}</strong> collection(s)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
             <h2 className="text-sm font-extrabold text-slate-900">Eligibility</h2>
             

@@ -1141,7 +1141,7 @@ export default function AdminDashboard({
     title: '', type: 'Amount off order', details: '', eligibility: 'All customers', status: 'Active'
   });
   const [showDiscountTypeSelector, setShowDiscountTypeSelector] = useState(false);
-  const [selectedDiscountType, setSelectedDiscountType] = useState<'Amount off products' | 'Buy X get Y' | 'Amount off order' | 'Free shipping' | null>(null);
+  const [selectedDiscountType, setSelectedDiscountType] = useState<'Amount off products' | 'Buy X get Y' | 'Amount off order' | 'Free shipping' | 'Loyalty Reward' | null>(null);
   const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
   const [isDiscountEditorOpen, setIsDiscountEditorOpen] = useState(false);
 
@@ -6768,6 +6768,7 @@ export default function AdminDashboard({
                 discountType={selectedDiscountType || 'Amount off order'}
                 products={localProducts}
                 collections={localCollections}
+                customers={localCustomers}
                 onCancel={() => {
                   setIsDiscountEditorOpen(false);
                   setEditingDiscount(null);
@@ -7016,6 +7017,28 @@ export default function AdminDashboard({
                           <span className="text-slate-300 font-bold text-sm group-hover:translate-x-1 transition-transform">→</span>
                         </div>
                         <p className="text-slate-500 text-[11px] mt-0.5 font-medium">Offer free shipping on an order</p>
+                      </div>
+                    </button>
+
+                    {/* Option 5: Loyalty Reward */}
+                    <button
+                      onClick={() => {
+                        setShowDiscountTypeSelector(false);
+                        setSelectedDiscountType('Loyalty Reward');
+                        setEditingDiscount(null);
+                        setIsDiscountEditorOpen(true);
+                      }}
+                      className="w-full p-4 hover:bg-slate-50 text-left transition flex items-start gap-3.5 cursor-pointer group"
+                    >
+                      <div className="p-2 bg-amber-50 group-hover:bg-amber-100 rounded-lg text-amber-700 group-hover:text-amber-800 shrink-0 mt-0.5">
+                        <Award className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center">
+                          <p className="font-bold text-xs text-[#071d37]">Loyalty Reward</p>
+                          <span className="text-amber-400 font-bold text-sm group-hover:translate-x-1 transition-transform">→</span>
+                        </div>
+                        <p className="text-slate-500 text-[11px] mt-0.5 font-medium">Issue B1G1, % discounts, or star points specifically to loyal customers</p>
                       </div>
                     </button>
 
