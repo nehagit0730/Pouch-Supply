@@ -24,6 +24,7 @@ interface CheckoutViewProps {
     worldpayTxId: string;
     worldpayAuthCode: string;
     cardBrand: string;
+    storeCreditApplied?: number;
   }) => void;
 }
 
@@ -35,6 +36,7 @@ export default function CheckoutView({
   onNavigate,
   onCompleteCheckout
 }: CheckoutViewProps) {
+  const [applyStoreCredit, setApplyStoreCredit] = useState(false);
   // Shipping info state
   const [fullName, setFullName] = useState(loggedInCustomer?.name || '');
   const [email, setEmail] = useState(loggedInCustomer?.email || '');
@@ -282,6 +284,9 @@ export default function CheckoutView({
   // Subtotal details
   const deliveryCost = discountApplied?.type === 'Free shipping' ? 0 : (deliverySpeed === 'priority' ? (totalAmount >= 40 ? 0 : 4.99) : 0);
   const finalTotal = totalAmount + deliveryCost;
+  const storeCreditAvailable = loggedInCustomer?.storeCredit || 0;
+  const storeCreditApplied = applyStoreCredit ? Math.min(storeCreditAvailable, finalTotal) : 0;
+  const finalTotalToPay = Math.max(0, finalTotal - storeCreditApplied);
 
   // Process secure Worldpay request
   const handlePay = async (e: React.FormEvent) => {
@@ -301,6 +306,37 @@ export default function CheckoutView({
       return;
     }
 
+    if (finalTotalToPay === 0) {
+      setIsProcessing(true);
+      setPaymentError(null);
+      setTimeout(() => {
+        setIsProcessing(false);
+        const generatedOrderId = `PS${Math.floor(Math.random() * 90000 + 10000)}`;
+        const successData = {
+          orderId: generatedOrderId,
+          customerName: fullName,
+          customerEmail: email,
+          address: `${addressLine}, ${city}, ${postcode}, ${country}`,
+          total: 0,
+          discountApplied: discountApplied,
+          items: cartItems.map(item => ({
+            productId: item.productId,
+            productTitle: item.productTitle,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image
+          })),
+          worldpayTxId: `WP-CREDIT-${Math.floor(Math.random() * 100000000)}`,
+          worldpayAuthCode: 'CREDIT-AUTH',
+          cardBrand: 'Store Credit',
+          storeCreditApplied: storeCreditApplied
+        };
+        onCompleteCheckout(successData);
+        setPaymentSuccessData(successData);
+      }, 1000);
+      return;
+    }
+
     if (paymentMethod === 'hosted') {
       setIsProcessing(true);
       setPaymentError(null);
@@ -310,7 +346,7 @@ export default function CheckoutView({
 
       const requestPayload = {
         orderId: generatedOrderId,
-        amount: finalTotal.toFixed(2),
+        amount: finalTotalToPay.toFixed(2),
         currency: 'GBP',
         customerName: fullName,
         customerEmail: email,
@@ -380,7 +416,7 @@ export default function CheckoutView({
       cardNumber: cardNumber,
       expiry: expiry,
       cvv: cvv,
-      amount: finalTotal.toFixed(2),
+      amount: finalTotalToPay.toFixed(2),
       currency: 'GBP',
       simulationMode: simulationMode
     };
@@ -433,7 +469,7 @@ export default function CheckoutView({
           customerName: fullName,
           customerEmail: email,
           address: `${addressLine}, ${city}, ${postcode}, ${country}`,
-          total: finalTotal,
+          total: finalTotalToPay,
           discountApplied,
           items: cartItems.map(item => ({
             productId: item.productId,
@@ -444,7 +480,8 @@ export default function CheckoutView({
           })),
           worldpayTxId: responseData.transactionId,
           worldpayAuthCode: responseData.authCode,
-          cardBrand: responseData.cardBrand
+          cardBrand: responseData.cardBrand,
+          storeCreditApplied: storeCreditApplied
         });
       }
     } catch (err: any) {
@@ -465,7 +502,7 @@ export default function CheckoutView({
       cardNumber: cardNumber,
       expiry: expiry,
       cvv: cvv,
-      amount: finalTotal.toFixed(2),
+      amount: finalTotalToPay.toFixed(2),
       currency: 'GBP',
       simulationMode: 'SUCCESS', // Verify completes transaction
       threeDSecureOTP: threeDsOtp
@@ -513,7 +550,7 @@ export default function CheckoutView({
         customerName: fullName,
         customerEmail: email,
         address: `${addressLine}, ${city}, ${postcode}, ${country}`,
-        total: finalTotal,
+        total: finalTotalToPay,
         discountApplied,
         items: cartItems.map(item => ({
           productId: item.productId,
@@ -524,7 +561,8 @@ export default function CheckoutView({
         })),
         worldpayTxId: responseData.transactionId,
         worldpayAuthCode: responseData.authCode,
-        cardBrand: responseData.cardBrand
+        cardBrand: responseData.cardBrand,
+        storeCreditApplied: storeCreditApplied
       });
 
     } catch (err: any) {
@@ -891,7 +929,7 @@ export default function CheckoutView({
 
             {/* Form Inputs */}
             <form onSubmit={handlePay} className="space-y-4">
-              {paymentMethod === 'direct' && (
+              {paymentMethod === 'direct' && finalTotalToPay > 0 && (
                 <>
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Cardholder Name</label>
@@ -971,9 +1009,11 @@ export default function CheckoutView({
                   <>
                     <Lock className="h-4 w-4 text-emerald-400" />
                     <span>
-                      {paymentMethod === 'hosted'
-                        ? `Redirect to Worldpay Checkout (£${finalTotal.toFixed(2)})`
-                        : `Authorize Payment of £${finalTotal.toFixed(2)} GBP`}
+                      {finalTotalToPay === 0
+                        ? `Complete Order using Store Credit (£0.00 to Pay)`
+                        : paymentMethod === 'hosted'
+                          ? `Redirect to Worldpay Checkout (£${finalTotalToPay.toFixed(2)})`
+                          : `Authorize Payment of £${finalTotalToPay.toFixed(2)} GBP`}
                     </span>
                   </>
                 )}
@@ -1060,6 +1100,31 @@ export default function CheckoutView({
               ))}
             </div>
 
+            {/* Store Credit application checkbox */}
+            {loggedInCustomer && loggedInCustomer.storeCredit !== undefined && loggedInCustomer.storeCredit > 0 && (
+              <div className="bg-emerald-50/50 border border-emerald-200 p-4 rounded-2xl text-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      id="apply-store-credit-checkout"
+                      checked={applyStoreCredit}
+                      onChange={(e) => setApplyStoreCredit(e.target.checked)}
+                      className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 cursor-pointer"
+                    />
+                    <label htmlFor="apply-store-credit-checkout" className="font-extrabold text-[#071d37] cursor-pointer select-none">
+                      Apply Store Credit (£{loggedInCustomer.storeCredit.toFixed(2)} Available)
+                    </label>
+                  </div>
+                </div>
+                {applyStoreCredit && (
+                  <p className="text-[10.5px] text-emerald-700 mt-2 font-medium leading-relaxed">
+                    Applying £{Math.min(loggedInCustomer.storeCredit, finalTotal).toFixed(2)} Store Credit deduction to order total.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Calculations review */}
             <div className="space-y-2 border-t border-slate-100 pt-3 text-xs leading-normal font-semibold">
               <div className="flex justify-between text-slate-500">
@@ -1079,9 +1144,16 @@ export default function CheckoutView({
                 <span>{deliveryCost === 0 ? 'FREE' : `£${deliveryCost.toFixed(2)}`}</span>
               </div>
 
+              {applyStoreCredit && storeCreditApplied > 0 && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>Store Credit Applied</span>
+                  <span>-£{storeCreditApplied.toFixed(2)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between text-slate-900 font-extrabold text-sm pt-2 border-t border-slate-150">
                 <span>Total amount to pay</span>
-                <span className="text-base text-indigo-700">£{finalTotal.toFixed(2)}</span>
+                <span className="text-base text-indigo-700 font-black">£{finalTotalToPay.toFixed(2)}</span>
               </div>
             </div>
 

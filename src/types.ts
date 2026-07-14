@@ -73,6 +73,7 @@ export interface Order {
   worldpayAuthCode?: string;
   cardBrand?: string;
   total: number;
+  storeCreditApplied?: number;
   destination: string;
   date: string; // e.g. Today at 10:28 pm
   deliveryMethod: string;
@@ -113,6 +114,9 @@ export interface Customer {
   amountSpent: number;
   addresses: string[];
   wishlist: string[]; // Product IDs
+  referralCode?: string;
+  storeCredit?: number;
+  referredByCode?: string | null;
 }
 
 export interface Discount {

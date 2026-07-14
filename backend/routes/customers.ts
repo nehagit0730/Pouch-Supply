@@ -52,7 +52,7 @@ router.post("/", async (req, res) => {
 // POST: Customer Signup
 router.post("/signup", async (req, res) => {
   try {
-    const { name, email, password, location = "United Kingdom" } = req.body;
+    const { name, email, password, location = "United Kingdom", referredByCode = null } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: "Name, email, and password are required for registration." });
@@ -66,6 +66,21 @@ router.post("/signup", async (req, res) => {
       return res.status(409).json({ error: "An account with this email already exists." });
     }
 
+    // Generate unique referral code for the new customer
+    const codeSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const cleanFirstName = name.trim().split(" ")[0].replace(/[^a-zA-Z]/g, "").toUpperCase() || "USER";
+    const referralCode = `REF-${cleanFirstName}-${codeSuffix}`;
+
+    // Verify referrer
+    let validReferredByCode: string | null = null;
+    if (referredByCode) {
+      const trimmedCode = referredByCode.trim().toUpperCase();
+      const referrer = customersList.find((c: any) => c.referralCode && c.referralCode.toUpperCase() === trimmedCode);
+      if (referrer) {
+        validReferredByCode = referrer.referralCode;
+      }
+    }
+
     const newCustomer: Customer & { passwordHash: string } = {
       id: `cust-${Date.now()}`,
       name: name.trim(),
@@ -76,11 +91,39 @@ router.post("/signup", async (req, res) => {
       amountSpent: 0,
       addresses: [], // Start with empty addresses array, no mock placeholder
       wishlist: [],
+      referralCode,
+      storeCredit: 0,
+      referredByCode: validReferredByCode,
       passwordHash: hashPassword(password),
     };
 
     const updatedList = [...customersList, newCustomer];
     await saveResource("customers", updatedList);
+
+    // If successfully registered and has referredByCode, create their 10% coupon
+    if (validReferredByCode) {
+      try {
+        const discountCode = `REF10-${codeSuffix}`;
+        const discountsList = await fetchResource("discounts") || [];
+        const newDiscount = {
+          id: `disc-ref-${newCustomer.id}`,
+          title: discountCode,
+          status: 'Active',
+          method: 'Code',
+          eligibility: 'All customers',
+          type: 'Amount off order',
+          used: 0,
+          details: `10% discount welcome coupon for referred customer`,
+          valueType: 'Percentage',
+          valueAmount: 10,
+          limitOnePerCustomer: true
+        };
+        await saveResource("discounts", [...discountsList, newDiscount]);
+        console.log(`[Referral System] Generated 10% discount coupon ${discountCode} for referred customer: ${emailTrim}`);
+      } catch (err) {
+        console.error("Failed to generate referral discount:", err);
+      }
+    }
 
     console.log(`[Customer Auth] New registration successful for: ${emailTrim}`);
     
@@ -113,6 +156,26 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "No account found matching this email." });
     }
 
+    let needsUpdate = false;
+
+    // Generate unique referral code for legacy / existing users if they don't have one
+    if (!found.referralCode) {
+      const codeSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const cleanFirstName = found.name.trim().split(" ")[0].replace(/[^a-zA-Z]/g, "").toUpperCase() || "USER";
+      found.referralCode = `REF-${cleanFirstName}-${codeSuffix}`;
+      needsUpdate = true;
+    }
+
+    if (found.storeCredit === undefined) {
+      found.storeCredit = 0;
+      needsUpdate = true;
+    }
+
+    if (found.referredByCode === undefined) {
+      found.referredByCode = null;
+      needsUpdate = true;
+    }
+
     // Support backward compatibility for legacy accounts without password hash
     if (found.passwordHash) {
       if (found.passwordHash !== hashPassword(password)) {
@@ -121,9 +184,13 @@ router.post("/login", async (req, res) => {
     } else {
       // If no passwordHash is set yet, we allow login on first try and save the password hash for subsequent logins
       found.passwordHash = hashPassword(password);
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
       const updatedList = customersList.map((c: any) => c.id === found.id ? found : c);
       await saveResource("customers", updatedList);
-      console.log(`[Customer Auth] Legacy customer password initialized on first login for: ${emailTrim}`);
+      console.log(`[Customer Auth] Initialized referral credentials or password for: ${emailTrim}`);
     }
 
     console.log(`[Customer Auth] Login successful: ${emailTrim}`);

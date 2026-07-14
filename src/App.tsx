@@ -161,6 +161,14 @@ export default function App() {
     setLayoutSettings(prev => {
       const resolved = typeof newSettings === 'function' ? newSettings(prev) : newSettings;
       localStorage.setItem('ps_layout_settings', JSON.stringify(resolved));
+      
+      // Persist to the server's layout settings API endpoint
+      fetch('/api/layoutsettings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(resolved)
+      }).catch(err => console.error("Failed to sync layout settings to server:", err));
+
       return resolved;
     });
   };
@@ -238,7 +246,7 @@ export default function App() {
         // Fetch store data
         const [
           prodsRes, collsRes, ordersRes, filesRes,
-          custsRes, discsRes, pagesRes, blogsRes
+          custsRes, discsRes, pagesRes, blogsRes, layoutRes
         ] = await Promise.all([
           fetch('/api/products').then(r => r.ok ? r.json() : null),
           fetch('/api/collections').then(r => r.ok ? r.json() : null),
@@ -248,6 +256,7 @@ export default function App() {
           fetch('/api/discounts').then(r => r.ok ? r.json() : null),
           fetch('/api/custompages').then(r => r.ok ? r.json() : null),
           fetch('/api/blogs').then(r => r.ok ? r.json() : null),
+          fetch('/api/layoutsettings').then(r => r.ok ? r.json() : null),
         ]);
 
         if (Array.isArray(prodsRes)) setProducts(prodsRes);
@@ -258,6 +267,10 @@ export default function App() {
         if (Array.isArray(discsRes)) setDiscounts(discsRes);
         if (Array.isArray(pagesRes)) setCustomPages(pagesRes);
         if (Array.isArray(blogsRes)) setBlogs(blogsRes);
+        
+        if (layoutRes) {
+          setLayoutSettings(layoutRes.data || layoutRes);
+        }
       } catch (err) {
         console.error("[State Loader] Failed to connect to backend MongoDB API. Using local backup state.", err);
       } finally {
@@ -849,6 +862,7 @@ export default function App() {
     worldpayTxId: string;
     worldpayAuthCode: string;
     cardBrand: string;
+    storeCreditApplied?: number;
   }) => {
     // Generate Royal Mail Track & Trace ID
     const generatedTrackingId = 'RN' + Math.floor(100000000 + Math.random() * 900000000) + 'GB';
@@ -995,15 +1009,43 @@ export default function App() {
       setDiscounts(prev => prev.map(d => d.id === paymentDetails.discountApplied!.id ? { ...d, used: d.used + 1 } : d));
     }
 
-    // Handle spent stats inside customers profile
+    // Handle spent stats, store credit deduction, and referral rewards
     if (loggedInCustomer) {
+      const creditUsed = paymentDetails.storeCreditApplied || 0;
       const updatedCust = {
         ...loggedInCustomer,
         ordersCount: loggedInCustomer.ordersCount + 1,
-        amountSpent: loggedInCustomer.amountSpent + paymentDetails.total
+        amountSpent: loggedInCustomer.amountSpent + paymentDetails.total,
+        storeCredit: Math.max(0, (loggedInCustomer.storeCredit || 0) - creditUsed)
       };
+
+      // Check if this customer was referred and is placing an order using their 10% welcome coupon
+      const usedReferralCoupon = paymentDetails.discountApplied && (
+        paymentDetails.discountApplied.id === `disc-ref-${loggedInCustomer.id}` ||
+        paymentDetails.discountApplied.title.startsWith('REF10-')
+      );
+
+      setCustomers(prev => {
+        let list = prev.map(c => c.id === loggedInCustomer.id ? updatedCust : c);
+        
+        if (updatedCust.referredByCode && usedReferralCoupon) {
+          const referrerCode = updatedCust.referredByCode.toUpperCase();
+          list = list.map(c => {
+            if (c.referralCode && c.referralCode.toUpperCase() === referrerCode) {
+              const newCredit = (c.storeCredit || 0) + 5;
+              console.log(`[Referral System] Rewarding referrer ${c.name} with £5 store credit (referred order placed by ${loggedInCustomer.email})`);
+              return {
+                ...c,
+                storeCredit: newCredit
+              };
+            }
+            return c;
+          });
+        }
+        return list;
+      });
+
       setLoggedInCustomer(updatedCust);
-      setCustomers(prev => prev.map(c => c.id === loggedInCustomer.id ? updatedCust : c));
     }
 
     // Clear cart
@@ -1630,6 +1672,7 @@ export default function App() {
                 onRemoveAddress={handleRemoveAddress}
                 onUpdateProfile={handleUpdateProfile}
                 onUpdateOrder={handleUpdateOrder}
+                discounts={discounts}
               />
             )}
 

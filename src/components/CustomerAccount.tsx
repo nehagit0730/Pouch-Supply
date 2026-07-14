@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Customer, Product, Order } from '../types';
+import { Customer, Product, Order, Discount } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   User, LogIn, Heart, PlusCircle, Trash2, MapPin, Package, ShoppingBag, 
@@ -21,6 +21,7 @@ interface CustomerAccountProps {
   onRemoveAddress: (index: number) => void;
   onUpdateProfile?: (customer: Customer) => void;
   onUpdateOrder?: (order: Order) => void;
+  discounts?: Discount[];
 }
 
 export default function CustomerAccount({
@@ -34,12 +35,14 @@ export default function CustomerAccount({
   onAddAddress,
   onRemoveAddress,
   onUpdateProfile,
-  onUpdateOrder
+  onUpdateOrder,
+  discounts = []
 }: CustomerAccountProps) {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [nameInput, setNameInput] = useState('');
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
+  const [referredByCodeInput, setReferredByCodeInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newAddress, setNewAddress] = useState('');
@@ -102,42 +105,64 @@ export default function CustomerAccount({
       return;
     }
     const saved = localStorage.getItem(custKey);
+    let state: any = null;
     if (saved) {
       try {
-        setCustState(JSON.parse(saved));
-        return;
+        state = JSON.parse(saved);
       } catch (e) {}
     }
-    // Set default mockup state
-    const defaultState = {
-      subPlan: 'core',
-      subStatus: 'Active',
-      subFrequency: 'Every 4 Weeks',
-      subCansCount: 8,
-      subPrice: 35.99,
-      nextPayment: '19 June 2026',
-      nextDelivery: '24 June 2026',
-      unlockedRewards: [
-        { id: 'reward_1', title: 'Free Express Delivery', desc: 'Complimentary shipping upgrade', redeemed: false, code: 'FREESHIP' },
-        { id: 'reward_2', title: '£5.00 Off Order', desc: 'Direct cash discount voucher', redeemed: false, code: 'POUCH5OFF' },
-        { id: 'reward_3', title: 'Free Extra Can', desc: 'Unlock a free sample in next box', redeemed: false, code: 'FREECAN' }
-      ],
-      referralCode: `pouch-supply.com/ref/${loggedInCustomer.name.toLowerCase().replace(/\s+/g, '')}`,
-      referredCount: 3,
-      referralCredit: 15.00,
-      referralsList: [
-        { name: 'David M.', date: '14 May 2026', status: 'Subscribed', credit: '£5.00' },
-        { name: 'Sophie L.', date: '02 June 2026', status: 'Subscribed', credit: '£5.00' },
-        { name: 'Alex K.', date: '18 June 2026', status: 'Registered', credit: 'Pending' }
-      ],
-      savedCards: [
-        { id: 'card_1', brand: 'Visa', last4: '4242', exp: '12/28', default: true }
-      ],
-      ordersCount: orders.filter(o => o.customerEmail.toLowerCase() === loggedInCustomer.email.toLowerCase()).length
-    };
-    setCustState(defaultState);
-    localStorage.setItem(custKey, JSON.stringify(defaultState));
-  }, [loggedInCustomer, custKey]);
+
+    const realReferralCode = loggedInCustomer.referralCode || `REF-${loggedInCustomer.name.trim().split(" ")[0].toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    const realStoreCredit = loggedInCustomer.storeCredit !== undefined ? loggedInCustomer.storeCredit : 0;
+
+    // Calculate referrals dynamically from the active customers & orders list
+    const myReferrals = customers.filter(c => c.referredByCode && c.referredByCode.toUpperCase() === realReferralCode.toUpperCase());
+    const referredCount = myReferrals.length;
+    const referralsList = myReferrals.map(c => {
+      const hasOrdered = orders.some(o => o.customerEmail.toLowerCase() === c.email.toLowerCase());
+      return {
+        name: c.name.split(" ")[0] + " " + (c.name.split(" ")[1] ? c.name.split(" ")[1].substring(0, 1) + "." : ""),
+        date: "Recently Registered",
+        status: hasOrdered ? 'Ordered' : 'Registered',
+        credit: hasOrdered ? '£5.00' : 'Pending'
+      };
+    });
+
+    if (!state) {
+      // Set default mockup state
+      state = {
+        subPlan: 'core',
+        subStatus: 'Active',
+        subFrequency: 'Every 4 Weeks',
+        subCansCount: 8,
+        subPrice: 35.99,
+        nextPayment: '19 June 2026',
+        nextDelivery: '24 June 2026',
+        unlockedRewards: [
+          { id: 'reward_1', title: 'Free Express Delivery', desc: 'Complimentary shipping upgrade', redeemed: false, code: 'FREESHIP' },
+          { id: 'reward_2', title: '£5.00 Off Order', desc: 'Direct cash discount voucher', redeemed: false, code: 'POUCH5OFF' },
+          { id: 'reward_3', title: 'Free Extra Can', desc: 'Unlock a free sample in next box', redeemed: false, code: 'FREECAN' }
+        ],
+        referralCode: realReferralCode,
+        referredCount: referredCount,
+        referralCredit: realStoreCredit,
+        referralsList: referralsList,
+        savedCards: [
+          { id: 'card_1', brand: 'Visa', last4: '4242', exp: '12/28', default: true }
+        ],
+        ordersCount: orders.filter(o => o.customerEmail.toLowerCase() === loggedInCustomer.email.toLowerCase()).length
+      };
+    } else {
+      // Ensure sync with loggedInCustomer's real storeCredit and referralCode
+      state.referralCode = realReferralCode;
+      state.referralCredit = realStoreCredit;
+      state.referredCount = referredCount;
+      state.referralsList = referralsList;
+    }
+
+    setCustState(state);
+    localStorage.setItem(custKey, JSON.stringify(state));
+  }, [loggedInCustomer, custKey, customers, orders]);
 
   const updateCustState = (newVal: any) => {
     setCustState(newVal);
@@ -160,7 +185,7 @@ export default function CustomerAccount({
     try {
       const endpoint = authMode === 'signup' ? '/api/customers/signup' : '/api/customers/login';
       const bodyPayload = authMode === 'signup' 
-        ? { name: nameInput.trim(), email: emailInput.toLowerCase().trim(), password: passwordInput }
+        ? { name: nameInput.trim(), email: emailInput.toLowerCase().trim(), password: passwordInput, referredByCode: referredByCodeInput.trim() }
         : { email: emailInput.toLowerCase().trim(), password: passwordInput };
 
       const response = await fetch(endpoint, {
@@ -174,6 +199,7 @@ export default function CustomerAccount({
       onLogin(data.customer);
       setNameInput('');
       setPasswordInput('');
+      setReferredByCodeInput('');
     } catch (err: any) {
       setErrorMsg(err.message || 'Server connection error.');
     } finally {
@@ -292,6 +318,18 @@ export default function CustomerAccount({
                   className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-[#071d37] focus:outline-none bg-slate-50/50"
                 />
               </div>
+              {authMode === 'signup' && (
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Referral Code (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. REF-SCOTT-F4X8"
+                    value={referredByCodeInput}
+                    onChange={(e) => setReferredByCodeInput(e.target.value)}
+                    className="w-full text-xs font-semibold border border-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-[#071d37] focus:outline-none bg-slate-50/50"
+                  />
+                </div>
+              )}
               {errorMsg && <p className="text-xs text-rose-500 font-bold">{errorMsg}</p>}
               <button
                 type="submit"
@@ -540,6 +578,42 @@ export default function CustomerAccount({
               {/* TAB 1: DASHBOARD (Rich Bento Grid Layout similar to the mockup) */}
               {activeTab === 'dashboard' && (
                 <div className="space-y-6">
+                  
+                  {/* Referral Welcome Coupon Banner */}
+                  {(() => {
+                    const myWelcomeCoupon = discounts.find(d => d.id === `disc-ref-${loggedInCustomer?.id}` && d.status === 'Active');
+                    if (myWelcomeCoupon) {
+                      return (
+                        <div className="bg-amber-50 border border-amber-200 text-amber-950 p-4 rounded-3xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-amber-100 text-amber-700 rounded-2xl">
+                              <Tag className="h-5 w-5" />
+                            </div>
+                            <div className="space-y-0.5">
+                              <p className="text-xs font-black uppercase tracking-wider">Welcome Referral Reward Active</p>
+                              <p className="text-[10.5px] text-amber-800 font-medium leading-relaxed">
+                                You received a <strong>10% discount coupon</strong> for your first purchase. Copy and enter the code at checkout!
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 bg-white px-4 py-2 border border-amber-100 rounded-2xl shrink-0">
+                            <span className="font-mono font-black text-xs text-[#071d37] select-all tracking-wider">{myWelcomeCoupon.title}</span>
+                            <button 
+                              onClick={() => {
+                                navigator.clipboard.writeText(myWelcomeCoupon.title);
+                                alert('Welcome coupon code copied! Apply it in your cart/checkout.');
+                              }}
+                              className="p-1 hover:bg-slate-100 text-[#071d37] rounded-lg transition-colors cursor-pointer"
+                              title="Copy Coupon Code"
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                   
                   {/* Top Row: Loyalty Scheme Header & Rewards Quick Look */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1516,25 +1590,33 @@ export default function CustomerAccount({
                     </div>
 
                     {/* Referrals summary block */}
-                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
-                      <div className="space-y-4">
-                        <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Referral Stats</h3>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
-                            <span className="text-slate-500 font-medium">Referred Friends</span>
-                            <span className="font-black text-[#071d37]">{custState.referredCount}</span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
-                            <span className="text-slate-500 font-medium">Credits Earned</span>
-                            <span className="font-black text-emerald-700">£10.00</span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-slate-500 font-medium">Pending Credits</span>
-                            <span className="font-black text-amber-600">£5.00</span>
+                    {(() => {
+                      const orderedCount = custState.referralsList.filter((r: any) => r.status === 'Ordered').length;
+                      const pendingCount = custState.referralsList.filter((r: any) => r.status === 'Registered').length;
+                      const earnedCredit = orderedCount * 5;
+                      const pendingCredit = pendingCount * 5;
+                      return (
+                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+                          <div className="space-y-4">
+                            <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Referral Stats</h3>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
+                                <span className="text-slate-500 font-medium">Referred Friends</span>
+                                <span className="font-black text-[#071d37]">{custState.referredCount}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
+                                <span className="text-slate-500 font-medium">Credits Earned</span>
+                                <span className="font-black text-emerald-700">£{earnedCredit.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-slate-500 font-medium">Pending Credits</span>
+                                <span className="font-black text-amber-600">£{pendingCredit.toFixed(2)}</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Referrals table list */}

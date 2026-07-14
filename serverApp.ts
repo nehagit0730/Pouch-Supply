@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { fetchResource, saveResource, saveUploadedImage, getUploadedImage, getConnectionStatus, updateMongoUri, getDb, getDatabaseDetails } from "./serverDb";
 
 // Import modular routers for products, collections, customers, orders, files, discounts, custom pages, and blogs
@@ -126,6 +127,31 @@ export async function createExpressApp() {
     } catch (err: any) {
       console.error("[API update-db-uri] Error saving and testing URI:", err);
       res.status(500).json({ error: err.message || "Failed to update connection string" });
+    }
+  });
+
+  // API Route: GET /api/layoutsettings
+  app.get("/api/layoutsettings", (req, res) => {
+    try {
+      const filePath = path.join(process.cwd(), "layout_settings.json");
+      if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath, "utf-8");
+        return res.json(JSON.parse(content));
+      }
+      res.status(404).json({ error: "No saved layout settings found." });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to load layout settings" });
+    }
+  });
+
+  // API Route: POST /api/layoutsettings
+  app.post("/api/layoutsettings", (req, res) => {
+    try {
+      const filePath = path.join(process.cwd(), "layout_settings.json");
+      fs.writeFileSync(filePath, JSON.stringify(req.body, null, 2), "utf-8");
+      res.json({ status: "success", data: req.body });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to save layout settings" });
     }
   });
 
