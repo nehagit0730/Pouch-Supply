@@ -1575,6 +1575,7 @@ export default function App() {
                 <CollectionDetailView
                   collection={matchedCollection}
                   allProducts={products}
+                  loggedInCustomer={loggedInCustomer}
                   onAddToCart={handleAddToCart}
                   onToggleWishlist={handleToggleWishlist}
                   onNavigate={(target, arg) => {
