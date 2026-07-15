@@ -872,7 +872,7 @@ export default function ProductsGrid({
                     >
                       
                       {/* Badge Tag indicator top-left (Best Seller / New / Brand) */}
-                      <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
+                      <div className="absolute top-4 left-4 z-20 flex flex-col gap-1.5">
                         {prod.tags.includes('best-seller') || prod.price < 4.50 ? (
                           <span className="bg-amber-500 text-white font-black text-[8px] uppercase tracking-widest py-1 px-2 rounded-md shadow-xs leading-none">
                             BEST SELLER
@@ -891,7 +891,7 @@ export default function ProductsGrid({
                       {/* Wishlist Heart Top Right */}
                       <button
                         onClick={() => handleHeartClick(prod.id)}
-                        className={`absolute top-4 right-4 z-10 p-1.5 rounded-full border shadow-xs transition-transform hover:scale-110 cursor-pointer bg-white ${
+                        className={`absolute top-4 right-4 z-20 p-1.5 rounded-full border shadow-xs transition-transform hover:scale-110 cursor-pointer bg-white ${
                           inWishlist 
                             ? 'border-red-100 text-red-500 bg-red-50/20' 
                             : 'border-slate-150 text-slate-400 hover:text-slate-600'

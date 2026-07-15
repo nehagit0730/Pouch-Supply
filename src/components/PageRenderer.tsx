@@ -308,7 +308,7 @@ function PlansSection({ sec, handleLinkClick }: PlansSectionProps) {
                   </div>
 
                   {/* Plan image wrapper - uses dynamic custom image if uploaded, or high-fidelity canister overlap */}
-                  <div className="relative h-44 w-full bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden flex items-center justify-center p-2 shadow-inner">
+                  <div className="relative h-44 w-full bg-transparent overflow-hidden flex items-center justify-center p-2">
                     {plan.imageUrl ? (
                       <img 
                         src={plan.imageUrl} 
@@ -1015,10 +1015,10 @@ function FeaturedCollectionSection({
 
                 <div className="space-y-4 flex-1 flex flex-col justify-between">
                   {/* Image takes 55%+ of height, dominates card */}
-                  <div className="w-full h-56 bg-slate-50/60 rounded-xl overflow-hidden border border-slate-100 relative shadow-inner flex items-center justify-center p-4">
+                  <div className="w-full h-56 bg-transparent overflow-hidden relative flex items-center justify-center p-1">
                     <img
                       src={prod.image}
-                      className="h-full max-h-[190px] max-w-[85%] object-contain filter drop-shadow-xl transform group-hover:scale-110 group-hover:-translate-y-3 transition-transform duration-500"
+                      className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                       alt={prod.title}
                       referrerPolicy="no-referrer"
                     />

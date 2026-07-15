@@ -4621,8 +4621,8 @@ export default function AdminDashboard({
                                           {displayedProducts.map(p => (
                                             <div key={p.id} className="bg-white border text-left p-2 rounded-xl space-y-1 block relative overflow-hidden shadow-3xs flex flex-col justify-between">
                                               <div>
-                                                <div className="h-14 bg-slate-50 rounded-lg overflow-hidden border border-slate-150 relative">
-                                                  <img src={p.image} className="h-full w-full object-cover" alt="" referrerPolicy="no-referrer" />
+                                                <div className="h-14 bg-transparent overflow-hidden relative flex items-center justify-center p-1">
+                                                  <img src={p.image} className="h-full w-full object-contain" alt="" referrerPolicy="no-referrer" />
                                                 </div>
                                                 <p className="text-[9px] text-slate-800 font-extrabold truncate mt-1 leading-snug">{p.title}</p>
                                                 <div className="flex gap-0.5 text-amber-500 text-[6px]">★★★★★</div>

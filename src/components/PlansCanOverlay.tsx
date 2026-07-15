@@ -128,7 +128,7 @@ export default function PlansCanOverlay({ type, className = '' }: PlansCanOverla
   }
 
   return (
-    <div className={`relative h-28 w-full bg-slate-50/20 rounded-2xl flex items-center justify-center py-4 overflow-hidden ${className}`}>
+    <div className={`relative h-28 w-full bg-transparent rounded-2xl flex items-center justify-center py-4 overflow-hidden ${className}`}>
       {/* Background shadow glow */}
       <div className="absolute inset-0 bg-radial-gradient from-white/10 to-transparent pointer-events-none" />
       
