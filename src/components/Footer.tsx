@@ -60,7 +60,7 @@ export default function Footer({ onNavigate, layoutSettings }: FooterProps) {
       
       {/* Brand value propositions row */}
       <div className="bg-slate-950 border-b border-slate-800/80 py-8 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 text-xs text-slate-300">
+        <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 text-xs text-slate-300">
           <div className="flex gap-3 items-center">
             <div className="p-2.5 bg-indigo-950/40 rounded-xl text-indigo-400 border border-indigo-900/40 shrink-0">
               <Truck className="h-5 w-5" />
@@ -104,7 +104,7 @@ export default function Footer({ onNavigate, layoutSettings }: FooterProps) {
       </div>
 
       {/* Main categories navigation columns */}
-      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
+      <div className="max-w-[1440px] mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
         
         {/* Brand identity column */}
         <div className="space-y-4">
@@ -181,7 +181,7 @@ export default function Footer({ onNavigate, layoutSettings }: FooterProps) {
       </div>
 
       {/* Disclaimers micro block */}
-      <div className="bg-slate-950 border-t border-slate-800 py-6 px-4 text-center text-[10px] text-slate-500 leading-relaxed max-w-7xl mx-auto">
+      <div className="bg-slate-950 border-t border-slate-800 py-6 px-4 text-center text-[10px] text-slate-500 leading-relaxed max-w-[1440px] mx-auto">
         <span className="font-bold text-slate-400 uppercase tracking-wider block mb-1">HEALTH & AGE WARNING DISCLOSURE</span>
         <span>Nicotine is highly addictive. Our products are strictly intended only for adult consumers of legal age. These statement summaries have not been evaluated by general medical regulators. Consult certified physicians for nicotine cessation guidelines.</span>
       </div>

@@ -408,7 +408,7 @@ export default function ProductsGrid({
       
       {/* Dynamic top safety/certification bar */}
       <div className="bg-white border-b border-slate-100 py-2.5 px-4 text-[10px] sm:text-[11px] text-slate-500 font-bold tracking-wide">
-        <div className="max-w-7xl mx-auto w-full flex flex-wrap justify-between items-center gap-y-2 gap-x-6">
+        <div className="max-w-[1440px] mx-auto w-full flex flex-wrap justify-between items-center gap-y-2 gap-x-6">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 mx-auto sm:mx-0">
             <span className="flex items-center gap-1.5 text-slate-600">
               <span className="text-sm">🇪🇺</span> EU Official Supplier
@@ -431,7 +431,7 @@ export default function ProductsGrid({
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
         
         {/* White Header Banner Block */}
         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 flex flex-col lg:flex-row justify-between items-stretch gap-6 shadow-xs relative overflow-hidden">

@@ -155,7 +155,7 @@ export default function Header({
       )}
 
       {/* Main navigation menu */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
         
         {/* Left: Brand logo */}
         <div 
@@ -450,7 +450,7 @@ export default function Header({
 
       {/* Sub menu micro links for customer convenience (Desktop & Tablet only) */}
       <div className="hidden sm:block bg-slate-50/50 border-t border-slate-150/70 h-10 flex items-center text-[10px] text-slate-400 font-bold px-4 tracking-wider">
-        <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
+        <div className="max-w-[1440px] mx-auto w-full flex justify-between items-center">
           <div className="flex gap-4">
             <span className="text-slate-500 flex items-center gap-1"><Store className="h-3 w-3" /> EU Official Supplier</span>
             <span className="hidden md:inline-block">• UK Tracked Courier Shipping</span>

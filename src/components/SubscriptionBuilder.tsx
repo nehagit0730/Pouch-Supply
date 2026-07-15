@@ -208,8 +208,12 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
 
   const handleAddProduct = (product: Product, forcedVariantId?: string) => {
     if (totalSelectedCount >= activeLimit) {
-      alert(`You have already selected ${activeLimit} items. Please remove some items if you'd like to choose different ones.`);
-      return;
+      if (activePlanSlug === 'ultimate') {
+        // Ultimate plan allows adding more than 12 cans at £3.80 each!
+      } else {
+        alert(`You have already selected ${activeLimit} items. Please remove some items if you'd like to choose different ones.`);
+        return;
+      }
     }
     const vid = forcedVariantId || getSelectedVariantId(product);
     const key = `${product.id}::${vid}`;
@@ -239,8 +243,11 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
   };
 
   const handleAddToCartClick = () => {
-    if (totalSelectedCount !== activeLimit) {
-      alert(`Please select exactly ${activeLimit} products to complete your ${activePlan?.name || 'custom'} pack subscription!`);
+    const isUltimate = activePlanSlug === 'ultimate';
+    const isValidCount = isUltimate ? totalSelectedCount >= activeLimit : totalSelectedCount === activeLimit;
+    
+    if (!isValidCount) {
+      alert(`Please select ${isUltimate ? 'at least' : 'exactly'} ${activeLimit} products to complete your ${activePlan?.name || 'custom'} pack subscription!`);
       return;
     }
 
@@ -265,7 +272,14 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
       return { product: finalProduct, quantity };
     });
 
-    onAddSubToCart(`${activePlan?.name || 'Custom'} Subscription Pack`, compiledItems, frequency, activePrice);
+    const extraCans = isUltimate && totalSelectedCount > 12 ? totalSelectedCount - 12 : 0;
+    const finalPrice = activePrice + (extraCans * 3.80);
+
+    const displayName = isUltimate && extraCans > 0 
+      ? `${activePlan?.name || 'Ultimate'} Pack (+${extraCans} Extra)` 
+      : `${activePlan?.name || 'Custom'} Subscription Pack`;
+
+    onAddSubToCart(displayName, compiledItems, frequency, finalPrice);
     
     setSuccessAnimation(true);
     setTimeout(() => {
@@ -729,12 +743,29 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
             {/* Custom choice slots counter (Choose 6 items etc) */}
             <div>
               <div className="flex justify-between items-center text-xs font-bold text-slate-600 mb-1.5">
-                <span>Allocated: {totalSelectedCount} / {activeLimit} products</span>
-                <span>{totalSelectedCount === activeLimit ? 'Complete!' : `${activeLimit - totalSelectedCount} left`}</span>
+                {activePlanSlug === 'ultimate' && totalSelectedCount >= 12 ? (
+                  <>
+                    <span>Allocated: {totalSelectedCount} / 12 products</span>
+                    {totalSelectedCount > 12 ? (
+                      <span className="text-emerald-600 font-extrabold">
+                        +{totalSelectedCount - 12} Extra Can{totalSelectedCount - 12 > 1 ? 's' : ''}
+                      </span>
+                    ) : (
+                      <span className="text-[#dfb55a] font-extrabold">Complete!</span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span>Allocated: {totalSelectedCount} / {activeLimit} products</span>
+                    <span>{totalSelectedCount === activeLimit ? 'Complete!' : `${activeLimit - totalSelectedCount} left`}</span>
+                  </>
+                )}
               </div>
               <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                 <div 
-                  className="bg-indigo-600 h-full rounded-full transition-all duration-300" 
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    activePlanSlug === 'ultimate' && totalSelectedCount > 12 ? 'bg-emerald-500' : 'bg-indigo-600'
+                  }`} 
                   style={{ width: `${Math.min((totalSelectedCount / activeLimit) * 100, 100)}%` }}
                 />
               </div>
@@ -815,23 +846,38 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
                 <span>{activeLimit} pouches flat rate</span>
                 <span className="line-through text-slate-400">£{(activePrice * 1.2).toFixed(2)}</span>
               </div>
+
+              {activePlanSlug === 'ultimate' && totalSelectedCount > 12 && (
+                <div className="flex justify-between items-center text-xs text-slate-600 animate-fade-in">
+                  <span>Additional cans ({totalSelectedCount - 12} × £3.80)</span>
+                  <span className="text-slate-800 font-extrabold">£{((totalSelectedCount - 12) * 3.80).toFixed(2)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between items-center font-extrabold text-slate-800">
                 <span className="text-xs">Subscription rate</span>
-                <span className="text-lg text-emerald-600">£{activePrice.toFixed(2)} <span className="text-[10px] text-slate-400 font-medium font-sans">/ cycle</span></span>
+                <span className="text-lg text-emerald-600">
+                  £{(activePrice + (activePlanSlug === 'ultimate' && totalSelectedCount > 12 ? (totalSelectedCount - 12) * 3.80 : 0)).toFixed(2)}{' '}
+                  <span className="text-[10px] text-slate-400 font-medium font-sans">/ cycle</span>
+                </span>
               </div>
 
               {activePlan.slug === 'ultimate' && (
-                <div className="text-[10px] text-red-600 font-extrabold uppercase text-center py-1 bg-red-50 border border-red-100 rounded-lg">
-                  £3.80 for any additional can
+                <div className="text-[10px] text-rose-600 font-extrabold uppercase text-center py-1.5 bg-rose-50 border border-rose-100 rounded-lg">
+                  {totalSelectedCount >= 12 ? (
+                    <span>★ Add additional cans below for £3.80 each!</span>
+                  ) : (
+                    <span>£3.80 for any additional can</span>
+                  )}
                 </div>
               )}
 
               <button
                 id="add-sub-box-btn"
-                disabled={totalSelectedCount !== activeLimit}
+                disabled={activePlanSlug === 'ultimate' ? totalSelectedCount < 12 : totalSelectedCount !== activeLimit}
                 onClick={handleAddToCartClick}
                 className={`w-full py-3.5 px-4 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-2 border cursor-pointer ${
-                  totalSelectedCount === activeLimit
+                  (activePlanSlug === 'ultimate' ? totalSelectedCount >= 12 : totalSelectedCount === activeLimit)
                     ? 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 shadow-md animate-pulse'
                     : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
                 }`}
@@ -842,7 +888,7 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
 
               <div className="flex items-start gap-1.5 text-[10px] text-slate-400 leading-normal pt-1">
                 <Info className="h-3 w-3 shrink-0 text-slate-400 mt-0.5" />
-                <span>You will be billed £{activePrice.toFixed(2)} recursively based on frequency. Access swap, skips, or instant terminations anytime from your customer portal.</span>
+                <span>You will be billed £{(activePrice + (activePlanSlug === 'ultimate' && totalSelectedCount > 12 ? (totalSelectedCount - 12) * 3.80 : 0)).toFixed(2)} recursively based on frequency. Access swap, skips, or instant terminations anytime from your customer portal.</span>
               </div>
             </div>
 
