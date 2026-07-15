@@ -1450,8 +1450,8 @@ export default function App() {
                           }}
                           className="bg-white border hover:border-slate-350 p-4 rounded-xl space-y-3 cursor-pointer group hover:shadow-xs transition-shadow"
                         >
-                          <div className="h-44 rounded-lg bg-slate-50 border overflow-hidden relative">
-                            <img src={prod.image} className="w-full h-full object-cover transition-transform group-hover:scale-102" alt="" referrerPolicy="no-referrer" />
+                          <div className="h-44 rounded-lg bg-white overflow-hidden relative flex items-center justify-center p-2">
+                            <img src={prod.image} className="w-full h-full object-contain transition-transform group-hover:scale-105" alt="" referrerPolicy="no-referrer" />
                             <span className="absolute top-2.5 left-2.5 bg-slate-900 text-white text-[9px] font-bold uppercase py-0.5 px-2 rounded-full">
                               {prod.vendor}
                             </span>

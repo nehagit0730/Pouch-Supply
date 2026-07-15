@@ -258,11 +258,11 @@ export default function ProductDetailView({
           
           {/* Left Column: Premium Canvas Image Box with Thumbnail Grid */}
           <div className="space-y-4">
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden aspect-square flex items-center justify-center p-6 relative group">
+            <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden aspect-square flex items-center justify-center p-2 relative group">
               <img
                 src={selectedImage || '/placeholder.png'}
                 alt={activeVariant ? `${product.title} ${activeVariant.name}` : product.title}
-                className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                 referrerPolicy="no-referrer"
               />
               <span className="absolute top-4 left-4 bg-indigo-600 text-white text-[9px] font-black uppercase py-1 px-3 rounded-full border border-indigo-500 tracking-wider">
@@ -535,8 +535,8 @@ export default function ProductDetailView({
                   }}
                   className="bg-white border border-slate-200 hover:border-slate-350 p-4 rounded-xl space-y-3 cursor-pointer group hover:shadow-md transition-all text-center flex flex-col justify-between"
                 >
-                  <div className="h-36 rounded-lg bg-slate-50 border overflow-hidden relative flex items-center justify-center p-3">
-                    <img src={rel.image} className="max-h-full max-w-full object-contain transition-transform group-hover:scale-102" alt="" referrerPolicy="no-referrer" />
+                  <div className="h-36 rounded-lg bg-white overflow-hidden relative flex items-center justify-center p-1">
+                    <img src={rel.image} className="w-full h-full object-contain transition-transform group-hover:scale-105" alt="" referrerPolicy="no-referrer" />
                   </div>
                   <div className="space-y-1 mt-2">
                     <h4 className="text-[11px] font-black text-slate-800 truncate">{rel.title}</h4>

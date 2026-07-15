@@ -914,17 +914,14 @@ export default function ProductsGrid({
                         }}
                         className={`relative cursor-pointer flex items-center justify-center shrink-0 ${
                           viewMode === 'grid' 
-                            ? 'w-full aspect-square mb-4.5 rounded-xl bg-slate-50/50 border border-slate-100 overflow-hidden' 
-                            : 'w-32 h-32 rounded-xl bg-slate-50/50 border border-slate-100 overflow-hidden'
+                            ? 'w-full aspect-square mb-4.5 rounded-xl bg-transparent overflow-hidden' 
+                            : 'w-32 h-32 rounded-xl bg-transparent overflow-hidden'
                         }`}
                       >
-                        {/* Soft light-grey gradient circular glow exactly mirroring the image */}
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(226,232,240,0.85)_0%,transparent_65%)]" />
-                        
                         <img
                           src={prod.image}
                           alt={prod.title}
-                          className="w-24 h-24 sm:w-28 sm:h-28 object-contain transition-transform duration-300 group-hover:scale-103 relative z-10"
+                          className="w-full h-full object-contain p-1 transition-transform duration-300 group-hover:scale-105 relative z-10"
                           referrerPolicy="no-referrer"
                         />
                       </div>
