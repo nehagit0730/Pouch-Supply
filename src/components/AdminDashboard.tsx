@@ -6,7 +6,7 @@ import {
   Trash2, Filter, Save, Sparkles, Building, Settings, Image as ImageIcon, 
   X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw, AlertTriangle, GripVertical,
   Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass, ShieldCheck, ChevronLeft,
-  ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server, Lock, Gift, Check, Clock, Truck, ArrowRight,
+  ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server, Lock, Gift, Check, Clock, Truck, ArrowRight, Zap, Shield,
   Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit, LogOut
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
@@ -4929,26 +4929,125 @@ export default function AdminDashboard({
                                     { iconName: 'Package', title: 'Never run out', description: 'Auto-refill and easy reordering.' }
                                   ];
 
+                                  const getPremiumCardDetails = (iconName: string, title: string, description: string) => {
+                                    const normIcon = (iconName || '').toLowerCase();
+                                    const normTitle = (title || '').toLowerCase();
+
+                                    if (normIcon.includes('truck') || normTitle.includes('delivery') || normTitle.includes('schedule')) {
+                                      return {
+                                        title: 'FLEXIBLE DELIVERY',
+                                        desc: 'Delivered on your schedule. Weekly, fortnightly or monthly.',
+                                        benefits: ['Change anytime', 'Skip or delay', 'Full control'],
+                                        iconName: 'Truck'
+                                      };
+                                    }
+                                    if (normIcon.includes('zap') || normTitle.includes('save') || normTitle.includes('price') || normTitle.includes('month')) {
+                                      return {
+                                        title: 'SAVE EVERY MONTH',
+                                        desc: 'Save up to £55/month compared to buying in-store.',
+                                        benefits: ['Better prices', 'Big savings', 'More value'],
+                                        iconName: 'Zap'
+                                      };
+                                    }
+                                    if (normIcon.includes('shield') || normTitle.includes('discreet') || normTitle.includes('packaging') || normTitle.includes('private')) {
+                                      return {
+                                        title: 'DISCREET PACKAGING',
+                                        desc: 'Plain and private secure packaging for ultimate peace of mind.',
+                                        benefits: ['No outer branding', 'Secure seal', 'Private delivery'],
+                                        iconName: 'Shield'
+                                      };
+                                    }
+                                    if (normIcon.includes('clock') || normTitle.includes('cancel') || normTitle.includes('commitment') || normTitle.includes('anytime')) {
+                                      return {
+                                        title: 'CANCEL ANYTIME',
+                                        desc: 'Pause, speed up, slow down, or end your plan anytime in one click.',
+                                        benefits: ['Zero commitment', 'No hidden fees', 'Instant update'],
+                                        iconName: 'Clock'
+                                      };
+                                    }
+                                    if (normIcon.includes('award') || normTitle.includes('loyalty') || normTitle.includes('reward') || normTitle.includes('scheme')) {
+                                      return {
+                                        title: 'LOYALTY REWARDS',
+                                        desc: 'Earn loyalty points on every cycle to redeem exclusive store benefits.',
+                                        benefits: ['Free accessories', 'Double points', 'Exclusive status'],
+                                        iconName: 'Award'
+                                      };
+                                    }
+                                    if (normIcon.includes('package') || normTitle.includes('never run out') || normTitle.includes('auto')) {
+                                      return {
+                                        title: 'NEVER RUN OUT',
+                                        desc: 'Auto-refill systems lock in your favorite pouches at sub-retail price thresholds.',
+                                        benefits: ['Auto-refill', 'Priority stock', 'Price lock-in'],
+                                        iconName: 'Package'
+                                      };
+                                    }
+                                    return {
+                                      title: title.toUpperCase(),
+                                      desc: description,
+                                      benefits: ['Premium quality', 'Reliable service', 'Best selection'],
+                                      iconName: iconName
+                                    };
+                                  };
+
                                   return (
-                                    <div className="py-6 space-y-4 font-sans text-center">
+                                    <div className="py-6 px-2 space-y-5 font-sans text-center bg-slate-50/50 rounded-2xl border border-slate-100">
                                       <div>
-                                        <h3 className="text-sm font-extrabold uppercase tracking-tight" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                        <h3 className="text-sm font-extrabold uppercase tracking-tight text-[#071529]" style={{ color: sec.settings.headingColor || '#1E293B' }}>
                                           {sec.settings.title || 'Why subscribe to Pouch Supply?'}
                                         </h3>
                                         {sec.settings.description && (
                                           <p className="text-[10px] text-slate-400 mt-0.5 max-w-md mx-auto leading-relaxed">{sec.settings.description}</p>
                                         )}
                                       </div>
-                                      <div className="grid grid-cols-2 gap-3 pt-2">
-                                        {previewItems.map((item, pidx) => (
-                                          <div key={pidx} className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl space-y-1 text-center hover:shadow-2xs transition-shadow">
-                                            <div className="h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center mx-auto text-[10px]" style={{ color: sec.settings.iconColor || '#4F46E5' }}>
-                                              {item.iconName === 'Truck' ? '🚚' : item.iconName === 'Zap' ? '⚡' : item.iconName === 'Shield' ? '🛡️' : item.iconName === 'Clock' ? '⏱️' : item.iconName === 'Award' ? '🏆' : item.iconName === 'Package' ? '📦' : '✨'}
+                                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                                        {previewItems.map((item, pidx) => {
+                                          const details = getPremiumCardDetails(item.iconName, item.title, item.description);
+                                          
+                                          const IconComp = (() => {
+                                            const iconClass = "h-6 w-6 text-[#071529] transition-transform duration-300 group-hover:scale-110";
+                                            switch (details.iconName) {
+                                              case 'Truck': return <Truck className={iconClass} />;
+                                              case 'Zap': return <Zap className={iconClass} />;
+                                              case 'Shield': return <ShieldCheck className={iconClass} />;
+                                              case 'Clock': return <Clock className={iconClass} />;
+                                              case 'Award': return <Award className={iconClass} />;
+                                              case 'Package': return <Package className={iconClass} />;
+                                              case 'Star': return <Star className={iconClass} />;
+                                              default: return <Sparkles className={iconClass} />;
+                                            }
+                                          })();
+
+                                          return (
+                                            <div key={pidx} className="bg-white border border-slate-150 p-4 rounded-xl flex flex-col justify-between hover:border-[#dfa047]/40 transition-all duration-300 shadow-xs text-left group">
+                                              <div className="space-y-3">
+                                                <div className="flex items-start justify-between gap-2">
+                                                  <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-full bg-[#faf0e1] flex items-center justify-center shrink-0 border border-[#dfa047]/10 transition-transform group-hover:scale-105">
+                                                      {IconComp}
+                                                    </div>
+                                                    <div>
+                                                      <h4 className="font-extrabold text-[11px] leading-tight text-[#071529] group-hover:text-[#dfa047] transition-colors uppercase tracking-wider">{details.title}</h4>
+                                                      <p className="text-[9.5px] text-slate-400 font-semibold mt-0.5 leading-relaxed">{details.desc}</p>
+                                                    </div>
+                                                  </div>
+                                                  
+                                                  <div className="w-5 h-5 rounded-full border border-[#dfa047]/30 flex items-center justify-center text-[#dfa047] shrink-0">
+                                                    <ArrowRight className="h-2.5 w-2.5" />
+                                                  </div>
+                                                </div>
+
+                                                <div className="pt-2 border-t border-slate-50 flex flex-wrap gap-x-3 gap-y-1">
+                                                  {details.benefits.map((b, bIdx) => (
+                                                    <div key={bIdx} className="flex items-center gap-1">
+                                                      <Check className="h-2.5 w-2.5 text-[#dfa047] stroke-[3px]" />
+                                                      <span className="text-[8.5px] font-black text-slate-500 uppercase tracking-wide">{b}</span>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              </div>
                                             </div>
-                                            <h4 className="font-extrabold text-[9.5px] leading-tight text-slate-800 uppercase tracking-tight">{item.title}</h4>
-                                            <p className="text-[8.5px] text-slate-400 leading-snug line-clamp-2">{item.description}</p>
-                                          </div>
-                                        ))}
+                                          );
+                                        })}
                                       </div>
                                     </div>
                                   );

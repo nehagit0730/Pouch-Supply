@@ -2240,75 +2240,155 @@ export default function PageRenderer({
                     { iconName: 'Package', title: 'Never run out', description: 'Auto-refill and easy reordering.', linkUrl: 'frontend-shop' }
                   ];
 
+                  const getPremiumCardDetails = (iconName: string, title: string, description: string) => {
+                    const normIcon = (iconName || '').toLowerCase();
+                    const normTitle = (title || '').toLowerCase();
+
+                    if (normIcon.includes('truck') || normTitle.includes('delivery') || normTitle.includes('schedule')) {
+                      return {
+                        title: 'FLEXIBLE DELIVERY',
+                        desc: 'Delivered on your schedule. Weekly, fortnightly or monthly.',
+                        benefits: ['Change anytime', 'Skip or delay', 'Full control'],
+                        iconName: 'Truck'
+                      };
+                    }
+                    if (normIcon.includes('zap') || normTitle.includes('save') || normTitle.includes('price') || normTitle.includes('month')) {
+                      return {
+                        title: 'SAVE EVERY MONTH',
+                        desc: 'Save up to £55/month compared to buying in-store.',
+                        benefits: ['Better prices', 'Big savings', 'More value'],
+                        iconName: 'Zap'
+                      };
+                    }
+                    if (normIcon.includes('shield') || normTitle.includes('discreet') || normTitle.includes('packaging') || normTitle.includes('private')) {
+                      return {
+                        title: 'DISCREET PACKAGING',
+                        desc: 'Plain and private secure packaging for ultimate peace of mind.',
+                        benefits: ['No outer branding', 'Secure seal', 'Private delivery'],
+                        iconName: 'Shield'
+                      };
+                    }
+                    if (normIcon.includes('clock') || normTitle.includes('cancel') || normTitle.includes('commitment') || normTitle.includes('anytime')) {
+                      return {
+                        title: 'CANCEL ANYTIME',
+                        desc: 'Pause, speed up, slow down, or end your plan anytime in one click.',
+                        benefits: ['Zero commitment', 'No hidden fees', 'Instant update'],
+                        iconName: 'Clock'
+                      };
+                    }
+                    if (normIcon.includes('award') || normTitle.includes('loyalty') || normTitle.includes('reward') || normTitle.includes('scheme')) {
+                      return {
+                        title: 'LOYALTY REWARDS',
+                        desc: 'Earn loyalty points on every cycle to redeem exclusive store benefits.',
+                        benefits: ['Free accessories', 'Double points', 'Exclusive status'],
+                        iconName: 'Award'
+                      };
+                    }
+                    if (normIcon.includes('package') || normTitle.includes('never run out') || normTitle.includes('auto')) {
+                      return {
+                        title: 'NEVER RUN OUT',
+                        desc: 'Auto-refill systems lock in your favorite pouches at sub-retail price thresholds.',
+                        benefits: ['Auto-refill', 'Priority stock', 'Price lock-in'],
+                        iconName: 'Package'
+                      };
+                    }
+                    return {
+                      title: title.toUpperCase(),
+                      desc: description,
+                      benefits: ['Premium quality', 'Reliable service', 'Best selection'],
+                      iconName: iconName
+                    };
+                  };
+
                   return (
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 py-4">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 py-8">
                       <div className="text-center space-y-3">
                         {sec.settings.title && (
                           <h2 
-                            className="text-3xl md:text-4xl font-black uppercase tracking-tight"
-                            style={{ color: sec.settings.headingColor || sec.settings.textColor || '#0F172A' }}
+                            className="text-3xl md:text-4xl font-black uppercase tracking-tight text-[#071529]"
                           >
                             {sec.settings.title}
                           </h2>
                         )}
                         {sec.settings.description && (
                           <p 
-                            className="max-w-2xl mx-auto text-xs sm:text-sm leading-relaxed opacity-85"
-                            style={{ color: sec.settings.textColor || '#475569' }}
+                            className="max-w-2xl mx-auto text-xs sm:text-sm leading-relaxed text-slate-500 font-semibold"
                           >
                             {sec.settings.description}
                           </p>
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-12 gap-x-8 text-center pt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
                         {items.map((item, iIdx) => {
+                          const details = getPremiumCardDetails(item.iconName, item.title, item.description);
+                          
                           const IconComp = (() => {
-                            const iconStyle = { color: sec.settings.iconColor || '#4F46E5' };
-                            switch (item.iconName) {
-                              case 'Truck': return <Truck className="h-7 w-7 mx-auto" style={iconStyle} />;
-                              case 'Zap': return <Zap className="h-7 w-7 mx-auto" style={iconStyle} />;
-                              case 'Shield': return <ShieldCheck className="h-7 w-7 mx-auto" style={iconStyle} />;
-                              case 'Clock': return <Clock className="h-7 w-7 mx-auto" style={iconStyle} />;
-                              case 'Award': return <Award className="h-7 w-7 mx-auto" style={iconStyle} />;
-                              case 'Package': return <Package className="h-7 w-7 mx-auto" style={iconStyle} />;
-                              case 'Heart': return <Heart className="h-7 w-7 mx-auto" style={iconStyle} />;
-                              case 'HelpCircle': return <HelpCircle className="h-7 w-7 mx-auto" style={iconStyle} />;
-                              case 'Star': return <Star className="h-7 w-7 mx-auto" style={iconStyle} />;
-                              default: return <Sparkles className="h-7 w-7 mx-auto" style={iconStyle} />;
+                            const iconClass = "h-8 w-8 text-[#071529] transition-transform duration-300 group-hover:scale-115";
+                            switch (details.iconName) {
+                              case 'Truck': return <Truck className={iconClass} />;
+                              case 'Zap': return <Zap className={iconClass} />;
+                              case 'Shield': return <ShieldCheck className={iconClass} />;
+                              case 'Clock': return <Clock className={iconClass} />;
+                              case 'Award': return <Award className={iconClass} />;
+                              case 'Package': return <Package className={iconClass} />;
+                              case 'Heart': return <Heart className={iconClass} />;
+                              case 'HelpCircle': return <HelpCircle className={iconClass} />;
+                              case 'Star': return <Star className={iconClass} />;
+                              default: return <Sparkles className={iconClass} />;
                             }
                           })();
 
                           return (
                             <div 
                               key={iIdx} 
-                              className="flex flex-col items-center space-y-3 p-4 group rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-300"
+                              onClick={() => {
+                                if (item.linkUrl) handleLinkClick(item.linkUrl);
+                              }}
+                              className="bg-white border border-slate-100 rounded-2xl p-6 md:p-7 flex flex-col justify-between hover:-translate-y-1 hover:shadow-lg hover:border-[#dfa047]/45 transition-all duration-300 group cursor-pointer shadow-xs select-none"
                             >
-                              <div className="p-3 rounded-full bg-slate-500/10 mb-1 flex items-center justify-center transition-transform duration-350 group-hover:scale-110">
-                                {IconComp}
+                              <div className="space-y-5">
+                                {/* Top row with icon, title/desc, and action arrow */}
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex items-start gap-4">
+                                    {/* Icon with soft gold circle background */}
+                                    <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-[#faf0e1] flex items-center justify-center shrink-0 shadow-inner border border-[#dfa047]/10 transition-all duration-300 group-hover:bg-[#f9ebd4]">
+                                      {IconComp}
+                                    </div>
+                                    
+                                    {/* Text info */}
+                                    <div className="text-left">
+                                      <h3 
+                                        className="text-sm sm:text-base font-black uppercase tracking-wider text-[#071529] group-hover:text-[#dfa047] transition-colors duration-250"
+                                      >
+                                        {details.title}
+                                      </h3>
+                                      <p 
+                                        className="text-[11px] sm:text-xs text-slate-500 font-bold leading-relaxed mt-1"
+                                      >
+                                        {details.desc}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Right side gold circular arrow */}
+                                  <div className="w-8 h-8 rounded-full border border-[#dfa047]/30 flex items-center justify-center text-[#dfa047] transition-all duration-300 group-hover:border-[#dfa047] group-hover:bg-[#dfa047]/15 shrink-0">
+                                    <ArrowRight className="h-4 w-4 transform group-hover:translate-x-0.5 transition-transform" />
+                                  </div>
+                                </div>
+
+                                {/* Bottom row: divider and benefit bullet checks */}
+                                <div className="pt-4 border-t border-slate-50 flex flex-wrap gap-x-5 gap-y-2 text-left">
+                                  {details.benefits.map((benefit, bIdx) => (
+                                    <div key={bIdx} className="flex items-center gap-1.5">
+                                      <Check className="h-3.5 w-3.5 text-[#dfa047] stroke-[3.5px] shrink-0" />
+                                      <span className="text-[10.5px] font-extrabold text-slate-600 uppercase tracking-wide">
+                                        {benefit}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                              <h3 
-                                className="text-sm font-black uppercase tracking-tight"
-                                style={{ color: sec.settings.headingColor || sec.settings.textColor || '#1E293B' }}
-                              >
-                                {item.title}
-                              </h3>
-                              <p 
-                                className="text-xs max-w-xs leading-relaxed opacity-75 font-medium"
-                                style={{ color: sec.settings.textColor || '#64748B' }}
-                              >
-                                {item.description}
-                              </p>
-                              {item.linkUrl && (
-                                <button
-                                  onClick={() => handleLinkClick(item.linkUrl)}
-                                  className="text-[10px] font-black uppercase tracking-widest mt-2 hover:underline opacity-90 hover:opacity-100 flex items-center gap-1 transition-all cursor-pointer bg-transparent border-none outline-none"
-                                  style={{ color: sec.settings.iconColor || sec.settings.textColor || '#4F46E5' }}
-                                >
-                                  <span>Learn more</span>
-                                  <span className="text-xs">↗</span>
-                                </button>
-                              )}
                             </div>
                           );
                         })}
