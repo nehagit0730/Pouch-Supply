@@ -3,7 +3,7 @@ import { CustomPage, PageSection, Product, Collection, Customer, BlogPost } from
 import { 
   ArrowRight, ShoppingCart, Star, Heart, FileText, Check, 
   ChevronDown, ChevronUp, Play, Sparkles, TrendingUp, Plus, Minus, ShieldCheck, Award, Eye, Flame, ArrowUpRight, BookOpen, Layers,
-  Truck, Zap, Shield, Clock, Package, HelpCircle, Globe, Tag, ChevronLeft, ChevronRight, Lock, Gift, RefreshCw, Snowflake, Crown, Percent
+  Truck, Zap, Shield, Clock, Package, HelpCircle, Globe, Tag, ChevronLeft, ChevronRight, Lock, Gift, RefreshCw, Snowflake, Crown, Percent, Calendar
 } from 'lucide-react';
 import PremiumSlideshow from './PremiumSlideshow';
 import PlansCanOverlay from './PlansCanOverlay';
@@ -1360,69 +1360,210 @@ export default function PageRenderer({
                   };
 
                   const ytId = getYouTubeId(sec.settings.videoUrl || '');
-                  const mp4Url = sec.settings.videoMp4Url || 'https://assets.mixkit.co/videos/preview/mixkit-laboratory-test-tubes-40436-large.mp4';
+                  // Check if there is a custom user video or if we should use our premium background image
+                  const hasCustomVideo = ytId || (sec.settings.videoMp4Url && !sec.settings.videoMp4Url.includes('laboratory-test-tubes'));
+                  const bgImage = '/src/assets/images/nicotine_pouches_hero_1784094944394.jpg';
+
+                  // Text replacements to match sent design
+                  const titleInput = sec.settings.title || '';
+                  const isLabTitle = !titleInput || titleInput.toLowerCase().includes('laboratory') || titleInput.toLowerCase().includes('showcase') || titleInput.toLowerCase().includes('watch');
+                  
+                  const headingLine1 = isLabTitle ? "YOUR NICOTINE," : titleInput;
+                  const headingLine2 = isLabTitle ? "ON AUTOPILOT." : "";
+
+                  const descInput = sec.settings.description || '';
+                  const isLabDesc = !descInput || descInput.toLowerCase().includes('compounding') || descInput.toLowerCase().includes('laboratory') || descInput.toLowerCase().includes('sterile') || descInput.toLowerCase().includes('witness');
 
                   return (
-                    <div className="relative w-full min-h-[420px] sm:min-h-[520px] md:min-h-[600px] flex items-center justify-center overflow-hidden bg-slate-950">
-                      {/* Video Player Background (YouTube or MP4 upload) */}
+                    <div className="relative w-full overflow-hidden bg-[#071529] flex flex-col justify-between">
+                      
+                      {/* Background Visual Layer */}
                       <div className="absolute inset-0 z-0 w-full h-full pointer-events-none">
-                        {ytId ? (
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] pointer-events-none scale-105">
-                            <iframe
-                              className="w-full h-full object-cover border-0"
-                              src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&playlist=${ytId}&loop=1&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1`}
-                              title="Video Banner Background"
-                              allow="autoplay; encrypted-media"
-                              allowFullScreen
+                        {hasCustomVideo ? (
+                          ytId ? (
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] pointer-events-none scale-105">
+                              <iframe
+                                className="w-full h-full object-cover border-0"
+                                src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&playlist=${ytId}&loop=1&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1`}
+                                title="Video Banner Background"
+                                allow="autoplay; encrypted-media"
+                                allowFullScreen
+                              />
+                            </div>
+                          ) : (
+                            <video
+                              className="w-full h-full object-cover opacity-80"
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              src={sec.settings.videoMp4Url}
                             />
-                          </div>
+                          )
                         ) : (
-                          <video
-                            className="w-full h-full object-cover opacity-90"
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                            src={mp4Url}
+                          <img
+                            src={bgImage}
+                            alt="Premium Nicotine Pouches Collection"
+                            className="w-full h-full object-cover object-center sm:object-right lg:object-right-bottom opacity-85"
+                            referrerPolicy="no-referrer"
                           />
                         )}
-                        {/* Elegant semi-transparent overlay gradient protecting readability */}
-                        <div className="absolute inset-0 bg-slate-950/60 sm:bg-slate-950/50" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/20" />
+                        
+                        {/* Readability masks: dark solid overlay on mobile, beautiful horizontal fade on desktop */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#030914] via-[#030914]/90 to-transparent lg:from-[#030914] lg:via-[#030914]/75 lg:to-transparent z-10" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#030914]/45 via-transparent to-black/30 z-10" />
                       </div>
 
                       {/* Content Overlay */}
-                      <div className="relative z-10 max-w-5xl mx-auto px-6 py-6 sm:py-8 text-center text-white space-y-4 flex flex-col items-center">
-                        <span className="inline-flex items-center gap-1.5 bg-indigo-650/85 text-white font-extrabold uppercase tracking-widest text-[8px] sm:text-[9.5px] py-1 px-3.5 rounded-full border border-indigo-400/25">
-                          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping mr-0.5" />
-                          🎥 Laboratory Loop Showcase
-                        </span>
+                      <div className="relative z-20 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-24 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                        
+                        {/* Left column text controls */}
+                        <div className="lg:col-span-7 space-y-6 sm:space-y-7 text-left">
+                          
+                          <div className="space-y-3">
+                            <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold uppercase tracking-tight leading-[1.08] font-sans text-white drop-shadow-md">
+                              <div>{headingLine1}</div>
+                              {headingLine2 && (
+                                <div className="text-[#dfa047] drop-shadow-xs font-black">{headingLine2}</div>
+                              )}
+                            </h2>
 
-                        <h2
-                          className="text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight leading-tight max-w-4xl text-white drop-shadow-sm font-sans"
-                          style={{ color: '#FFFFFF' }}
-                        >
-                          {sec.settings.title || 'Watch Brand Highlights'}
-                        </h2>
-
-                        {sec.settings.description && (
-                          <p className="text-xs sm:text-sm md:text-base leading-relaxed max-w-2xl mx-auto text-slate-200 opacity-95 font-medium drop-shadow-xs">
-                            {sec.settings.description}
-                          </p>
-                        )}
-
-                        {sec.settings.buttonText && (
-                          <div className="pt-4">
-                            <button
-                              onClick={() => handleLinkClick(sec.settings.buttonLink || 'frontend-shop')}
-                              className="bg-white hover:bg-slate-100 text-slate-950 font-black text-xs sm:text-sm py-4 px-10 rounded-xl shadow-lg transition-all duration-300 cursor-pointer flex items-center gap-2 uppercase tracking-widest group"
-                            >
-                              <span>{sec.settings.buttonText}</span>
-                              <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                            </button>
+                            {isLabDesc ? (
+                              <div className="space-y-1.5 pt-2 text-slate-200 text-sm sm:text-base md:text-[17px] leading-relaxed font-bold tracking-wide drop-shadow-sm opacity-95">
+                                <p>Premium nicotine pouch subscriptions.</p>
+                                <p>Your favourite brands. Delivered your way.</p>
+                                <p>Every week, fortnight or month.</p>
+                              </div>
+                            ) : (
+                              <p className="text-slate-200 text-sm sm:text-base leading-relaxed max-w-xl font-bold tracking-wide drop-shadow-sm pt-1">
+                                {descInput}
+                              </p>
+                            )}
                           </div>
-                        )}
+
+                          {/* Interactive Buttons */}
+                          <div className="flex flex-col sm:flex-row gap-4 pt-1 items-stretch sm:items-center">
+                            
+                            {/* Primary Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleLinkClick('frontend-subscribe')}
+                              className="bg-[#dfa047] hover:bg-[#c98e3b] text-white font-extrabold py-3.5 px-8 rounded-xl transition-all duration-300 flex flex-col items-center justify-center cursor-pointer shadow-lg active:scale-95 group shrink-0"
+                            >
+                              <span className="text-[12px] sm:text-[13px] font-black tracking-widest uppercase">SUBSCRIBE NOW</span>
+                              <span className="text-[10px] text-white/90 font-semibold mt-0.5">Save up to £55 per month</span>
+                            </button>
+
+                            {/* Secondary Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleLinkClick(sec.settings.buttonLink || 'frontend-shop')}
+                              className="border border-white/30 hover:border-white hover:bg-white/10 text-white font-black tracking-widest text-[11px] sm:text-[12px] uppercase py-4.5 px-8 rounded-xl transition-all duration-300 flex items-center justify-center cursor-pointer active:scale-95 shrink-0"
+                            >
+                              {sec.settings.buttonText || 'BROWSE BRANDS'}
+                            </button>
+
+                          </div>
+
+                          {/* 4 Feature Badges Under the buttons */}
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-4 pt-6 border-t border-white/10 max-w-xl">
+                            
+                            {/* Bullet 1 */}
+                            <div className="flex items-start gap-2.5">
+                              <span className="p-1.5 bg-white/5 text-[#dfa047] border border-white/10 rounded-lg shrink-0">
+                                <Award className="h-4 w-4" />
+                              </span>
+                              <div>
+                                <p className="text-[10.5px] font-black tracking-wider text-white uppercase">NEVER RUN OUT</p>
+                                <p className="text-[9.5px] text-slate-350 font-bold mt-0.5 leading-tight">Delivered on your schedule</p>
+                              </div>
+                            </div>
+
+                            {/* Bullet 2 */}
+                            <div className="flex items-start gap-2.5">
+                              <span className="p-1.5 bg-white/5 text-[#dfa047] border border-white/10 rounded-lg shrink-0">
+                                <Package className="h-4 w-4" />
+                              </span>
+                              <div>
+                                <p className="text-[10.5px] font-black tracking-wider text-white uppercase">DISCREET DELIVERY</p>
+                                <p className="text-[9.5px] text-slate-350 font-bold mt-0.5 leading-tight">Plain packaging</p>
+                              </div>
+                            </div>
+
+                            {/* Bullet 3 */}
+                            <div className="flex items-start gap-2.5">
+                              <span className="p-1.5 bg-white/5 text-[#dfa047] border border-white/10 rounded-lg shrink-0">
+                                <Tag className="h-4 w-4" />
+                              </span>
+                              <div>
+                                <p className="text-[10.5px] font-black tracking-wider text-white uppercase">SAVE VS. SHOP PRICES</p>
+                                <p className="text-[9.5px] text-slate-350 font-bold mt-0.5 leading-tight">Save up to £55/month</p>
+                              </div>
+                            </div>
+
+                            {/* Bullet 4 */}
+                            <div className="flex items-start gap-2.5">
+                              <span className="p-1.5 bg-white/5 text-[#dfa047] border border-white/10 rounded-lg shrink-0">
+                                <RefreshCw className="h-4 w-4" />
+                              </span>
+                              <div>
+                                <p className="text-[10.5px] font-black tracking-wider text-white uppercase">CANCEL ANYTIME</p>
+                                <p className="text-[9.5px] text-slate-350 font-bold mt-0.5 leading-tight">No commitment</p>
+                              </div>
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                        {/* Right column empty spacing to let the canister background shine on large screens */}
+                        <div className="hidden lg:block lg:col-span-5 h-full min-h-[250px]" />
+
                       </div>
+
+                      {/* Gold full-width bar at the absolute bottom of the section */}
+                      <div className="w-full bg-[#dfa047] py-4.5 px-4 sm:px-6 z-20 relative border-t border-white/5 shadow-md">
+                        <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 text-white text-center sm:text-left divide-y lg:divide-y-0 lg:divide-x divide-white/15">
+                          
+                          {/* Item 1 */}
+                          <div className="flex flex-col sm:flex-row items-center gap-2.5 justify-center lg:justify-start px-2 py-2 sm:py-0">
+                            <Truck className="h-5.5 w-5.5 text-white shrink-0" />
+                            <div>
+                              <p className="text-[10.5px] sm:text-[11px] font-black tracking-widest uppercase leading-tight">FREE UK DELIVERY</p>
+                              <p className="text-[9.5px] sm:text-[10px] text-white/90 font-bold mt-0.5">On orders £40+</p>
+                            </div>
+                          </div>
+
+                          {/* Item 2 */}
+                          <div className="flex flex-col sm:flex-row items-center gap-2.5 justify-center lg:justify-start px-4 py-2 sm:py-0 border-white/15">
+                            <Calendar className="h-5.5 w-5.5 text-white shrink-0" />
+                            <div>
+                              <p className="text-[10.5px] sm:text-[11px] font-black tracking-widest uppercase leading-tight">DELIVERED ON YOUR SCHEDULE</p>
+                              <p className="text-[9.5px] sm:text-[10px] text-white/90 font-bold mt-0.5">Weekly, Fortnightly or Monthly</p>
+                            </div>
+                          </div>
+
+                          {/* Item 3 */}
+                          <div className="flex flex-col sm:flex-row items-center gap-2.5 justify-center lg:justify-start px-4 py-2 sm:py-0 border-white/15">
+                            <Award className="h-5.5 w-5.5 text-white shrink-0" />
+                            <div>
+                              <p className="text-[10.5px] sm:text-[11px] font-black tracking-widest uppercase leading-tight">LOYALTY REWARDS</p>
+                              <p className="text-[9.5px] sm:text-[10px] text-white/90 font-bold mt-0.5">Earn points & exclusive perks</p>
+                            </div>
+                          </div>
+
+                          {/* Item 4 */}
+                          <div className="flex flex-col sm:flex-row items-center gap-2.5 justify-center lg:justify-start px-4 py-2 sm:py-0 border-white/15">
+                            <Lock className="h-5.5 w-5.5 text-white shrink-0" />
+                            <div>
+                              <p className="text-[10.5px] sm:text-[11px] font-black tracking-widest uppercase leading-tight">100% SECURE CHECKOUT</p>
+                              <p className="text-[9.5px] sm:text-[10px] text-white/90 font-bold mt-0.5">Your data is protected</p>
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+
                     </div>
                   );
                 })()}
