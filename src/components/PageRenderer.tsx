@@ -1163,7 +1163,7 @@ export default function PageRenderer({
   allBlogs = []
 }: PageRendererProps) {
   // Safe state for keeping track of active FAQs
-  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
+  const [openFaqIdx, setOpenFaqIdx] = useState<string | null>(null);
 
   // Safe parsing of custom links or routes
   const handleLinkClick = (link?: string) => {
@@ -1185,8 +1185,9 @@ export default function PageRenderer({
     }
   };
 
-  const toggleFaq = (idx: number) => {
-    setOpenFaqIdx(openFaqIdx === idx ? null : idx);
+  const toggleFaq = (secId: string, idx: number) => {
+    const key = `${secId}-${idx}`;
+    setOpenFaqIdx(openFaqIdx === key ? null : key);
   };
 
   return (
@@ -2014,32 +2015,32 @@ export default function PageRenderer({
                     </div>
 
                     <div className="space-y-4">
-                      {[
+                      {(sec.settings.faqItems || [
                         { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon fulfillment lines dispatch.' },
                         { q: 'Are these pouches 100% tobacco-free?', a: 'Under all current EU & UK reseller regulations, our catalog consists strictly of plant-fiber pouch variants utilizing medical crystalline formats.' },
                         { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific week layouts. Pause, skip custom flavors, or cancel anytime for free in the account dashboard.' },
                         { q: 'Where are the canisters formulated?', a: 'Formulated in certified European laboratories under strict vacuum sterile protocols, ensuring consistent aroma and maximum flavor lock.' }
-                      ].map((faq, fIdx) => {
-                        const isChosen = openFaqIdx === fIdx;
+                      ]).map((faq: any, fIdx: number) => {
+                        const isChosen = openFaqIdx === `${sec.id}-${fIdx}`;
                         return (
                           <div 
                             key={fIdx} 
                             className="bg-white border border-slate-150 rounded-2xl p-4.5 sm:p-5 transition-all shadow-xs cursor-pointer hover:border-slate-300"
-                            onClick={() => toggleFaq(fIdx)}
+                            onClick={() => toggleFaq(sec.id, fIdx)}
                           >
                             <div className="flex items-center justify-between">
-                              <span className="font-extrabold text-xs sm:text-xs text-slate-800 flex items-center gap-2 pr-4">
+                              <span className="font-extrabold text-xs sm:text-xs text-slate-800 flex items-center gap-2 pr-4 text-left">
                                 <span className={isChosen ? 'text-indigo-600 font-black' : 'text-slate-400 font-bold'}>Q:</span> 
                                 <span>{faq.q}</span>
                               </span>
-                              <div className="shrink-0 p-1 bg-slate-50 rounded-lg text-slate-500 border border-slate-100 group">
-                                {isChosen ? <ChevronUp className="h-3.5 w-3.5 text-indigo-650" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                              <div className="shrink-0 flex items-center justify-center h-6 w-6 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-500 font-extrabold text-sm select-none transition-colors">
+                                {isChosen ? '-' : '+'}
                               </div>
                             </div>
                             
                             {/* Smooth accordion expanded logic */}
-                            <div className={`transition-all duration-300 overflow-hidden ${isChosen ? 'max-h-32 mt-3 opacity-100 border-t border-slate-50 pt-3' : 'max-h-0 opacity-0'}`}>
-                              <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed pl-2">
+                            <div className={`transition-all duration-300 overflow-hidden ${isChosen ? 'max-h-96 mt-3 opacity-100 border-t border-slate-50 pt-3' : 'max-h-0 opacity-0'}`}>
+                              <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed pl-2 text-left">
                                 {faq.a}
                               </p>
                             </div>

@@ -1070,6 +1070,7 @@ export default function AdminDashboard({
   const [selectedBuilderPageId, setSelectedBuilderPageId] = useState<string | null>(null);
   const [selectedBuilderSectionId, setSelectedBuilderSectionId] = useState<string | null>(null);
   const [activeSlideEditIndex, setActiveSlideEditIndex] = useState<number>(0);
+  const [openPreviewFaqIndex, setOpenPreviewFaqIndex] = useState<string | null>(null);
   const [moduleSearchQuery, setModuleSearchQuery] = useState('');
 
   // Draft page & collection builder custom states
@@ -1627,6 +1628,11 @@ export default function AdminDashboard({
           { iconType: 'shield', title: 'PREMIUM QUALITY', description: 'Only trusted, proven brands.' },
           { iconType: 'globe', title: 'GLOBAL SELECTION', description: 'The best from around the world.' },
           { iconType: 'tag', title: 'MEMBER PRICING', description: 'Better prices, always.' }
+        ] : undefined,
+        faqItems: sectionType === 'FAQs' ? [
+          { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon dispatch.' },
+          { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' },
+          { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific interval. Pause or cancel anytime for free.' }
         ] : undefined,
         alertBadgeText: sectionType === 'Plans' ? 'Most customers save up to £55/month' : undefined,
         promoBannerText: sectionType === 'Plans' ? '★ FIRST 50 SUBSCRIBERS - Get 10% OFF FOR LIFE >' : undefined,
@@ -4667,18 +4673,38 @@ export default function AdminDashboard({
                                       {sec.settings.title || 'Frequently Answered Questions'}
                                     </h3>
                                     <div className="space-y-1.5 text-[9.5px]">
-                                      {[
+                                      {(sec.settings.faqItems || [
                                         { q: 'Is delivery fully tracked?', a: 'Yes, royal mail tracking lines generate instantly email alerts.' },
                                         { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' }
-                                      ].map((faq, fIdx) => (
-                                        <div key={fIdx} className="bg-slate-50 p-2 rounded-xl border border-slate-200/90 leading-snug">
-                                          <div className="font-extrabold text-slate-800 flex justify-between items-center">
-                                            <span>Q: {faq.q}</span>
-                                            <ChevronDown className="h-3 w-3 text-slate-400 shrink-0" />
+                                      ]).map((faq: any, fIdx: number) => {
+                                        const isChosen = openPreviewFaqIndex === `${sec.id}-${fIdx}`;
+                                        return (
+                                          <div 
+                                            key={fIdx} 
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedBuilderSectionId(sec.id);
+                                              const key = `${sec.id}-${fIdx}`;
+                                              setOpenPreviewFaqIndex(openPreviewFaqIndex === key ? null : key);
+                                            }}
+                                            className="bg-white hover:bg-slate-50 p-2.5 rounded-xl border border-slate-200/90 leading-snug cursor-pointer transition-all text-left"
+                                          >
+                                            <div className="font-extrabold text-slate-800 flex justify-between items-center gap-2">
+                                              <span>Q: {faq.q}</span>
+                                              <div className="shrink-0 flex items-center justify-center h-4.5 w-4.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold text-[9px] select-none transition-colors border border-slate-200">
+                                                {isChosen ? '-' : '+'}
+                                              </div>
+                                            </div>
+                                            
+                                            {/* Collapsible Answer */}
+                                            <div className={`transition-all duration-300 overflow-hidden ${isChosen ? 'max-h-32 mt-2 pt-2 border-t border-slate-100 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                              <p className="text-slate-500 text-[8.5px] leading-relaxed">
+                                                A: {faq.a}
+                                              </p>
+                                            </div>
                                           </div>
-                                          <p className="text-slate-500 mt-1 pt-1 border-t border-slate-100 text-[8.5px]">A: {faq.a}</p>
-                                        </div>
-                                      ))}
+                                        );
+                                      })}
                                     </div>
                                   </div>
                                 )}
@@ -6321,6 +6347,114 @@ export default function AdminDashboard({
                               ))}
                               {(currentlyEditingSection.settings.trustBadges || []).length === 0 && (
                                 <p className="text-[10px] text-slate-400 text-center py-4">No trust badges in the list. Click "+ Add Badge" above.</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* FAQS EDITING SETTINGS */}
+                        {currentlyEditingSection.type === 'FAQs' && (
+                          <div className="space-y-4 pt-1">
+                            <div>
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">Section Title</label>
+                              <input
+                                type="text"
+                                value={currentlyEditingSection.settings.title || ''}
+                                onChange={(e) => handleUpdateSectionSettings('title', e.target.value)}
+                                className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none"
+                                placeholder="e.g. Frequently Asked Questions"
+                              />
+                            </div>
+
+                            <div className="flex justify-between items-center pt-2">
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">FAQ Items</label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const list = currentlyEditingSection.settings.faqItems || [
+                                    { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon dispatch.' },
+                                    { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' },
+                                    { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific interval. Pause or cancel anytime for free.' }
+                                  ];
+                                  const updated = [...list, { q: 'New Question?', a: 'Enter answer text.' }];
+                                  handleUpdateSectionSettings('faqItems', updated);
+                                }}
+                                className="text-[9px] bg-indigo-50 text-indigo-700 hover:bg-indigo-100 p-1 px-2 rounded-md font-bold transition-all cursor-pointer uppercase tracking-wider"
+                              >
+                                + Add FAQ
+                              </button>
+                            </div>
+
+                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
+                              {(currentlyEditingSection.settings.faqItems || [
+                                { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon dispatch.' },
+                                { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' },
+                                { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific interval. Pause or cancel anytime for free.' }
+                              ]).map((item: any, idx: number) => (
+                                <div key={idx} className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg space-y-2 relative">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const defaultList = currentlyEditingSection.settings.faqItems || [
+                                        { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon dispatch.' },
+                                        { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' },
+                                        { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific interval. Pause or cancel anytime for free.' }
+                                      ];
+                                      const list = [...defaultList];
+                                      list.splice(idx, 1);
+                                      handleUpdateSectionSettings('faqItems', list);
+                                    }}
+                                    className="absolute top-1.5 right-1.5 text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
+                                    title="Delete FAQ"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+
+                                  <div className="text-[9px] font-black uppercase text-indigo-650 mb-1">FAQ #{idx + 1}</div>
+
+                                  <div>
+                                    <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">Question</label>
+                                    <input
+                                      type="text"
+                                      value={item.q || ''}
+                                      onChange={(e) => {
+                                        const defaultList = currentlyEditingSection.settings.faqItems || [
+                                          { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon dispatch.' },
+                                          { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' },
+                                          { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific interval. Pause or cancel anytime for free.' }
+                                        ];
+                                        const list = [...defaultList];
+                                        list[idx] = { ...list[idx], q: e.target.value };
+                                        handleUpdateSectionSettings('faqItems', list);
+                                      }}
+                                      className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none"
+                                      placeholder="Question?"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[8px] font-bold text-slate-400 uppercase mb-0.5">Answer</label>
+                                    <textarea
+                                      rows={2}
+                                      value={item.a || ''}
+                                      onChange={(e) => {
+                                        const defaultList = currentlyEditingSection.settings.faqItems || [
+                                          { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon dispatch.' },
+                                          { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' },
+                                          { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific interval. Pause or cancel anytime for free.' }
+                                        ];
+                                        const list = [...defaultList];
+                                        list[idx] = { ...list[idx], a: e.target.value };
+                                        handleUpdateSectionSettings('faqItems', list);
+                                      }}
+                                      className="w-full text-[10px] border p-1 rounded bg-white focus:outline-none resize-none"
+                                      placeholder="Answer."
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                              {(currentlyEditingSection.settings.faqItems || []).length === 0 && (
+                                <p className="text-[10px] text-slate-400 text-center py-4">No FAQ items. Click "+ Add FAQ" above.</p>
                               )}
                             </div>
                           </div>

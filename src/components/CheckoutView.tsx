@@ -71,30 +71,39 @@ export default function CheckoutView({
   const [threeDsOtp, setThreeDsOtp] = useState('');
   const [threeDsError, setThreeDsError] = useState<string | null>(null);
 
-  // Yoti Age Verification States
-  const [yotiVerified, setYotiVerified] = useState<boolean>(() => {
-    return sessionStorage.getItem('yoti_verified') === 'true';
+  // AgeChecked Age Verification States
+  const [ageCheckedVerified, setAgeCheckedVerified] = useState<boolean>(() => {
+    return sessionStorage.getItem('agechecked_verified') === 'true';
   });
-  const [yotiVerifyingDetails, setYotiVerifyingDetails] = useState<{
-    method: 'ESTIMATION' | 'APP' | 'DOC';
+  const [ageCheckedDetails, setAgeCheckedDetails] = useState<{
+    method: 'ELECTORAL' | 'CARD' | 'MOBILE' | 'DOC' | 'BIOMETRIC';
     timestamp: string;
     token: string;
-    estimatedAge?: number;
-    docType?: string;
     name?: string;
+    details?: string;
   } | null>(() => {
-    const saved = sessionStorage.getItem('yoti_details');
+    const saved = sessionStorage.getItem('agechecked_details');
     return saved ? JSON.parse(saved) : null;
   });
-  const [yotiActiveMethod, setYotiActiveMethod] = useState<'ESTIMATION' | 'APP' | 'DOC' | null>(null);
-  const [yotiStep, setYotiStep] = useState<'select' | 'scanning' | 'details_extracted' | 'success'>('select');
-  const [yotiSelfieFile, setYotiSelfieFile] = useState<string | null>(null);
-  const [yotiDocFile, setYotiDocFile] = useState<string | null>(null);
-  const [yotiDocType, setYotiDocType] = useState<'Passport' | 'Driving License' | 'Citizen Card'>('Passport');
-  const [yotiScanningProgress, setYotiScanningProgress] = useState<number>(0);
-  const [yotiAgeEstimate, setYotiAgeEstimate] = useState<number>(23);
-  const [yotiExtractedName, setYotiExtractedName] = useState<string>('');
-  const [yotiLocalStream, setYotiLocalStream] = useState<MediaStream | null>(null);
+  const [ageCheckedActiveMethod, setAgeCheckedActiveMethod] = useState<'ELECTORAL' | 'CARD' | 'MOBILE' | 'DOC' | 'BIOMETRIC' | null>(null);
+  const [ageCheckedStep, setAgeCheckedStep] = useState<'select' | 'input' | 'verifying' | 'success'>('select');
+  const [ageCheckedScanningProgress, setAgeCheckedScanningProgress] = useState<number>(0);
+  const [ageCheckedLocalStream, setAgeCheckedLocalStream] = useState<MediaStream | null>(null);
+
+  // Input states for AgeChecked methods
+  const [electoralName, setElectoralName] = useState(loggedInCustomer?.name || '');
+  const [electoralDob, setElectoralDob] = useState('');
+  const [electoralPostcode, setElectoralPostcode] = useState(postcode || 'EC1A 1BB');
+  
+  const [cardCheckNumber, setCardCheckNumber] = useState('');
+  const [cardCheckName, setCardCheckName] = useState(loggedInCustomer?.name || '');
+  
+  const [mobilePhone, setMobilePhone] = useState('');
+  const [mobileNetwork, setMobileNetwork] = useState('EE');
+  
+  const [docType, setDocType] = useState<'Passport' | 'Driving License'>('Passport');
+  const [docNumber, setDocNumber] = useState('');
+  const [docName, setDocName] = useState(loggedInCustomer?.name || '');
 
   // Auto-fill customer details when they change
   useEffect(() => {
@@ -102,40 +111,41 @@ export default function CheckoutView({
       setFullName(loggedInCustomer.name);
       setEmail(loggedInCustomer.email);
       setCardHolder(loggedInCustomer.name);
+      setElectoralName(loggedInCustomer.name);
+      setCardCheckName(loggedInCustomer.name);
+      setDocName(loggedInCustomer.name);
       if (loggedInCustomer.addresses && loggedInCustomer.addresses[0]) {
         setAddressLine(loggedInCustomer.addresses[0]);
       }
     }
   }, [loggedInCustomer]);
 
-  // --- Yoti Age Verification Simulations ---
+  // --- AgeChecked Verification Simulations ---
 
-  // Camera integration for Facial Age Estimation
+  // Camera integration for Facial Biometrics/Estimation
   useEffect(() => {
-    if (yotiActiveMethod === 'ESTIMATION' && yotiStep === 'scanning') {
+    if (ageCheckedActiveMethod === 'BIOMETRIC' && ageCheckedStep === 'verifying') {
       let activeStream: MediaStream | null = null;
       navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
         .then(stream => {
-          setYotiLocalStream(stream);
+          setAgeCheckedLocalStream(stream);
           activeStream = stream;
         })
         .catch(err => {
           console.warn("Camera hardware not available, using high-fidelity face mesh scan simulation:", err);
         });
 
-      // Animate progress bar from 0 to 100
-      setYotiScanningProgress(0);
+      setAgeCheckedScanningProgress(0);
       const interval = setInterval(() => {
-        setYotiScanningProgress(prev => {
+        setAgeCheckedScanningProgress(prev => {
           if (prev >= 100) {
             clearInterval(interval);
-            // After scanning, transit to detail extraction approval screen
             setTimeout(() => {
-              setYotiStep('details_extracted');
-            }, 600);
+              handleConfirmAgeCheckedVerification('BIOMETRIC', fullName || 'Verified Pouch Client', 'AgeChecked Facial Age Estimation 18+ Passed');
+            }, 500);
             return 100;
           }
-          return prev + 4;
+          return prev + 5;
         });
       }, 100);
 
@@ -144,92 +154,87 @@ export default function CheckoutView({
         if (activeStream) {
           activeStream.getTracks().forEach(track => track.stop());
         }
-        setYotiLocalStream(null);
+        setAgeCheckedLocalStream(null);
       };
     }
-  }, [yotiActiveMethod, yotiStep]);
+  }, [ageCheckedActiveMethod, ageCheckedStep]);
 
-  // QR Code / Yoti App Verification simulation progress
+  // General loader/verify progress for text-based checks (Electoral Roll, CC, Mobile, Doc)
   useEffect(() => {
-    if (yotiActiveMethod === 'APP' && yotiStep === 'scanning') {
-      setYotiScanningProgress(0);
+    if (ageCheckedActiveMethod !== null && ageCheckedActiveMethod !== 'BIOMETRIC' && ageCheckedStep === 'verifying') {
+      setAgeCheckedScanningProgress(0);
       const interval = setInterval(() => {
-        setYotiScanningProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return prev + 1;
-        });
-      }, 150);
-
-      return () => clearInterval(interval);
-    }
-  }, [yotiActiveMethod, yotiStep]);
-
-  // Document Scan Verification simulation progress
-  useEffect(() => {
-    if (yotiActiveMethod === 'DOC' && yotiStep === 'scanning') {
-      setYotiScanningProgress(0);
-      const interval = setInterval(() => {
-        setYotiScanningProgress(prev => {
+        setAgeCheckedScanningProgress(prev => {
           if (prev >= 100) {
             clearInterval(interval);
             setTimeout(() => {
-              setYotiExtractedName(fullName || 'Alexander Sterling');
-              setYotiStep('details_extracted');
-            }, 500);
+              let detailsStr = '';
+              let targetName = fullName || 'Verified Pouch Client';
+              
+              if (ageCheckedActiveMethod === 'ELECTORAL') {
+                detailsStr = `Electoral Register Match at Postcode: ${electoralPostcode}, DOB: ${electoralDob}`;
+                targetName = electoralName;
+              } else if (ageCheckedActiveMethod === 'CARD') {
+                detailsStr = `Card Verification pre-auth success. Last 4 digits: ${cardCheckNumber.slice(-4) || '4321'}`;
+                targetName = cardCheckName;
+              } else if (ageCheckedActiveMethod === 'MOBILE') {
+                detailsStr = `Mobile operator ${mobileNetwork} database lookup verified for phone: ${mobilePhone}`;
+              } else if (ageCheckedActiveMethod === 'DOC') {
+                detailsStr = `${docType} verified. Doc Number: ${docNumber}`;
+                targetName = docName;
+              }
+
+              handleConfirmAgeCheckedVerification(ageCheckedActiveMethod, targetName, detailsStr);
+            }, 600);
             return 100;
           }
-          return prev + 6;
+          return prev + 10;
         });
-      }, 100);
+      }, 120);
 
       return () => clearInterval(interval);
     }
-  }, [yotiActiveMethod, yotiStep]);
+  }, [ageCheckedActiveMethod, ageCheckedStep]);
 
-  // Handle finalize and save Yoti verification to session
-  const handleConfirmYotiVerification = (estimatedAge: number, method: 'ESTIMATION' | 'APP' | 'DOC', optionalName?: string) => {
-    const token = `yoti_v2_f${Math.floor(100000 + Math.random() * 900000)}_${method.toLowerCase()}`;
+  // Handle finalize and save AgeChecked verification to session
+  const handleConfirmAgeCheckedVerification = (
+    method: 'ELECTORAL' | 'CARD' | 'MOBILE' | 'DOC' | 'BIOMETRIC',
+    customName?: string,
+    customDetails?: string
+  ) => {
+    const token = `ac_v3_f${Math.floor(100000 + Math.random() * 900000)}_${method.toLowerCase()}`;
     const verificationObj = {
       method,
       timestamp: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('en-GB'),
       token,
-      estimatedAge,
-      docType: method === 'DOC' ? yotiDocType : undefined,
-      name: method === 'DOC' ? (optionalName || yotiExtractedName || fullName || 'Verified Pouch Client') : (fullName || 'Verified Pouch Client')
+      name: customName || fullName || 'Verified Pouch Client',
+      details: customDetails || 'Instant age check approved'
     };
 
-    setYotiVerifyingDetails(verificationObj);
-    setYotiVerified(true);
-    setYotiStep('success');
+    setAgeCheckedDetails(verificationObj);
+    setAgeCheckedVerified(true);
+    setAgeCheckedStep('success');
 
-    sessionStorage.setItem('yoti_verified', 'true');
-    sessionStorage.setItem('yoti_details', JSON.stringify(verificationObj));
+    sessionStorage.setItem('agechecked_verified', 'true');
+    sessionStorage.setItem('agechecked_details', JSON.stringify(verificationObj));
     
-    // Also sync verification state with loggedInCustomer if they exist
-    if (loggedInCustomer) {
-      // Dispatch custom event to notify App.tsx if needed
-      const event = new CustomEvent('yoti-status-updated', { detail: { verified: true, details: verificationObj } });
-      window.dispatchEvent(event);
-    }
+    // Dispatch custom event if other parts of application listen
+    const event = new CustomEvent('agechecked-status-updated', { detail: { verified: true, details: verificationObj } });
+    window.dispatchEvent(event);
   };
 
-  // Reset/Reset verification (for simulation & admin clarity)
-  const handleResetYotiVerification = () => {
-    setYotiVerified(false);
-    setYotiVerifyingDetails(null);
-    setYotiActiveMethod(null);
-    setYotiStep('select');
-    setYotiScanningProgress(0);
-    setYotiSelfieFile(null);
-    setYotiDocFile(null);
+  // Reset verification
+  const handleResetAgeCheckedVerification = () => {
+    setAgeCheckedVerified(false);
+    setAgeCheckedDetails(null);
+    setAgeCheckedActiveMethod(null);
+    setAgeCheckedStep('select');
+    setAgeCheckedScanningProgress(0);
 
-    sessionStorage.removeItem('yoti_verified');
-    sessionStorage.removeItem('yoti_details');
+    sessionStorage.removeItem('agechecked_verified');
+    sessionStorage.removeItem('agechecked_details');
 
-    const event = new CustomEvent('yoti-status-updated', { detail: { verified: false, details: null } });
+    const event = new CustomEvent('agechecked-status-updated', { detail: { verified: false, details: null } });
     window.dispatchEvent(event);
   };
 
@@ -296,10 +301,10 @@ export default function CheckoutView({
       return;
     }
 
-    if (!yotiVerified) {
-      setPaymentError('Age Verification Required: Under tobacco & nicotine regulation, you must verify you are 18+ via Yoti before completing your order.');
-      // Smooth scroll to Yoti block
-      const element = document.getElementById('yoti-verification-section');
+    if (!ageCheckedVerified) {
+      setPaymentError('Age Verification Required: Under tobacco & nicotine regulation, you must verify you are 18+ via AgeChecked before completing your order.');
+      // Smooth scroll to AgeChecked block
+      const element = document.getElementById('agechecked-verification-section');
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
@@ -785,23 +790,23 @@ export default function CheckoutView({
             </div>
           </div>
 
-          {/* Yoti Age Verification Section */}
-          <div id="yoti-verification-section" className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4 transition-all duration-300">
+          {/* AgeChecked Age Verification Section */}
+          <div id="agechecked-verification-section" className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4 transition-all duration-300">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                  <UserCheck className="h-4.5 w-4.5 text-indigo-600" /> 1.5. Yoti 18+ Age Verification
+                  <UserCheck className="h-4.5 w-4.5 text-cyan-600" /> 1.5. AgeChecked 18+ Verification
                 </h3>
                 <p className="text-slate-400 text-[10.5px] font-bold mt-1 leading-normal">
-                  Under tobacco & nicotine regulation, you must verify you are 18+ before completing your order.
+                  In compliance with UK Tobacco and Nicotine sales standards, we instantly verify that you are aged 18 or over.
                 </p>
               </div>
-              <div className="shrink-0 flex items-center gap-1.5 bg-[#dfa047]/10 text-[#dfa047] border border-[#dfa047]/20 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
-                🛡️ Yoti Official
+              <div className="shrink-0 flex items-center gap-1.5 bg-cyan-50 text-cyan-700 border border-cyan-200/50 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
+                🛡️ AgeChecked App Verified
               </div>
             </div>
 
-            {yotiVerified && yotiVerifyingDetails ? (
+            {ageCheckedVerified && ageCheckedDetails ? (
               /* Verification Success State */
               <div className="bg-emerald-50/40 border-2 border-emerald-500/30 p-5 rounded-2xl space-y-4 relative overflow-hidden">
                 <div className="absolute right-[-10px] top-[-10px] w-14 h-14 bg-emerald-100/40 rounded-full flex items-center justify-center">
@@ -813,9 +818,9 @@ export default function CheckoutView({
                     <ShieldCheck className="h-5 w-5" />
                   </span>
                   <div className="space-y-1">
-                    <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800">Age Verified Successfully</h4>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800">Age Checked Successfully</h4>
                     <p className="text-[11px] text-slate-500 leading-normal font-bold">
-                      Your identity and age (18+) have been securely validated via Yoti and locked to this checkout session.
+                      Your age is verified (18+) via the secure AgeChecked system and associated with your transaction.
                     </p>
                   </div>
                 </div>
@@ -823,32 +828,40 @@ export default function CheckoutView({
                 {/* Verification Metadata table */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-white border border-emerald-100 rounded-xl p-3.5 text-[10px] font-semibold text-slate-600">
                   <div className="space-y-1">
-                    <p className="text-slate-400 text-[8px] uppercase font-black">Method Used</p>
+                    <p className="text-slate-400 text-[8px] uppercase font-black">Verification Method</p>
                     <p className="font-extrabold text-slate-800 flex items-center gap-1">
-                      {yotiVerifyingDetails.method === 'ESTIMATION' ? 'Facial Age Estimation Scan' : yotiVerifyingDetails.method === 'APP' ? 'Yoti Smartphone App Sync' : 'ID Document Verification'}
+                      {ageCheckedDetails.method === 'ELECTORAL' && 'UK Electoral Register Match'}
+                      {ageCheckedDetails.method === 'CARD' && 'Card pre-auth Validation Check'}
+                      {ageCheckedDetails.method === 'MOBILE' && 'Mobile Operator Sync Match'}
+                      {ageCheckedDetails.method === 'DOC' && 'Government Document Check'}
+                      {ageCheckedDetails.method === 'BIOMETRIC' && 'Biometric Facial Estimate Scan'}
                     </p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-slate-400 text-[8px] uppercase font-black">Verified Client Name</p>
-                    <p className="font-extrabold text-slate-800">{yotiVerifyingDetails.name || fullName || 'Verified Pouch Client'}</p>
+                    <p className="text-slate-400 text-[8px] uppercase font-black">Verified Customer Name</p>
+                    <p className="font-extrabold text-slate-800">{ageCheckedDetails.name}</p>
+                  </div>
+                  <div className="space-y-1 sm:col-span-2 border-t border-slate-100 pt-2.5">
+                    <p className="text-slate-400 text-[8px] uppercase font-black">Compliance Reference Details</p>
+                    <p className="font-mono text-slate-700 text-[9.5px] select-all truncate">{ageCheckedDetails.details}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-slate-400 text-[8px] uppercase font-black">Verification Token</p>
-                    <p className="font-mono text-indigo-600 text-[9px] select-all truncate">{yotiVerifyingDetails.token}</p>
+                    <p className="text-slate-400 text-[8px] uppercase font-black">Compliance Token</p>
+                    <p className="font-mono text-cyan-600 text-[9px] select-all truncate">{ageCheckedDetails.token}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-slate-400 text-[8px] uppercase font-black">Timestamp</p>
-                    <p className="font-extrabold text-slate-800">{yotiVerifyingDetails.timestamp}</p>
+                    <p className="text-slate-400 text-[8px] uppercase font-black">Verified Timestamp</p>
+                    <p className="font-extrabold text-slate-800">{ageCheckedDetails.timestamp}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between gap-4 pt-1">
                   <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
-                    <Lock className="h-3.5 w-3.5 shrink-0" /> Verified 18+ compliant under UK Tobacco Regulation.
+                    <Lock className="h-3.5 w-3.5 shrink-0" /> PAS 1296 Accredited Age Assurance.
                   </p>
                   <button
                     type="button"
-                    onClick={handleResetYotiVerification}
+                    onClick={handleResetAgeCheckedVerification}
                     className="text-[9.5px] text-red-600 hover:text-red-700 font-black uppercase hover:underline bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 px-3 py-1.5 rounded-lg transition-all cursor-pointer"
                   >
                     Reset & Re-Verify
@@ -859,82 +872,132 @@ export default function CheckoutView({
               /* Pending Verification state */
               <div className="space-y-4">
                 
-                {yotiActiveMethod === null && (
+                {ageCheckedActiveMethod === null && (
                   /* Main verification type selection cards */
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     
-                    {/* Method 1: Face Scan */}
+                    {/* Method 1: UK Electoral Roll */}
                     <button
                       type="button"
                       onClick={() => {
-                        setYotiActiveMethod('ESTIMATION');
-                        setYotiStep('scanning');
+                        setAgeCheckedActiveMethod('ELECTORAL');
+                        setAgeCheckedStep('input');
                       }}
-                      className="text-left border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
+                      className="text-left border border-slate-200 hover:border-cyan-500 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
                     >
                       <div className="space-y-2">
-                        <span className="p-2 bg-indigo-50 text-indigo-600 rounded-lg inline-block group-hover:bg-indigo-100 transition-colors">
-                          <Camera className="h-4.5 w-4.5" />
+                        <span className="p-2 bg-cyan-50 text-cyan-700 rounded-lg inline-block group-hover:bg-cyan-100 transition-colors">
+                          <CheckCircle className="h-4.5 w-4.5" />
                         </span>
                         <div>
-                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">1. Face Selfie Scan</h4>
+                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">1. Electoral Register</h4>
                           <p className="text-[10.5px] text-slate-500 font-medium leading-normal pt-1">
-                            Use your webcam for an instant 3-second age estimation selfie check.
+                            Instant verification matching name, address, and DOB against electoral rolls.
                           </p>
                         </div>
                       </div>
-                      <span className="text-[10px] text-indigo-600 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        Start selfie scan <span className="text-xs">➔</span>
+                      <span className="text-[10px] text-cyan-700 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        Select Electoral check <span className="text-xs">➔</span>
                       </span>
                     </button>
 
-                    {/* Method 2: Yoti App */}
+                    {/* Method 2: Payment Card Pre-auth */}
                     <button
                       type="button"
                       onClick={() => {
-                        setYotiActiveMethod('APP');
-                        setYotiStep('scanning');
+                        setAgeCheckedActiveMethod('CARD');
+                        setAgeCheckedStep('input');
                       }}
-                      className="text-left border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
+                      className="text-left border border-slate-200 hover:border-cyan-500 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
                     >
                       <div className="space-y-2">
-                        <span className="p-2 bg-indigo-50 text-indigo-600 rounded-lg inline-block group-hover:bg-indigo-100 transition-colors">
-                          <QrCode className="h-4.5 w-4.5" />
+                        <span className="p-2 bg-cyan-50 text-cyan-700 rounded-lg inline-block group-hover:bg-cyan-100 transition-colors">
+                          <CreditCard className="h-4.5 w-4.5" />
                         </span>
                         <div>
-                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">2. Yoti Mobile App</h4>
+                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">2. Card Verification</h4>
                           <p className="text-[10.5px] text-slate-500 font-medium leading-normal pt-1">
-                            Scan a QR code using your Yoti app to share verified age details instantly.
+                            Simulate a credit or debit card check verifying adult ownership. No charge is made.
                           </p>
                         </div>
                       </div>
-                      <span className="text-[10px] text-indigo-600 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        Scan QR code <span className="text-xs">➔</span>
+                      <span className="text-[10px] text-cyan-700 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        Select Card Check <span className="text-xs">➔</span>
                       </span>
                     </button>
 
-                    {/* Method 3: Doc Upload */}
+                    {/* Method 3: Mobile Network Database */}
                     <button
                       type="button"
                       onClick={() => {
-                        setYotiActiveMethod('DOC');
-                        setYotiStep('select'); // Let user select document type first
+                        setAgeCheckedActiveMethod('MOBILE');
+                        setAgeCheckedStep('input');
                       }}
-                      className="text-left border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
+                      className="text-left border border-slate-200 hover:border-cyan-500 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
                     >
                       <div className="space-y-2">
-                        <span className="p-2 bg-indigo-50 text-indigo-600 rounded-lg inline-block group-hover:bg-indigo-100 transition-colors">
+                        <span className="p-2 bg-cyan-50 text-cyan-700 rounded-lg inline-block group-hover:bg-cyan-100 transition-colors">
+                          <Smartphone className="h-4.5 w-4.5" />
+                        </span>
+                        <div>
+                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">3. Mobile Operator</h4>
+                          <p className="text-[10.5px] text-slate-500 font-medium leading-normal pt-1">
+                            Queries your mobile operator (EE, Vodafone, O2, Three) to match adult credentials.
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-cyan-700 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        Select Mobile check <span className="text-xs">➔</span>
+                      </span>
+                    </button>
+
+                    {/* Method 4: Passport or Driving Licence */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAgeCheckedActiveMethod('DOC');
+                        setAgeCheckedStep('input');
+                      }}
+                      className="text-left border border-slate-200 hover:border-cyan-500 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
+                    >
+                      <div className="space-y-2">
+                        <span className="p-2 bg-cyan-50 text-cyan-700 rounded-lg inline-block group-hover:bg-cyan-100 transition-colors">
                           <Upload className="h-4.5 w-4.5" />
                         </span>
                         <div>
-                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">3. Identity Document</h4>
+                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">4. Driving Licence / Passport</h4>
                           <p className="text-[10.5px] text-slate-500 font-medium leading-normal pt-1">
-                            Upload your Passport, Driving License, or ID Card for OCR scanning.
+                            Check and authenticate document register formats instantly to pass regulation.
                           </p>
                         </div>
                       </div>
-                      <span className="text-[10px] text-indigo-600 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        Upload ID document <span className="text-xs">➔</span>
+                      <span className="text-[10px] text-cyan-700 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        Select Document Check <span className="text-xs">➔</span>
+                      </span>
+                    </button>
+
+                    {/* Method 5: Facial age mesh biometric estimation */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAgeCheckedActiveMethod('BIOMETRIC');
+                        setAgeCheckedStep('verifying');
+                      }}
+                      className="text-left border border-slate-200 hover:border-cyan-500 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
+                    >
+                      <div className="space-y-2">
+                        <span className="p-2 bg-cyan-50 text-cyan-700 rounded-lg inline-block group-hover:bg-cyan-100 transition-colors">
+                          <Camera className="h-4.5 w-4.5" />
+                        </span>
+                        <div>
+                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">5. Facial Age Biometrics</h4>
+                          <p className="text-[10.5px] text-slate-500 font-medium leading-normal pt-1">
+                            Secure camera-based biometrics scan evaluating physical age markers in 3 seconds.
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-cyan-700 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        Start Facial Scan <span className="text-xs">➔</span>
                       </span>
                     </button>
 
@@ -942,286 +1005,284 @@ export default function CheckoutView({
                 )}
 
                 {/* ACTIVE VERIFICATION WORKFLOW DISPLAY */}
-                {yotiActiveMethod !== null && (
+                {ageCheckedActiveMethod !== null && (
                   <div className="border border-slate-200/80 rounded-xl p-4 bg-slate-50/40 space-y-4">
                     
                     {/* Active Header with Go Back */}
                     <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
                       <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
-                        <span className="text-[10px] font-black uppercase text-indigo-800 tracking-wider">
-                          {yotiActiveMethod === 'ESTIMATION' && 'Facial Age Estimation'}
-                          {yotiActiveMethod === 'APP' && 'Yoti App QR Verification'}
-                          {yotiActiveMethod === 'DOC' && 'ID Document Upload Verification'}
+                        <span className="h-2 w-2 rounded-full bg-cyan-600 animate-pulse" />
+                        <span className="text-[10px] font-black uppercase text-cyan-800 tracking-wider">
+                          {ageCheckedActiveMethod === 'ELECTORAL' && 'AgeChecked: Electoral Register Match'}
+                          {ageCheckedActiveMethod === 'CARD' && 'AgeChecked: Payment Card Check'}
+                          {ageCheckedActiveMethod === 'MOBILE' && 'AgeChecked: Mobile Operator Handshake'}
+                          {ageCheckedActiveMethod === 'DOC' && 'AgeChecked: Document Integrity Check'}
+                          {ageCheckedActiveMethod === 'BIOMETRIC' && 'AgeChecked: Facial Biometrics Scan'}
                         </span>
                       </div>
                       <button
                         type="button"
-                        onClick={handleResetYotiVerification}
+                        onClick={handleResetAgeCheckedVerification}
                         className="text-[9.5px] text-slate-500 hover:text-slate-800 font-black uppercase flex items-center gap-1 cursor-pointer hover:underline"
                       >
                         ✕ Cancel & Choose Other
                       </button>
                     </div>
 
-                    {/* METHOD 1: FACIAL AGE ESTIMATION DETAILS */}
-                    {yotiActiveMethod === 'ESTIMATION' && (
-                      <div className="space-y-4">
-                        {yotiStep === 'scanning' && (
-                          <div className="flex flex-col items-center justify-center p-6 space-y-4 text-center">
-                            
-                            {/* Webcam/Scanner Box */}
-                            <div className="relative w-48 h-48 rounded-full border-4 border-dashed border-indigo-500/80 overflow-hidden bg-slate-900 flex items-center justify-center shadow-inner">
-                              
-                              {/* Video live feedback or animated face placeholder */}
-                              {yotiLocalStream ? (
-                                <video
-                                  ref={video => { if (video && yotiLocalStream) { video.srcObject = yotiLocalStream; } }}
-                                  autoPlay
-                                  playsInline
-                                  muted
-                                  className="absolute inset-0 w-full h-full object-cover rounded-full"
+                    {/* INTERACTIVE INPUT FORMS */}
+                    {ageCheckedStep === 'input' && (
+                      <div className="space-y-4 text-left">
+                        
+                        {/* 1. Electoral roll details */}
+                        {ageCheckedActiveMethod === 'ELECTORAL' && (
+                          <div className="space-y-3.5">
+                            <p className="text-[10.5px] text-slate-500 font-bold leading-normal">
+                              Enter your registered voter address details. AgeChecked matches public registries instantly without pulling credit histories.
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Full Name</label>
+                                <input
+                                  type="text"
+                                  value={electoralName}
+                                  onChange={(e) => setElectoralName(e.target.value)}
+                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
+                                  required
                                 />
-                              ) : (
-                                <div className="text-slate-500 text-center space-y-2">
-                                  <Camera className="h-10 w-10 mx-auto text-slate-400 animate-pulse" />
-                                  <span className="text-[9px] font-bold block uppercase text-slate-400 px-3">Initializing Camera...</span>
-                                </div>
-                              )}
-
-                              {/* Scanning visual overlay bar */}
-                              <div className="absolute inset-x-0 h-1.5 bg-indigo-400 opacity-75 shadow-[0_0_8px_rgba(129,140,248,0.8)] animate-[bounce_2s_infinite]" style={{ top: `${yotiScanningProgress}%` }} />
-                              
-                              {/* Scan targets */}
-                              <div className="absolute inset-8 border border-white/20 rounded-full pointer-events-none border-dashed" />
-                            </div>
-
-                            <div className="space-y-1">
-                              <p className="text-xs font-black uppercase text-slate-800">Yoti Facial Analyzer Scan in progress...</p>
-                              <p className="text-[10px] text-slate-400 font-semibold leading-normal max-w-sm">
-                                Please look directly into your camera. Yoti is checking biometric age markers. No images are recorded or saved.
-                              </p>
-                            </div>
-
-                            {/* Progress bar container */}
-                            <div className="w-full max-w-xs space-y-1.5">
-                              <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-slate-500">
-                                <span>Scanning Face Mesh</span>
-                                <span>{yotiScanningProgress}%</span>
                               </div>
-                              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                                <div className="bg-indigo-600 h-full transition-all duration-100" style={{ width: `${yotiScanningProgress}%` }} />
+                              <div className="space-y-1">
+                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Date of Birth</label>
+                                <input
+                                  type="date"
+                                  value={electoralDob}
+                                  onChange={(e) => setElectoralDob(e.target.value)}
+                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-1 sm:col-span-2">
+                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Registered Postcode</label>
+                                <input
+                                  type="text"
+                                  value={electoralPostcode}
+                                  onChange={(e) => setElectoralPostcode(e.target.value)}
+                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
+                                  required
+                                />
                               </div>
                             </div>
-                          </div>
-                        )}
-
-                        {yotiStep === 'details_extracted' && (
-                          <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-3.5 text-center">
-                            <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-emerald-100 text-emerald-700">
-                              <UserCheck className="h-5 w-5" />
-                            </div>
-                            <div className="space-y-1">
-                              <h5 className="text-xs font-black uppercase tracking-wide text-indigo-900">Estimation Complete</h5>
-                              <p className="text-[11px] text-slate-600 font-bold max-w-sm mx-auto">
-                                The biometric scan successfully verified your age. You are estimated to be <strong className="text-slate-900 font-black">{yotiAgeEstimate} Years Old</strong> (Age 18+ Threshold Passed).
-                              </p>
-                            </div>
-
                             <button
                               type="button"
-                              onClick={() => handleConfirmYotiVerification(yotiAgeEstimate, 'ESTIMATION')}
-                              className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl cursor-pointer shadow-sm transition-colors"
+                              onClick={() => {
+                                if (electoralDob) {
+                                  setAgeCheckedStep('verifying');
+                                } else {
+                                  alert('Please specify your date of birth first.');
+                                }
+                              }}
+                              className="bg-cyan-600 hover:bg-cyan-700 text-white font-black text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-xl cursor-pointer"
                             >
-                              Confirm & Approve Verification
+                              Verify via Electoral Roll
                             </button>
                           </div>
                         )}
-                      </div>
-                    )}
 
-                    {/* METHOD 2: YOTI APP VERIFICATION */}
-                    {yotiActiveMethod === 'APP' && (
-                      <div className="space-y-4">
-                        <div className="flex flex-col sm:flex-row items-center gap-5 p-4">
-                          
-                          {/* Pixelated mock QR code */}
-                          <div className="bg-white p-3 border border-slate-200 rounded-xl shrink-0 shadow-sm relative">
-                            <div className="w-28 h-28 grid grid-cols-4 gap-1.5 opacity-85">
-                              {Array.from({ length: 16 }).map((_, i) => {
-                                const isCorner = i === 0 || i === 3 || i === 12 || i === 15;
-                                return (
-                                  <div
-                                    key={i}
-                                    className={`rounded ${
-                                      isCorner 
-                                        ? 'bg-slate-900 border-4 border-slate-350' 
-                                        : Math.random() > 0.4 ? 'bg-slate-900' : 'bg-slate-100'
-                                    }`}
-                                  />
-                                );
-                              })}
-                            </div>
-                            {/* Scanning indicator */}
-                            <div className="absolute inset-x-2 h-0.5 bg-indigo-500 opacity-60 animate-bounce" style={{ top: '50%' }} />
-                          </div>
-
-                          <div className="flex-1 space-y-3">
-                            <div className="space-y-1.5 text-left">
-                              <h5 className="text-xs font-black uppercase text-slate-900">1. Scan QR Code on your Phone</h5>
-                              <p className="text-[10.5px] text-slate-500 font-semibold leading-relaxed">
-                                Open the Yoti app on your mobile device, press the "Scan QR" button, and aim your camera at this QR code.
-                              </p>
-                            </div>
-
-                            <div className="space-y-2 bg-slate-100 p-3 rounded-lg text-left">
-                              <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 uppercase">
-                                <span>Awaiting smartphone handshake...</span>
-                                <span>{yotiScanningProgress}%</span>
-                              </div>
-                              <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                                <div className="bg-indigo-600 h-full transition-all duration-150" style={{ width: `${yotiScanningProgress}%` }} />
-                              </div>
-                            </div>
-
-                            <div className="pt-1 text-left flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleConfirmYotiVerification(25, 'APP')}
-                                className="bg-slate-900 hover:bg-black text-white font-black text-[10px] uppercase tracking-wider px-3.5 py-2 rounded-lg cursor-pointer transition-colors"
-                              >
-                                Simulate App Consent Approve
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* METHOD 3: IDENTITY DOCUMENT UPLOAD */}
-                    {yotiActiveMethod === 'DOC' && (
-                      <div className="space-y-4">
-                        {yotiStep === 'select' && (
-                          <div className="space-y-4">
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Select Identity Document Type</label>
-                              <div className="grid grid-cols-3 gap-2.5">
-                                {(['Passport', 'Driving License', 'Citizen Card'] as const).map((doc) => (
-                                  <button
-                                    type="button"
-                                    key={doc}
-                                    onClick={() => setYotiDocType(doc)}
-                                    className={`py-2 px-3 text-[10px] font-bold uppercase border rounded-lg transition-all ${
-                                      yotiDocType === doc 
-                                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-black' 
-                                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                    }`}
-                                  >
-                                    {doc === 'Passport' ? '✈️ ' : doc === 'Driving License' ? '🚗 ' : '🆔 '} {doc}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-
-                            {/* Upload Area */}
-                            <div className="border-2 border-dashed border-slate-250 bg-white hover:bg-slate-50 rounded-xl p-6 text-center space-y-3 transition-colors relative cursor-pointer">
-                              <Upload className="h-7 w-7 text-slate-400 mx-auto" />
-                              <div className="space-y-1">
-                                <p className="text-xs font-black text-slate-800 uppercase">Upload or Drag Front of your {yotiDocType}</p>
-                                <p className="text-[9.5px] text-slate-400 font-semibold">Supports PNG, JPG, PDF up to 8MB. Must clearly show name and date of birth.</p>
-                              </div>
-                              
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setYotiStep('scanning');
-                                }}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] uppercase px-4 py-2 rounded-lg transition-colors cursor-pointer inline-block"
-                              >
-                                Simulate ID Scan & Upload
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {yotiStep === 'scanning' && (
-                          <div className="flex flex-col items-center justify-center p-6 space-y-4 text-center">
-                            <RefreshCw className="h-8 w-8 text-indigo-600 animate-spin" />
-                            <div className="space-y-1">
-                              <p className="text-xs font-black uppercase text-slate-800">Yoti OCR Document Scanning...</p>
-                              <p className="text-[10px] text-slate-400 font-semibold leading-normal max-w-sm">
-                                Verifying security watermarks and extracting birth details from your {yotiDocType}.
-                              </p>
-                            </div>
-
-                            {/* Progress bar */}
-                            <div className="w-full max-w-xs space-y-1.5">
-                              <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-slate-500">
-                                <span>Scanning {yotiDocType}</span>
-                                <span>{yotiScanningProgress}%</span>
-                              </div>
-                              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                                <div className="bg-indigo-600 h-full transition-all duration-100" style={{ width: `${yotiScanningProgress}%` }} />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {yotiStep === 'details_extracted' && (
-                          <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-3.5">
-                            <div className="flex items-center gap-3">
-                              <span className="p-1.5 bg-indigo-50 text-indigo-700 rounded-lg">
-                                <UserCheck className="h-4 w-4" />
-                              </span>
-                              <div>
-                                <h5 className="text-[11px] font-black uppercase text-slate-900">Extracted Document Data</h5>
-                                <p className="text-[9.5px] text-slate-400 font-semibold">Please review and confirm to proceed.</p>
-                              </div>
-                            </div>
-
-                            <div className="space-y-3 border-t border-slate-100 pt-3">
-                              <div className="space-y-1">
-                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Extracted Full Name</label>
+                        {/* 2. Card Check Details */}
+                        {ageCheckedActiveMethod === 'CARD' && (
+                          <div className="space-y-3.5">
+                            <p className="text-[10.5px] text-slate-500 font-bold leading-normal">
+                              Authorize a mock verification. Visa and Mastercard mandate that payment card issuers only issue active accounts to individuals 18+. We verify with the bank instantly.
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div className="space-y-1 sm:col-span-2">
+                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Name on Card</label>
                                 <input
                                   type="text"
-                                  value={yotiExtractedName}
-                                  onChange={(e) => setYotiExtractedName(e.target.value)}
-                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-slate-50/50"
+                                  value={cardCheckName}
+                                  onChange={(e) => setCardCheckName(e.target.value)}
+                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
+                                  required
                                 />
                               </div>
+                              <div className="space-y-1 sm:col-span-2">
+                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Card Number (16-digit)</label>
+                                <input
+                                  type="text"
+                                  placeholder="xxxx xxxx xxxx xxxx"
+                                  value={cardCheckNumber}
+                                  onChange={(e) => setCardCheckNumber(e.target.value)}
+                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
+                                  required
+                                />
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setAgeCheckedStep('verifying')}
+                              className="bg-cyan-600 hover:bg-cyan-700 text-white font-black text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-xl cursor-pointer"
+                            >
+                              Simulate Bank Age Validation
+                            </button>
+                          </div>
+                        )}
 
-                              <div className="grid grid-cols-2 gap-3.5 text-[10px] font-semibold text-slate-600">
-                                <div className="space-y-0.5">
-                                  <p className="text-slate-400 text-[8px] uppercase font-black">Document Type</p>
-                                  <p className="font-extrabold text-slate-800">{yotiDocType}</p>
+                        {/* 3. Mobile Network Verification */}
+                        {ageCheckedActiveMethod === 'MOBILE' && (
+                          <div className="space-y-3.5">
+                            <p className="text-[10.5px] text-slate-500 font-bold leading-normal">
+                              AgeChecked matches your cellular profile with carrier database registries to confirm you are registered as a bill-paying adult.
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">UK Mobile Number</label>
+                                <input
+                                  type="tel"
+                                  placeholder="e.g. 07700 900077"
+                                  value={mobilePhone}
+                                  onChange={(e) => setMobilePhone(e.target.value)}
+                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Network Carrier</label>
+                                <select
+                                  value={mobileNetwork}
+                                  onChange={(e) => setMobileNetwork(e.target.value)}
+                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
+                                >
+                                  <option value="EE">EE</option>
+                                  <option value="O2">O2</option>
+                                  <option value="Vodafone">Vodafone</option>
+                                  <option value="Three">Three Mobile</option>
+                                  <option value="Virgin Mobile">Virgin Mobile</option>
+                                </select>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setAgeCheckedStep('verifying')}
+                              className="bg-cyan-600 hover:bg-cyan-700 text-white font-black text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-xl cursor-pointer"
+                            >
+                              Send Handshake Signal
+                            </button>
+                          </div>
+                        )}
+
+                        {/* 4. Document check details */}
+                        {ageCheckedActiveMethod === 'DOC' && (
+                          <div className="space-y-3.5">
+                            <p className="text-[10.5px] text-slate-500 font-bold leading-normal">
+                              Please supply your document reference details. AgeChecked performs instant cryptographic register lookup matching.
+                            </p>
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Document Type</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {(['Passport', 'Driving License'] as const).map((doc) => (
+                                    <button
+                                      type="button"
+                                      key={doc}
+                                      onClick={() => setDocType(doc)}
+                                      className={`py-2 px-3 text-[9.5px] font-black uppercase border rounded-lg transition-all ${
+                                        docType === doc 
+                                          ? 'border-cyan-600 bg-cyan-50 text-cyan-700' 
+                                          : 'border-slate-200 bg-white text-slate-600'
+                                      }`}
+                                    >
+                                      {doc === 'Passport' ? '✈️ UK Passport' : '🚗 UK Driving Licence'}
+                                    </button>
+                                  ))}
                                 </div>
-                                <div className="space-y-0.5">
-                                  <p className="text-slate-400 text-[8px] uppercase font-black">Age Status</p>
-                                  <p className="font-black text-emerald-600 uppercase flex items-center gap-1">✓ Over 18 Verified</p>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Full Name on Document</label>
+                                  <input
+                                    type="text"
+                                    value={docName}
+                                    onChange={(e) => setDocName(e.target.value)}
+                                    className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
+                                    required
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">
+                                    {docType === 'Passport' ? 'Passport Number (9 Digits)' : 'Licence Number (18 Characters)'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder={docType === 'Passport' ? 'e.g. 504930122' : 'e.g. SMITH904837DS29'}
+                                    value={docNumber}
+                                    onChange={(e) => setDocNumber(e.target.value)}
+                                    className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white font-mono"
+                                    required
+                                  />
                                 </div>
                               </div>
                             </div>
-
-                            <div className="flex gap-3 pt-1 border-t border-slate-100">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setYotiStep('select');
-                                }}
-                                className="w-1/2 text-[10px] border border-slate-200 hover:bg-slate-50 text-slate-500 font-black uppercase py-2 rounded-lg transition-colors cursor-pointer"
-                              >
-                                Scan Different ID
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleConfirmYotiVerification(28, 'DOC', yotiExtractedName)}
-                                className="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] uppercase py-2 rounded-lg transition-colors cursor-pointer text-center"
-                              >
-                                Approve & Save Data
-                              </button>
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setAgeCheckedStep('verifying')}
+                              className="bg-cyan-600 hover:bg-cyan-700 text-white font-black text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-xl cursor-pointer"
+                            >
+                              Verify Document Number
+                            </button>
                           </div>
                         )}
+
+                      </div>
+                    )}
+
+                    {/* VERIFYING SIMULATOR PROGRESS */}
+                    {ageCheckedStep === 'verifying' && (
+                      <div className="flex flex-col items-center justify-center p-6 space-y-4 text-center">
+                        
+                        {/* Special Webcam Frame for Biometric, Standard Spin for Text Checks */}
+                        {ageCheckedActiveMethod === 'BIOMETRIC' ? (
+                          <div className="relative w-48 h-48 rounded-full border-4 border-dashed border-cyan-500 overflow-hidden bg-slate-900 flex items-center justify-center shadow-inner">
+                            {ageCheckedLocalStream ? (
+                              <video
+                                ref={video => { if (video && ageCheckedLocalStream) { video.srcObject = ageCheckedLocalStream; } }}
+                                autoPlay
+                                playsInline
+                                muted
+                                className="absolute inset-0 w-full h-full object-cover rounded-full"
+                              />
+                            ) : (
+                              <div className="text-slate-500 text-center space-y-2">
+                                <Camera className="h-10 w-10 mx-auto text-slate-400 animate-pulse" />
+                                <span className="text-[9px] font-bold block uppercase text-slate-400 px-3">Initializing Camera...</span>
+                              </div>
+                            )}
+                            <div className="absolute inset-x-0 h-1 bg-cyan-400 opacity-80 shadow-[0_0_8px_rgba(34,211,238,0.8)] animate-[bounce_2s_infinite]" style={{ top: `${ageCheckedScanningProgress}%` }} />
+                          </div>
+                        ) : (
+                          <div className="p-4 bg-cyan-50 text-cyan-600 rounded-full animate-spin">
+                            <RefreshCw className="h-8 w-8" />
+                          </div>
+                        )}
+
+                        <div className="space-y-1">
+                          <p className="text-xs font-black uppercase text-slate-800">
+                            {ageCheckedActiveMethod === 'BIOMETRIC' ? 'Analyzing Face Geometry...' : 'AgeChecked Secure Verification in Progress...'}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-semibold leading-normal max-w-sm">
+                            Querying compliant registers and validating age thresholds safely. This process adheres to PAS 1296 privacy requirements.
+                          </p>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-full max-w-xs space-y-1.5">
+                          <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-slate-500">
+                            <span>Processing Match Rate</span>
+                            <span>{ageCheckedScanningProgress}%</span>
+                          </div>
+                          <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                            <div className="bg-cyan-600 h-full transition-all duration-100" style={{ width: `${ageCheckedScanningProgress}%` }} />
+                          </div>
+                        </div>
                       </div>
                     )}
 
