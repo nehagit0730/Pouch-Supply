@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, CartItem, BlogPost, LayoutSettings
@@ -283,6 +283,15 @@ export default function App() {
     }
   };
 
+  const loadedProductsSuccess = useRef(false);
+  const loadedCollectionsSuccess = useRef(false);
+  const loadedOrdersSuccess = useRef(false);
+  const loadedFilesSuccess = useRef(false);
+  const loadedCustomersSuccess = useRef(false);
+  const loadedDiscountsSuccess = useRef(false);
+  const loadedPagesSuccess = useRef(false);
+  const loadedBlogsSuccess = useRef(false);
+
   // Load all central database arrays on mount
   useEffect(() => {
     async function loadDataFromDb() {
@@ -303,14 +312,38 @@ export default function App() {
           fetch('/api/layoutsettings').then(r => r.ok ? r.json() : null),
         ]);
 
-        if (Array.isArray(prodsRes)) setProducts(prodsRes);
-        if (Array.isArray(collsRes)) setCollections(collsRes);
-        if (Array.isArray(ordersRes)) setOrders(ordersRes);
-        if (Array.isArray(filesRes)) setFiles(filesRes);
-        if (Array.isArray(custsRes)) setCustomers(custsRes);
-        if (Array.isArray(discsRes)) setDiscounts(discsRes);
-        if (Array.isArray(pagesRes)) setCustomPages(pagesRes);
-        if (Array.isArray(blogsRes)) setBlogs(blogsRes);
+        if (Array.isArray(prodsRes)) {
+          setProducts(prodsRes);
+          loadedProductsSuccess.current = true;
+        }
+        if (Array.isArray(collsRes)) {
+          setCollections(collsRes);
+          loadedCollectionsSuccess.current = true;
+        }
+        if (Array.isArray(ordersRes)) {
+          setOrders(ordersRes);
+          loadedOrdersSuccess.current = true;
+        }
+        if (Array.isArray(filesRes)) {
+          setFiles(filesRes);
+          loadedFilesSuccess.current = true;
+        }
+        if (Array.isArray(custsRes)) {
+          setCustomers(custsRes);
+          loadedCustomersSuccess.current = true;
+        }
+        if (Array.isArray(discsRes)) {
+          setDiscounts(discsRes);
+          loadedDiscountsSuccess.current = true;
+        }
+        if (Array.isArray(pagesRes)) {
+          setCustomPages(pagesRes);
+          loadedPagesSuccess.current = true;
+        }
+        if (Array.isArray(blogsRes)) {
+          setBlogs(blogsRes);
+          loadedBlogsSuccess.current = true;
+        }
         
         if (layoutRes) {
           setLayoutSettings(layoutRes.data || layoutRes);
@@ -590,56 +623,56 @@ export default function App() {
   // --- Write to LocalStorage AND MongoDB Database on Changes ---
   useEffect(() => {
     safeSaveToLocalStorage('ps_products', products);
-    if (isInitialLoadDone) {
+    if (isInitialLoadDone && loadedProductsSuccess.current) {
       syncToApi('products', products);
     }
   }, [products, isInitialLoadDone]);
 
   useEffect(() => {
     safeSaveToLocalStorage('ps_collections', collections);
-    if (isInitialLoadDone) {
+    if (isInitialLoadDone && loadedCollectionsSuccess.current) {
       syncToApi('collections', collections);
     }
   }, [collections, isInitialLoadDone]);
 
   useEffect(() => {
     safeSaveToLocalStorage('ps_orders', orders);
-    if (isInitialLoadDone) {
+    if (isInitialLoadDone && loadedOrdersSuccess.current) {
       syncToApi('orders', orders);
     }
   }, [orders, isInitialLoadDone]);
 
   useEffect(() => {
     safeSaveToLocalStorage('ps_files', files);
-    if (isInitialLoadDone) {
+    if (isInitialLoadDone && loadedFilesSuccess.current) {
       syncToApi('files', files);
     }
   }, [files, isInitialLoadDone]);
 
   useEffect(() => {
     safeSaveToLocalStorage('ps_customers', customers);
-    if (isInitialLoadDone) {
+    if (isInitialLoadDone && loadedCustomersSuccess.current) {
       syncToApi('customers', customers);
     }
   }, [customers, isInitialLoadDone]);
 
   useEffect(() => {
     safeSaveToLocalStorage('ps_discounts', discounts);
-    if (isInitialLoadDone) {
+    if (isInitialLoadDone && loadedDiscountsSuccess.current) {
       syncToApi('discounts', discounts);
     }
   }, [discounts, isInitialLoadDone]);
 
   useEffect(() => {
     safeSaveToLocalStorage('ps_custom_pages', customPages);
-    if (isInitialLoadDone) {
+    if (isInitialLoadDone && loadedPagesSuccess.current) {
       syncToApi('custompages', customPages);
     }
   }, [customPages, isInitialLoadDone]);
 
   useEffect(() => {
     safeSaveToLocalStorage('ps_blogs', blogs);
-    if (isInitialLoadDone) {
+    if (isInitialLoadDone && loadedBlogsSuccess.current) {
       syncToApi('blogs', blogs);
     }
   }, [blogs, isInitialLoadDone]);

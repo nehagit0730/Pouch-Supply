@@ -390,7 +390,7 @@ export default function ProductDetailView({
               {product.variants && product.variants.length > 0 && (
                 <div id="product-variants-section" className="space-y-3.5 pt-3 border-t border-slate-100">
                   {product.variants.map((v) => (
-                    <div key={v.id} className="space-y-1.5 text-left">
+                    <div key={v.id || v.name} className="space-y-1.5 text-left">
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">
                         Select {v.name}: <span className="text-indigo-600 font-extrabold">{selectedVariants[v.name]}</span>
                       </span>

@@ -186,6 +186,7 @@ export async function getDb(): Promise<any | null> {
 
 // Global resource controllers that fetch from Mongoose DB or fallback to memory
 export async function fetchResource(resource: string): Promise<any[]> {
+  const mongoUri = process.env.MONGODB_URI;
   try {
     const conn = await connectMongoose();
     const Model = getModelForResource(resource) as any;
@@ -196,9 +197,14 @@ export async function fetchResource(resource: string): Promise<any[]> {
         const { _id, __v, ...cleanDoc } = doc;
         return cleanDoc;
       });
+    } else if (mongoUri) {
+      throw new Error("MongoDB is configured but connection failed.");
     }
-  } catch (error) {
-    // Fallback active
+  } catch (error: any) {
+    console.error(`[fetchResource] Error fetching "${resource}":`, error);
+    if (mongoUri) {
+      throw new Error(`Database fetch failed for ${resource}: ${error.message || error}`);
+    }
   }
   return memoryCache[resource] || [];
 }
@@ -207,6 +213,7 @@ export async function saveResource(resource: string, list: any[]): Promise<any[]
   // Synchronously update local fallback cache
   memoryCache[resource] = [...list];
 
+  const mongoUri = process.env.MONGODB_URI;
   try {
     const conn = await connectMongoose();
     const Model = getModelForResource(resource) as any;
@@ -229,9 +236,14 @@ export async function saveResource(resource: string, list: any[]): Promise<any[]
       }
       console.log(`[saveResource] Successfully upserted and synchronized all ${list.length} items to ${resource} collection.`);
       return list;
+    } else if (mongoUri) {
+      throw new Error("MongoDB is configured but connection failed during save.");
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error(`[saveResource] Error during database synchronization for "${resource}":`, error);
+    if (mongoUri) {
+      throw new Error(`Database save failed for ${resource}: ${error.message || error}`);
+    }
   }
   return memoryCache[resource];
 }

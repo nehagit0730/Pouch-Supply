@@ -7,7 +7,7 @@ import {
   X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw, AlertTriangle, GripVertical,
   Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass, ShieldCheck, ChevronLeft,
   ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server, Lock, Gift, Check, Clock, Truck, ArrowRight, Zap, Shield,
-  Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit, LogOut
+  Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit, LogOut, Download, Upload
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 import CollectionEditor from './CollectionEditor';
@@ -1396,6 +1396,138 @@ export default function AdminDashboard({
     );
     onUpdateProducts(updated);
     setSelectedProductIds([]);
+  };
+
+  const handleExportProducts = () => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(products, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `pouch_supply_products_backup_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (e: any) {
+      console.error("Export failed:", e);
+      alert("Failed to export products: " + e.message);
+    }
+  };
+
+  const handleImportProducts = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        let importedList: any[] = [];
+
+        if (file.name.endsWith('.json')) {
+          const parsed = JSON.parse(text);
+          importedList = Array.isArray(parsed) ? parsed : [parsed];
+        } else if (file.name.endsWith('.csv')) {
+          const lines = text.split(/\r?\n/);
+          if (lines.length < 2) throw new Error("CSV file is empty or lacks headers");
+          
+          const headerLine = lines[0];
+          const separator = headerLine.includes(';') ? ';' : ',';
+          const headers = headerLine.split(separator).map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
+          
+          for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            let values: string[] = [];
+            let currentVal = '';
+            let inQuotes = false;
+            for (let charIndex = 0; charIndex < line.length; charIndex++) {
+              const char = line[charIndex];
+              if (char === '"' || char === "'") {
+                inQuotes = !inQuotes;
+              } else if (char === separator && !inQuotes) {
+                values.push(currentVal.trim().replace(/^["']|["']$/g, ''));
+                currentVal = '';
+              } else {
+                currentVal += char;
+              }
+            }
+            values.push(currentVal.trim().replace(/^["']|["']$/g, ''));
+
+            const rowObj: any = {};
+            headers.forEach((header, index) => {
+              rowObj[header] = values[index] || '';
+            });
+
+            if (rowObj.title || rowObj.id) {
+              const id = rowObj.id || `prod-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+              const title = rowObj.title || "Untitled Product";
+              const price = parseFloat(rowObj.price) || 4.99;
+              const compareAtPrice = rowObj.compareatprice ? parseFloat(rowObj.compareatprice) : undefined;
+              const inventory = parseInt(rowObj.inventory, 10) || 100;
+              const sku = rowObj.sku || `SKU-${id.toUpperCase()}`;
+              const category = rowObj.category || "Nicotine Pouches";
+              const vendor = rowObj.vendor || "Premium Brand";
+              const status = (rowObj.status && ['Active', 'Draft'].includes(rowObj.status)) ? rowObj.status : 'Active';
+              const image = rowObj.image || "/placeholder.png";
+              const description = rowObj.description || `Premium compounding high-grade portion from ${vendor}.`;
+              const weight = parseFloat(rowObj.weight) || 15;
+              const weightUnit = rowObj.weightunit || "g";
+              const strength = rowObj.strength || "10 mg";
+              const flavour = rowObj.flavour || "Original";
+              
+              importedList.push({
+                id,
+                title,
+                description,
+                price,
+                compareAtPrice,
+                inventory,
+                sku,
+                category,
+                vendor,
+                status,
+                image,
+                weight,
+                weightUnit,
+                tags: rowObj.tags ? rowObj.tags.split('|').map((t: string) => t.trim()) : [vendor, flavour],
+                slug: rowObj.slug || id,
+                strength,
+                flavour,
+                variants: rowObj.variants ? JSON.parse(rowObj.variants) : [{ id: `var-opt-${id}`, name: "Strength", values: [strength] }],
+                concreteVariants: rowObj.concretevariants ? JSON.parse(rowObj.concretevariants) : [{ id: `var-det-${id}`, name: `${flavour} (${strength})`, price, inventory, description, images: [image], flavour }]
+              });
+            }
+          }
+        } else {
+          throw new Error("Unsupported file extension. Please select a .json or .csv file.");
+        }
+
+        if (importedList.length === 0) {
+          throw new Error("No products could be parsed from the file.");
+        }
+
+        triggerConfirm(`Do you want to MERGE these ${importedList.length} products with your existing catalog? (Clicking 'OK' merges them. To replace your entire catalog, click cancel first and empty your catalog, or contact support.)`, () => {
+          const existingIds = new Set(products.map(p => p.id));
+          const merged = [...products];
+          importedList.forEach(item => {
+            if (existingIds.has(item.id)) {
+              const idx = merged.findIndex(p => p.id === item.id);
+              if (idx !== -1) merged[idx] = item;
+            } else {
+              merged.push(item);
+            }
+          });
+          onUpdateProducts(merged);
+        }, `Import ${importedList.length} Products`);
+
+      } catch (err: any) {
+        console.error("Import failed:", err);
+        alert("Failed to import products: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   // Create & Edit Collection
@@ -3685,15 +3817,38 @@ export default function AdminDashboard({
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setEditingProduct(null);
-                      setShowAddProduct(true);
-                    }}
-                    className="bg-slate-900 hover:bg-slate-850 font-bold p-2.5 px-4 rounded-xl text-xs text-white flex items-center gap-1 shadow-xs cursor-pointer"
-                  >
-                    <Plus className="h-4 w-4" /> Add Product Item
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={handleExportProducts}
+                      className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                      title="Export all products to JSON backup file"
+                    >
+                      <Download className="h-3.5 w-3.5 text-slate-500" /> Export Backup
+                    </button>
+
+                    <label
+                      className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                      title="Import products from JSON or CSV backup"
+                    >
+                      <Upload className="h-3.5 w-3.5 text-slate-500" /> Import Backup
+                      <input
+                        type="file"
+                        accept=".json,.csv"
+                        className="hidden"
+                        onChange={handleImportProducts}
+                      />
+                    </label>
+
+                    <button
+                      onClick={() => {
+                        setEditingProduct(null);
+                        setShowAddProduct(true);
+                      }}
+                      className="bg-slate-900 hover:bg-slate-850 font-bold p-2.5 px-4 rounded-xl text-xs text-white flex items-center gap-1 shadow-xs cursor-pointer whitespace-nowrap"
+                    >
+                      <Plus className="h-4 w-4" /> Add Product Item
+                    </button>
+                  </div>
                 </div>
 
                 {/* Products Inventory Grid table */}

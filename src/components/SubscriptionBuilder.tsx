@@ -652,7 +652,7 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
                                 className="w-full text-xs font-bold border border-slate-200 bg-slate-50/50 p-1.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
                               >
                                 {prod.concreteVariants!.map(v => (
-                                  <option key={v.id} value={v.id}>
+                                  <option key={v.id || v.name} value={v.id}>
                                     {v.name} - £{v.price.toFixed(2)}
                                   </option>
                                 ))}
@@ -676,7 +676,7 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
                               <div className="mt-3 p-2.5 bg-indigo-50/20 rounded-lg border border-indigo-100/50 text-[10px] space-y-1">
                                 <span className="font-extrabold text-indigo-700 uppercase tracking-wider block text-[8px]">In Your Pack Box:</span>
                                 {allocatedForThisProduct.map(item => (
-                                  <div key={item.vid} className="flex justify-between items-center text-slate-700 font-semibold">
+                                  <div key={`${item.vid}-${item.name}`} className="flex justify-between items-center text-slate-700 font-semibold">
                                     <span>• {item.name}</span>
                                     <span className="bg-indigo-600 text-white font-extrabold px-2 py-0.5 rounded-full text-[9px] min-w-4 text-center">{item.qty}</span>
                                   </div>
