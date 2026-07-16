@@ -37,7 +37,8 @@ export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'Brands we offer', label: 'Brands we offer', desc: 'Infinite running marquee of brand logo images with live upload option', icon: 'Layers' },
   { type: 'How it works', label: 'How it works', desc: 'Dynamic timeline workflow steps with custom images & layouts', icon: 'Compass' },
   { type: 'Trust badges', label: 'Trust Badges', desc: 'Elegant horizontal grid displaying core store guarantees like authenticity and premium quality', icon: 'Award' },
-  { type: 'Plans', label: 'Subscription Plans', desc: 'Display the customizable 4-tier subscription plans grid', icon: 'LayoutGrid' }
+  { type: 'Plans', label: 'Subscription Plans', desc: 'Display the customizable 4-tier subscription plans grid', icon: 'LayoutGrid' },
+  { type: 'Clearance Sale', label: 'Clearance Sale', desc: 'Display selected clearance products with layouts like shop now grid', icon: 'Flame' }
 ] as const;
 
 export const getSectionLabel = (type: string): string => {
@@ -67,6 +68,7 @@ export const getSectionIcon = (type: string) => {
     case 'How it works': return <Compass className="h-4 w-4 text-blue-600 animate-spin" style={{ animationDuration: '6s' }} />;
     case 'Trust badges': return <Award className="h-4 w-4 text-yellow-600 animate-pulse" />;
     case 'Plans': return <LayoutGrid className="h-4 w-4 text-amber-500 animate-pulse" />;
+    case 'Clearance Sale': return <Flame className="h-4 w-4 text-red-500 animate-pulse" />;
     default: return <FileCode className="h-4 w-4 text-slate-400" />;
   }
 };
@@ -1557,6 +1559,7 @@ export default function AdminDashboard({
              : sectionType === 'Brands we offer' ? 'Brands we offer'
              : sectionType === 'Icon with text' ? 'Why subscribe to Pouch Supply?'
              : sectionType === 'Video banner' ? 'Watch Our Laboratory Showcase'
+             : sectionType === 'Clearance Sale' ? 'Clearance Sale Event'
              : `Custom ${sectionType}`,
         description: sectionType === 'Image with text' ? 'Our plant-fiber formulations are packed under sterile medical conditions for persistent, smooth boosts.'
                  : sectionType === 'Text column with image' ? 'Every single canister batch is vacuum-sealed inside high-density polymer tubes guaranteeing pristine flavor locks.'
@@ -1568,6 +1571,7 @@ export default function AdminDashboard({
                  : sectionType === 'Brands we offer' ? 'Explore our curated roster of premium nicotine pouches and global compounding series.'
                  : sectionType === 'Icon with text' ? 'Explore exclusive rewards and reliable logistics built directly into our ecosystem.'
                   : sectionType === 'Video banner' ? 'Witness the clinical sterile compounding process behind our sub-zero cooling pouches.'
+                  : sectionType === 'Clearance Sale' ? 'Save big on our premium selected stock items. Final clearance, while stocks last!'
                  : 'Edit option elements inside options sidebar',
         columnsDesktop: sectionType === 'Blog post' ? 3 : undefined,
         columnsMobile: sectionType === 'Blog post' ? 1 : undefined,
@@ -1590,6 +1594,7 @@ export default function AdminDashboard({
         buttonLink: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text' || sectionType === 'Video banner') ? 'frontend-shop' : undefined,
         marqueeSpeed: 3,
         itemsCount: (sectionType === 'Featured collection' || sectionType === 'Marquee images' || sectionType === 'Collection list') ? 4 : undefined,
+        selectedProductIds: sectionType === 'Clearance Sale' ? localProducts.filter(p => p.status === 'Active').slice(0, 4).map(p => p.id) : undefined,
         videoUrl: sectionType === 'Video banner' ? '' : undefined,
         videoMp4Url: sectionType === 'Video banner' ? 'https://assets.mixkit.co/videos/preview/mixkit-laboratory-test-tubes-40436-large.mp4' : undefined,
         imageUrl: (sectionType === 'Image banner' || sectionType === 'Image with text') ? '/placeholder.png' : undefined,
@@ -4645,6 +4650,61 @@ export default function AdminDashboard({
                                   );
                                 })()}
 
+                                {/* 10.5. CLEARANCE SALE (Interactive template preview grid) */}
+                                {sec.type === 'Clearance Sale' && (() => {
+                                  const selectedIds = sec.settings.selectedProductIds || [];
+                                  const displayedProducts = localProducts.filter(p => selectedIds.includes(p.id));
+
+                                  return (
+                                    <div className="py-4 space-y-3 text-center">
+                                      <div className="flex justify-between items-end border-b border-slate-100 pb-1">
+                                        <div className="text-left">
+                                          <span className="text-[7.5px] font-bold uppercase text-red-500 flex items-center gap-1">
+                                            <span className="h-1.5 w-1.5 bg-red-500 rounded-full animate-pulse" />
+                                            Clearance Flash Sale
+                                          </span>
+                                          <h4 className="text-[10px] font-black uppercase text-slate-800" style={{ color: sec.settings.headingColor || '#1E293B' }}>
+                                            {sec.settings.title || 'Clearance Sale Event'}
+                                          </h4>
+                                        </div>
+                                        <span className="text-[8px] text-red-700 font-extrabold uppercase font-mono bg-red-50 border border-red-100 rounded px-1.5 py-0.5">
+                                          {displayedProducts.length} Items Selected
+                                        </span>
+                                      </div>
+
+                                      {displayedProducts.length === 0 ? (
+                                        <div className="bg-slate-50 border border-dashed rounded-lg p-5 text-center text-[9px] text-slate-400">
+                                          No products are selected for clearance sale. Edit the settings in the sidebar to choose products.
+                                        </div>
+                                      ) : (
+                                        <div className="grid grid-cols-3 gap-2">
+                                          {displayedProducts.map(p => (
+                                            <div key={p.id} className="bg-white border border-red-150 text-left p-2 rounded-xl space-y-1 block relative overflow-hidden shadow-3xs flex flex-col justify-between">
+                                              <div>
+                                                <span className="absolute top-1 left-1 bg-red-600 text-white text-[5.5px] font-black tracking-widest uppercase py-0.5 px-1 rounded z-10">
+                                                  CLEARANCE
+                                                </span>
+                                                <div className="h-14 bg-transparent overflow-hidden relative flex items-center justify-center p-1">
+                                                  <img src={p.image} className="h-full w-full object-contain" alt="" referrerPolicy="no-referrer" />
+                                                </div>
+                                                <p className="text-[9px] text-slate-800 font-extrabold truncate mt-1 leading-snug">{p.title}</p>
+                                                <div className="flex gap-0.5 text-amber-500 text-[6px]">★★★★★</div>
+                                              </div>
+                                              <div className="flex justify-between items-center pt-1 border-t border-slate-100 mt-1 leading-none">
+                                                <div className="flex flex-col">
+                                                  <span className="text-[9px] font-extrabold text-red-600 font-mono">£{(p.price * 0.8).toFixed(2)}</span>
+                                                  <span className="text-[6px] line-through text-slate-400 font-mono">£{p.price.toFixed(2)}</span>
+                                                </div>
+                                                <span className="text-[6.5px] font-black text-red-650 tracking-wider">CLAIM</span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
+
                                 {/* 11. IMAGES GALLERY */}
                                 {sec.type === 'Images gallery' && (
                                   <div className="space-y-3 py-4 text-center">
@@ -6460,6 +6520,75 @@ export default function AdminDashboard({
                           </div>
                         )}
 
+                        {/* CLEARANCE SALE EDITING SETTINGS */}
+                        {currentlyEditingSection.type === 'Clearance Sale' && (
+                          <div className="space-y-4 pt-1">
+                            <div>
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">Section Title</label>
+                              <input
+                                type="text"
+                                value={currentlyEditingSection.settings.title || ''}
+                                onChange={(e) => handleUpdateSectionSettings('title', e.target.value)}
+                                className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:border-indigo-500 transition-colors"
+                                placeholder="e.g. Clearance Sale Event"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">Section Description</label>
+                              <textarea
+                                rows={2}
+                                value={currentlyEditingSection.settings.description || ''}
+                                onChange={(e) => handleUpdateSectionSettings('description', e.target.value)}
+                                className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:border-indigo-500 transition-colors resize-none"
+                                placeholder="Section subtitle or description..."
+                              />
+                            </div>
+
+                            <div className="pt-3 border-t border-slate-100">
+                              <div className="flex justify-between items-center mb-1.5">
+                                <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px]">Clearance Products</label>
+                                <span className="font-mono text-[9px] font-bold text-red-700 bg-red-50 px-1.5 rounded">{(currentlyEditingSection.settings.selectedProductIds || []).length} selected</span>
+                              </div>
+                              <div className="space-y-1.5 max-h-[220px] overflow-y-auto border border-slate-200 p-2.5 rounded-xl bg-slate-50 shadow-inner scrollbar-thin">
+                                {products.map(p => {
+                                  const selectedIds = currentlyEditingSection.settings.selectedProductIds || [];
+                                  const isSelected = selectedIds.includes(p.id);
+                                  return (
+                                    <label key={p.id} className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer hover:text-slate-900 transition-colors py-1 border-b border-slate-100/60 last:border-none">
+                                      <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={() => {
+                                          let updatedIds;
+                                          if (isSelected) {
+                                            updatedIds = selectedIds.filter(id => id !== p.id);
+                                          } else {
+                                            updatedIds = [...selectedIds, p.id];
+                                          }
+                                          handleUpdateSectionSettings('selectedProductIds', updatedIds);
+                                        }}
+                                        className="rounded border-slate-300 text-red-650 focus:ring-red-500 h-3.5 w-3.5 cursor-pointer"
+                                      />
+                                      {p.image && (
+                                        <img src={p.image} className="w-7 h-7 rounded object-contain border border-slate-200 shrink-0 bg-white p-0.5" alt="" referrerPolicy="no-referrer" />
+                                      )}
+                                      <div className="flex-1 min-w-0">
+                                        <div className="truncate text-[11px] font-bold leading-tight">{p.title}</div>
+                                        <div className="text-[9px] text-slate-400 font-mono">£{p.price.toFixed(2)} • {p.vendor}</div>
+                                      </div>
+                                    </label>
+                                  );
+                                })}
+                                {products.length === 0 && (
+                                  <p className="text-[10px] text-slate-400 text-center py-4">No products in catalog.</p>
+                                )}
+                              </div>
+                              <p className="text-[8.5px] text-slate-400 mt-1.5 leading-tight">Check the products you want to feature on the Clearance Sale section of the page layout.</p>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Image asset url selector */}
                         {currentlyEditingSection.settings.imageUrl !== undefined && currentlyEditingSection.type !== 'Slideshow' && (
                           <ImageUploadInput
@@ -8030,6 +8159,54 @@ export default function AdminDashboard({
                     <p className="text-[9px] text-slate-400 mt-1">Accepts PNG, JPG, or SVG. Visible in the bottom-left column of the footer layout.</p>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* 3. KLAVIYO INTEGRATION CARD */}
+            <div className="bg-white border border-slate-200 shadow-xs rounded-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-orange-50 text-orange-600 rounded-lg">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <span className="font-extrabold text-slate-900 uppercase tracking-wider text-xs">Klaviyo Marketing Integration</span>
+                </div>
+                {localLayoutSettings.klaviyoPublicKey ? (
+                  <span className="text-[8px] font-black uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-150 flex items-center gap-1">
+                    <span className="h-1 w-1 bg-emerald-500 rounded-full animate-ping" />
+                    Connected
+                  </span>
+                ) : (
+                  <span className="text-[8px] font-black uppercase bg-slate-100 text-slate-400 px-2 py-0.5 rounded border border-slate-150">
+                    Not Configured
+                  </span>
+                )}
+              </div>
+
+              <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">
+                Unlock automated ecommerce marketing flows. Connecting your Klaviyo Site ID (Public API Key) automatically tracks: 
+                <span className="block mt-1 font-mono text-[9px] text-indigo-600 leading-normal">
+                  • Active on Site (Visitor Page View)<br />
+                  • Viewed Product (Catalog Detail Click)<br />
+                  • Added to Cart (Shopping cart logs)<br />
+                  • Started Checkout (Initiate checkout events)<br />
+                  • Placed Order (Successful conversion metrics)<br />
+                  • Subscribed to Newsletter (Footer sign-up capture)
+                </span>
+              </p>
+
+              <div>
+                <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Klaviyo Site ID / Public API Key</label>
+                <input
+                  type="text"
+                  value={localLayoutSettings.klaviyoPublicKey || ''}
+                  onChange={(e) => setLocalLayoutSettings({ ...localLayoutSettings, klaviyoPublicKey: e.target.value })}
+                  className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  placeholder="e.g. AB12CD"
+                />
+                <p className="text-[8.5px] text-slate-400 mt-1.5">
+                  Your 6-to-8 character public API key. Find this in your <a href="https://www.klaviyo.com/app/settings/api-keys" target="_blank" rel="noreferrer" className="text-orange-600 hover:underline font-bold">Klaviyo Account Settings</a>.
+                </p>
               </div>
             </div>
 

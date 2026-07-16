@@ -791,6 +791,181 @@ function HowItWorksSection({ sec, handleLinkClick }: HowItWorksSectionProps) {
   );
 }
 
+interface ClearanceSaleSectionProps {
+  sec: PageSection;
+  allProducts: Product[];
+  loggedInCustomer: Customer | null;
+  onAddToCart: (product: Product, quantity: number) => void;
+  onToggleWishlist: (productId: string) => void;
+  onNavigate: (tab: string, arg?: string) => void;
+}
+
+function ClearanceSaleSection({
+  sec,
+  allProducts,
+  loggedInCustomer,
+  onAddToCart,
+  onToggleWishlist,
+  onNavigate
+}: ClearanceSaleSectionProps) {
+  const selectedIds = sec.settings.selectedProductIds || [];
+  
+  const displayedProducts = React.useMemo(() => {
+    return allProducts.filter(p => p.status === 'Active' && selectedIds.includes(p.id));
+  }, [allProducts, selectedIds]);
+
+  return (
+    <div className="space-y-8 px-4 sm:px-6 py-12 max-w-7xl mx-auto">
+      {/* Top Header section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 border-b border-rose-100 gap-6 animate-fadeIn">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 animate-duration-1000"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500">
+              Clearance & Final Stock Event
+            </span>
+          </div>
+          <h2 
+            className="text-3xl md:text-4xl font-black uppercase tracking-tight text-slate-900"
+            style={{ color: sec.settings.headingColor || '#0f172a' }}
+          >
+            {sec.settings.title || 'Clearance Sale'}
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-xl font-medium">
+            {sec.settings.description || 'Save big on our premium selected stock items. Final clearance, while stocks last!'}
+          </p>
+          <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 font-bold pt-1">
+            <span className="bg-red-50 text-red-600 px-2 py-0.5 rounded-full border border-red-150">UP TO 20% OFF</span>
+            <span>•</span>
+            <span>Pris-match garanti</span>
+            <span>•</span>
+            <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">Fast UK Shipping</span>
+          </div>
+        </div>
+        
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row md:flex-col items-start sm:items-center md:items-end gap-4 w-full md:w-auto shrink-0">
+          <button
+            onClick={() => onNavigate('frontend-shop')}
+            className="bg-red-650 hover:bg-red-700 text-white text-xs font-black py-3 px-6 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-300 shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.01] active:scale-95 text-center w-full sm:w-auto"
+          >
+            <span className="uppercase tracking-widest text-[10px]">Shop All Collections</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Products Grid */}
+      {displayedProducts.length === 0 ? (
+        <div className="py-16 text-center text-slate-400 bg-slate-50 border border-dashed rounded-2xl">
+          <p className="text-sm font-bold">No active clearance products found.</p>
+          <p className="text-xs mt-1">Configure selected clearance items in the admin page-builder section settings.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {displayedProducts.map(prod => {
+            const isWishlisted = loggedInCustomer?.wishlist.includes(prod.id);
+            const clearancePrice = prod.price * 0.8; // 20% clearance discount
+
+            return (
+              <div 
+                key={prod.id} 
+                onClick={() => onNavigate(`/products/${prod.id}`)}
+                className="bg-white border-2 border-red-50 hover:border-red-400/80 rounded-2xl overflow-hidden p-4 space-y-4 group transition-all duration-300 relative flex flex-col justify-between cursor-pointer hover:-translate-y-2 hover:shadow-2xl hover:shadow-red-100/20"
+              >
+                {/* Clearance Badge */}
+                <span className="absolute top-3.5 left-3.5 text-[8.5px] font-black tracking-wider uppercase py-1 px-2.5 rounded shadow-3xs z-10 bg-red-650 text-white">
+                  CLEARANCE DEALS
+                </span>
+
+                {/* Wishlist triggers */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleWishlist(prod.id);
+                  }}
+                  className="absolute top-3.5 right-3.5 p-2 rounded-full bg-white/95 backdrop-blur-md border border-slate-200 shadow-3xs text-slate-400 hover:text-red-500 hover:scale-105 active:scale-95 transition-all z-10 cursor-pointer"
+                >
+                  <Heart className={`h-4 w-4 ${isWishlisted ? 'text-red-500 fill-red-500' : ''}`} />
+                </button>
+
+                <div className="space-y-4 flex-1 flex flex-col justify-between">
+                  {/* Image */}
+                  <div className="w-full h-56 bg-transparent overflow-hidden relative flex items-center justify-center p-1">
+                    <img
+                      src={prod.image}
+                      className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                      alt={prod.title}
+                      referrerPolicy="no-referrer"
+                    />
+                    
+                    <span className="absolute bottom-2.5 left-2.5 bg-rose-600 text-white text-[8px] font-black tracking-widest uppercase py-0.5 px-2 rounded">
+                      20% EXTRA OFF
+                    </span>
+                  </div>
+
+                  {/* Brand & title */}
+                  <div className="text-center space-y-1.5 px-1">
+                    <h4 className="font-extrabold text-sm text-slate-900 group-hover:text-red-600 transition-colors uppercase tracking-tight line-clamp-1">
+                      {prod.title.toLowerCase().startsWith(prod.vendor.toLowerCase()) ? prod.title : `${prod.vendor} ${prod.title}`}
+                    </h4>
+                    
+                    <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-450 font-bold uppercase tracking-wider">
+                      <span className="text-red-600 font-extrabold">{prod.strength || '6mg'}</span>
+                      <span className="text-slate-300 font-normal">•</span>
+                      <span>{prod.tags?.[0] || 'Mint'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pricing & Subscription Savings */}
+                <div className="space-y-3 pt-3 border-t border-red-50">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-base font-black text-red-650 font-mono">£{clearancePrice.toFixed(2)}</span>
+                      <span className="text-xs line-through text-slate-400 font-mono">£{prod.price.toFixed(2)}</span>
+                    </div>
+                    <p className="text-[10px] text-emerald-600 font-extrabold mt-0.5">
+                      Immediate Stock Dispatch
+                    </p>
+                  </div>
+
+                  {/* Limited Stock message */}
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onNavigate('frontend-shop');
+                    }}
+                    className="w-full bg-[#FAFAFA] hover:bg-red-50 hover:border-red-200 transition-all border border-slate-100 py-2 px-2.5 rounded-xl flex items-center justify-between text-[9px] text-slate-500 font-bold cursor-pointer font-sans"
+                  >
+                    <span className="text-red-600 font-bold">Limited stocks available</span>
+                    <span className="text-slate-700 underline flex items-center gap-0.5 hover:text-red-600 font-extrabold">Final Sale →</span>
+                  </div>
+
+                  {/* Buy Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddToCart(prod, 1);
+                    }}
+                    className="w-full bg-red-650 hover:bg-red-700 text-white text-[11px] font-black py-3 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-all duration-300 uppercase tracking-widest shadow-sm active:scale-97"
+                  >
+                    <ShoppingCart className="h-3.5 w-3.5" />
+                    <span>CLAIM DEAL</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface FeaturedCollectionSectionProps {
   sec: PageSection;
   allProducts: Product[];
@@ -1834,6 +2009,19 @@ export default function PageRenderer({
                     onNavigate={onNavigate}
                   />
                 )}
+
+                {/* 10.5. CLEARANCE SALE (Interactive multi-product grid) */}
+                {sec.type === 'Clearance Sale' && (
+                  <ClearanceSaleSection 
+                    sec={sec}
+                    allProducts={allProducts}
+                    loggedInCustomer={loggedInCustomer}
+                    onAddToCart={onAddToCart}
+                    onToggleWishlist={onToggleWishlist}
+                    onNavigate={onNavigate}
+                  />
+                )}
+
                 {false && sec.type === 'Featured collection' && (
                   <div className="space-y-8 px-4 sm:px-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end pb-4 border-b border-slate-200">

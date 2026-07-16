@@ -196,7 +196,7 @@ export interface Discount {
 
 export interface PageSection {
   id: string;
-  type: 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list' | 'Icon with text' | 'Brands we offer' | 'How it works' | 'Trust badges' | 'Plans';
+  type: 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list' | 'Icon with text' | 'Brands we offer' | 'How it works' | 'Trust badges' | 'Plans' | 'Clearance Sale';
   settings: {
     [key: string]: any;
     fullWidth: boolean;
@@ -315,5 +315,6 @@ export interface LayoutSettings {
   footerLogoDescription: string;
   footerLogoImage: string; // Base64 or URL
   menuItems: MenuItem[];
+  klaviyoPublicKey?: string;
 }
 

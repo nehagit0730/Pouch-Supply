@@ -29,6 +29,16 @@ import {
   Sparkles, ShieldCheck, Truck, RefreshCw, Star, ArrowRight, Package, ShoppingCart, Check, Heart, User, CheckCircle2, Save, AlertTriangle, Search, Undo, Mail, X
 } from 'lucide-react';
 import OrderWithdrawalModal from './components/OrderWithdrawalModal';
+import { 
+  initKlaviyo, 
+  klaviyoIdentify, 
+  klaviyoReset, 
+  klaviyoTrack, 
+  klaviyoTrackViewedProduct, 
+  klaviyoTrackAddedToCart, 
+  klaviyoTrackStartedCheckout, 
+  klaviyoTrackPlacedOrder 
+} from './utils/klaviyo';
 
 const ALLOWED_BRANDS = [
   '77',
@@ -98,20 +108,54 @@ export default function App() {
   // --- Persistent Storage State Initialization ---
   const [productsState, setProductsState] = useState<Product[]>(() => {
     const raw = safeLoadFromLocalStorage<Product[]>('ps_products', INITIAL_PRODUCTS);
-    return raw.map(p => ({
-      ...p,
-      vendor: mapVendorToAllowedBrand(p.vendor)
-    }));
+    const seen = new Set<string>();
+    const deduplicated: Product[] = [];
+    for (const p of raw) {
+      if (p && p.id && !seen.has(p.id)) {
+        seen.add(p.id);
+        const variantSeen = new Set<string>();
+        const cleanVariants = (p.concreteVariants || []).filter(v => {
+          if (v && v.id && !variantSeen.has(v.id)) {
+            variantSeen.add(v.id);
+            return true;
+          }
+          return false;
+        });
+        deduplicated.push({
+          ...p,
+          vendor: mapVendorToAllowedBrand(p.vendor),
+          concreteVariants: cleanVariants
+        });
+      }
+    }
+    return deduplicated;
   });
 
   const products = productsState;
   const setProducts = (value: Product[] | ((prev: Product[]) => Product[])) => {
     setProductsState((prev) => {
       const resolved = typeof value === 'function' ? value(prev) : value;
-      return resolved.map(p => ({
-        ...p,
-        vendor: mapVendorToAllowedBrand(p.vendor)
-      }));
+      const seen = new Set<string>();
+      const deduplicated: Product[] = [];
+      for (const p of resolved) {
+        if (p && p.id && !seen.has(p.id)) {
+          seen.add(p.id);
+          const variantSeen = new Set<string>();
+          const cleanVariants = (p.concreteVariants || []).filter(v => {
+            if (v && v.id && !variantSeen.has(v.id)) {
+              variantSeen.add(v.id);
+              return true;
+            }
+            return false;
+          });
+          deduplicated.push({
+            ...p,
+            vendor: mapVendorToAllowedBrand(p.vendor),
+            concreteVariants: cleanVariants
+          });
+        }
+      }
+      return deduplicated;
     });
   };
 
@@ -616,8 +660,29 @@ export default function App() {
           return [...prev, loggedInCustomer];
         }
       });
+      // Klaviyo profile integration
+      klaviyoIdentify(loggedInCustomer);
+    } else {
+      klaviyoReset();
     }
   }, [loggedInCustomer]);
+
+  // Initialize Klaviyo script when Public API Key/Site ID changes
+  useEffect(() => {
+    if (layoutSettings.klaviyoPublicKey) {
+      initKlaviyo(layoutSettings.klaviyoPublicKey);
+    }
+  }, [layoutSettings.klaviyoPublicKey]);
+
+  // Track "Viewed Product" in Klaviyo
+  useEffect(() => {
+    if (currentTab === 'product-detail' && selectedProductId) {
+      const product = productsState.find(p => p.id === selectedProductId);
+      if (product) {
+        klaviyoTrackViewedProduct(product);
+      }
+    }
+  }, [currentTab, selectedProductId, productsState]);
 
   // Synchronize customers list with any completed order records automatically
   useEffect(() => {
@@ -722,6 +787,8 @@ export default function App() {
       }
     });
     setCartOpen(true);
+    // Track in Klaviyo
+    klaviyoTrackAddedToCart(product, quantity);
   };
 
   // Add customized subscription pack package directly to cart
@@ -849,6 +916,11 @@ export default function App() {
     setCheckoutTotal(finalTotal);
     setCartOpen(false);
     navigateToTab('frontend-checkout');
+
+    // Track Started Checkout in Klaviyo
+    const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const discountAmount = Math.max(0, subtotal - finalTotal);
+    klaviyoTrackStartedCheckout(cartItems, subtotal, discountAmount);
   };
 
   const handleCompleteCheckout = (paymentDetails: {
@@ -1047,6 +1119,14 @@ export default function App() {
 
       setLoggedInCustomer(updatedCust);
     }
+
+    // Track Placed Order in Klaviyo
+    klaviyoTrackPlacedOrder(
+      paymentDetails.orderId,
+      cartItems,
+      paymentDetails.total,
+      paymentDetails.discountApplied ? paymentDetails.discountApplied.title : ''
+    );
 
     // Clear cart
     setCartItems([]);

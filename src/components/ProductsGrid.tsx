@@ -227,7 +227,14 @@ export default function ProductsGrid({
         list.push(p);
       }
     });
-    return list;
+
+    const seen = new Set<string>();
+    return list.filter(p => {
+      if (!p.id) return false;
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
   }, [products]);
 
   // Filtered list implementation

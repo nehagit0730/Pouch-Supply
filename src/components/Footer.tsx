@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Mail, ShieldCheck, Truck, RefreshCw, Sparkles, HelpCircle, ArrowRight } from 'lucide-react';
 import { LayoutSettings } from '../types';
+import { klaviyoTrackNewsletterSubscribe } from '../utils/klaviyo';
 
 interface FooterProps {
   onNavigate?: (tab: string) => void;
@@ -8,6 +9,21 @@ interface FooterProps {
 }
 
 export default function Footer({ onNavigate, layoutSettings }: FooterProps) {
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleSubscribe = () => {
+    setErrorMsg('');
+    if (!email || !email.includes('@')) {
+      setErrorMsg('Please enter a valid email.');
+      return;
+    }
+    klaviyoTrackNewsletterSubscribe(email);
+    setSubscribed(true);
+    setEmail('');
+  };
+
   return (
     <>
       {/* 60-Second Subscription CTA Transition Banner into Footer */}
@@ -166,16 +182,35 @@ export default function Footer({ onNavigate, layoutSettings }: FooterProps) {
           <p className="text-slate-400 leading-normal text-[11px]">
             Subscribe to receive exclusive weekly offers, nicotine strength updates, and flash sales codes.
           </p>
-          <div className="flex gap-2.5">
-            <input
-              type="email"
-              placeholder="Your email address"
-              className="bg-slate-800 border border-slate-700/80 p-2 text-xs rounded-lg text-white w-full pr-8 focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-500 font-medium"
-            />
-            <button className="bg-indigo-600 hover:bg-indigo-700 font-bold p-2 px-3 rounded-lg text-white cursor-pointer transition-colors text-[10px] uppercase tracking-wider shrink-0">
-              Join
-            </button>
-          </div>
+          {subscribed ? (
+            <div className="bg-indigo-950 border border-indigo-800 text-indigo-300 text-xs p-3 rounded-lg text-center font-bold">
+              🎉 Joined successfully! Welcome aboard.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex gap-2.5">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSubscribe();
+                  }}
+                  placeholder="Your email address"
+                  className="bg-slate-800 border border-slate-700/80 p-2 text-xs rounded-lg text-white w-full pr-8 focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-500 font-medium"
+                />
+                <button
+                  onClick={handleSubscribe}
+                  className="bg-indigo-600 hover:bg-indigo-700 font-bold p-2 px-3 rounded-lg text-white cursor-pointer transition-colors text-[10px] uppercase tracking-wider shrink-0"
+                >
+                  Join
+                </button>
+              </div>
+              {errorMsg && (
+                <p className="text-red-400 text-[10px] font-bold leading-none">{errorMsg}</p>
+              )}
+            </div>
+          )}
         </div>
 
       </div>
