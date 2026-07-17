@@ -684,11 +684,26 @@ export default function App() {
   useEffect(() => {
     safeSaveToLocalStorage('ps_logged_in_customer', loggedInCustomer);
     if (loggedInCustomer) {
+      // Auto-update to new format if missing or old format
+      const hasOldFormat = loggedInCustomer.referralCode && !loggedInCustomer.referralCode.startsWith("REF-PS-");
+      if (!loggedInCustomer.referralCode || hasOldFormat) {
+        const codeSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+        const cleanFirstName = loggedInCustomer.name.trim().split(" ")[0].replace(/[^a-zA-Z]/g, "").toUpperCase() || "USER";
+        const newReferralCode = `REF-PS-${cleanFirstName}-${codeSuffix}`;
+        
+        const updated = {
+          ...loggedInCustomer,
+          referralCode: newReferralCode
+        };
+        setLoggedInCustomer(updated);
+        return;
+      }
+
       // Keep customer object in the master listing synced as well, adding them if they do not exist
       setCustomers(prev => {
         const exists = prev.some(c => c.id === loggedInCustomer.id || c.email.toLowerCase() === loggedInCustomer.email.toLowerCase());
         if (exists) {
-          return prev.map(c => (c.id === loggedInCustomer.id || c.email.toLowerCase() === loggedInCustomer.email.toLowerCase()) ? loggedInCustomer : c);
+          return prev.map(c => (c.id === loggedInCustomer.id || c.email.toLowerCase() === loggedInCustomer.email.toLowerCase()) ? { ...c, referralCode: loggedInCustomer.referralCode } : c);
         } else {
           return [...prev, loggedInCustomer];
         }

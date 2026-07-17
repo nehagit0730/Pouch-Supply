@@ -69,7 +69,7 @@ router.post("/signup", async (req, res) => {
     // Generate unique referral code for the new customer
     const codeSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     const cleanFirstName = name.trim().split(" ")[0].replace(/[^a-zA-Z]/g, "").toUpperCase() || "USER";
-    const referralCode = `REF-${cleanFirstName}-${codeSuffix}`;
+    const referralCode = `REF-PS-${cleanFirstName}-${codeSuffix}`;
 
     // Verify referrer
     let validReferredByCode: string | null = null;
@@ -158,11 +158,12 @@ router.post("/login", async (req, res) => {
 
     let needsUpdate = false;
 
-    // Generate unique referral code for legacy / existing users if they don't have one
-    if (!found.referralCode) {
+    // Generate unique referral code for legacy / existing users if they don't have one or have the old format
+    const hasOldFormat = found.referralCode && !found.referralCode.startsWith("REF-PS-");
+    if (!found.referralCode || hasOldFormat) {
       const codeSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
       const cleanFirstName = found.name.trim().split(" ")[0].replace(/[^a-zA-Z]/g, "").toUpperCase() || "USER";
-      found.referralCode = `REF-${cleanFirstName}-${codeSuffix}`;
+      found.referralCode = `REF-PS-${cleanFirstName}-${codeSuffix}`;
       needsUpdate = true;
     }
 

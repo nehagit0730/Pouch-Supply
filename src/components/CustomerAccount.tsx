@@ -215,7 +215,7 @@ export default function CustomerAccount({
       } catch (e) {}
     }
 
-    const realReferralCode = loggedInCustomer.referralCode || `REF-${loggedInCustomer.name.trim().split(" ")[0].toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    const realReferralCode = loggedInCustomer.referralCode || `REF-PS-${loggedInCustomer.name.trim().split(" ")[0].toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     const realStoreCredit = loggedInCustomer.storeCredit !== undefined ? loggedInCustomer.storeCredit : 0;
 
     // Calculate referrals dynamically from the active customers & orders list
