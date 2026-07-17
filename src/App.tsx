@@ -1277,13 +1277,17 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#f6f6f7] flex flex-col items-center justify-center p-6" id="app-loading-state">
         <div className="space-y-4 max-w-md w-full text-center flex flex-col items-center">
-          <div className="h-10 w-10 text-indigo-650 animate-spin border-4 border-[#e1e2e6] border-t-indigo-600 rounded-full mb-1"></div>
-          <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest animate-pulse font-mono">Connecting to Atlas Database...</p>
-          <div className="h-0.5 w-24 bg-slate-200 rounded-full overflow-hidden relative">
-            <div className="absolute top-0 left-0 bottom-0 bg-indigo-600 rounded-full animate-[shimmer_1.5s_infinite]" style={{ width: '40%' }}></div>
+          {/* Elegant spinning logo indicator */}
+          <div className="w-12 h-12 bg-gradient-to-tr from-[#008060] to-[#00a880] rounded-xl flex items-center justify-center shadow-md animate-bounce mb-2">
+            <div className="w-5 h-5 border-2 border-white rounded-md"></div>
           </div>
-          <p className="text-[10.5px] text-slate-500 font-bold leading-relaxed max-w-xs">
-            Synchronizing live products, collection hierarchies, customer order histories, and inventories...
+          <h2 className="font-extrabold text-[#1a1c1d] tracking-tight text-lg leading-none">Pouch Supply</h2>
+          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest font-mono">Initializing Premium Catalog...</p>
+          <div className="h-0.5 w-24 bg-slate-200 rounded-full overflow-hidden relative">
+            <div className="absolute top-0 left-0 bottom-0 bg-[#008060] rounded-full animate-[shimmer_1.5s_infinite]" style={{ width: '60%' }}></div>
+          </div>
+          <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed max-w-xs">
+            Preparing Swedish premium nicotine canister catalogs and live inventories...
           </p>
         </div>
       </div>
@@ -2261,7 +2265,7 @@ export default function App() {
             )}
 
             {/* FRONTEND VIEW - 404 NOT FOUND FOR NONEXISTENT PAGES */}
-            {!['frontend-home', 'frontend-shop', 'frontend-brands', 'frontend-subscribe', 'frontend-account', 'product-detail', 'collection-detail', 'blogs', 'blog-detail', 'privacy-policy', 'shipping-policy', 'refund-policy', 'terms-conditions'].includes(currentTab) && !customPages.some(p => p.slug === currentTab) && (
+            {!['frontend-home', 'frontend-shop', 'frontend-brands', 'frontend-subscribe', 'frontend-account', 'product-detail', 'collection-detail', 'blogs', 'blog-detail', 'privacy-policy', 'shipping-policy', 'refund-policy', 'terms-conditions', 'frontend-checkout', 'payment-worldpay-gateway', 'payment-success', 'payment-failed', 'payment-cancelled'].includes(currentTab) && !customPages.some(p => p.slug === currentTab) && (
               <div className="max-w-6xl mx-auto py-24 px-4 text-center space-y-6">
                 <span className="text-7xl block">🔍</span>
                 <div className="space-y-1.5">
@@ -2416,7 +2420,9 @@ export default function App() {
       )}
 
       {/* Universal Footer layout */}
-      {!isAdminActive && <Footer onNavigate={navigateToTab} layoutSettings={layoutSettings} />}
+      {!isAdminActive && !['payment-worldpay-gateway', 'payment-success', 'payment-failed', 'payment-cancelled', 'frontend-checkout'].includes(currentTab) && (
+        <Footer onNavigate={navigateToTab} layoutSettings={layoutSettings} />
+      )}
 
       {/* Floating Order Withdrawal Button (Bottom Left) */}
       {!isAdminActive && (

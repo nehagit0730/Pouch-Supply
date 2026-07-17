@@ -424,7 +424,7 @@ export default function Header({
       )}
 
       {/* Info bar (Sub menu micro links for customer convenience - Desktop & Tablet only) */}
-      <div className="hidden sm:block bg-slate-50/70 border-t border-slate-100/90 h-10 flex items-center text-[10px] text-slate-500 font-extrabold px-4 tracking-wider shadow-2xs">
+      <div className="hidden sm:flex bg-slate-50/70 border-t border-slate-100/90 h-11 text-[10px] text-slate-500 font-extrabold px-4 tracking-wider shadow-2xs items-center">
         <div className="max-w-[1440px] mx-auto w-full flex justify-between items-center">
           <div className="flex items-center gap-4">
             <span className="text-slate-600 flex items-center gap-1.5">
