@@ -1125,9 +1125,13 @@ export default function App() {
       };
 
       // Check if this customer was referred and is placing an order using their 10% welcome coupon
+      const isVirtualReferral = paymentDetails.discountApplied && paymentDetails.discountApplied.id.startsWith('disc-ref-virtual-');
+      const referrerIdFromVirtual = isVirtualReferral ? paymentDetails.discountApplied!.id.replace('disc-ref-virtual-', '') : null;
+
       const usedReferralCoupon = paymentDetails.discountApplied && (
         paymentDetails.discountApplied.id === `disc-ref-${loggedInCustomer.id}` ||
-        paymentDetails.discountApplied.title.startsWith('REF10-')
+        paymentDetails.discountApplied.title.startsWith('REF10-') ||
+        isVirtualReferral
       );
 
       setCustomers(prev => {
@@ -1147,10 +1151,44 @@ export default function App() {
             return c;
           });
         }
+
+        if (isVirtualReferral && referrerIdFromVirtual) {
+          list = list.map(c => {
+            if (c.id === referrerIdFromVirtual) {
+              const newCredit = (c.storeCredit || 0) + 5;
+              console.log(`[Referral System] Rewarding referrer ${c.name} with £5 store credit via virtual coupon (order placed by ${loggedInCustomer.email})`);
+              return {
+                ...c,
+                storeCredit: newCredit
+              };
+            }
+            return c;
+          });
+        }
         return list;
       });
 
       setLoggedInCustomer(updatedCust);
+    } else {
+      // Guest order using virtual referral coupon
+      const isVirtualReferral = paymentDetails.discountApplied && paymentDetails.discountApplied.id.startsWith('disc-ref-virtual-');
+      const referrerIdFromVirtual = isVirtualReferral ? paymentDetails.discountApplied!.id.replace('disc-ref-virtual-', '') : null;
+
+      if (isVirtualReferral && referrerIdFromVirtual) {
+        setCustomers(prev => {
+          return prev.map(c => {
+            if (c.id === referrerIdFromVirtual) {
+              const newCredit = (c.storeCredit || 0) + 5;
+              console.log(`[Referral System] Rewarding referrer ${c.name} with £5 store credit via virtual coupon (order placed by Guest)`);
+              return {
+                ...c,
+                storeCredit: newCredit
+              };
+            }
+            return c;
+          });
+        });
+      }
     }
 
     // Track Placed Order in Klaviyo
@@ -2308,6 +2346,8 @@ export default function App() {
         onTriggerCheckout={handleTriggerCheckout}
         products={products}
         collections={collections}
+        customers={customers}
+        loggedInCustomer={loggedInCustomer}
       />
 
       {/* Global Customer Dashboard slide out drawer panel */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CartItem, Discount } from '../types';
+import { CartItem, Discount, Customer } from '../types';
 import { X, Trash2, Plus, Minus, Ticket, Check, ShieldCheck, ShoppingBag, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import SubscriptionIcon from './SubscriptionIcon';
@@ -15,6 +15,8 @@ interface CartDrawerProps {
   onTriggerCheckout: (discountApplied: Discount | null, finalTotal: number) => void;
   products?: any[];
   collections?: any[];
+  customers?: Customer[];
+  loggedInCustomer?: Customer | null;
 }
 
 export default function CartDrawer({
@@ -26,7 +28,9 @@ export default function CartDrawer({
   activeDiscounts,
   onTriggerCheckout,
   products = [],
-  collections = []
+  collections = [],
+  customers = [],
+  loggedInCustomer = null
 }: CartDrawerProps) {
   const [promoCodeInput, setPromoCodeInput] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<Discount | null>(null);
@@ -60,7 +64,32 @@ export default function CartDrawer({
       setAppliedDiscount(found);
       setPromoSuccess(`Promo Code "${code}" applied: ${found.details}!`);
     } else {
-      setPromoError('Invalid or expired promo code.');
+      // Check if it matches an existing customer's referral code (case-insensitive)
+      const matchingCustomer = customers.find(c => c.referralCode && c.referralCode.toUpperCase() === code);
+      if (matchingCustomer) {
+        if (loggedInCustomer && loggedInCustomer.id === matchingCustomer.id) {
+          setPromoError("You cannot use your own referral code.");
+          return;
+        }
+
+        const virtualDiscount: Discount = {
+          id: `disc-ref-virtual-${matchingCustomer.id}`,
+          title: code,
+          status: 'Active',
+          method: 'Code',
+          eligibility: 'All customers',
+          type: 'Amount off order',
+          valueType: 'Percentage',
+          valueAmount: 10,
+          details: `10% referral discount courtesy of ${matchingCustomer.name.split(" ")[0]}`,
+          used: 0,
+          limitOnePerCustomer: true
+        };
+        setAppliedDiscount(virtualDiscount);
+        setPromoSuccess(`Referral code applied! You receive a 10% discount on your order.`);
+      } else {
+        setPromoError('Invalid or expired promo code.');
+      }
     }
   };
 
