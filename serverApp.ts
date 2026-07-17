@@ -13,6 +13,7 @@ import discountsRouter from "./backend/routes/discounts";
 import customPagesRouter from "./backend/routes/customPages";
 import blogsRouter from "./backend/routes/blogs";
 import worldpayRouter from "./backend/routes/worldpay";
+import agecheckedRouter from "./backend/routes/agechecked";
 
 export async function createExpressApp() {
   const app = express();
@@ -165,6 +166,7 @@ export async function createExpressApp() {
   app.use("/api/custompages", customPagesRouter);
   app.use("/api/blogs", blogsRouter);
   app.use("/api/worldpay", worldpayRouter);
+  app.use("/api/agechecked", agecheckedRouter);
 
   // Serve placeholder.png directly from root workspace to handle all environments smoothly
   app.get("/placeholder.png", (req, res) => {
