@@ -1841,6 +1841,9 @@ export default function App() {
                 loggedInCustomer={loggedInCustomer}
                 onNavigate={navigateToTab}
                 onCompleteCheckout={handleCompleteCheckout}
+                activeDiscounts={discounts}
+                customers={customers}
+                onApplyDiscount={setCheckoutDiscount}
               />
             )}
 

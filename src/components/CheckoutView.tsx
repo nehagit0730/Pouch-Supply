@@ -6,6 +6,7 @@ import {
   Camera, QrCode, UserCheck, Smartphone, Upload, Activity, Check, X
 } from 'lucide-react';
 import SubscriptionIcon from './SubscriptionIcon';
+import { calculateDiscountAmount } from '../utils';
 
 interface CheckoutViewProps {
   cartItems: CartItem[];
@@ -26,6 +27,9 @@ interface CheckoutViewProps {
     cardBrand: string;
     storeCreditApplied?: number;
   }) => void;
+  activeDiscounts?: Discount[];
+  customers?: Customer[];
+  onApplyDiscount?: (discount: Discount | null) => void;
 }
 
 export default function CheckoutView({
@@ -34,9 +38,20 @@ export default function CheckoutView({
   totalAmount,
   loggedInCustomer,
   onNavigate,
-  onCompleteCheckout
+  onCompleteCheckout,
+  activeDiscounts = [],
+  customers = [],
+  onApplyDiscount
 }: CheckoutViewProps) {
   const [applyStoreCredit, setApplyStoreCredit] = useState(false);
+  const [currentDiscount, setCurrentDiscount] = useState<Discount | null>(discountApplied);
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [promoError, setPromoError] = useState('');
+  const [promoSuccess, setPromoSuccess] = useState('');
+
+  useEffect(() => {
+    setCurrentDiscount(discountApplied);
+  }, [discountApplied]);
   // Shipping info state
   const [fullName, setFullName] = useState(loggedInCustomer?.name || '');
   const [email, setEmail] = useState(loggedInCustomer?.email || '');
@@ -354,9 +369,65 @@ export default function CheckoutView({
     ]);
   };
 
-  // Subtotal details
-  const deliveryCost = discountApplied?.type === 'Free shipping' ? 0 : (deliverySpeed === 'priority' ? (totalAmount >= 40 ? 0 : 4.99) : 0);
-  const finalTotal = totalAmount + deliveryCost;
+  const handleApplyPromoInCheckout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setPromoError('');
+    setPromoSuccess('');
+
+    const code = promoCodeInput.trim().toUpperCase();
+    if (!code) {
+      setPromoError('Please enter a code.');
+      return;
+    }
+
+    // Check active promotional coupon codes
+    const found = activeDiscounts?.find(d => d.title.toUpperCase() === code && d.status === 'Active');
+    if (found) {
+      setCurrentDiscount(found);
+      if (onApplyDiscount) {
+        onApplyDiscount(found);
+      }
+      setPromoSuccess(`Promo Code "${code}" applied: ${found.details}!`);
+    } else {
+      // Check if it matches an existing customer's referral code (case-insensitive)
+      const matchingCustomer = customers?.find(c => c.referralCode && c.referralCode.toUpperCase() === code);
+      if (matchingCustomer) {
+        if (loggedInCustomer && loggedInCustomer.id === matchingCustomer.id) {
+          setPromoError("You cannot use your own referral code.");
+          return;
+        }
+
+        const virtualDiscount: Discount = {
+          id: `disc-ref-virtual-${matchingCustomer.id}`,
+          title: code,
+          status: 'Active',
+          method: 'Code',
+          eligibility: 'All customers',
+          type: 'Amount off order',
+          valueType: 'Percentage',
+          valueAmount: 10,
+          details: `10% referral discount courtesy of ${matchingCustomer.name.split(" ")[0]}`,
+          used: 0,
+          limitOnePerCustomer: true
+        };
+        setCurrentDiscount(virtualDiscount);
+        if (onApplyDiscount) {
+          onApplyDiscount(virtualDiscount);
+        }
+        setPromoSuccess(`Referral code applied! You receive a 10% discount on your order.`);
+      } else {
+        setPromoError('Invalid or expired promo code.');
+      }
+    }
+  };
+
+  // Subtotal details calculated dynamically
+  const rawSubtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const discountValue = calculateDiscountAmount(currentDiscount, cartItems, rawSubtotal);
+  const subtotalAfterDiscount = Math.max(rawSubtotal - discountValue, 0);
+
+  const deliveryCost = currentDiscount?.type === 'Free shipping' ? 0 : (deliverySpeed === 'priority' ? (subtotalAfterDiscount >= 40 ? 0 : 4.99) : 0);
+  const finalTotal = subtotalAfterDiscount + deliveryCost;
   const storeCreditAvailable = loggedInCustomer?.storeCredit || 0;
   const storeCreditApplied = applyStoreCredit ? Math.min(storeCreditAvailable, finalTotal) : 0;
   const finalTotalToPay = Math.max(0, finalTotal - storeCreditApplied);
@@ -391,7 +462,7 @@ export default function CheckoutView({
           customerEmail: email,
           address: `${addressLine}, ${city}, ${postcode}, ${country}`,
           total: 0,
-          discountApplied: discountApplied,
+          discountApplied: currentDiscount,
           items: cartItems.map(item => ({
             productId: item.productId,
             productTitle: item.productTitle,
@@ -543,7 +614,7 @@ export default function CheckoutView({
           customerEmail: email,
           address: `${addressLine}, ${city}, ${postcode}, ${country}`,
           total: finalTotalToPay,
-          discountApplied,
+          discountApplied: currentDiscount,
           items: cartItems.map(item => ({
             productId: item.productId,
             productTitle: item.productTitle,
@@ -624,7 +695,7 @@ export default function CheckoutView({
         customerEmail: email,
         address: `${addressLine}, ${city}, ${postcode}, ${country}`,
         total: finalTotalToPay,
-        discountApplied,
+        discountApplied: currentDiscount,
         items: cartItems.map(item => ({
           productId: item.productId,
           productTitle: item.productTitle,
@@ -1714,17 +1785,49 @@ export default function CheckoutView({
               </div>
             )}
 
+            {/* Promo / Referral Code Box */}
+            <div className="bg-slate-50/70 border border-slate-200 p-4 rounded-2xl text-xs space-y-2">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Promo or Referral Code
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. CRUSHCLUB15 or REF-..."
+                  value={promoCodeInput}
+                  onChange={(e) => setPromoCodeInput(e.target.value)}
+                  className="flex-1 bg-white border border-slate-200 p-2 text-xs rounded-xl uppercase placeholder:normal-case font-bold tracking-wider focus:outline-none focus:ring-1 focus:ring-slate-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyPromoInCheckout}
+                  className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-extrabold px-3.5 py-2 rounded-xl cursor-pointer transition-colors shrink-0 uppercase tracking-wider"
+                >
+                  Apply
+                </button>
+              </div>
+              {promoError && <p className="text-[10px] text-red-500 font-bold">{promoError}</p>}
+              {promoSuccess && (
+                <div className="flex items-center gap-1 text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-100 p-1.5 rounded-lg font-black">
+                  <Check className="h-3.5 w-3.5 shrink-0" />
+                  <span>{promoSuccess}</span>
+                </div>
+              )}
+            </div>
+
             {/* Calculations review */}
             <div className="space-y-2 border-t border-slate-100 pt-3 text-xs leading-normal font-semibold">
               <div className="flex justify-between text-slate-500">
                 <span>Subtotal items</span>
-                <span className="text-slate-800">£{totalAmount.toFixed(2)}</span>
+                <span className="text-slate-800">£{rawSubtotal.toFixed(2)}</span>
               </div>
 
-              {discountApplied && (
+              {currentDiscount && (
                 <div className="flex justify-between text-emerald-600">
-                  <span>Promo applied ({discountApplied.title})</span>
-                  <span>-£{(totalAmount >= 40 ? totalAmount - totalAmount : 5).toFixed(2)}</span>
+                  <span className="flex items-center gap-1">
+                    <Check className="h-3 w-3" /> Promo/Referral Applied ({currentDiscount.title})
+                  </span>
+                  <span className="font-extrabold">-£{discountValue.toFixed(2)}</span>
                 </div>
               )}
 
