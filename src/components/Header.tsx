@@ -219,21 +219,6 @@ export default function Header({
 
         {/* Right: Actions block (Dashboard controller, customer logins, basket drawers) */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          
-          {/* Extremely prominent Admin Dashboard Toggle - Hide on mobile, show on sm/md and up */}
-          <button
-            onClick={onOpenAdmin}
-            className={`flex items-center gap-1.5 py-2 px-3.5 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer ${
-              isAdminActive 
-                ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md hover:brightness-110' 
-                : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300'
-            } hidden sm:flex`}
-          >
-            <LayoutDashboard className="h-3.5 w-3.5 shrink-0 animate-pulse" />
-            <span className="hidden md:inline">{isAdminActive ? 'Viewing Dashboard' : 'Admin Portal'}</span>
-          </button>
-
-          <span className="h-5 w-px bg-slate-200 hidden md:block" />
 
           {/* Search Trigger Button */}
           <button
@@ -388,23 +373,7 @@ export default function Header({
 
               {/* Portal controls & account triggers */}
               <div className="space-y-2 border-t border-slate-100 pt-5">
-                <div className="text-[10px] font-black uppercase text-indigo-650 tracking-wider mb-3 px-2.5">Portals & Accounts</div>
-                
-                {/* Admin Portal toggle */}
-                <button
-                  onClick={() => {
-                    onOpenAdmin();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 py-3 px-3.5 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-                    isAdminActive 
-                      ? 'bg-indigo-600 text-white shadow-md' 
-                      : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-150'
-                  }`}
-                >
-                  <LayoutDashboard className="h-4.5 w-4.5 shrink-0" />
-                  <span>{isAdminActive ? 'Viewing Dashboard' : 'Admin Portal'}</span>
-                </button>
+                <div className="text-[10px] font-black uppercase text-indigo-650 tracking-wider mb-3 px-2.5">Your Account</div>
 
                 {/* Customer login trigger */}
                 <button
