@@ -987,15 +987,17 @@ function FeaturedCollectionSection({
 }: FeaturedCollectionSectionProps) {
   const [activeTab, setActiveTab] = useState<'All' | 'Mint' | 'Berry' | 'Citrus' | 'Strong' | 'New Arrivals' | 'Bestsellers'>('All');
 
+  const targetCollectionId = sec.settings.selectedCollectionId;
+  const selectedColl = React.useMemo(() => {
+    return targetCollectionId ? allCollections.find(c => c.id === targetCollectionId) : null;
+  }, [targetCollectionId, allCollections]);
+
   // Filter products by collection and active tab
   const filteredProducts = React.useMemo(() => {
-    const targetCollectionId = sec.settings.selectedCollectionId;
-    const selectedColl = targetCollectionId ? allCollections.find(c => c.id === targetCollectionId) : null;
-    
     // First, filter by collection
     let list = allProducts.filter(p => p.status === 'Active');
     if (targetCollectionId && selectedColl) {
-      list = list.filter(p => selectedColl.productIds.includes(p.id));
+      list = list.filter(p => (selectedColl.productIds || []).includes(p.id));
     }
 
     // Now, filter by active tab
@@ -1080,10 +1082,10 @@ function FeaturedCollectionSection({
             className="text-3xl md:text-4xl font-black uppercase tracking-tight text-[#0F172A]"
             style={{ color: sec.settings.headingColor || '#0f172a' }}
           >
-            {sec.settings.title || 'Try Before You Subscribe'}
+            {sec.settings.title || (selectedColl ? selectedColl.title : 'Try Before You Subscribe')}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 max-w-xl font-medium">
-            {sec.settings.description || 'Find your favourite flavours before committing to a plan.'}
+            {sec.settings.description || (selectedColl && selectedColl.description ? selectedColl.description : 'Find your favourite flavours before committing to a plan.')}
           </p>
           <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 font-bold pt-1">
             <span>Fast UK delivery</span>

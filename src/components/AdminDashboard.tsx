@@ -1530,6 +1530,336 @@ export default function AdminDashboard({
     e.target.value = '';
   };
 
+  const handleExportCollections = () => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collections, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `pouch_supply_collections_backup_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (e: any) {
+      console.error("Export failed:", e);
+      alert("Failed to export collections: " + e.message);
+    }
+  };
+
+  const handleImportCollections = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = JSON.parse(text);
+        const importedList = Array.isArray(parsed) ? parsed : [parsed];
+
+        if (importedList.length === 0) {
+          throw new Error("No collections could be parsed from the file.");
+        }
+
+        triggerConfirm(`Do you want to MERGE these ${importedList.length} collections with your existing lists?`, () => {
+          const existingIds = new Set(collections.map(c => c.id));
+          const merged = [...collections];
+          importedList.forEach(item => {
+            if (item && item.id) {
+              if (existingIds.has(item.id)) {
+                const idx = merged.findIndex(c => c.id === item.id);
+                if (idx !== -1) merged[idx] = item;
+              } else {
+                merged.push(item);
+              }
+            }
+          });
+          onUpdateCollections(merged);
+        }, "Import Collections Backup");
+
+      } catch (err: any) {
+        console.error("Import failed:", err);
+        alert("Failed to import collections: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleExportPages = () => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(customPages, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `pouch_supply_pages_backup_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (e: any) {
+      console.error("Export failed:", e);
+      alert("Failed to export pages: " + e.message);
+    }
+  };
+
+  const handleImportPages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = JSON.parse(text);
+        const importedList = Array.isArray(parsed) ? parsed : [parsed];
+
+        if (importedList.length === 0) {
+          throw new Error("No pages could be parsed from the file.");
+        }
+
+        triggerConfirm(`Do you want to MERGE these ${importedList.length} custom pages with your existing pages?`, () => {
+          const existingIds = new Set(customPages.map(p => p.id));
+          const merged = [...customPages];
+          importedList.forEach(item => {
+            if (item && item.id) {
+              if (existingIds.has(item.id)) {
+                const idx = merged.findIndex(p => p.id === item.id);
+                if (idx !== -1) merged[idx] = item;
+              } else {
+                merged.push(item);
+              }
+            }
+          });
+          onUpdateCustomPages(merged);
+        }, "Import Pages Backup");
+
+      } catch (err: any) {
+        console.error("Import failed:", err);
+        alert("Failed to import pages: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleExportOrders = () => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(orders, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `pouch_supply_orders_backup_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (e: any) {
+      console.error("Export failed:", e);
+      alert("Failed to export orders: " + e.message);
+    }
+  };
+
+  const handleImportOrders = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = JSON.parse(text);
+        const importedList = Array.isArray(parsed) ? parsed : [parsed];
+
+        if (importedList.length === 0) {
+          throw new Error("No orders could be parsed from the file.");
+        }
+
+        triggerConfirm(`Do you want to MERGE these ${importedList.length} orders with your existing orders?`, () => {
+          const existingIds = new Set(orders.map(o => o.id));
+          const merged = [...orders];
+          importedList.forEach(item => {
+            if (item && item.id) {
+              if (existingIds.has(item.id)) {
+                const idx = merged.findIndex(o => o.id === item.id);
+                if (idx !== -1) merged[idx] = item;
+              } else {
+                merged.push(item);
+              }
+            }
+          });
+          onUpdateOrders(merged);
+        }, "Import Orders Backup");
+
+      } catch (err: any) {
+        console.error("Import failed:", err);
+        alert("Failed to import orders: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleExportCustomers = () => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(customers, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `pouch_supply_customers_backup_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (e: any) {
+      console.error("Export failed:", e);
+      alert("Failed to export customers: " + e.message);
+    }
+  };
+
+  const handleImportCustomers = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = JSON.parse(text);
+        const importedList = Array.isArray(parsed) ? parsed : [parsed];
+
+        if (importedList.length === 0) {
+          throw new Error("No customers could be parsed from the file.");
+        }
+
+        triggerConfirm(`Do you want to MERGE these ${importedList.length} customers with your existing customers list?`, () => {
+          const existingIds = new Set(customers.map(c => c.id));
+          const merged = [...customers];
+          importedList.forEach(item => {
+            if (item && item.id) {
+              if (existingIds.has(item.id)) {
+                const idx = merged.findIndex(c => c.id === item.id);
+                if (idx !== -1) merged[idx] = item;
+              } else {
+                merged.push(item);
+              }
+            }
+          });
+          onUpdateCustomers(merged);
+        }, "Import Customers Backup");
+
+      } catch (err: any) {
+        console.error("Import failed:", err);
+        alert("Failed to import customers: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleExportDiscounts = () => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(discounts, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `pouch_supply_discounts_backup_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (e: any) {
+      console.error("Export failed:", e);
+      alert("Failed to export discounts: " + e.message);
+    }
+  };
+
+  const handleImportDiscounts = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = JSON.parse(text);
+        const importedList = Array.isArray(parsed) ? parsed : [parsed];
+
+        if (importedList.length === 0) {
+          throw new Error("No discounts could be parsed from the file.");
+        }
+
+        triggerConfirm(`Do you want to MERGE these ${importedList.length} discounts with your existing discounts list?`, () => {
+          const existingIds = new Set(discounts.map(d => d.id));
+          const merged = [...discounts];
+          importedList.forEach(item => {
+            if (item && item.id) {
+              if (existingIds.has(item.id)) {
+                const idx = merged.findIndex(d => d.id === item.id);
+                if (idx !== -1) merged[idx] = item;
+              } else {
+                merged.push(item);
+              }
+            }
+          });
+          onUpdateDiscounts(merged);
+        }, "Import Discounts Backup");
+
+      } catch (err: any) {
+        console.error("Import failed:", err);
+        alert("Failed to import discounts: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleExportBlogs = () => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(blogs, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `pouch_supply_blogs_backup_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (e: any) {
+      console.error("Export failed:", e);
+      alert("Failed to export blogs: " + e.message);
+    }
+  };
+
+  const handleImportBlogs = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = JSON.parse(text);
+        const importedList = Array.isArray(parsed) ? parsed : [parsed];
+
+        if (importedList.length === 0) {
+          throw new Error("No blog posts could be parsed from the file.");
+        }
+
+        triggerConfirm(`Do you want to MERGE these ${importedList.length} blog posts with your existing blog posts list?`, () => {
+          const existingIds = new Set(blogs.map(b => b.id));
+          const merged = [...blogs];
+          importedList.forEach(item => {
+            if (item && item.id) {
+              if (existingIds.has(item.id)) {
+                const idx = merged.findIndex(b => b.id === item.id);
+                if (idx !== -1) merged[idx] = item;
+              } else {
+                merged.push(item);
+              }
+            }
+          });
+          onUpdateBlogs(merged);
+        }, "Import Blogs Backup");
+
+      } catch (err: any) {
+        console.error("Import failed:", err);
+        alert("Failed to import blogs: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   // Create & Edit Collection
   const handleCreateCollection = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2700,16 +3030,39 @@ export default function AdminDashboard({
                 ))}
               </div>
 
-              {/* Query filter input */}
-              <div className="relative w-full sm:w-64">
-                <input
-                  type="text"
-                  placeholder="Filter ID, customers..."
-                  value={orderQuery}
-                  onChange={(e) => setOrderQuery(e.target.value)}
-                  className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
-                />
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <button
+                  onClick={handleExportOrders}
+                  className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2 px-2.5 rounded-lg text-xs text-slate-700 flex items-center gap-1 transition cursor-pointer shadow-2xs"
+                  title="Export all orders to JSON backup file"
+                >
+                  <Download className="h-3 w-3 text-slate-500" /> Export Backup
+                </button>
+
+                <label
+                  className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2 px-2.5 rounded-lg text-xs text-slate-700 flex items-center gap-1 transition cursor-pointer shadow-2xs cursor-pointer"
+                  title="Import orders from JSON backup"
+                >
+                  <Upload className="h-3 w-3 text-slate-500" /> Import Backup
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={handleImportOrders}
+                  />
+                </label>
+
+                {/* Query filter input */}
+                <div className="relative w-full sm:w-64">
+                  <input
+                    type="text"
+                    placeholder="Filter ID, customers..."
+                    value={orderQuery}
+                    onChange={(e) => setOrderQuery(e.target.value)}
+                    className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
+                  />
+                  <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                </div>
               </div>
             </div>
 
@@ -3545,19 +3898,42 @@ export default function AdminDashboard({
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => setEditingCollection({
-                      id: 'new_temp_draft_col',
-                      title: '',
-                      description: '',
-                      type: 'Manual',
-                      image: '/placeholder.png',
-                      productIds: []
-                    })}
-                    className="bg-slate-900 hover:bg-slate-850 font-bold p-2.5 px-4 rounded-xl text-xs text-white flex items-center gap-1 shadow-xs cursor-pointer"
-                  >
-                    <Plus className="h-4 w-4" /> Create Collection Box
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={handleExportCollections}
+                      className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                      title="Export all collections to JSON backup file"
+                    >
+                      <Download className="h-3.5 w-3.5 text-slate-500" /> Export Backup
+                    </button>
+
+                    <label
+                      className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs cursor-pointer"
+                      title="Import collections from JSON backup"
+                    >
+                      <Upload className="h-3.5 w-3.5 text-slate-500" /> Import Backup
+                      <input
+                        type="file"
+                        accept=".json"
+                        className="hidden"
+                        onChange={handleImportCollections}
+                      />
+                    </label>
+
+                    <button
+                      onClick={() => setEditingCollection({
+                        id: 'new_temp_draft_col',
+                        title: '',
+                        description: '',
+                        type: 'Manual',
+                        image: '/placeholder.png',
+                        productIds: []
+                      })}
+                      className="bg-slate-900 hover:bg-slate-850 font-bold p-2.5 px-4 rounded-xl text-xs text-white flex items-center gap-1 shadow-xs cursor-pointer"
+                    >
+                      <Plus className="h-4 w-4" /> Create Collection Box
+                    </button>
+                  </div>
                 </div>
 
                 {/* Collections Table Grid list */}
@@ -4051,14 +4427,38 @@ export default function AdminDashboard({
             {/* If no page is selected for editing/building, list customizable pages */}
             {!selectedBuilderPageId ? (
               <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-500 font-bold">List of builder pages</span>
-                  <button
-                    onClick={() => setShowAddPage(true)}
-                    className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
-                  >
-                    <Plus className="h-4 w-4" /> Add Page Template
-                  </button>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
+                  <span className="text-xs text-slate-500 font-extrabold uppercase tracking-wider">List of customizable templates ({localPages.length})</span>
+                  
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={handleExportPages}
+                      className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                      title="Export all pages to JSON backup file"
+                    >
+                      <Download className="h-3.5 w-3.5 text-slate-500" /> Export Backup
+                    </button>
+
+                    <label
+                      className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs cursor-pointer"
+                      title="Import pages from JSON backup"
+                    >
+                      <Upload className="h-3.5 w-3.5 text-slate-500" /> Import Backup
+                      <input
+                        type="file"
+                        accept=".json"
+                        className="hidden"
+                        onChange={handleImportPages}
+                      />
+                    </label>
+
+                    <button
+                      onClick={() => setShowAddPage(true)}
+                      className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
+                    >
+                      <Plus className="h-4 w-4" /> Add Page Template
+                    </button>
+                  </div>
                 </div>
 
                 <div className="bg-white border rounded-xl divide-y divide-slate-100 shadow-xs">
@@ -7151,12 +7551,35 @@ export default function AdminDashboard({
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
               </div>
 
-              <button
-                onClick={() => setShowAddCustomer(true)}
-                className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
-              >
-                <Plus className="h-4 w-4" /> Add Register Customer Profile
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={handleExportCustomers}
+                  className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                  title="Export all customers to JSON backup file"
+                >
+                  <Download className="h-3.5 w-3.5 text-slate-500" /> Export Backup
+                </button>
+
+                <label
+                  className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs cursor-pointer"
+                  title="Import customers from JSON backup"
+                >
+                  <Upload className="h-3.5 w-3.5 text-slate-500" /> Import Backup
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={handleImportCustomers}
+                  />
+                </label>
+
+                <button
+                  onClick={() => setShowAddCustomer(true)}
+                  className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Plus className="h-4 w-4" /> Add Register Customer Profile
+                </button>
+              </div>
             </div>
 
             {/* Customers details list */}
@@ -7320,12 +7743,35 @@ export default function AdminDashboard({
                     <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                   </div>
 
-                  <button
-                    onClick={() => setShowDiscountTypeSelector(true)}
-                    className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
-                  >
-                    <Plus className="h-4 w-4" /> Create Discount
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={handleExportDiscounts}
+                      className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                      title="Export all discounts to JSON backup file"
+                    >
+                      <Download className="h-3.5 w-3.5 text-slate-500" /> Export Backup
+                    </button>
+
+                    <label
+                      className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs cursor-pointer"
+                      title="Import discounts from JSON backup"
+                    >
+                      <Upload className="h-3.5 w-3.5 text-slate-500" /> Import Backup
+                      <input
+                        type="file"
+                        accept=".json"
+                        className="hidden"
+                        onChange={handleImportDiscounts}
+                      />
+                    </label>
+
+                    <button
+                      onClick={() => setShowDiscountTypeSelector(true)}
+                      className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
+                    >
+                      <Plus className="h-4 w-4" /> Create Discount
+                    </button>
+                  </div>
                 </div>
 
                 {/* Discounts List database table */}
@@ -7610,20 +8056,43 @@ export default function AdminDashboard({
                 </select>
               </div>
 
-              <button
-                onClick={() => {
-                  setNewBlogForm({
-                    title: '', excerpt: '', content: '', image: '',
-                    author: 'Admin', category: 'General', status: 'Active',
-                    publishedAt: '', readTime: '5 min read', tags: []
-                  });
-                  setBlogTagsInput('');
-                  setShowAddBlog(true);
-                }}
-                className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
-              >
-                <Plus className="h-4 w-4" /> Create Blog Post
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={handleExportBlogs}
+                  className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                  title="Export all blogs to JSON backup file"
+                >
+                  <Download className="h-3.5 w-3.5 text-slate-500" /> Export Backup
+                </button>
+
+                <label
+                  className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs cursor-pointer"
+                  title="Import blogs from JSON backup"
+                >
+                  <Upload className="h-3.5 w-3.5 text-slate-500" /> Import Backup
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={handleImportBlogs}
+                  />
+                </label>
+
+                <button
+                  onClick={() => {
+                    setNewBlogForm({
+                      title: '', excerpt: '', content: '', image: '',
+                      author: 'Admin', category: 'General', status: 'Active',
+                      publishedAt: '', readTime: '5 min read', tags: []
+                    });
+                    setBlogTagsInput('');
+                    setShowAddBlog(true);
+                  }}
+                  className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Plus className="h-4 w-4" /> Create Blog Post
+                </button>
+              </div>
             </div>
 
             {/* Blogs list table */}
