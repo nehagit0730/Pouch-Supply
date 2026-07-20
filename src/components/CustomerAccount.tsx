@@ -70,11 +70,10 @@ export default function CustomerAccount({
 
   // Star Progress System definition and calculations
   const TIERS = [
-    { level: 1, name: "Tier 1", required: 5 },
-    { level: 2, name: "Tier 2", required: 10 },
-    { level: 3, name: "Tier 3", required: 30 },
-    { level: 4, name: "Tier 4", required: 40 },
-    { level: 5, name: "Tier 5 (VIP)", required: 50 }
+    { level: 1, name: "Bronze Member", required: 5 },
+    { level: 2, name: "Silver Member", required: 15 },
+    { level: 3, name: "Gold Member", required: 30 },
+    { level: 4, name: "Platinum Member", required: 31 }
   ];
 
   const myOrders = loggedInCustomer 
@@ -82,72 +81,66 @@ export default function CustomerAccount({
     : [];
   const ordersCount = myOrders.length;
 
+  const getUnlockedRewardsCount = (count: number): number => {
+    const staticMilestones = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29];
+    let unlocked = staticMilestones.filter(m => count >= m).length;
+    if (count >= 31) {
+      for (let i = 31; i <= count; i++) {
+        if (i % 2 !== 0) {
+          unlocked++;
+        }
+      }
+    }
+    return unlocked;
+  };
+
   const getTierInfo = (count: number) => {
-    if (count >= 50) {
+    const unlockedCount = getUnlockedRewardsCount(count);
+    if (count >= 31) {
       return {
-        level: 5,
-        currentTierName: "Tier 5 (VIP)",
-        badgeName: "VIP Customer",
+        level: 4,
+        currentTierName: "Platinum Member",
+        badgeName: "Platinum Member",
         nextTierName: "",
         ordersNeededForNext: 0,
         progressPercentage: 100,
-        unlockedCount: 5,
-        description: "Congratulations! You have reached Tier 5 (Final VIP Tier) and unlocked VIP Customer status with 50+ completed orders. You are now officially a VIP Customer!"
+        unlockedCount,
+        description: "Congratulations! You have reached Platinum Member status 💎! Enjoy the highest loyalty multiplier, quarterly surprise rewards, priority customer support, and direct rewards for every odd-numbered order."
       };
-    } else if (count >= 40) {
-      return {
-        level: 4,
-        currentTierName: "Tier 4",
-        badgeName: "Gold Member",
-        nextTierName: "Tier 5 (VIP)",
-        ordersNeededForNext: 50 - count,
-        progressPercentage: Math.round(((count - 40) / (50 - 40)) * 100),
-        unlockedCount: 4,
-        description: `You are currently at Tier 4. Complete ${50 - count} more order${50 - count > 1 ? 's' : ''} to reach Tier 5 (Final VIP Tier) and unlock VIP Customer status.`
-      };
-    } else if (count >= 30) {
+    } else if (count >= 16) {
       return {
         level: 3,
-        currentTierName: "Tier 3",
-        badgeName: "Silver Member",
-        nextTierName: "Tier 4",
-        ordersNeededForNext: 40 - count,
-        progressPercentage: Math.round(((count - 30) / (40 - 30)) * 100),
-        unlockedCount: 3,
-        description: `You are currently at Tier 3. Complete ${40 - count} more order${40 - count > 1 ? 's' : ''} to reach Tier 4.`
+        currentTierName: "Gold Member",
+        badgeName: "Gold Member",
+        nextTierName: "Platinum Member",
+        ordersNeededForNext: 31 - count,
+        progressPercentage: Math.round(((count - 15) / (31 - 15)) * 100),
+        unlockedCount,
+        description: `You are currently a Gold Member 🥇. Complete ${31 - count} more order${31 - count > 1 ? 's' : ''} to unlock Platinum Member status.`
       };
-    } else if (count >= 10) {
+    } else if (count >= 6) {
       return {
         level: 2,
-        currentTierName: "Tier 2",
-        badgeName: "Bronze Member",
-        nextTierName: "Tier 3",
-        ordersNeededForNext: 30 - count,
-        progressPercentage: Math.round(((count - 10) / (30 - 10)) * 100),
-        unlockedCount: 2,
-        description: `You are currently at Tier 2. Complete ${30 - count} more order${30 - count > 1 ? 's' : ''} to reach Tier 3.`
-      };
-    } else if (count >= 5) {
-      return {
-        level: 1,
-        currentTierName: "Tier 1",
-        badgeName: "Active Member",
-        nextTierName: "Tier 2",
-        ordersNeededForNext: 10 - count,
-        progressPercentage: Math.round(((count - 5) / (10 - 5)) * 100),
-        unlockedCount: 1,
-        description: `You are currently at Tier 1. Complete ${10 - count} more order${10 - count > 1 ? 's' : ''} to reach Tier 2.`
+        currentTierName: "Silver Member",
+        badgeName: "Silver Member",
+        nextTierName: "Gold Member",
+        ordersNeededForNext: 16 - count,
+        progressPercentage: Math.round(((count - 5) / (16 - 5)) * 100),
+        unlockedCount,
+        description: `You are currently a Silver Member 🥈. Complete ${16 - count} more order${16 - count > 1 ? 's' : ''} to unlock Gold Member status.`
       };
     } else {
       return {
-        level: 0,
-        currentTierName: "Standard Member",
-        badgeName: "New Member",
-        nextTierName: "Tier 1",
-        ordersNeededForNext: 5 - count,
+        level: 1,
+        currentTierName: "Bronze Member",
+        badgeName: "Bronze Member",
+        nextTierName: "Silver Member",
+        ordersNeededForNext: 6 - count,
         progressPercentage: Math.round((count / 5) * 100),
-        unlockedCount: 0,
-        description: `You are currently a Standard Member. Complete ${5 - count} more order${5 - count > 1 ? 's' : ''} to reach Tier 1 and start unlocking loyalty rewards.`
+        unlockedCount,
+        description: count === 0
+          ? "You are currently a Bronze Member 🥉. Every new subscriber starts here! Place your first order to start unlocking rewards."
+          : `You are currently a Bronze Member 🥉. Complete ${6 - count} more order${6 - count > 1 ? 's' : ''} to unlock Silver Member status.`
       };
     }
   };
@@ -287,16 +280,16 @@ export default function CustomerAccount({
     }));
 
     if (!state) {
-      // Set default mockup state
+      // Set default state, preferring values already saved in the database on loggedInCustomer
       state = {
-        subPlan: 'core',
-        subStatus: 'Active',
-        subFrequency: 'Every 4 Weeks',
-        subCansCount: 8,
-        subPrice: 35.99,
-        nextPayment: '19 June 2026',
-        nextDelivery: '24 June 2026',
-        unlockedRewards: [
+        subPlan: (loggedInCustomer as any).subPlan || 'core',
+        subStatus: (loggedInCustomer as any).subStatus || 'Active',
+        subFrequency: (loggedInCustomer as any).subFrequency || 'Every 4 Weeks',
+        subCansCount: (loggedInCustomer as any).subCansCount || 8,
+        subPrice: (loggedInCustomer as any).subPrice || 35.99,
+        nextPayment: (loggedInCustomer as any).nextPayment || '19 June 2026',
+        nextDelivery: (loggedInCustomer as any).nextDelivery || '24 June 2026',
+        unlockedRewards: (loggedInCustomer as any).unlockedRewards || [
           { id: 'reward_1', title: 'Free Express Delivery', desc: 'Complimentary shipping upgrade', redeemed: false, code: 'FREESHIP' },
           { id: 'reward_2', title: '£5.00 Off Order', desc: 'Direct cash discount voucher', redeemed: false, code: 'POUCH5OFF' },
           { id: 'reward_3', title: 'Free Extra Can', desc: 'Unlock a free sample in next box', redeemed: false, code: 'FREECAN' }
@@ -305,17 +298,46 @@ export default function CustomerAccount({
         referredCount: referredCount,
         referralCredit: realStoreCredit,
         referralsList: referralsList,
-        savedCards: [
+        savedCards: (loggedInCustomer as any).savedCards || [
           { id: 'card_1', brand: 'Visa', last4: '4242', exp: '12/28', default: true }
         ],
-        ordersCount: orders.filter(o => o.customerEmail.toLowerCase() === loggedInCustomer.email.toLowerCase()).length
+        ordersCount: orders.filter(o => o.customerEmail.toLowerCase() === loggedInCustomer.email.toLowerCase()).length,
+        subItems: (loggedInCustomer as any).subItems || (allProducts.length >= 2 ? [
+          { productId: allProducts[0].id, title: allProducts[0].title, quantity: Math.floor(((loggedInCustomer as any).subCansCount || 8) / 2) || 4, image: allProducts[0].image, price: allProducts[0].price },
+          { productId: allProducts[1].id, title: allProducts[1].title, quantity: Math.ceil(((loggedInCustomer as any).subCansCount || 8) / 2) || 4, image: allProducts[1].image, price: allProducts[1].price }
+        ] : [
+          { productId: 'prod-1', title: 'VELO Freeze Max', quantity: Math.floor(((loggedInCustomer as any).subCansCount || 8) / 2) || 4, image: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=120&q=80', price: 4.50 },
+          { productId: 'prod-2', title: 'ZYN Cool Mint', quantity: Math.ceil(((loggedInCustomer as any).subCansCount || 8) / 2) || 4, image: 'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&w=120&q=80', price: 4.50 }
+        ])
       };
     } else {
-      // Ensure sync with loggedInCustomer's real storeCredit and referralCode
+      // Ensure sync with loggedInCustomer's real storeCredit and referralCode from MongoDB database
       state.referralCode = realReferralCode;
       state.referralCredit = realStoreCredit;
       state.referredCount = referredCount;
       state.referralsList = referralsList;
+      if ((loggedInCustomer as any).subStatus !== undefined) state.subStatus = (loggedInCustomer as any).subStatus;
+      if ((loggedInCustomer as any).subPlan !== undefined) state.subPlan = (loggedInCustomer as any).subPlan;
+      if ((loggedInCustomer as any).subFrequency !== undefined) state.subFrequency = (loggedInCustomer as any).subFrequency;
+      if ((loggedInCustomer as any).subCansCount !== undefined) state.subCansCount = (loggedInCustomer as any).subCansCount;
+      if ((loggedInCustomer as any).subPrice !== undefined) state.subPrice = (loggedInCustomer as any).subPrice;
+      if ((loggedInCustomer as any).nextPayment !== undefined) state.nextPayment = (loggedInCustomer as any).nextPayment;
+      if ((loggedInCustomer as any).nextDelivery !== undefined) state.nextDelivery = (loggedInCustomer as any).nextDelivery;
+      if ((loggedInCustomer as any).unlockedRewards !== undefined) state.unlockedRewards = (loggedInCustomer as any).unlockedRewards;
+      if ((loggedInCustomer as any).savedCards !== undefined) state.savedCards = (loggedInCustomer as any).savedCards;
+
+      if ((loggedInCustomer as any).subItems !== undefined) {
+        state.subItems = (loggedInCustomer as any).subItems;
+      } else if (!state.subItems) {
+        const cansCount = state.subCansCount || 8;
+        state.subItems = allProducts.length >= 2 ? [
+          { productId: allProducts[0].id, title: allProducts[0].title, quantity: Math.floor(cansCount / 2) || 4, image: allProducts[0].image, price: allProducts[0].price },
+          { productId: allProducts[1].id, title: allProducts[1].title, quantity: Math.ceil(cansCount / 2) || 4, image: allProducts[1].image, price: allProducts[1].price }
+        ] : [
+          { productId: 'prod-1', title: 'VELO Freeze Max', quantity: Math.floor(cansCount / 2) || 4, image: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=120&q=80', price: 4.50 },
+          { productId: 'prod-2', title: 'ZYN Cool Mint', quantity: Math.ceil(cansCount / 2) || 4, image: 'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&w=120&q=80', price: 4.50 }
+        ];
+      }
     }
 
     setCustState(state);
@@ -325,6 +347,12 @@ export default function CustomerAccount({
   const updateCustState = (newVal: any) => {
     setCustState(newVal);
     localStorage.setItem(custKey, JSON.stringify(newVal));
+    if (onUpdateProfile && loggedInCustomer) {
+      onUpdateProfile({
+        ...loggedInCustomer,
+        ...newVal
+      });
+    }
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -620,6 +648,77 @@ export default function CustomerAccount({
     { id: 'support', label: 'Help & Support', icon: LifeBuoy }
   ];
 
+  // Subscription item modifiers
+  const handleUpdateSubItemQty = (productId: string, newQty: number) => {
+    if (newQty < 0) return;
+    let updatedItems = [...(custState.subItems || [])];
+    if (newQty === 0) {
+      updatedItems = updatedItems.filter((item: any) => item.productId !== productId);
+    } else {
+      updatedItems = updatedItems.map((item: any) => {
+        if (item.productId === productId) {
+          return { ...item, quantity: newQty };
+        }
+        return item;
+      });
+    }
+    updateCustState({ ...custState, subItems: updatedItems });
+  };
+
+  const handleRemoveSubItem = (productId: string) => {
+    const updatedItems = (custState.subItems || []).filter((item: any) => item.productId !== productId);
+    updateCustState({ ...custState, subItems: updatedItems });
+  };
+
+  const handleAddProductToSub = (product: Product) => {
+    const currentItems = [...(custState.subItems || [])];
+    const totalCansSelected = currentItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+    const capacity = custState.subCansCount || 8;
+    
+    if (totalCansSelected >= capacity) {
+      alert(`Your subscription box is currently full (${totalCansSelected}/${capacity} cans). Please decrease the quantity of an existing flavor first, or use the 'Replace flavor' dropdown to swap!`);
+      return;
+    }
+    
+    const existingIndex = currentItems.findIndex((item: any) => item.productId === product.id);
+    if (existingIndex > -1) {
+      currentItems[existingIndex].quantity += 1;
+    } else {
+      currentItems.push({
+        productId: product.id,
+        title: product.title,
+        quantity: 1,
+        image: product.image,
+        price: product.price
+      });
+    }
+    updateCustState({ ...custState, subItems: currentItems });
+  };
+
+  const handleSwapSubItem = (oldProductId: string, newProduct: Product) => {
+    let updatedItems = [...(custState.subItems || [])];
+    const existingIndex = updatedItems.findIndex((item: any) => item.productId === newProduct.id);
+    const oldItemIndex = updatedItems.findIndex((item: any) => item.productId === oldProductId);
+    
+    if (oldItemIndex === -1) return;
+    const oldQty = updatedItems[oldItemIndex].quantity;
+    
+    if (existingIndex > -1) {
+      if (existingIndex === oldItemIndex) return; // same product, no-op
+      updatedItems[existingIndex].quantity += oldQty;
+      updatedItems = updatedItems.filter((item: any) => item.productId !== oldProductId);
+    } else {
+      updatedItems[oldItemIndex] = {
+        productId: newProduct.id,
+        title: newProduct.title,
+        quantity: oldQty,
+        image: newProduct.image,
+        price: newProduct.price
+      };
+    }
+    updateCustState({ ...custState, subItems: updatedItems });
+  };
+
   return (
     <div className="min-h-screen bg-[#f4f6f9] py-6 px-4 md:px-8 font-sans">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
@@ -786,7 +885,7 @@ export default function CustomerAccount({
                       <div className="flex justify-between items-start gap-4">
                         <div className="space-y-1.5">
                           <h2 className="text-xl font-black uppercase tracking-wider text-white">
-                            {ordersCount >= 50 ? "★ VIP CUSTOMER STATUS" : "STAR PROGRESS SYSTEM"}
+                            {ordersCount >= 31 ? "★ PLATINUM MEMBER STATUS" : "STAR PROGRESS SYSTEM"}
                           </h2>
                           <p className="text-slate-300 text-xs leading-relaxed max-w-md">
                             {tierInfo.description}
@@ -799,7 +898,7 @@ export default function CustomerAccount({
                             {tierInfo.progressPercentage}%
                           </span>
                           <span className="text-[7px] text-slate-300 uppercase tracking-widest font-extrabold max-w-[80px] truncate">
-                            {ordersCount >= 50 ? "VIP Member" : tierInfo.currentTierName}
+                            {ordersCount >= 31 ? "Platinum Member" : tierInfo.currentTierName}
                           </span>
                         </div>
                       </div>
@@ -810,13 +909,13 @@ export default function CustomerAccount({
                         <div className="relative h-1 bg-white/20 rounded-full">
                           <div 
                             className="absolute left-0 top-0 h-full bg-[#dfa047] rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(223,160,71,0.5)]" 
-                            style={{ width: `${Math.min(100, (ordersCount / 50) * 100)}%` }} 
+                            style={{ width: `${Math.min(100, (ordersCount / 31) * 100)}%` }} 
                           />
                           
                           {/* Milestone Nodes */}
                           {TIERS.map((t) => {
                             const isUnlocked = ordersCount >= t.required;
-                            const pct = (t.required / 50) * 100;
+                            const pct = (t.required / 31) * 100;
                             return (
                               <div 
                                 key={t.level}
@@ -828,7 +927,7 @@ export default function CustomerAccount({
                                     ? 'bg-[#dfa047] border-[#dfa047] text-[#071d37] scale-110 shadow-lg' 
                                     : 'bg-[#071d37] border-slate-500 text-slate-400 hover:border-slate-300'
                                 }`}>
-                                  {t.level === 5 ? (
+                                  {t.level === 4 ? (
                                     <Award className={`h-4 w-4 ${isUnlocked ? 'fill-current text-[#071d37]' : 'text-slate-400'}`} />
                                   ) : (
                                     <Star className={`h-3.5 w-3.5 ${isUnlocked ? 'fill-current text-[#071d37]' : 'text-slate-400'}`} />
@@ -849,8 +948,8 @@ export default function CustomerAccount({
                       <div className="flex justify-between items-center text-[10px] text-slate-300 font-bold uppercase tracking-wider mt-4 px-1">
                         <span>{ordersCount} Completed Order{ordersCount !== 1 ? 's' : ''}</span>
                         <span className="text-[#dfa047] font-black">
-                          {ordersCount >= 50 
-                            ? "★ VIP CUSTOMER LEVEL UNLOCKED" 
+                          {ordersCount >= 31 
+                            ? "★ PLATINUM MEMBER LEVEL UNLOCKED" 
                             : `${tierInfo.ordersNeededForNext} order${tierInfo.ordersNeededForNext > 1 ? 's' : ''} to reach ${tierInfo.nextTierName}`}
                         </span>
                       </div>
@@ -880,8 +979,8 @@ export default function CustomerAccount({
                           <div>
                             <p className="text-xs font-black text-[#071d37] uppercase">{tierInfo.badgeName}</p>
                             <p className="text-[10px] text-slate-500 leading-relaxed">
-                              {ordersCount >= 50 
-                                ? "VIP status active! Lifetime 15% discount and support priority." 
+                              {ordersCount >= 31 
+                                ? "Platinum status active! Highest loyalty multiplier and priority support." 
                                 : "Complete purchases to unlock tiers and trigger premium coupons."}
                             </p>
                           </div>
@@ -895,10 +994,10 @@ export default function CustomerAccount({
                           </div>
                           <div className="bg-slate-50 border border-slate-100 p-2 rounded-2xl flex flex-col justify-center min-w-0">
                             <p className="text-base font-black text-[#071d37]">{tierInfo.unlockedCount}</p>
-                            <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight mt-0.5">Unlocked Tiers</p>
+                            <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight mt-0.5">Unlocked Perks</p>
                           </div>
                           <div className="bg-slate-50 border border-slate-100 p-2 rounded-2xl flex flex-col justify-center min-w-0">
-                            <p className="text-base font-black text-[#071d37]">£{(tierInfo.unlockedCount * 15).toFixed(0)}</p>
+                            <p className="text-base font-black text-[#071d37]">£{(tierInfo.unlockedCount * 12).toFixed(0)}</p>
                             <p className="text-[8px] text-slate-400 uppercase font-bold tracking-tight mt-0.5">Saved Total</p>
                           </div>
                         </div>
@@ -967,7 +1066,9 @@ export default function CustomerAccount({
                           {/* Left: overlapping canisters preview */}
                           <div className="flex -space-x-4 shrink-0">
                             {(() => {
-                              const images = allProducts.filter(p => p.image).map(p => p.image);
+                              const images = (custState.subItems || [])
+                                .map((item: any) => item.image)
+                                .filter(Boolean);
                               const defaults = [
                                 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=120&q=80',
                                 'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&w=120&q=80',
@@ -1526,7 +1627,37 @@ export default function CustomerAccount({
                               if (plan === 'lite') { cans = 6; price = 27.99; }
                               else if (plan === 'pro') { cans = 10; price = 40.99; }
                               else if (plan === 'ultimate') { cans = 12; price = 46.99; }
-                              updateCustState({ ...custState, subPlan: plan, subCansCount: cans, subPrice: price });
+
+                              let currentSubItems = [...(custState.subItems || [])];
+                              if (currentSubItems.length === 0) {
+                                currentSubItems = allProducts.length >= 2 ? [
+                                  { productId: allProducts[0].id, title: allProducts[0].title, quantity: Math.floor(cans / 2) || 3, image: allProducts[0].image, price: allProducts[0].price },
+                                  { productId: allProducts[1].id, title: allProducts[1].title, quantity: Math.ceil(cans / 2) || 3, image: allProducts[1].image, price: allProducts[1].price }
+                                ] : [
+                                  { productId: 'prod-1', title: 'VELO Freeze Max', quantity: Math.floor(cans / 2) || 3, image: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=120&q=80', price: 4.50 },
+                                  { productId: 'prod-2', title: 'ZYN Cool Mint', quantity: Math.ceil(cans / 2) || 3, image: 'https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&w=120&q=80', price: 4.50 }
+                                ];
+                              } else {
+                                const totalCurrent = currentSubItems.reduce((sum, item) => sum + item.quantity, 0);
+                                if (totalCurrent !== cans) {
+                                  if (cans > totalCurrent) {
+                                    currentSubItems[0].quantity += (cans - totalCurrent);
+                                  } else {
+                                    let diff = totalCurrent - cans;
+                                    for (let i = currentSubItems.length - 1; i >= 0; i--) {
+                                      if (currentSubItems[i].quantity > diff) {
+                                        currentSubItems[i].quantity -= diff;
+                                        break;
+                                      } else {
+                                        diff -= (currentSubItems[i].quantity - 1);
+                                        currentSubItems[i].quantity = 1;
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+
+                              updateCustState({ ...custState, subPlan: plan, subCansCount: cans, subPrice: price, subItems: currentSubItems });
                             }}
                             className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-xl focus:ring-2 focus:ring-[#071d37] bg-white outline-none"
                           >
@@ -1607,38 +1738,187 @@ export default function CustomerAccount({
                     </div>
                   </div>
 
-                  {/* Interactive product Swapper */}
-                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
-                    <div>
-                      <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Custom Product Swapper</h3>
-                      <p className="text-slate-400 text-[10.5px]">Select your preferred premium can types to include in your next recurring shipment.</p>
+                  {/* Interactive product Swapper & Customizer */}
+                  <div className="space-y-6">
+                    {/* Part 1: Current Box Composition */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                      <div>
+                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                          <div>
+                            <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Your Current Box Lineup</h3>
+                            <p className="text-slate-400 text-[10.5px]">Adjust canister quantities or swap flavors to customize your recurring delivery.</p>
+                          </div>
+                          {(() => {
+                            const subItems = custState.subItems || [];
+                            const totalSelected = subItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+                            const capacity = custState.subCansCount || 8;
+                            const isExact = totalSelected === capacity;
+                            const isOver = totalSelected > capacity;
+                            
+                            return (
+                              <div className="text-right shrink-0">
+                                <span className={`inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                                  isExact ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                                  isOver ? 'bg-rose-50 text-rose-700 border border-rose-100' : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                }`}>
+                                  Box Capacity: {totalSelected} / {capacity} Cans
+                                </span>
+                              </div>
+                            );
+                          })()}
+                        </div>
+
+                        {/* Progress Bar Meter */}
+                        {(() => {
+                          const subItems = custState.subItems || [];
+                          const totalSelected = subItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+                          const capacity = custState.subCansCount || 8;
+                          const pct = Math.min(100, (totalSelected / capacity) * 100);
+                          const isExact = totalSelected === capacity;
+                          const isOver = totalSelected > capacity;
+                          
+                          return (
+                            <div className="mt-3">
+                              <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
+                                <div 
+                                  className={`h-full transition-all duration-300 ${
+                                    isExact ? 'bg-emerald-500' :
+                                    isOver ? 'bg-rose-500 animate-pulse' : 'bg-[#dfa047]'
+                                  }`}
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+
+                              {/* Alert Warnings */}
+                              {!isExact && (
+                                <div className={`mt-2.5 flex items-start gap-2 p-3.5 rounded-2xl text-[11px] leading-relaxed border ${
+                                  isOver 
+                                    ? 'bg-rose-50 border-rose-100 text-rose-700' 
+                                    : 'bg-amber-50 border-amber-100 text-amber-700'
+                                }`}>
+                                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                                  <div>
+                                    {isOver ? (
+                                      <p><strong>Limit Exceeded:</strong> Your selected canisters ({totalSelected}) exceed your <strong>{capacity} Cans</strong> subscription plan. Please reduce quantities to complete your box customizations.</p>
+                                    ) : (
+                                      <p><strong>Fill Your Box:</strong> You have selected {totalSelected} of your allowed <strong>{capacity} Cans</strong>. Please increase quantities or add new flavors from the catalog below to make the most of your delivery!</p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Current Items List */}
+                      {(!custState.subItems || custState.subItems.length === 0) ? (
+                        <div className="py-8 text-center text-slate-400 text-xs">
+                          Your active subscription box is empty. Choose premium flavors below to fill it!
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {custState.subItems.map((item: any) => (
+                            <div key={item.productId} className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl hover:border-slate-300 transition-all animate-fade-in">
+                              <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <img 
+                                  src={item.image} 
+                                  alt={item.title} 
+                                  className="w-12 h-12 object-cover rounded-xl bg-white border border-slate-200 shrink-0 shadow-xs" 
+                                  referrerPolicy="no-referrer"
+                                />
+                                <div className="min-w-0">
+                                  <h4 className="text-xs font-black text-[#071d37] truncate">{item.title}</h4>
+                                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">£{item.price ? item.price.toFixed(2) : '4.50'} • Recurring Item</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto border-t sm:border-t-0 pt-2.5 sm:pt-0">
+                                {/* Swap dropdown list */}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] font-bold text-slate-400 hidden md:inline">Swap:</span>
+                                  <select
+                                    value={item.productId}
+                                    onChange={(e) => {
+                                      const selectedProd = allProducts.find(p => p.id === e.target.value);
+                                      if (selectedProd) {
+                                        handleSwapSubItem(item.productId, selectedProd);
+                                      }
+                                    }}
+                                    className="text-[10px] font-bold text-[#071d37] bg-white border border-slate-200 py-1.5 px-2.5 rounded-xl hover:border-[#dfa047] transition-all cursor-pointer outline-none focus:ring-1 focus:ring-[#071d37] max-w-[150px]"
+                                  >
+                                    <option value={item.productId}>🔄 Swap with...</option>
+                                    {allProducts.filter(p => p.id !== item.productId).map(p => (
+                                      <option key={p.id} value={p.id}>{p.title}</option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                {/* Quantity Controller */}
+                                <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
+                                  <button
+                                    onClick={() => handleUpdateSubItemQty(item.productId, item.quantity - 1)}
+                                    className="w-7 h-7 flex items-center justify-center text-xs font-bold text-[#071d37] hover:bg-slate-100 rounded-lg cursor-pointer"
+                                  >
+                                    -
+                                  </button>
+                                  <span className="text-xs font-extrabold text-[#071d37] min-w-[16px] text-center">{item.quantity}</span>
+                                  <button
+                                    onClick={() => handleUpdateSubItemQty(item.productId, item.quantity + 1)}
+                                    className="w-7 h-7 flex items-center justify-center text-xs font-bold text-[#071d37] hover:bg-slate-100 rounded-lg cursor-pointer"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+
+                                {/* Delete Button */}
+                                <button
+                                  onClick={() => handleRemoveSubItem(item.productId)}
+                                  className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
+                                  title="Remove from Box"
+                                >
+                                  <Trash2 className="h-4.5 w-4.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {allProducts.slice(0, 4).map(prod => (
-                        <div key={prod.id} className="flex gap-3 bg-[#f4f6f9] border border-slate-100 p-3 rounded-2xl relative hover:shadow-xs transition-all">
-                          <img 
-                            src={prod.image} 
-                            alt={prod.title} 
-                            className="w-14 h-14 object-cover rounded-xl bg-white border border-slate-100 shrink-0" 
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="flex-1 min-w-0 flex flex-col justify-between">
-                            <div>
-                              <span className="text-[9px] text-[#dfa047] font-bold uppercase tracking-wider">{prod.vendor}</span>
-                              <h4 className="text-xs font-black text-[#071d37] truncate">{prod.title}</h4>
+                    {/* Part 2: Add other available canisters */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                      <div>
+                        <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Add Premium Flavors to Box</h3>
+                        <p className="text-slate-400 text-[10.5px]">Select any of these premium nicotine pouch brands to add to your recurring deliveries.</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {allProducts.filter(prod => !(custState.subItems || []).some((item: any) => item.productId === prod.id)).map(prod => (
+                          <div key={prod.id} className="flex gap-3 bg-[#f4f6f9] border border-slate-100 p-3 rounded-2xl relative hover:shadow-xs transition-all">
+                            <img 
+                              src={prod.image} 
+                              alt={prod.title} 
+                              className="w-14 h-14 object-cover rounded-xl bg-white border border-slate-100 shrink-0" 
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="flex-1 min-w-0 flex flex-col justify-between">
+                              <div>
+                                <span className="text-[9px] text-[#dfa047] font-bold uppercase tracking-wider">{prod.vendor}</span>
+                                <h4 className="text-xs font-black text-[#071d37] truncate">{prod.title}</h4>
+                              </div>
+                              <span className="text-xs font-extrabold text-slate-800 mt-1">£{prod.price.toFixed(2)}</span>
                             </div>
-                            <span className="text-xs font-extrabold text-slate-800 mt-1">£{prod.price.toFixed(2)}</span>
+                            
+                            <button
+                              onClick={() => handleAddProductToSub(prod)}
+                              className="absolute right-3 bottom-3 text-[10px] font-bold text-[#071d37] bg-white border border-slate-200 py-1 px-2.5 rounded-lg hover:border-[#dfa047] transition-all cursor-pointer"
+                            >
+                              + Add to Box
+                            </button>
                           </div>
-                          
-                          <button
-                            onClick={() => alert(`${prod.title} has been successfully added/swapped into your active box lineup!`)}
-                            className="absolute right-3 bottom-3 text-[10px] font-bold text-[#071d37] bg-white border border-slate-200 py-1 px-2.5 rounded-lg hover:border-[#dfa047] transition-all cursor-pointer"
-                          >
-                            Swap
-                          </button>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -1668,93 +1948,243 @@ export default function CustomerAccount({
                     </div>
                   </div>
 
-                  {/* Complete rewards grid list */}
-                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
-                    <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Your Star Progress Milestone Rewards</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {TIERS.map((tier) => {
-                        const isUnlocked = ordersCount >= tier.required;
-                        
-                        // Define reward properties for each tier
-                        let rewardTitle = "";
-                        let rewardDesc = "";
-                        let rewardCode = "";
-                        
-                        if (tier.level === 1) {
-                          rewardTitle = "Buy 5 Get 1 Free Can";
-                          rewardDesc = "Receive a complimentary premium white nicotine pouch canister on your 5th order.";
-                          rewardCode = "PSFREE5";
-                        } else if (tier.level === 2) {
-                          rewardTitle = "£10.00 Account Gift Voucher";
-                          rewardDesc = "A direct £10 cash coupon code to apply at checkout for your loyalty.";
-                          rewardCode = "PSLOYAL10";
-                        } else if (tier.level === 3) {
-                          rewardTitle = "£15.00 Store Discount";
-                          rewardDesc = "Get £15.00 off your order. Sourced directly from partners in Sweden.";
-                          rewardCode = "SWE30";
-                        } else if (tier.level === 4) {
-                          rewardTitle = "Free Extra Can Subscription Bonus";
-                          rewardDesc = "Unlocks a free extra can on all future subscriptions automatically.";
-                          rewardCode = "EXTRACAN";
-                        } else if (tier.level === 5) {
-                          rewardTitle = "VIP Lifetime Status";
-                          rewardDesc = "Unlocks permanent VIP privileges, priority support, and 15% discount on all purchases.";
-                          rewardCode = "VIPLIFETIME";
+                  {/* Complete rewards list based on new Tier System */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-6">
+                    <div>
+                      <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Your Tier Milestone Rewards</h3>
+                      <p className="text-slate-500 text-xs mt-0.5">Place orders to progress through tiers and unlock instant vouchers, free cans, free shipping, and merchandise.</p>
+                    </div>
+
+                    <div className="space-y-8">
+                      {[
+                        {
+                          id: "bronze",
+                          badge: "🥉",
+                          name: "Bronze Member",
+                          range: "Orders 1–5",
+                          intro: "Every new subscriber starts here.",
+                          unlockMsg: "Unlock: Silver Member",
+                          benefits: [
+                            "Bronze Member Badge 🥉",
+                            "Automatic Loyalty Tracking 📊"
+                          ],
+                          milestones: [
+                            { order: 1, reward: "Members receive 10% OFF", code: "BRONZE1" },
+                            { order: 3, reward: "FREE can of your choice", code: "BRONZE3" },
+                            { order: 5, reward: "Free Express Delivery on your next order", code: "BRONZE5" }
+                          ]
+                        },
+                        {
+                          id: "silver",
+                          badge: "🥈",
+                          name: "Silver Member",
+                          range: "Orders 6–15",
+                          intro: "Benefits unlocked upon reaching Order 6.",
+                          unlockMsg: "Unlock: Gold Member",
+                          benefits: [
+                            "Silver Account Badge 🥈",
+                            "Early Access to New Flavours 🎁",
+                            "Exclusive Subscriber-Only Offers 💰"
+                          ],
+                          milestones: [
+                            { order: 7, reward: "FREE can 🥫", code: "SILVER7" },
+                            { order: 9, reward: "£5 Store Credit 🎁", code: "SILVER9" },
+                            { order: 11, reward: "FREE can 🥫", code: "SILVER11" },
+                            { order: 13, reward: "Exclusive Pouch Supply merchandise (stickers, keyring, bottle opener, etc.) 🎁", code: "SILVER13" },
+                            { order: 15, reward: "2 FREE cans 🥫", code: "SILVER15" }
+                          ]
+                        },
+                        {
+                          id: "gold",
+                          badge: "🥇",
+                          name: "Gold Member",
+                          range: "Orders 16–30",
+                          intro: "Elite member status with priority benefits and multiple rewards.",
+                          unlockMsg: "Unlock: Platinum Member",
+                          benefits: [
+                            "Gold Badge 🥇",
+                            "Priority Access to Limited Editions ⭐",
+                            "Birthday Reward 🎉",
+                            "Exclusive Promotions 💰"
+                          ],
+                          milestones: [
+                            { order: 17, reward: "20% off your purchase 🎁", code: "GOLD17" },
+                            { order: 19, reward: "2 FREE cans 🥫", code: "GOLD19" },
+                            { order: 21, reward: "Mystery Reward (chosen by Pouch Supply) 🎁", code: "GOLD21" },
+                            { order: 23, reward: "2 FREE cans 🥫", code: "GOLD23" },
+                            { order: 25, reward: "Premium Pouch Supply merchandise 👕", code: "GOLD25" },
+                            { order: 27, reward: "20% off your purchase 🎁", code: "GOLD27" },
+                            { order: 29, reward: "2 FREE cans 🥫", code: "GOLD29" },
+                            { order: 30, reward: "Unlock Platinum Member 🏆", code: "GOLD30" }
+                          ]
+                        },
+                        {
+                          id: "platinum",
+                          badge: "💎",
+                          name: "Platinum Member",
+                          range: "31+ Orders",
+                          intro: "Unlocks at 31 completed subscription orders.",
+                          unlockMsg: "Ultimate Status reached!",
+                          benefits: [
+                            "Platinum Badge 💎",
+                            "Highest Loyalty Multiplier 👑",
+                            "First Access to All New Launches 🚀",
+                            "Quarterly Surprise Rewards 🎁",
+                            "Priority Customer Support ⭐"
+                          ],
+                          milestones: [
+                            { order: 31, reward: "Odd order reward: Choose 3 FREE cans, £10 Store Credit, Free Priority Delivery, Exclusive merchandise, or Mystery Reward", code: "PLATINUM_ODD" }
+                          ]
                         }
+                      ].map((tier) => {
+                        const isTierActive = (tier.id === "bronze") ||
+                          (tier.id === "silver" && ordersCount >= 6) ||
+                          (tier.id === "gold" && ordersCount >= 16) ||
+                          (tier.id === "platinum" && ordersCount >= 31);
 
                         return (
                           <div 
-                            key={tier.level} 
-                            className={`p-4 rounded-2xl border flex flex-col justify-between gap-3 transition-all ${
-                              isUnlocked 
-                                ? 'bg-emerald-50/40 border-emerald-200/60 text-[#071d37]' 
-                                : 'bg-slate-50/50 border-slate-200/60 opacity-80'
+                            key={tier.id}
+                            className={`border rounded-2xl p-5 space-y-4 transition-all ${
+                              isTierActive ? 'bg-slate-50/80 shadow-xs border-slate-200' : 'opacity-70 bg-slate-50/30 border-slate-200/50'
                             }`}
                           >
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-1.5">
-                                  <span className={`p-1 rounded-md ${isUnlocked ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
-                                    {tier.level === 5 ? <Award className="h-4 w-4" /> : <Star className="h-4 w-4 fill-current" />}
-                                  </span>
-                                  <h4 className="text-xs font-black uppercase tracking-wider">{tier.name} Reward</h4>
+                            {/* Tier Header */}
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-2xl">{tier.badge}</span>
+                                <div>
+                                  <h4 className="font-extrabold text-sm text-[#071d37]">{tier.name}</h4>
+                                  <span className="text-[10px] text-slate-500 font-bold">{tier.range} — {tier.intro}</span>
                                 </div>
-                                <span className={`text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full shrink-0 ${
-                                  isUnlocked 
-                                    ? 'bg-emerald-100 text-emerald-800' 
-                                    : 'bg-slate-200 text-slate-600'
-                                }`}>
-                                  {isUnlocked ? 'Unlocked' : 'Locked'}
-                                </span>
                               </div>
-                              <p className="text-xs font-bold text-slate-800 pt-1.5">{rewardTitle}</p>
-                              <p className="text-[10.5px] text-slate-500 leading-relaxed">{rewardDesc}</p>
-                              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">Required: {tier.required} Completed Orders</p>
+                              <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                                isTierActive 
+                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                                  : 'bg-slate-200 text-slate-600 border border-slate-300'
+                              }`}>
+                                {isTierActive ? 'Active Tier' : 'Locked'}
+                              </span>
                             </div>
 
-                            {isUnlocked ? (
-                              <div className="flex items-center justify-between gap-2 bg-white p-2 border border-emerald-100 rounded-xl mt-1">
-                                <div className="min-w-0">
-                                  <span className="text-[8px] text-slate-400 font-bold uppercase block">Voucher Promo Code</span>
-                                  <span className="font-mono font-black text-[11px] text-[#071d37] tracking-wider select-all">{rewardCode}</span>
-                                </div>
-                                <button 
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(rewardCode);
-                                    alert(`Voucher code "${rewardCode}" copied to clipboard! Paste at checkout.`);
-                                  }}
-                                  className="text-[9px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 py-1.5 px-3 rounded-lg transition-colors cursor-pointer shrink-0 uppercase"
-                                >
-                                  Copy Code
-                                </button>
+                            {/* Benefits row */}
+                            <div className="space-y-1.5">
+                              <p className="text-[10px] font-black uppercase tracking-wider text-[#071d37]/70">Permanent Tier Benefits Unlocked:</p>
+                              <div className="flex flex-wrap gap-2">
+                                {tier.benefits.map((b, i) => (
+                                  <span key={i} className="text-[10px] font-semibold bg-white border border-slate-200 px-2.5 py-1 rounded-lg text-slate-700 shadow-3xs">
+                                    {b}
+                                  </span>
+                                ))}
                               </div>
-                            ) : (
-                              <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium bg-slate-100/50 p-2 rounded-xl mt-1">
-                                <span>Complete {tier.required - ordersCount} more order{tier.required - ordersCount !== 1 ? 's' : ''} to unlock</span>
-                                <span className="p-1"><ShieldAlert className="h-3.5 w-3.5 text-slate-400" /></span>
+                            </div>
+
+                            {/* Milestones inside Tier */}
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-black uppercase tracking-wider text-[#071d37]/70">Order Milestones & Gifts:</p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {tier.id === "platinum" ? (
+                                  <div className="col-span-1 md:col-span-2 bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border border-violet-200 p-4 rounded-xl space-y-3">
+                                    <div className="flex justify-between items-start">
+                                      <div>
+                                        <p className="text-xs font-black text-[#071d37] uppercase tracking-wide">💎 Dynamic Odd-Numbered Rewards Active</p>
+                                        <p className="text-[10.5px] text-slate-600 leading-relaxed pt-0.5">Every odd-numbered subscription shipment earns you a reward!</p>
+                                      </div>
+                                      <span className="text-[9px] bg-violet-100 text-violet-800 border border-violet-200 px-2.5 py-0.5 rounded-full font-bold">Orders 31+ Onwards</span>
+                                    </div>
+
+                                    {/* Choice box */}
+                                    <div className="bg-white/80 p-3 rounded-lg border border-violet-100 space-y-2">
+                                      <p className="text-[10px] font-bold text-slate-700">Odd Order Rewards (Choose ONE at checkout/delivery):</p>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] font-medium text-slate-600">
+                                        <span className="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">🥫 3 FREE Cans of choice</span>
+                                        <span className="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">💷 £10.00 Store Credit</span>
+                                        <span className="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">🚚 Free Priority Fast Delivery</span>
+                                        <span className="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">🎁 Exclusive Pouch Supply Merch</span>
+                                        <span className="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">🎲 Mystery Custom Reward</span>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-1 border-t border-violet-100">
+                                      <span className="text-[10px] text-slate-500 font-bold">Your completed orders: <strong>{ordersCount}</strong></span>
+                                      {ordersCount >= 31 ? (
+                                        <div className="flex gap-2">
+                                          <span className="font-mono font-black text-xs bg-white text-[#071d37] border border-violet-200 py-1 px-3 rounded-md">PLATINUM_ODD</span>
+                                          <button 
+                                            onClick={() => {
+                                              navigator.clipboard.writeText("PLATINUM_ODD");
+                                              alert("Voucher code 'PLATINUM_ODD' copied to clipboard! Paste at checkout to request your odd-numbered order selection.");
+                                            }}
+                                            className="text-[9px] font-black text-violet-700 bg-violet-50 hover:bg-violet-100 py-1 px-2.5 rounded-md uppercase tracking-wider cursor-pointer"
+                                          >
+                                            Copy Code
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <span className="text-[10px] text-slate-400 font-bold">Complete {31 - ordersCount} more orders to activate</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  tier.milestones.map((m) => {
+                                    const isUnlocked = ordersCount >= m.order;
+                                    return (
+                                      <div 
+                                        key={m.order}
+                                        className={`p-3 rounded-xl border flex flex-col justify-between gap-2.5 transition-all ${
+                                          isUnlocked 
+                                            ? 'bg-emerald-50/35 border-emerald-200/60' 
+                                            : 'bg-slate-100/50 border-slate-200/50'
+                                        }`}
+                                      >
+                                        <div className="space-y-1">
+                                          <div className="flex justify-between items-center gap-2">
+                                            <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-md">
+                                              Order {m.order}
+                                            </span>
+                                            <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                                              isUnlocked ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'
+                                            }`}>
+                                              {isUnlocked ? 'Unlocked' : 'Locked'}
+                                            </span>
+                                          </div>
+                                          <p className="text-[10.5px] font-bold text-slate-800">{m.reward}</p>
+                                        </div>
+
+                                        {isUnlocked ? (
+                                          <div className="flex items-center justify-between gap-1 bg-white p-1.5 border border-emerald-100 rounded-lg">
+                                            <div className="min-w-0">
+                                              <span className="text-[7px] text-slate-400 font-bold uppercase block">Voucher Code</span>
+                                              <span className="font-mono font-black text-[10px] text-[#071d37] tracking-wider block truncate">{m.code}</span>
+                                            </div>
+                                            <button 
+                                              onClick={() => {
+                                                navigator.clipboard.writeText(m.code);
+                                                alert(`Voucher code "${m.code}" copied! Enter at checkout to redeem.`);
+                                              }}
+                                              className="text-[8px] font-black text-emerald-700 bg-emerald-50 hover:bg-emerald-100 py-1 px-2 rounded cursor-pointer shrink-0 uppercase"
+                                            >
+                                              Copy
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <span className="text-[9px] text-slate-400 font-bold block pt-1">
+                                            Needs {m.order - ordersCount} more order{m.order - ordersCount !== 1 ? 's' : ''}
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  })
+                                )}
                               </div>
-                            )}
+                            </div>
+
+                            {/* Unlock Message Footer */}
+                            <div className="text-right">
+                              <span className="text-[9px] font-black bg-slate-200/50 text-[#071d37]/80 px-2.5 py-1 rounded-md border border-slate-300/30">
+                                {tier.unlockMsg}
+                              </span>
+                            </div>
                           </div>
                         );
                       })}

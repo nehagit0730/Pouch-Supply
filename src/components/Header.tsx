@@ -40,6 +40,17 @@ export default function Header({
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const getMenuItemTab = (item: any): string => {
+    if (item.tab) return item.tab;
+    if (item.path) {
+      if (item.path === 'collection-all') return 'frontend-shop';
+      if (item.path === 'brands') return 'frontend-brands';
+      if (item.path === 'blog-all') return 'blogs';
+      return item.path;
+    }
+    return 'frontend-home';
+  };
+
   const filteredProducts = searchQuery.trim() === '' ? [] : allProducts.filter(p => 
     p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     p.vendor.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -196,25 +207,28 @@ export default function Header({
             { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
             { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
             { id: '5', label: 'About', tab: 'about', type: 'tab' }
-          ]).map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                if (item.type === 'external' && item.url) {
-                  window.open(item.url, '_blank');
-                } else {
-                  onTabChange(item.tab);
-                }
-              }}
-              className={`text-[11px] font-extrabold uppercase tracking-widest py-2 px-4 rounded-xl transition-all duration-250 cursor-pointer ${
-                currentTab === item.tab && !isAdminActive 
-                  ? 'bg-slate-900 text-white shadow-xs' 
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+          ]).map((item) => {
+            const itemTab = getMenuItemTab(item);
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  if (item.type === 'external' && item.url) {
+                    window.open(item.url, '_blank');
+                  } else {
+                    onTabChange(itemTab);
+                  }
+                }}
+                className={`text-[11px] font-extrabold uppercase tracking-widest py-2 px-4 rounded-xl transition-all duration-250 cursor-pointer ${
+                  currentTab === itemTab && !isAdminActive 
+                    ? 'bg-slate-900 text-white shadow-xs' 
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
 
         {/* Right: Actions block (Dashboard controller, customer logins, basket drawers) */}
@@ -349,26 +363,29 @@ export default function Header({
                   { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
                   { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
                   { id: '5', label: 'About', tab: 'about', type: 'tab' }
-                ]).map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      if (item.type === 'external' && item.url) {
-                        window.open(item.url, '_blank');
-                      } else {
-                        onTabChange(item.tab);
-                      }
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full text-left font-black uppercase tracking-wider text-xs py-3 px-3.5 rounded-xl transition-all cursor-pointer ${
-                      currentTab === item.tab && !isAdminActive
-                        ? 'bg-indigo-50 text-indigo-700'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
+                ]).map((item) => {
+                  const itemTab = getMenuItemTab(item);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        if (item.type === 'external' && item.url) {
+                          window.open(item.url, '_blank');
+                        } else {
+                          onTabChange(itemTab);
+                        }
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`w-full text-left font-black uppercase tracking-wider text-xs py-3 px-3.5 rounded-xl transition-all cursor-pointer ${
+                        currentTab === itemTab && !isAdminActive
+                          ? 'bg-indigo-50 text-indigo-700'
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Portal controls & account triggers */}

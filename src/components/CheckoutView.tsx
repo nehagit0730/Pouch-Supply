@@ -783,6 +783,44 @@ export default function CheckoutView({
     );
   }
 
+  const hasSubscription = cartItems.some(item => item.productId && (item.productId.startsWith('sub-pack') || item.productId.includes('sub-pack')));
+
+  if (hasSubscription && !loggedInCustomer) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+        <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-12 shadow-sm space-y-6 flex flex-col items-center animate-fade-in">
+          <div className="p-4 bg-red-50 text-red-600 rounded-full w-16 h-16 flex items-center justify-center shadow-xs">
+            <Lock className="h-8 w-8" />
+          </div>
+          <div className="space-y-3">
+            <h2 className="text-xl font-black text-[#071d37] uppercase tracking-wider">Account Required to Subscribe</h2>
+            <p className="text-slate-500 text-xs leading-relaxed max-w-md mx-auto">
+              Your cart contains a customized **Pouch Supply Subscription Pack**. To complete a subscription purchase, you are required to create a free customer account or sign in.
+            </p>
+            <p className="text-slate-400 text-[11px] leading-relaxed max-w-lg mx-auto bg-slate-50 border border-slate-100 rounded-xl p-3.5 mt-2">
+              Having an account ensures your selected nicotine pouch quantities are securely synced to our cloud database. This allows you to manage swaps, skip deliveries, track milestones, and secure rewards anytime with zero data loss.
+            </p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md pt-2">
+            <button
+              onClick={() => onNavigate('frontend-account')}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-widest py-3.5 px-6 rounded-xl transition-all cursor-pointer shadow-xs"
+            >
+              Sign In / Create Account
+            </button>
+            <button
+              onClick={() => onNavigate('frontend-shop')}
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-widest py-3.5 px-6 rounded-xl transition-all cursor-pointer border border-slate-200"
+            >
+              Continue Shopping
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       

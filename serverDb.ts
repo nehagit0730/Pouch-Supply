@@ -302,9 +302,11 @@ export async function fetchLayoutSettings(): Promise<any> {
     footerLogoImage: '',
     klaviyoPublicKey: '',
     menuItems: [
-      { id: 'all-products', label: 'All Pouches', path: 'collection-all' },
-      { id: 'brands', label: 'Explore Brands', path: 'brands' },
-      { id: 'custom-link-1', label: 'Support & FAQs', path: 'blog-all' }
+      { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
+      { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
+      { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
+      { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
+      { id: '5', label: 'About', tab: 'about', type: 'tab' }
     ]
   };
 

@@ -373,6 +373,11 @@ export default function App() {
 
   // App Routing Navigation
   const [currentTab, setCurrentTab] = useState<string>('frontend-home');
+
+  // Fix pages opening directly at the bottom or middle: scroll to top on every navigation change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentTab]);
   const [activeCollectionId, setActiveCollectionId] = useState<string>('all');
   const [isAdminActive, setIsAdminActive] = useState<boolean>(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
@@ -717,7 +722,7 @@ export default function App() {
       setCustomers(prev => {
         const exists = prev.some(c => c.id === loggedInCustomer.id || c.email.toLowerCase() === loggedInCustomer.email.toLowerCase());
         if (exists) {
-          return prev.map(c => (c.id === loggedInCustomer.id || c.email.toLowerCase() === loggedInCustomer.email.toLowerCase()) ? { ...c, referralCode: loggedInCustomer.referralCode } : c);
+          return prev.map(c => (c.id === loggedInCustomer.id || c.email.toLowerCase() === loggedInCustomer.email.toLowerCase()) ? { ...c, ...loggedInCustomer } : c);
         } else {
           return [...prev, loggedInCustomer];
         }
@@ -1165,11 +1170,22 @@ export default function App() {
     // Handle spent stats, store credit deduction, and referral rewards
     if (loggedInCustomer) {
       const creditUsed = paymentDetails.storeCreditApplied || 0;
+      const hasSubscription = cartItems.some(item => item.productId && (item.productId.startsWith('sub-pack') || item.productId.includes('sub-pack')));
+      const subItem = cartItems.find(item => item.productId && (item.productId.startsWith('sub-pack') || item.productId.includes('sub-pack')));
+
       const updatedCust = {
         ...loggedInCustomer,
         ordersCount: loggedInCustomer.ordersCount + 1,
         amountSpent: loggedInCustomer.amountSpent + paymentDetails.total,
-        storeCredit: Math.max(0, (loggedInCustomer.storeCredit || 0) - creditUsed)
+        storeCredit: Math.max(0, (loggedInCustomer.storeCredit || 0) - creditUsed),
+        subscriptionStatus: hasSubscription ? 'Subscribed' : (loggedInCustomer.subscriptionStatus || 'Not subscribed'),
+        subStatus: hasSubscription ? 'Active' : (loggedInCustomer.subStatus || 'Inactive'),
+        subPlan: hasSubscription ? (subItem?.productId?.replace('sub-pack-', '') || 'core') : (loggedInCustomer.subPlan || 'core'),
+        subFrequency: hasSubscription ? 'Every 4 Weeks' : (loggedInCustomer.subFrequency || 'Every 4 Weeks'),
+        subCansCount: hasSubscription ? (subItem?.quantity || 8) : (loggedInCustomer.subCansCount || 8),
+        subPrice: hasSubscription ? (subItem?.price || 35.99) : (loggedInCustomer.subPrice || 35.99),
+        nextPayment: hasSubscription ? new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : (loggedInCustomer.nextPayment || '19 June 2026'),
+        nextDelivery: hasSubscription ? new Date(Date.now() + 32 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : (loggedInCustomer.nextDelivery || '24 June 2026')
       };
 
       // Check if this customer was referred and is placing an order using their 10% welcome coupon
