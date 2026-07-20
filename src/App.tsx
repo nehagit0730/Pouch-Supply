@@ -331,6 +331,20 @@ export default function App() {
         if (Array.isArray(custsRes)) {
           setCustomers(custsRes);
           loadedCustomersSuccess.current = true;
+          
+          // Sync currently logged-in customer's details immediately on load
+          const savedStr = localStorage.getItem('ps_logged_in_customer');
+          if (savedStr && savedStr !== 'undefined') {
+            try {
+              const savedObj = JSON.parse(savedStr);
+              if (savedObj && savedObj.email) {
+                const fresh = custsRes.find(c => c.id === savedObj.id || c.email.toLowerCase() === savedObj.email.toLowerCase());
+                if (fresh) {
+                  setLoggedInCustomer(fresh);
+                }
+              }
+            } catch (e) {}
+          }
         }
         if (Array.isArray(discsRes)) {
           setDiscounts(discsRes);
@@ -714,6 +728,25 @@ export default function App() {
       klaviyoReset();
     }
   }, [loggedInCustomer]);
+
+  // Keep loggedInCustomer in sync with any updates in the master customers database list (e.g. referral rewards)
+  useEffect(() => {
+    if (loggedInCustomer && isInitialLoadDone) {
+      const fresh = customers.find(c => c.id === loggedInCustomer.id || c.email.toLowerCase() === loggedInCustomer.email.toLowerCase());
+      if (fresh) {
+        const hasDiff = 
+          fresh.storeCredit !== loggedInCustomer.storeCredit ||
+          fresh.referralCode !== loggedInCustomer.referralCode ||
+          fresh.ordersCount !== loggedInCustomer.ordersCount ||
+          fresh.amountSpent !== loggedInCustomer.amountSpent ||
+          fresh.subscriptionStatus !== loggedInCustomer.subscriptionStatus;
+        if (hasDiff) {
+          console.log(`[Sync Engine] Synchronizing loggedInCustomer state with master customers list. Store credit: £${fresh.storeCredit}`);
+          setLoggedInCustomer(fresh);
+        }
+      }
+    }
+  }, [customers, isInitialLoadDone]);
 
   // Initialize Klaviyo script when Public API Key/Site ID changes
   useEffect(() => {

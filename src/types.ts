@@ -92,6 +92,8 @@ export interface Order {
     location: string;
     description: string;
   }[];
+  discountApplied?: Discount | null;
+  createdAt?: string;
 }
 
 export interface FileEntry {

@@ -14,7 +14,7 @@ import {
 import {
   ProductModel, CollectionModel, OrderModel, FileModel,
   CustomerModel, DiscountModel, CustomPageModel, BlogModel,
-  UploadedImageModel, connectMongoose, getMongooseStatus, resetConnection, DbStatus
+  UploadedImageModel, LayoutSettingsModel, connectMongoose, getMongooseStatus, resetConnection, DbStatus
 } from './mongooseDb';
 
 // Re-export type if needed
@@ -289,4 +289,90 @@ export async function getUploadedImage(id: string): Promise<{ base64Data: string
   }
 
   return memoryImages[id] || null;
+}
+
+export async function fetchLayoutSettings(): Promise<any> {
+  const defaultSettings = {
+    id: "layout_settings",
+    headerLogoText: 'POUCH SUPPLY',
+    headerLogoSubtext: 'Premium Nicotine',
+    headerLogoImage: '',
+    footerLogoText: 'POUCH SUPPLY',
+    footerLogoDescription: 'Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.',
+    footerLogoImage: '',
+    klaviyoPublicKey: '',
+    menuItems: [
+      { id: 'all-products', label: 'All Pouches', path: 'collection-all' },
+      { id: 'brands', label: 'Explore Brands', path: 'brands' },
+      { id: 'custom-link-1', label: 'Support & FAQs', path: 'blog-all' }
+    ]
+  };
+
+  try {
+    const conn = await connectMongoose();
+    if (conn) {
+      const Model = LayoutSettingsModel as any;
+      const doc = await Model.findOne({ id: "layout_settings" }).lean().exec();
+      if (doc) {
+        const { _id, __v, ...cleanDoc } = doc;
+        return cleanDoc;
+      }
+
+      // If database is connected but no document, let's try to seed from layout_settings.json
+      const filePath = path.join(process.cwd(), "layout_settings.json");
+      let seedSettings = { ...defaultSettings };
+      if (fs.existsSync(filePath)) {
+        try {
+          const content = fs.readFileSync(filePath, "utf-8");
+          seedSettings = { ...JSON.parse(content), id: "layout_settings" };
+        } catch (e) {
+          console.warn("[serverDb] Failed to parse local layout_settings.json:", e);
+        }
+      }
+      // Save it to MongoDB
+      await Model.replaceOne({ id: "layout_settings" }, seedSettings, { upsert: true });
+      return seedSettings;
+    }
+  } catch (error) {
+    console.error("[serverDb] Failed to fetch layout settings from DB, falling back to local file:", error);
+  }
+
+  // Fallback to reading file
+  const filePath = path.join(process.cwd(), "layout_settings.json");
+  if (fs.existsSync(filePath)) {
+    try {
+      const content = fs.readFileSync(filePath, "utf-8");
+      return JSON.parse(content);
+    } catch (e) {
+      console.warn("[serverDb] Failed fallback load of layout_settings.json:", e);
+    }
+  }
+
+  return defaultSettings;
+}
+
+export async function saveLayoutSettings(settings: any): Promise<any> {
+  const payload = { ...settings, id: "layout_settings" };
+  
+  // Write to local file as fallback/concurrency
+  try {
+    const filePath = path.join(process.cwd(), "layout_settings.json");
+    fs.writeFileSync(filePath, JSON.stringify(payload, null, 2), "utf-8");
+  } catch (e) {
+    console.warn("[serverDb] Failed writing to layout_settings.json:", e);
+  }
+
+  try {
+    const conn = await connectMongoose();
+    if (conn) {
+      const Model = LayoutSettingsModel as any;
+      const { _id, __v, ...cleanItem } = payload;
+      await Model.replaceOne({ id: "layout_settings" }, cleanItem, { upsert: true });
+      console.log("[serverDb] Successfully saved layout settings to MongoDB.");
+    }
+  } catch (error) {
+    console.error("[serverDb] Failed to save layout settings to DB:", error);
+  }
+
+  return payload;
 }

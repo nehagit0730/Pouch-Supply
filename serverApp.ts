@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
-import { fetchResource, saveResource, saveUploadedImage, getUploadedImage, getConnectionStatus, updateMongoUri, getDb, getDatabaseDetails } from "./serverDb";
+import { fetchResource, saveResource, saveUploadedImage, getUploadedImage, getConnectionStatus, updateMongoUri, getDb, getDatabaseDetails, fetchLayoutSettings, saveLayoutSettings } from "./serverDb";
 
 // Import modular routers for products, collections, customers, orders, files, discounts, custom pages, and blogs
 import productsRouter from "./backend/routes/products";
@@ -132,25 +132,20 @@ export async function createExpressApp() {
   });
 
   // API Route: GET /api/layoutsettings
-  app.get("/api/layoutsettings", (req, res) => {
+  app.get("/api/layoutsettings", async (req, res) => {
     try {
-      const filePath = path.join(process.cwd(), "layout_settings.json");
-      if (fs.existsSync(filePath)) {
-        const content = fs.readFileSync(filePath, "utf-8");
-        return res.json(JSON.parse(content));
-      }
-      res.status(404).json({ error: "No saved layout settings found." });
+      const data = await fetchLayoutSettings();
+      res.json(data);
     } catch (err: any) {
       res.status(500).json({ error: err.message || "Failed to load layout settings" });
     }
   });
 
   // API Route: POST /api/layoutsettings
-  app.post("/api/layoutsettings", (req, res) => {
+  app.post("/api/layoutsettings", async (req, res) => {
     try {
-      const filePath = path.join(process.cwd(), "layout_settings.json");
-      fs.writeFileSync(filePath, JSON.stringify(req.body, null, 2), "utf-8");
-      res.json({ status: "success", data: req.body });
+      const saved = await saveLayoutSettings(req.body);
+      res.json({ status: "success", data: saved });
     } catch (err: any) {
       res.status(500).json({ error: err.message || "Failed to save layout settings" });
     }

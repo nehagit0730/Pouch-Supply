@@ -1860,6 +1860,66 @@ export default function AdminDashboard({
     e.target.value = '';
   };
 
+  const handleExportFiles = () => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localFiles, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `pouch_supply_files_backup_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (e: any) {
+      console.error("Export failed:", e);
+      alert("Failed to export files: " + e.message);
+    }
+  };
+
+  const handleImportFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = JSON.parse(text);
+        const importedList = Array.isArray(parsed) ? parsed : [parsed];
+
+        if (importedList.length === 0) {
+          throw new Error("No files could be parsed from the backup file.");
+        }
+
+        const isValid = importedList.every(item => item && item.id && item.url && item.fileName);
+        if (!isValid) {
+          throw new Error("Invalid file backup format. Each item must have an id, url, and fileName.");
+        }
+
+        triggerConfirm(`Do you want to MERGE these ${importedList.length} files with your existing files list?`, () => {
+          const existingIds = new Set(localFiles.map(f => f.id));
+          const merged = [...localFiles];
+          importedList.forEach(item => {
+            if (item && item.id) {
+              if (existingIds.has(item.id)) {
+                const idx = merged.findIndex(f => f.id === item.id);
+                if (idx !== -1) merged[idx] = item;
+              } else {
+                merged.push(item);
+              }
+            }
+          });
+          onUpdateFiles(merged);
+        }, "Import Files Backup");
+
+      } catch (err: any) {
+        console.error("Import failed:", err);
+        alert("Failed to import files: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   // Create & Edit Collection
   const handleCreateCollection = (e: React.FormEvent) => {
     e.preventDefault();
@@ -7401,8 +7461,8 @@ export default function AdminDashboard({
           <div className="space-y-6">
             
             {/* Header controls filter */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-              <div className="relative w-full sm:w-64">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
+              <div className="relative w-full lg:w-64">
                 <input
                   type="text"
                   placeholder="Filter media files..."
@@ -7413,12 +7473,35 @@ export default function AdminDashboard({
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
               </div>
 
-              <button
-                onClick={() => setShowAddFile(true)}
-                className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
-              >
-                <Plus className="h-4 w-4" /> Upload Custom Image Asset
-              </button>
+              <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-end">
+                <button
+                  onClick={handleExportFiles}
+                  className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                  title="Export all media files list to JSON backup file"
+                >
+                  <Download className="h-3.5 w-3.5 text-slate-500" /> Export Backup
+                </button>
+
+                <label
+                  className="bg-white hover:bg-slate-50 border border-slate-200 font-bold p-2.5 px-3 rounded-xl text-xs text-slate-700 flex items-center gap-1.5 transition cursor-pointer shadow-2xs cursor-pointer"
+                  title="Import media files from JSON backup"
+                >
+                  <Upload className="h-3.5 w-3.5 text-slate-500" /> Import Backup
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={handleImportFiles}
+                  />
+                </label>
+
+                <button
+                  onClick={() => setShowAddFile(true)}
+                  className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Plus className="h-4 w-4" /> Upload Custom Image Asset
+                </button>
+              </div>
             </div>
 
             {/* List files layout table */}

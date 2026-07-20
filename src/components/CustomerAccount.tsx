@@ -218,18 +218,73 @@ export default function CustomerAccount({
     const realReferralCode = loggedInCustomer.referralCode || `REF-PS-${loggedInCustomer.name.trim().split(" ")[0].toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     const realStoreCredit = loggedInCustomer.storeCredit !== undefined ? loggedInCustomer.storeCredit : 0;
 
-    // Calculate referrals dynamically from the active customers & orders list
-    const myReferrals = customers.filter(c => c.referredByCode && c.referredByCode.toUpperCase() === realReferralCode.toUpperCase());
-    const referredCount = myReferrals.length;
-    const referralsList = myReferrals.map(c => {
-      const hasOrdered = orders.some(o => o.customerEmail.toLowerCase() === c.email.toLowerCase());
-      return {
-        name: c.name.split(" ")[0] + " " + (c.name.split(" ")[1] ? c.name.split(" ")[1].substring(0, 1) + "." : ""),
-        date: "Recently Registered",
-        status: hasOrdered ? 'Ordered' : 'Registered',
-        credit: hasOrdered ? '£5.00' : 'Pending'
-      };
+    // Gather all referred friends from both:
+    // 1. Registered customers who used the referral code on signup
+    // 2. Orders that were placed using the referrer's referral code/coupon
+    const referredEmails = new Set<string>();
+    const dynamicReferrals: Array<{
+      name: string;
+      email: string;
+      date: string;
+      status: 'Registered' | 'Ordered';
+      credit: string;
+    }> = [];
+
+    // 1. Scan registered customers
+    customers.forEach(c => {
+      if (c.referredByCode && c.referredByCode.toUpperCase() === realReferralCode.toUpperCase()) {
+        if (c.email.toLowerCase() !== loggedInCustomer.email.toLowerCase()) {
+          referredEmails.add(c.email.toLowerCase());
+          const hasOrdered = orders.some(o => o.customerEmail.toLowerCase() === c.email.toLowerCase());
+          dynamicReferrals.push({
+            name: c.name,
+            email: c.email.toLowerCase(),
+            date: "Recently Registered",
+            status: hasOrdered ? 'Ordered' : 'Registered',
+            credit: hasOrdered ? '£5.00' : 'Pending'
+          });
+        }
+      }
     });
+
+    // 2. Scan orders for guest or other users who applied this referrer's code at checkout
+    orders.forEach(o => {
+      const disc = o.discountApplied;
+      const isMyReferralCode = disc && (
+        disc.id === `disc-ref-virtual-${loggedInCustomer.id}` ||
+        disc.id === `disc-ref-${loggedInCustomer.id}` ||
+        disc.title.toUpperCase() === realReferralCode.toUpperCase()
+      );
+      if (isMyReferralCode && o.customerEmail.toLowerCase() !== loggedInCustomer.email.toLowerCase()) {
+        const emailLower = o.customerEmail.toLowerCase();
+        if (!referredEmails.has(emailLower)) {
+          referredEmails.add(emailLower);
+          const matchCust = customers.find(c => c.email.toLowerCase() === emailLower);
+          const displayName = matchCust ? matchCust.name : (o.customerName || "Friend");
+          dynamicReferrals.push({
+            name: displayName,
+            email: emailLower,
+            date: o.createdAt ? new Date(o.createdAt).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }) : "Recently Ordered",
+            status: 'Ordered',
+            credit: '£5.00'
+          });
+        } else {
+          const existingRef = dynamicReferrals.find(r => r.email === emailLower);
+          if (existingRef && existingRef.status !== 'Ordered') {
+            existingRef.status = 'Ordered';
+            existingRef.credit = '£5.00';
+          }
+        }
+      }
+    });
+
+    const referredCount = dynamicReferrals.length;
+    const referralsList = dynamicReferrals.map(r => ({
+      name: r.name.split(" ")[0] + " " + (r.name.split(" ")[1] ? r.name.split(" ")[1].substring(0, 1) + "." : ""),
+      date: r.date,
+      status: r.status,
+      credit: r.credit
+    }));
 
     if (!state) {
       // Set default mockup state

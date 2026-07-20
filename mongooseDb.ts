@@ -120,6 +120,18 @@ const UploadedImageSchema = new Schema({
   mimeType: { type: String, required: true }
 }, { strict: false });
 
+const LayoutSettingsSchema = new Schema({
+  id: { type: String, required: true, unique: true },
+  headerLogoText: { type: String },
+  headerLogoSubtext: { type: String },
+  headerLogoImage: { type: String },
+  footerLogoText: { type: String },
+  footerLogoDescription: { type: String },
+  footerLogoImage: { type: String },
+  klaviyoPublicKey: { type: String },
+  menuItems: { type: Array }
+}, { strict: false, timestamps: true });
+
 export const ProductModel = mongoose.models.Product || mongoose.model('Product', ProductSchema, 'products');
 export const CollectionModel = mongoose.models.Collection || mongoose.model('Collection', CollectionSchema, 'collections');
 export const OrderModel = mongoose.models.Order || mongoose.model('Order', OrderSchema, 'orders');
@@ -129,6 +141,7 @@ export const DiscountModel = mongoose.models.Discount || mongoose.model('Discoun
 export const CustomPageModel = mongoose.models.CustomPage || mongoose.model('CustomPage', CustomPageSchema, 'custompages');
 export const BlogModel = mongoose.models.Blog || mongoose.model('Blog', BlogSchema, 'blogs');
 export const UploadedImageModel = mongoose.models.UploadedImage || mongoose.model('UploadedImage', UploadedImageSchema, 'uploaded_images');
+export const LayoutSettingsModel = mongoose.models.LayoutSettings || mongoose.model('LayoutSettings', LayoutSettingsSchema, 'layout_settings');
 
 // Connection status cache
 let lastConnectionStatus: DbStatus = { status: 'pending' };
