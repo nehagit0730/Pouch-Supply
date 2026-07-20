@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Customer, CartItem, Product, Collection, LayoutSettings } from '../types';
-import { ShoppingCart, Heart, User, Sparkles, LayoutDashboard, Menu, Store, Phone, HelpCircle, Search, X } from 'lucide-react';
+import { ShoppingCart, Heart, User, Sparkles, LayoutDashboard, Menu, Store, Phone, HelpCircle, Search, X, ChevronRight } from 'lucide-react';
 
 interface HeaderProps {
   currentTab: string;
@@ -353,10 +353,9 @@ export default function Header({
               </button>
             </div>
 
-            {/* Menu Links */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              <div className="space-y-1">
-                <div className="text-[10px] font-black uppercase text-indigo-650 tracking-wider mb-2 px-2.5">Navigation Menu</div>
+            {/* Menu Links & Accounts (Ultra compact, unified, scroll-free layout) */}
+            <div className="flex-1 overflow-y-auto min-h-0 bg-white">
+              <div className="divide-y divide-slate-100 border-b border-slate-100">
                 {(layoutSettings?.menuItems || [
                   { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
                   { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
@@ -365,6 +364,7 @@ export default function Header({
                   { id: '5', label: 'About', tab: 'about', type: 'tab' }
                 ]).map((item) => {
                   const itemTab = getMenuItemTab(item);
+                  const isActive = currentTab === itemTab && !isAdminActive;
                   return (
                     <button
                       key={item.id}
@@ -376,21 +376,17 @@ export default function Header({
                         }
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`w-full text-left font-black uppercase tracking-wider text-xs py-3 px-3.5 rounded-xl transition-all cursor-pointer ${
-                        currentTab === itemTab && !isAdminActive
-                          ? 'bg-indigo-50 text-indigo-700'
-                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      className={`w-full flex items-center justify-between py-3 px-4.5 text-left font-black uppercase tracking-widest text-[10.5px] transition-all duration-200 cursor-pointer ${
+                        isActive
+                          ? 'bg-slate-900 text-white'
+                          : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950'
                       }`}
                     >
-                      {item.label}
+                      <span>{item.label}</span>
+                      <ChevronRight className={`h-3.5 w-3.5 transition-transform ${isActive ? 'text-white/80' : 'text-slate-400'}`} />
                     </button>
                   );
                 })}
-              </div>
-
-              {/* Portal controls & account triggers */}
-              <div className="space-y-2 border-t border-slate-100 pt-5">
-                <div className="text-[10px] font-black uppercase text-indigo-650 tracking-wider mb-3 px-2.5">Your Account</div>
 
                 {/* Customer login trigger */}
                 <button
@@ -398,10 +394,15 @@ export default function Header({
                     onOpenCustomer();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 py-3 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold text-xs hover:bg-slate-100 transition-all cursor-pointer"
+                  className="w-full flex items-center justify-between py-3 px-4.5 text-left transition-all duration-200 cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-slate-950"
                 >
-                  <User className="h-4.5 w-4.5 text-slate-500 shrink-0" />
-                  <span>{loggedInCustomer ? `Account: ${loggedInCustomer.name}` : 'Customer Account / Log In'}</span>
+                  <div className="flex items-center gap-2.5">
+                    <User className="h-4 w-4 text-slate-500 shrink-0" />
+                    <span className="font-black uppercase tracking-widest text-[10.5px]">
+                      {loggedInCustomer && loggedInCustomer.name ? `Account: ${loggedInCustomer.name.split(' ')[0]}` : 'Customer Account / Log In'}
+                    </span>
+                  </div>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
                 </button>
 
                 {/* Wishlist trigger */}
@@ -410,30 +411,35 @@ export default function Header({
                     onOpenWishlist();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="w-full flex items-center justify-between py-3 px-3.5 rounded-xl border border-transparent hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all cursor-pointer"
+                  className="w-full flex items-center justify-between py-3 px-4.5 text-left transition-all duration-200 cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-slate-950"
                 >
-                  <div className="flex items-center gap-3">
-                    <Heart className="h-4.5 w-4.5 text-slate-500" />
-                    <span>My Wishlist</span>
+                  <div className="flex items-center gap-2.5">
+                    <Heart className={`h-4 w-4 shrink-0 ${wishlistCount > 0 ? 'text-rose-500 fill-rose-500' : 'text-slate-500'}`} />
+                    <span className="font-black uppercase tracking-widest text-[10.5px]">My Wishlist</span>
                   </div>
-                  {wishlistCount > 0 && (
-                    <span className="bg-red-400 text-white text-[10px] font-black rounded-full h-5 min-w-5 flex items-center justify-center px-1.5">
-                      {wishlistCount}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {wishlistCount > 0 && (
+                      <span className="bg-rose-500 text-white text-[9px] font-black rounded-full h-4.5 min-w-4.5 flex items-center justify-center px-1">
+                        {wishlistCount}
+                      </span>
+                    )}
+                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  </div>
                 </button>
               </div>
             </div>
 
             {/* Micro details Footer */}
-            <div className="p-4 border-t border-slate-100 bg-slate-50 space-y-2.5 text-[10px] text-slate-400 font-bold tracking-wider">
-              <div className="flex items-center gap-1.5 text-slate-500">
-                <Store className="h-3.5 w-3.5" />
-                <span>EU Official Supplier</span>
+            <div className="p-4 bg-slate-50/80 border-t border-slate-100 flex flex-col gap-2 shrink-0">
+              <div className="flex items-center justify-between text-[10px] text-slate-500 font-extrabold tracking-wider">
+                <div className="flex items-center gap-1.5">
+                  <Store className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>EU Official Supplier</span>
+                </div>
+                <span>• UK Tracked</span>
               </div>
-              <div className="text-slate-400">• UK Tracked Courier Shipping</div>
-              <div className="pt-1 text-[9px] text-slate-400/80 leading-relaxed font-semibold">
-                ✉️ Support: Support@pouch-supply.com
+              <div className="text-[10px] text-slate-500 font-semibold truncate">
+                ✉️ Support: <span className="font-bold text-slate-700 select-all">Support@pouch-supply.com</span>
               </div>
             </div>
           </div>

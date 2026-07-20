@@ -1540,7 +1540,11 @@ export default function App() {
                     allBlogs={blogs}
                     onNavigate={(target, arg) => {
                       if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
-                        navigateToTab(target);
+                        if (target === 'frontend-shop' && arg) {
+                          navigateToTab('collection-detail', undefined, arg);
+                        } else {
+                          navigateToTab(target);
+                        }
                       } else if (target.startsWith('/pages/') || target.startsWith('page-')) {
                         const slug = target.replace('/pages/', '').replace('page-', '');
                         navigateToTab(slug);
@@ -1703,7 +1707,11 @@ export default function App() {
                   allBlogs={blogs}
                   onNavigate={(target, arg) => {
                     if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
-                      navigateToTab(target);
+                      if (target === 'frontend-shop' && arg) {
+                        navigateToTab('collection-detail', undefined, arg);
+                      } else {
+                        navigateToTab(target);
+                      }
                     } else if (target.startsWith('/pages/') || target.startsWith('page-')) {
                       const slug = target.replace('/pages/', '').replace('page-', '');
                       navigateToTab(slug);
@@ -1851,7 +1859,11 @@ export default function App() {
                     allBlogs={blogs}
                     onNavigate={(target, arg) => {
                       if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
-                        navigateToTab(target);
+                        if (target === 'frontend-shop' && arg) {
+                          navigateToTab('collection-detail', undefined, arg);
+                        } else {
+                          navigateToTab(target);
+                        }
                       } else if (target.startsWith('/pages/') || target.startsWith('page-')) {
                         const slug = target.replace('/pages/', '').replace('page-', '');
                         navigateToTab(slug);
