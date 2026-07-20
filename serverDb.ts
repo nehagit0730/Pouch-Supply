@@ -198,13 +198,10 @@ export async function fetchResource(resource: string): Promise<any[]> {
         return cleanDoc;
       });
     } else if (mongoUri) {
-      throw new Error("MongoDB is configured but connection failed.");
+      console.warn(`[fetchResource] MongoDB connection failed despite being configured. Falling back to local memoryCache for "${resource}".`);
     }
   } catch (error: any) {
-    console.error(`[fetchResource] Error fetching "${resource}":`, error);
-    if (mongoUri) {
-      throw new Error(`Database fetch failed for ${resource}: ${error.message || error}`);
-    }
+    console.error(`[fetchResource] Error fetching "${resource}", falling back to memoryCache:`, error);
   }
   return memoryCache[resource] || [];
 }
@@ -237,13 +234,10 @@ export async function saveResource(resource: string, list: any[]): Promise<any[]
       console.log(`[saveResource] Successfully upserted and synchronized all ${list.length} items to ${resource} collection.`);
       return list;
     } else if (mongoUri) {
-      throw new Error("MongoDB is configured but connection failed during save.");
+      console.warn(`[saveResource] MongoDB connection failed despite being configured during save. Saved to memoryCache fallback for "${resource}".`);
     }
   } catch (error: any) {
-    console.error(`[saveResource] Error during database synchronization for "${resource}":`, error);
-    if (mongoUri) {
-      throw new Error(`Database save failed for ${resource}: ${error.message || error}`);
-    }
+    console.error(`[saveResource] Error during database synchronization for "${resource}", saved to memoryCache fallback:`, error);
   }
   return memoryCache[resource];
 }
