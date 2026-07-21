@@ -246,78 +246,6 @@ export async function saveResource(resource: string, list: any[]): Promise<any[]
 const memoryImages: Record<string, { base64Data: string; mimeType: string }> = {};
 
 export async function saveUploadedImage(id: string, base64Data: string, mimeType: string): Promise<string> {
-  // Try ImgBB upload if API key is configured
-  let apiKey = process.env.IMGBB_API_KEY;
-  if (!apiKey) {
-    try {
-      const conn = await connectMongoose();
-      if (conn) {
-        const Model = LayoutSettingsModel as any;
-        const doc = await Model.findOne({ id: "layout_settings" }).lean().exec();
-        if (doc && doc.imgbbApiKey) {
-          apiKey = doc.imgbbApiKey;
-        }
-      }
-    } catch (e) {
-      console.warn("[saveUploadedImage] Failed to lookup ImgBB API key from DB:", e);
-    }
-  }
-
-  if (apiKey) {
-    try {
-      console.log(`[ImgBB] Attempting image upload using API key: ${apiKey.slice(0, 4)}...`);
-      const formData = new URLSearchParams();
-      formData.append("image", base64Data);
-
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey.trim()}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: formData.toString()
-      });
-
-      if (response.ok) {
-        const result: any = await response.json();
-        if (result && result.success && result.data && result.data.url) {
-          console.log(`[ImgBB] Successfully uploaded image to ImgBB: ${result.data.url}`);
-          return result.data.url;
-        }
-      } else {
-        const errText = await response.text();
-        console.error("[ImgBB] API upload returned non-OK response:", errText);
-      }
-    } catch (err) {
-      console.error("[ImgBB] Error uploading to ImgBB API, falling back to local/DB storage:", err);
-    }
-  }
-
-  // Ensure uploads directory exists on disk
-  const uploadsDir = path.join(process.cwd(), 'uploads');
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
-
-  // Determine file extension
-  let ext = 'png';
-  if (mimeType.includes('jpeg') || mimeType.includes('jpg')) ext = 'jpg';
-  else if (mimeType.includes('webp')) ext = 'webp';
-  else if (mimeType.includes('svg')) ext = 'svg';
-  else if (mimeType.includes('gif')) ext = 'gif';
-  else if (mimeType.includes('mp4')) ext = 'mp4';
-  else if (mimeType.includes('webm')) ext = 'webm';
-
-  const filename = `${id}.${ext}`;
-  const filePath = path.join(uploadsDir, filename);
-
-  try {
-    // Write physical file on local project workspace hosting
-    fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
-    console.log(`[Local Disk Sync] Successfully saved uploaded file to disk: ${filePath}`);
-  } catch (err) {
-    console.error("[Local Disk Sync] Failed to write uploaded file to disk:", err);
-  }
-
   // Store in memory cache fallback
   memoryImages[id] = { base64Data, mimeType };
 
@@ -337,8 +265,8 @@ export async function saveUploadedImage(id: string, base64Data: string, mimeType
     console.error("[Mongoose Engine] Failed to save uploaded image in DB:", error);
   }
 
-  // Return the direct static url so the browser can load it instantly with zero overhead
-  return `/uploads/${filename}`;
+  // Return the direct MongoDB streaming API URL
+  return `/api/images/${id}`;
 }
 
 export async function getUploadedImage(id: string): Promise<{ base64Data: string; mimeType: string } | null> {
@@ -347,7 +275,7 @@ export async function getUploadedImage(id: string): Promise<{ base64Data: string
     return memoryImages[id];
   }
 
-  // 2. Check local uploads folder on disk
+  // 2. Check local uploads folder on disk as a tertiary fallback for older local images
   try {
     const uploadsDir = path.join(process.cwd(), 'uploads');
     if (fs.existsSync(uploadsDir)) {
@@ -373,7 +301,7 @@ export async function getUploadedImage(id: string): Promise<{ base64Data: string
     console.error("[Local Storage] Error reading file from disk fallback:", err);
   }
 
-  // 3. Check Mongoose/MongoDB Atlas database
+  // 3. Check Mongoose/MongoDB Atlas database (Primary durable source)
   try {
     const conn = await connectMongoose();
     if (conn) {

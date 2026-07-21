@@ -9038,46 +9038,6 @@ export default function AdminDashboard({
               </div>
             </div>
 
-            {/* 4. IMGBB IMAGE HOSTING CARD */}
-            <div className="bg-white border border-slate-200 shadow-xs rounded-2xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-indigo-50 text-indigo-650 rounded-lg">
-                    <ImageIcon className="h-4 w-4" />
-                  </div>
-                  <span className="font-extrabold text-slate-900 uppercase tracking-wider text-xs">ImgBB Image Hosting Integration</span>
-                </div>
-                {localLayoutSettings.imgbbApiKey ? (
-                  <span className="text-[8px] font-black uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-150 flex items-center gap-1">
-                    <span className="h-1 w-1 bg-emerald-500 rounded-full" />
-                    CDN Active
-                  </span>
-                ) : (
-                  <span className="text-[8px] font-black uppercase bg-slate-100 text-slate-400 px-2 py-0.5 rounded border border-slate-150">
-                    Database Fallback
-                  </span>
-                )}
-              </div>
-
-              <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">
-                Save database space and prevent slow product saving! By configuring an <strong>ImgBB API Key</strong>, all newly uploaded images (for products, blogs, and logos) are uploaded directly to ImgBB's global high-speed CDN and return an instant HTTPS link.
-              </p>
-
-              <div>
-                <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">ImgBB API Key</label>
-                <input
-                  type="password"
-                  value={localLayoutSettings.imgbbApiKey || ''}
-                  onChange={(e) => setLocalLayoutSettings({ ...localLayoutSettings, imgbbApiKey: e.target.value })}
-                  className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  placeholder="Paste your ImgBB API key here"
-                />
-                <p className="text-[8.5px] text-slate-400 mt-1.5">
-                  Get a free permanent API key in 10 seconds! Sign up at <a href="https://api.imgbb.com/" target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline font-bold">api.imgbb.com</a>, create a key, and paste it above.
-                </p>
-              </div>
-            </div>
-
           </div>
 
           {/* Right Side: Header Navigation Menu Builder */}
