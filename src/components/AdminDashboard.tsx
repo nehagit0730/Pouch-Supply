@@ -782,6 +782,8 @@ export default function AdminDashboard({
       footerLogoText: 'POUCH SUPPLY',
       footerLogoDescription: 'Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.',
       footerLogoImage: '',
+      klaviyoPublicKey: '',
+      imgbbApiKey: '',
       menuItems: [
         { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
         { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
@@ -1131,6 +1133,7 @@ export default function AdminDashboard({
   };
 
   const [fileQuery, setFileQuery] = useState('');
+  const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [showAddFile, setShowAddFile] = useState(false);
   const [newFileForm, setNewFileForm] = useState({ fileName: '', altText: '', url: '' });
 
@@ -2360,7 +2363,33 @@ export default function AdminDashboard({
   const handleDeleteFile = (id: string) => {
     triggerConfirm("Are you sure you want to delete this media file?", () => {
       onUpdateFiles(files.filter(f => f.id !== id));
+      setSelectedFileIds(prev => prev.filter(fid => fid !== id));
     }, "Delete Media File");
+  };
+
+  const handleSelectAllFiles = (checked: boolean) => {
+    if (checked) {
+      setSelectedFileIds(filteredFiles.map(f => f.id));
+    } else {
+      setSelectedFileIds([]);
+    }
+  };
+
+  const handleSelectFile = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedFileIds(prev => [...prev, id]);
+    } else {
+      setSelectedFileIds(prev => prev.filter(fid => fid !== id));
+    }
+  };
+
+  const handleBulkDeleteFiles = () => {
+    if (selectedFileIds.length === 0) return;
+    triggerConfirm(`Are you sure you want to bulk delete the ${selectedFileIds.length} selected media files?`, () => {
+      const updated = files.filter(f => !selectedFileIds.includes(f.id));
+      onUpdateFiles(updated);
+      setSelectedFileIds([]);
+    }, "Bulk Delete Media Files");
   };
 
   // Add Customer
@@ -2800,6 +2829,15 @@ export default function AdminDashboard({
                         {uriUpdateResult.message}
                       </p>
                     )}
+
+                    {/* Vercel Environment Variable Guide Callout */}
+                    <div className="mt-3 p-3 bg-indigo-50 border border-indigo-150 rounded-lg text-[10.5px] leading-relaxed text-indigo-950 font-semibold flex items-start gap-2.5">
+                      <div className="mt-0.5 text-xs text-indigo-600 font-bold select-none">💡</div>
+                      <div>
+                        <span className="font-extrabold text-indigo-905 block uppercase tracking-wider text-[9px] mb-0.5">Vercel & Production Deployments note:</span>
+                        Because Vercel uses stateless, read-only serverless functions, the input box above only saves the connection in memory temporarily. To persist your database permanently, you <strong>MUST</strong> go to your <strong>Vercel Project Dashboard ➜ Settings ➜ Environment Variables</strong>, add a variable named <code className="font-mono bg-indigo-100/80 text-indigo-900 px-1 py-0.5 rounded text-[9.5px]">MONGODB_URI</code>, and paste your connection string there. Then redeploy the project!
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -7462,15 +7500,21 @@ export default function AdminDashboard({
             
             {/* Header controls filter */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-              <div className="relative w-full lg:w-64">
-                <input
-                  type="text"
-                  placeholder="Filter media files..."
-                  value={fileQuery}
-                  onChange={(e) => setFileQuery(e.target.value)}
-                  className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
-                />
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                <div className="relative w-full sm:w-64">
+                  <input
+                    type="text"
+                    placeholder="Filter media files..."
+                    value={fileQuery}
+                    onChange={(e) => setFileQuery(e.target.value)}
+                    className="w-full text-xs p-2 pb-2 pl-8 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 bg-slate-50"
+                  />
+                  <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                </div>
+                <div className="px-3 py-1.5 bg-slate-100 rounded-lg text-slate-600 text-xs font-bold whitespace-nowrap self-start sm:self-auto flex items-center gap-1.5 border border-slate-150">
+                  <HardDrive className="h-3.5 w-3.5 text-slate-500" />
+                  <span>{filteredFiles.length} media files on list</span>
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-end">
@@ -7506,12 +7550,46 @@ export default function AdminDashboard({
 
             {/* List files layout table */}
             <div className="bg-white border rounded-xl overflow-hidden shadow-xs">
+              {/* Bulk Actions Bar for Files */}
+              {selectedFileIds.length > 0 && (
+                <div className="bg-slate-50 border-b border-slate-200 p-3 px-4 flex flex-wrap items-center justify-between gap-2 animate-fadeIn">
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="checkbox"
+                      className="rounded border-slate-300 text-slate-900 focus:ring-slate-500 h-4 w-4 cursor-pointer"
+                      checked={filteredFiles.length > 0 && filteredFiles.every(f => selectedFileIds.includes(f.id))}
+                      onChange={(e) => handleSelectAllFiles(e.target.checked)}
+                    />
+                    <span className="text-xs font-bold text-slate-700">
+                      {selectedFileIds.length} selected <span className="text-slate-400 font-normal">({filteredFiles.length} total on list)</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleBulkDeleteFiles}
+                      className="px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-extrabold text-red-650 transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete bulk
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-50/75 border-b border-slate-200 text-[10px] text-slate-450 font-bold uppercase tracking-widest">
+                      <th className="p-4 w-12 text-center">
+                        <input 
+                          type="checkbox"
+                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-500 h-4 w-4 cursor-pointer"
+                          checked={filteredFiles.length > 0 && filteredFiles.every(f => selectedFileIds.includes(f.id))}
+                          onChange={(e) => handleSelectAllFiles(e.target.checked)}
+                        />
+                      </th>
                       <th className="p-4">Media Thumbnail</th>
-                      <th className="p-4">File Name Name</th>
+                      <th className="p-4">File Name</th>
                       <th className="p-4">Alternative Alt Text</th>
                       <th className="p-4">Date Uploaded</th>
                       <th className="p-4">Size</th>
@@ -7522,11 +7600,19 @@ export default function AdminDashboard({
                   <tbody className="divide-y divide-slate-100">
                     {filteredFiles.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="text-center py-12 text-slate-400">No media assets configured.</td>
+                        <td colSpan={8} className="text-center py-12 text-slate-400">No media assets configured.</td>
                       </tr>
                     ) : (
                       filteredFiles.map(file => (
                         <tr key={file.id} className="hover:bg-slate-50/50">
+                          <td className="p-4 w-12 text-center">
+                            <input 
+                              type="checkbox"
+                              className="rounded border-slate-300 text-slate-900 focus:ring-slate-500 h-4 w-4 cursor-pointer"
+                              checked={selectedFileIds.includes(file.id)}
+                              onChange={(e) => handleSelectFile(file.id, e.target.checked)}
+                            />
+                          </td>
                           <td className="p-4 shrink-0">
                             <img
                               src={file.url}
@@ -8913,6 +8999,46 @@ export default function AdminDashboard({
                 />
                 <p className="text-[8.5px] text-slate-400 mt-1.5">
                   Your 6-to-8 character public API key. Find this in your <a href="https://www.klaviyo.com/app/settings/api-keys" target="_blank" rel="noreferrer" className="text-orange-600 hover:underline font-bold">Klaviyo Account Settings</a>.
+                </p>
+              </div>
+            </div>
+
+            {/* 4. IMGBB IMAGE HOSTING CARD */}
+            <div className="bg-white border border-slate-200 shadow-xs rounded-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-indigo-50 text-indigo-650 rounded-lg">
+                    <ImageIcon className="h-4 w-4" />
+                  </div>
+                  <span className="font-extrabold text-slate-900 uppercase tracking-wider text-xs">ImgBB Image Hosting Integration</span>
+                </div>
+                {localLayoutSettings.imgbbApiKey ? (
+                  <span className="text-[8px] font-black uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-150 flex items-center gap-1">
+                    <span className="h-1 w-1 bg-emerald-500 rounded-full" />
+                    CDN Active
+                  </span>
+                ) : (
+                  <span className="text-[8px] font-black uppercase bg-slate-100 text-slate-400 px-2 py-0.5 rounded border border-slate-150">
+                    Database Fallback
+                  </span>
+                )}
+              </div>
+
+              <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">
+                Save database space and prevent slow product saving! By configuring an <strong>ImgBB API Key</strong>, all newly uploaded images (for products, blogs, and logos) are uploaded directly to ImgBB's global high-speed CDN and return an instant HTTPS link.
+              </p>
+
+              <div>
+                <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">ImgBB API Key</label>
+                <input
+                  type="password"
+                  value={localLayoutSettings.imgbbApiKey || ''}
+                  onChange={(e) => setLocalLayoutSettings({ ...localLayoutSettings, imgbbApiKey: e.target.value })}
+                  className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  placeholder="Paste your ImgBB API key here"
+                />
+                <p className="text-[8.5px] text-slate-400 mt-1.5">
+                  Get a free permanent API key in 10 seconds! Sign up at <a href="https://api.imgbb.com/" target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline font-bold">api.imgbb.com</a>, create a key, and paste it above.
                 </p>
               </div>
             </div>

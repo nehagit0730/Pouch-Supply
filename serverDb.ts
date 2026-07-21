@@ -246,6 +246,53 @@ export async function saveResource(resource: string, list: any[]): Promise<any[]
 const memoryImages: Record<string, { base64Data: string; mimeType: string }> = {};
 
 export async function saveUploadedImage(id: string, base64Data: string, mimeType: string): Promise<string> {
+  // Try ImgBB upload if API key is configured
+  let apiKey = process.env.IMGBB_API_KEY;
+  if (!apiKey) {
+    try {
+      const conn = await connectMongoose();
+      if (conn) {
+        const Model = LayoutSettingsModel as any;
+        const doc = await Model.findOne({ id: "layout_settings" }).lean().exec();
+        if (doc && doc.imgbbApiKey) {
+          apiKey = doc.imgbbApiKey;
+        }
+      }
+    } catch (e) {
+      console.warn("[saveUploadedImage] Failed to lookup ImgBB API key from DB:", e);
+    }
+  }
+
+  if (apiKey) {
+    try {
+      console.log(`[ImgBB] Attempting image upload using API key: ${apiKey.slice(0, 4)}...`);
+      const formData = new URLSearchParams();
+      formData.append("image", base64Data);
+
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey.trim()}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: formData.toString()
+      });
+
+      if (response.ok) {
+        const result: any = await response.json();
+        if (result && result.success && result.data && result.data.url) {
+          console.log(`[ImgBB] Successfully uploaded image to ImgBB: ${result.data.url}`);
+          return result.data.url;
+        }
+      } else {
+        const errText = await response.text();
+        console.error("[ImgBB] API upload returned non-OK response:", errText);
+      }
+    } catch (err) {
+      console.error("[ImgBB] Error uploading to ImgBB API, falling back to local/DB storage:", err);
+    }
+  }
+
+  // Fallback to local MongoDB storage
   memoryImages[id] = { base64Data, mimeType };
 
   try {
@@ -295,6 +342,7 @@ export async function fetchLayoutSettings(): Promise<any> {
     footerLogoDescription: 'Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.',
     footerLogoImage: '',
     klaviyoPublicKey: '',
+    imgbbApiKey: '',
     menuItems: [
       { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
       { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },

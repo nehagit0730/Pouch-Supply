@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Customer, CartItem, Product, Collection, LayoutSettings } from '../types';
-import { ShoppingCart, Heart, User, Sparkles, LayoutDashboard, Menu, Store, Phone, HelpCircle, Search, X, ChevronRight } from 'lucide-react';
+import { ShoppingCart, Heart, User, Sparkles, LayoutDashboard, Menu, Store, Phone, HelpCircle, Search, X, ChevronRight, Home, ShoppingBag, Award, Info } from 'lucide-react';
 
 interface HeaderProps {
   currentTab: string;
@@ -354,92 +354,143 @@ export default function Header({
             </div>
 
             {/* Menu Links & Accounts (Ultra compact, unified, scroll-free layout) */}
-            <div className="flex-1 overflow-y-auto min-h-0 bg-white">
-              <div className="divide-y divide-slate-100 border-b border-slate-100">
-                {(layoutSettings?.menuItems || [
-                  { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
-                  { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
-                  { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
-                  { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
-                  { id: '5', label: 'About', tab: 'about', type: 'tab' }
-                ]).map((item) => {
-                  const itemTab = getMenuItemTab(item);
-                  const isActive = currentTab === itemTab && !isAdminActive;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        if (item.type === 'external' && item.url) {
-                          window.open(item.url, '_blank');
-                        } else {
-                          onTabChange(itemTab);
-                        }
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between py-3 px-4.5 text-left font-black uppercase tracking-widest text-[10.5px] transition-all duration-200 cursor-pointer ${
-                        isActive
-                          ? 'bg-slate-900 text-white'
-                          : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950'
-                      }`}
-                    >
-                      <span>{item.label}</span>
-                      <ChevronRight className={`h-3.5 w-3.5 transition-transform ${isActive ? 'text-white/80' : 'text-slate-400'}`} />
-                    </button>
-                  );
-                })}
+            <div className="flex-1 flex flex-col justify-between bg-white px-4 py-4 space-y-4">
+              
+              {/* Main Quick Navigation Grid (2 Columns to fit easily in view) */}
+              <div className="space-y-2">
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">Quick Navigation</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {(layoutSettings?.menuItems || [
+                    { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
+                    { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
+                    { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
+                    { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
+                    { id: '5', label: 'About', tab: 'about', type: 'tab' }
+                  ]).map((item) => {
+                    const itemTab = getMenuItemTab(item);
+                    const isActive = currentTab === itemTab && !isAdminActive;
+                    
+                    // Inline helper to map icons
+                    const labelLower = item.label.toLowerCase();
+                    let iconEl = <Info className="h-4 w-4 shrink-0" />;
+                    if (labelLower.includes('home')) iconEl = <Home className="h-4 w-4 shrink-0" />;
+                    else if (labelLower.includes('subscribe') || labelLower.includes('plan')) iconEl = <Sparkles className="h-4 w-4 shrink-0 text-amber-500 fill-amber-400/20" />;
+                    else if (labelLower.includes('shop') || labelLower.includes('now') || labelLower.includes('pouches')) iconEl = <ShoppingBag className="h-4 w-4 shrink-0" />;
+                    else if (labelLower.includes('brand')) iconEl = <Award className="h-4 w-4 shrink-0 text-indigo-600" />;
 
-                {/* Customer login trigger */}
-                <button
-                  onClick={() => {
-                    onOpenCustomer();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between py-3 px-4.5 text-left transition-all duration-200 cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-slate-950"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <User className="h-4 w-4 text-slate-500 shrink-0" />
-                    <span className="font-black uppercase tracking-widest text-[10.5px]">
-                      {loggedInCustomer && loggedInCustomer.name ? `Account: ${loggedInCustomer.name.split(' ')[0]}` : 'Customer Account / Log In'}
-                    </span>
-                  </div>
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
-                </button>
-
-                {/* Wishlist trigger */}
-                <button
-                  onClick={() => {
-                    onOpenWishlist();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between py-3 px-4.5 text-left transition-all duration-200 cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-slate-950"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Heart className={`h-4 w-4 shrink-0 ${wishlistCount > 0 ? 'text-rose-500 fill-rose-500' : 'text-slate-500'}`} />
-                    <span className="font-black uppercase tracking-widest text-[10.5px]">My Wishlist</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {wishlistCount > 0 && (
-                      <span className="bg-rose-500 text-white text-[9px] font-black rounded-full h-4.5 min-w-4.5 flex items-center justify-center px-1">
-                        {wishlistCount}
-                      </span>
-                    )}
-                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
-                  </div>
-                </button>
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          if (item.type === 'external' && item.url) {
+                            window.open(item.url, '_blank');
+                          } else {
+                            onTabChange(itemTab);
+                          }
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all duration-200 cursor-pointer ${
+                          isActive
+                            ? 'bg-slate-900 border-slate-900 text-white shadow-xs'
+                            : 'bg-slate-50/50 border-slate-100 text-slate-700 hover:bg-slate-50 hover:border-slate-200'
+                        }`}
+                      >
+                        <div className={`p-1.5 rounded-lg ${isActive ? 'bg-white/10 text-white' : 'bg-white border border-slate-100 text-slate-500 shadow-3xs'}`}>
+                          {iconEl}
+                        </div>
+                        <span className="font-extrabold uppercase tracking-wider text-[9.5px] leading-tight truncate">
+                          {item.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+
+              {/* Accounts & My Wishlist Mini Rows */}
+              <div className="space-y-2">
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">My Personal Hub</span>
+                <div className="space-y-1.5">
+                  {/* Customer login trigger */}
+                  <button
+                    onClick={() => {
+                      onOpenCustomer();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center justify-between p-2 px-3 rounded-xl bg-slate-50/50 border border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all cursor-pointer text-left text-slate-700"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded-lg bg-white border border-slate-100 text-slate-500 shadow-3xs">
+                        <User className="h-4 w-4 shrink-0" />
+                      </div>
+                      <span className="font-extrabold uppercase tracking-wider text-[9.5px]">
+                        {loggedInCustomer && loggedInCustomer.name ? `Account: ${loggedInCustomer.name.split(' ')[0]}` : 'Log In / Register'}
+                      </span>
+                    </div>
+                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  </button>
+
+                  {/* Wishlist trigger */}
+                  <button
+                    onClick={() => {
+                      onOpenWishlist();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center justify-between p-2 px-3 rounded-xl bg-slate-50/50 border border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all cursor-pointer text-left text-slate-700"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded-lg bg-white border border-slate-100 text-slate-500 shadow-3xs">
+                        <Heart className={`h-4 w-4 shrink-0 ${wishlistCount > 0 ? 'text-rose-500 fill-rose-500' : 'text-slate-500'}`} />
+                      </div>
+                      <span className="font-extrabold uppercase tracking-wider text-[9.5px]">My Wishlist</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {wishlistCount > 0 && (
+                        <span className="bg-rose-500 text-white text-[8px] font-black rounded-full h-4.5 min-w-4.5 flex items-center justify-center px-1.5 shadow-3xs">
+                          {wishlistCount}
+                        </span>
+                      )}
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Store perks & Guarantees */}
+              <div className="p-3 bg-slate-50/70 border border-slate-100 rounded-2xl space-y-1.5">
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 block">Our Guarantee</span>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[8.5px] font-extrabold text-slate-500 uppercase tracking-wide">
+                  <div className="flex items-center gap-1">
+                    <span className="text-emerald-500">✔</span> Official Supplier
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-emerald-500">✔</span> Tracked Express
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-emerald-500">✔</span> Age Verified
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-emerald-500">✔</span> Tax Compliant
+                  </div>
+                </div>
+              </div>
+
             </div>
 
-            {/* Micro details Footer */}
-            <div className="p-4 bg-slate-50/80 border-t border-slate-100 flex flex-col gap-2 shrink-0">
-              <div className="flex items-center justify-between text-[10px] text-slate-500 font-extrabold tracking-wider">
-                <div className="flex items-center gap-1.5">
-                  <Store className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>EU Official Supplier</span>
+            {/* Micro details Footer (Compact fixed footer) */}
+            <div className="p-4 bg-slate-50/90 border-t border-slate-100 flex flex-col gap-1.5 shrink-0">
+              <div className="flex items-center justify-between text-[9px] text-slate-500 font-extrabold tracking-wider">
+                <div className="flex items-center gap-1">
+                  <Store className="h-3 w-3 text-emerald-600" />
+                  <span>POUCH SUPPLY EU</span>
                 </div>
-                <span>• UK Tracked</span>
+                <span>• UK Tracked •</span>
               </div>
-              <div className="text-[10px] text-slate-500 font-semibold truncate">
-                ✉️ Support: <span className="font-bold text-slate-700 select-all">Support@pouch-supply.com</span>
+              <div className="text-[9.5px] text-slate-500 font-semibold truncate flex items-center gap-1">
+                <span>✉️ Support:</span>
+                <a href="mailto:Support@pouch-supply.com" className="font-bold text-slate-700 hover:text-indigo-600 select-all underline">
+                  Support@pouch-supply.com
+                </a>
               </div>
             </div>
           </div>

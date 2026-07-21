@@ -191,6 +191,8 @@ export default function App() {
       footerLogoText: 'POUCH SUPPLY',
       footerLogoDescription: 'Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.',
       footerLogoImage: '',
+      klaviyoPublicKey: '',
+      imgbbApiKey: '',
       menuItems: [
         { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
         { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
@@ -418,8 +420,14 @@ export default function App() {
       const prod = products.find(p => p.id === cleanProdId || p.slug === cleanProdId);
       url = `/products/${prod?.slug || cleanProdId}${queryStr ? `?${queryStr}` : ''}`;
     } else if (tab === 'collection-detail' && collectionId) {
-      const col = collections.find(c => c.id === collectionId || c.slug === collectionId);
-      url = `/collections/${col?.slug || collectionId}`;
+      const col = collections.find(c => 
+        c.id === collectionId || 
+        c.slug === collectionId || 
+        slugify(c.title) === collectionId ||
+        c.id.toLowerCase() === collectionId.toLowerCase() ||
+        (c.slug && c.slug.toLowerCase() === collectionId.toLowerCase())
+      );
+      url = `/collections/${col?.slug || col?.id || collectionId}`;
     } else {
       url = `/pages/${tab}`;
     }
@@ -534,7 +542,14 @@ export default function App() {
         }
       } else if (path.startsWith('/collections/')) {
         const colId = path.replace('/collections/', '');
-        const matchedCol = collections.find(c => c.id === colId || slugify(c.title) === colId);
+        const matchedCol = collections.find(c => 
+          c.id === colId || 
+          (c.slug && c.slug === colId) || 
+          slugify(c.title) === colId || 
+          c.id.toLowerCase() === colId.toLowerCase() ||
+          (c.slug && c.slug.toLowerCase() === colId.toLowerCase()) ||
+          slugify(c.id) === colId.toLowerCase()
+        );
         if (matchedCol) {
           setActiveCollectionId(matchedCol.id);
           setCurrentTab('collection-detail');
