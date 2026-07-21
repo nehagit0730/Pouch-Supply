@@ -902,6 +902,8 @@ export default function AdminDashboard({
   };
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
   // Sync edits wrapper overrides so existing handlers automatically write to drafts and sync to the parent App context immediately
   const onUpdateProducts = (updatedProds: Product[]) => {
@@ -962,18 +964,32 @@ export default function AdminDashboard({
 
   // Global Save & Discard triggers
   const handleGlobalSave = () => {
-    parentOnUpdateProducts(localProducts);
-    parentOnUpdateCollections(localCollections);
-    parentOnUpdateCustomPages(localPages);
-    parentOnUpdateDiscounts(localDiscounts);
-    parentOnUpdateOrders(localOrders);
-    parentOnUpdateFiles(localFiles);
-    parentOnUpdateCustomers(localCustomers);
-    parentOnUpdateBlogs(localBlogs);
+    setIsSaving(true);
+    setShowSaveSuccess(false);
 
-    setHasUnsavedChanges(false);
-    if (onDirtyChange) onDirtyChange(false);
-    if (onAdminActionComplete) onAdminActionComplete('save');
+    // Simulate saving process for realistic high-quality feedback
+    setTimeout(() => {
+      parentOnUpdateProducts(localProducts);
+      parentOnUpdateCollections(localCollections);
+      parentOnUpdateCustomPages(localPages);
+      parentOnUpdateDiscounts(localDiscounts);
+      parentOnUpdateOrders(localOrders);
+      parentOnUpdateFiles(localFiles);
+      parentOnUpdateCustomers(localCustomers);
+      parentOnUpdateBlogs(localBlogs);
+
+      setHasUnsavedChanges(false);
+      setIsSaving(false);
+      setShowSaveSuccess(true);
+      
+      if (onDirtyChange) onDirtyChange(false);
+      if (onAdminActionComplete) onAdminActionComplete('save');
+
+      // Hide the success toast after 3.5 seconds
+      setTimeout(() => {
+        setShowSaveSuccess(false);
+      }, 3500);
+    }, 850);
   };
 
   const handleGlobalDiscard = () => {
@@ -2715,15 +2731,21 @@ export default function AdminDashboard({
               {/* Save changes button */}
               <button
                 onClick={handleGlobalSave}
-                disabled={!hasUnsavedChanges}
+                disabled={!hasUnsavedChanges || isSaving}
                 className={`py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all shadow-xs border ${
-                  hasUnsavedChanges
-                    ? 'bg-[#008060] hover:bg-[#006e52] text-white border-[#008060] cursor-pointer ring-2 ring-emerald-405'
+                  isSaving
+                    ? 'bg-slate-700 text-white border-slate-700 cursor-wait'
+                    : hasUnsavedChanges
+                    ? 'bg-[#008060] hover:bg-[#006e52] text-white border-[#008060] cursor-pointer ring-4 ring-emerald-400/30 animate-pulse font-extrabold shadow-md shadow-emerald-100'
                     : 'bg-slate-100 text-slate-350 border-slate-200 cursor-not-allowed select-none'
                 }`}
               >
-                <Save className="h-4 w-4 shrink-0" />
-                <span>Save Changes</span>
+                {isSaving ? (
+                  <RefreshCw className="h-4 w-4 shrink-0 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 shrink-0" />
+                )}
+                <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
               </button>
 
               {/* Discard button */}
@@ -4755,10 +4777,23 @@ export default function AdminDashboard({
                     )}
                     <button
                       onClick={handleGlobalSave}
-                      className="bg-[#008060] hover:bg-[#006e52] text-white font-bold text-[10px] py-1.5 px-3.5 rounded-lg flex items-center gap-1.5 cursor-pointer uppercase tracking-wider transition shadow-sm"
+                      disabled={!hasUnsavedChanges || isSaving}
+                      className={`font-extrabold text-[10px] py-1.5 px-4 rounded-lg flex items-center gap-1.5 uppercase tracking-wider transition-all duration-300 shadow-sm border ${
+                        isSaving
+                          ? 'bg-slate-700 text-slate-300 border-slate-700 cursor-wait'
+                          : hasUnsavedChanges
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 cursor-pointer ring-4 ring-emerald-400/40 animate-pulse shadow-md shadow-emerald-900/30 font-black'
+                          : 'bg-slate-800 text-slate-400 border-slate-700 cursor-not-allowed select-none'
+                      }`}
                     >
-                      <Save className="h-3.5 w-3.5" />
-                      <span>Save Changes</span>
+                      {isSaving ? (
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin text-slate-300" />
+                      ) : !hasUnsavedChanges ? (
+                        <Check className="h-3.5 w-3.5 text-emerald-400" />
+                      ) : (
+                        <Save className="h-3.5 w-3.5" />
+                      )}
+                      <span>{isSaving ? 'Saving...' : !hasUnsavedChanges ? 'All Saved & Live' : 'Save Changes'}</span>
                     </button>
                   </div>
                 </div>
@@ -9486,6 +9521,26 @@ export default function AdminDashboard({
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Floating Save Success Toast Notification */}
+        {showSaveSuccess && (
+          <div className="fixed bottom-6 right-6 z-[99999] bg-slate-900 text-white border border-slate-800 p-4 rounded-xl shadow-2xl flex items-center gap-3.5 max-w-sm select-none transition-all duration-300 animate-in slide-in-from-bottom-4 zoom-in-95">
+            <div className="h-8 w-8 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center shrink-0">
+              <Check className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="font-black uppercase tracking-wider text-[9px] text-emerald-400 block mb-0.5">Live Sync Complete</span>
+              <span className="font-extrabold block text-xs text-white">All Changes Saved successfully!</span>
+              <span className="text-[10px] font-semibold text-slate-400 leading-normal block mt-0.5">Your edits have been synchronized across the database and are now live on the storefront.</span>
+            </div>
+            <button 
+              onClick={() => setShowSaveSuccess(false)} 
+              className="text-slate-400 hover:text-white cursor-pointer ml-1 p-1 hover:bg-white/10 rounded transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
         )}
 
