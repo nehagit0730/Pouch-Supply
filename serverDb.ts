@@ -292,9 +292,36 @@ export async function saveUploadedImage(id: string, base64Data: string, mimeType
     }
   }
 
-  // Fallback to local MongoDB storage
+  // Ensure uploads directory exists on disk
+  const uploadsDir = path.join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  // Determine file extension
+  let ext = 'png';
+  if (mimeType.includes('jpeg') || mimeType.includes('jpg')) ext = 'jpg';
+  else if (mimeType.includes('webp')) ext = 'webp';
+  else if (mimeType.includes('svg')) ext = 'svg';
+  else if (mimeType.includes('gif')) ext = 'gif';
+  else if (mimeType.includes('mp4')) ext = 'mp4';
+  else if (mimeType.includes('webm')) ext = 'webm';
+
+  const filename = `${id}.${ext}`;
+  const filePath = path.join(uploadsDir, filename);
+
+  try {
+    // Write physical file on local project workspace hosting
+    fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+    console.log(`[Local Disk Sync] Successfully saved uploaded file to disk: ${filePath}`);
+  } catch (err) {
+    console.error("[Local Disk Sync] Failed to write uploaded file to disk:", err);
+  }
+
+  // Store in memory cache fallback
   memoryImages[id] = { base64Data, mimeType };
 
+  // Sync to Mongoose MongoDB Atlas if connected
   try {
     const conn = await connectMongoose();
     if (conn) {
@@ -304,21 +331,57 @@ export async function saveUploadedImage(id: string, base64Data: string, mimeType
         { id, base64Data, mimeType },
         { upsert: true }
       );
+      console.log(`[MongoDB Sync] Successfully saved image to Atlas database for ID: ${id}`);
     }
   } catch (error) {
     console.error("[Mongoose Engine] Failed to save uploaded image in DB:", error);
   }
 
-  return `/api/images/${id}`;
+  // Return the direct static url so the browser can load it instantly with zero overhead
+  return `/uploads/${filename}`;
 }
 
 export async function getUploadedImage(id: string): Promise<{ base64Data: string; mimeType: string } | null> {
+  // 1. Check local in-memory cache first
+  if (memoryImages[id]) {
+    return memoryImages[id];
+  }
+
+  // 2. Check local uploads folder on disk
+  try {
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    if (fs.existsSync(uploadsDir)) {
+      const files = fs.readdirSync(uploadsDir);
+      const matchedFile = files.find(f => f.startsWith(id + '.'));
+      if (matchedFile) {
+        const filePath = path.join(uploadsDir, matchedFile);
+        const buffer = fs.readFileSync(filePath);
+        const base64Data = buffer.toString('base64');
+        
+        let mimeType = 'image/png';
+        if (matchedFile.endsWith('.jpg') || matchedFile.endsWith('.jpeg')) mimeType = 'image/jpeg';
+        else if (matchedFile.endsWith('.webp')) mimeType = 'image/webp';
+        else if (matchedFile.endsWith('.svg')) mimeType = 'image/svg+xml';
+        else if (matchedFile.endsWith('.gif')) mimeType = 'image/gif';
+        else if (matchedFile.endsWith('.mp4')) mimeType = 'video/mp4';
+        else if (matchedFile.endsWith('.webm')) mimeType = 'video/webm';
+
+        return { base64Data, mimeType };
+      }
+    }
+  } catch (err) {
+    console.error("[Local Storage] Error reading file from disk fallback:", err);
+  }
+
+  // 3. Check Mongoose/MongoDB Atlas database
   try {
     const conn = await connectMongoose();
     if (conn) {
       const UploadedModel = UploadedImageModel as any;
       const doc = await UploadedModel.findOne({ id }).lean().exec();
       if (doc) {
+        // Cache in memory for subsequent requests
+        memoryImages[id] = { base64Data: doc.base64Data, mimeType: doc.mimeType };
         return {
           base64Data: doc.base64Data,
           mimeType: doc.mimeType
@@ -329,7 +392,7 @@ export async function getUploadedImage(id: string): Promise<{ base64Data: string
     console.error("[Mongoose Engine] Failed to load image from DB:", error);
   }
 
-  return memoryImages[id] || null;
+  return null;
 }
 
 export async function fetchLayoutSettings(): Promise<any> {

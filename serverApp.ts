@@ -37,6 +37,41 @@ export async function createExpressApp() {
 
 
 
+  // Serves /uploads with lazy loading fallback from MongoDB Atlas!
+  const uploadsPath = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadsPath)) {
+    fs.mkdirSync(uploadsPath, { recursive: true });
+  }
+
+  app.get("/uploads/:filename", async (req, res, next) => {
+    try {
+      const filename = req.params.filename;
+      const filePath = path.join(process.cwd(), "uploads", filename);
+      
+      if (fs.existsSync(filePath)) {
+        return res.sendFile(filePath);
+      }
+      
+      // If the file is missing from disk, try lazy-loading it from MongoDB Atlas!
+      const dotIndex = filename.lastIndexOf(".");
+      const id = dotIndex !== -1 ? filename.substring(0, dotIndex) : filename;
+      
+      console.log(`[Uploads Restore] File ${filename} missing from local disk. Restoring from MongoDB...`);
+      const imgDoc = await getUploadedImage(id);
+      if (imgDoc && imgDoc.base64Data) {
+        fs.writeFileSync(filePath, Buffer.from(imgDoc.base64Data, "base64"));
+        console.log(`[Uploads Restore] Restored successfully: ${filename}`);
+        return res.sendFile(filePath);
+      }
+    } catch (err) {
+      console.error("[Uploads Restore] Failed during lazy load restoration:", err);
+    }
+    next();
+  });
+
+  // Serve static uploaded files locally from disk as a fallback for standard directory requests
+  app.use("/uploads", express.static(uploadsPath));
+
   // API Route: Secure binary/base64 Image Storage
   app.post("/api/upload", async (req, res) => {
     try {
@@ -60,8 +95,16 @@ export async function createExpressApp() {
       const id = `img-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
       const imageUrl = await saveUploadedImage(id, base64String, mimeType);
       
-      console.log(`[API Upload] Successfully persisted ${mimeType} image into MongoDB Atlas. ID: ${id}`);
-      res.json({ url: imageUrl, id });
+      // Convert to absolute URL
+      let absoluteUrl = imageUrl;
+      if (imageUrl.startsWith("/")) {
+        const host = req.get("host") || "pouch-supply.com";
+        const protocol = req.headers["x-forwarded-proto"] || req.protocol || "https";
+        absoluteUrl = `${protocol}://${host}${imageUrl}`;
+      }
+
+      console.log(`[API Upload] Successfully persisted ${mimeType} image. Absolute URL: ${absoluteUrl}`);
+      res.json({ url: absoluteUrl, id });
     } catch (err: any) {
       console.error("[API Upload] Fail:", err);
       res.status(500).json({ error: err.message || "Failed to process image upload database insertion" });
