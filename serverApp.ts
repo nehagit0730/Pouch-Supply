@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
-import { fetchResource, saveResource, saveUploadedImage, getUploadedImage, getConnectionStatus, updateMongoUri, getDb, getDatabaseDetails, fetchLayoutSettings, saveLayoutSettings } from "./serverDb";
+import { fetchResource, saveResource, saveUploadedImage, getUploadedImage, getConnectionStatus, updateDbUri, getDb, getDatabaseDetails, fetchLayoutSettings, saveLayoutSettings } from "./serverDb";
 
 // Import modular routers for products, collections, customers, orders, files, discounts, custom pages, and blogs
 import productsRouter from "./backend/routes/products";
@@ -12,8 +12,7 @@ import customersRouter from "./backend/routes/customers";
 import discountsRouter from "./backend/routes/discounts";
 import customPagesRouter from "./backend/routes/customPages";
 import blogsRouter from "./backend/routes/blogs";
-import worldpayRouter from "./backend/routes/worldpay";
-import agecheckedRouter from "./backend/routes/agechecked";
+import razorpayRouter from "./backend/routes/razorpay";
 
 export async function createExpressApp() {
   const app = express();
@@ -37,31 +36,49 @@ export async function createExpressApp() {
 
 
 
-  // Serves /uploads with lazy loading fallback from MongoDB Atlas!
+  // Serves /uploads with lazy loading fallback from Neon Postgres database!
   const uploadsPath = path.join(process.cwd(), "uploads");
   if (!fs.existsSync(uploadsPath)) {
-    fs.mkdirSync(uploadsPath, { recursive: true });
+    try {
+      fs.mkdirSync(uploadsPath, { recursive: true });
+    } catch (_) {}
   }
 
   app.get("/uploads/:filename", async (req, res, next) => {
     try {
       const filename = req.params.filename;
-      const filePath = path.join(process.cwd(), "uploads", filename);
+      const filePath = path.join(uploadsPath, filename);
       
       if (fs.existsSync(filePath)) {
         return res.sendFile(filePath);
       }
       
-      // If the file is missing from disk, try lazy-loading it from MongoDB Atlas!
+      // If the file is missing from disk, lazy-load from Neon Postgres database!
       const dotIndex = filename.lastIndexOf(".");
       const id = dotIndex !== -1 ? filename.substring(0, dotIndex) : filename;
       
-      console.log(`[Uploads Restore] File ${filename} missing from local disk. Restoring from MongoDB...`);
-      const imgDoc = await getUploadedImage(id);
+      console.log(`[Uploads Restore] File ${filename} missing from local disk. Restoring from Neon Postgres...`);
+      let imgDoc = await getUploadedImage(id);
+      if (!imgDoc && dotIndex !== -1) {
+        imgDoc = await getUploadedImage(filename);
+      }
+
       if (imgDoc && imgDoc.base64Data) {
-        fs.writeFileSync(filePath, Buffer.from(imgDoc.base64Data, "base64"));
-        console.log(`[Uploads Restore] Restored successfully: ${filename}`);
-        return res.sendFile(filePath);
+        // Cache to disk if filesystem is writable
+        try {
+          fs.writeFileSync(filePath, Buffer.from(imgDoc.base64Data, "base64"));
+          console.log(`[Uploads Restore] Restored to disk successfully: ${filename}`);
+        } catch (_) {}
+
+        // Stream image directly to client
+        const imgBuffer = Buffer.from(imgDoc.base64Data, "base64");
+        res.writeHead(200, {
+          "Content-Type": imgDoc.mimeType || "image/png",
+          "Content-Length": imgBuffer.length,
+          "Cache-Control": "public, max-age=31536000",
+          "Access-Control-Allow-Origin": "*"
+        });
+        return res.end(imgBuffer);
       }
     } catch (err) {
       console.error("[Uploads Restore] Failed during lazy load restoration:", err);
@@ -93,18 +110,20 @@ export async function createExpressApp() {
       }
 
       const id = `img-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
-      const imageUrl = await saveUploadedImage(id, base64String, mimeType);
+      const relativeUrl = await saveUploadedImage(id, base64String, mimeType);
       
-      // Convert to absolute URL
-      let absoluteUrl = imageUrl;
-      if (imageUrl.startsWith("/")) {
-        const host = req.get("host") || "pouch-supply.com";
-        const protocol = req.headers["x-forwarded-proto"] || req.protocol || "https";
-        absoluteUrl = `${protocol}://${host}${imageUrl}`;
+      // Also write to disk cache if possible
+      try {
+        const ext = mimeType.includes('/') ? mimeType.split('/')[1] : 'png';
+        const diskFile = path.join(uploadsPath, `${id}.${ext}`);
+        fs.writeFileSync(diskFile, Buffer.from(base64String, 'base64'));
+      } catch (e) {
+        console.warn('Could not write uploaded image to disk:', e);
       }
 
-      console.log(`[API Upload] Successfully persisted ${mimeType} image. Absolute URL: ${absoluteUrl}`);
-      res.json({ url: absoluteUrl, id });
+      // Return relative URL /api/images/${id} so it renders seamlessly across ALL environments and domains
+      console.log(`[API Upload] Successfully persisted ${mimeType} image with ID: ${id}. URL: ${relativeUrl}`);
+      res.json({ url: relativeUrl, relativeUrl, id });
     } catch (err: any) {
       console.error("[API Upload] Fail:", err);
       res.status(500).json({ error: err.message || "Failed to process image upload database insertion" });
@@ -114,17 +133,25 @@ export async function createExpressApp() {
   // API Route: Image Provider / Streamer
   app.get("/api/images/:id", async (req, res) => {
     try {
-      const { id } = req.params;
-      const imgDoc = await getUploadedImage(id);
+      const rawId = req.params.id;
+      const dotIndex = rawId.lastIndexOf(".");
+      const cleanId = dotIndex !== -1 ? rawId.substring(0, dotIndex) : rawId;
+
+      let imgDoc = await getUploadedImage(cleanId);
+      if (!imgDoc && dotIndex !== -1) {
+        imgDoc = await getUploadedImage(rawId);
+      }
+
       if (!imgDoc) {
         return res.status(404).send("Image not found");
       }
 
       const imgBuffer = Buffer.from(imgDoc.base64Data, "base64");
       res.writeHead(200, {
-        "Content-Type": imgDoc.mimeType,
+        "Content-Type": imgDoc.mimeType || "image/png",
         "Content-Length": imgBuffer.length,
-        "Cache-Control": "public, max-age=31536000" // Persistent browser caching
+        "Cache-Control": "public, max-age=31536000",
+        "Access-Control-Allow-Origin": "*"
       });
       res.end(imgBuffer);
     } catch (err: any) {
@@ -161,8 +188,8 @@ export async function createExpressApp() {
       if (!uri) {
         return res.status(400).json({ error: "No connection string was provided." });
       }
-      // Re-initialize with new Mongo URI
-      updateMongoUri(uri);
+      // Re-initialize with new DB URI
+      updateDbUri(uri);
       
       // Attempt immediate connection check
       await getDb();
@@ -203,8 +230,7 @@ export async function createExpressApp() {
   app.use("/api/discounts", discountsRouter);
   app.use("/api/custompages", customPagesRouter);
   app.use("/api/blogs", blogsRouter);
-  app.use("/api/worldpay", worldpayRouter);
-  app.use("/api/agechecked", agecheckedRouter);
+  app.use("/api/razorpay", razorpayRouter);
 
   // Serve placeholder.png directly from root workspace to handle all environments smoothly
   app.get("/placeholder.png", (req, res) => {

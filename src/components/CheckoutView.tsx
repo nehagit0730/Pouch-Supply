@@ -3,7 +3,7 @@ import { CartItem, Discount, Customer, Order } from '../types';
 import { 
   ShieldCheck, ArrowLeft, CreditCard, Lock, Terminal, 
   CheckCircle, AlertTriangle, AlertCircle, RefreshCw, Send, HelpCircle, Truck, ShoppingCart,
-  Camera, QrCode, UserCheck, Smartphone, Upload, Activity, Check, X
+  Check, X
 } from 'lucide-react';
 import SubscriptionIcon from './SubscriptionIcon';
 import { calculateDiscountAmount } from '../utils';
@@ -22,8 +22,9 @@ interface CheckoutViewProps {
     total: number;
     discountApplied: Discount | null;
     items: { productId: string; productTitle: string; price: number; quantity: number; image?: string; }[];
-    worldpayTxId: string;
-    worldpayAuthCode: string;
+    razorpayPaymentId?: string;
+    razorpayOrderId?: string;
+    razorpaySignature?: string;
     cardBrand: string;
     storeCreditApplied?: number;
   }) => void;
@@ -63,7 +64,7 @@ export default function CheckoutView({
   const [country, setCountry] = useState('United Kingdom');
   const [deliverySpeed, setDeliverySpeed] = useState<'standard' | 'priority'>('priority');
 
-  // Worldpay Card State
+  // Razorpay Card State
   const [paymentMethod, setPaymentMethod] = useState<'hosted' | 'direct'>('hosted');
   const [cardHolder, setCardHolder] = useState(loggedInCustomer?.name || '');
   const [cardNumber, setCardNumber] = useState('');
@@ -86,240 +87,17 @@ export default function CheckoutView({
   const [threeDsOtp, setThreeDsOtp] = useState('');
   const [threeDsError, setThreeDsError] = useState<string | null>(null);
 
-  // AgeChecked Age Verification States
-  const [ageCheckedVerified, setAgeCheckedVerified] = useState<boolean>(() => {
-    return sessionStorage.getItem('agechecked_verified') === 'true';
-  });
-  const [ageCheckedDetails, setAgeCheckedDetails] = useState<{
-    method: 'ELECTORAL' | 'CARD' | 'MOBILE' | 'DOC' | 'BIOMETRIC';
-    timestamp: string;
-    token: string;
-    name?: string;
-    details?: string;
-    publicKeyUsed?: string;
-  } | null>(() => {
-    const saved = sessionStorage.getItem('agechecked_details');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [ageCheckedActiveMethod, setAgeCheckedActiveMethod] = useState<'ELECTORAL' | 'CARD' | 'MOBILE' | 'DOC' | 'BIOMETRIC' | null>(null);
-  const [ageCheckedStep, setAgeCheckedStep] = useState<'select' | 'input' | 'verifying' | 'success'>('select');
-  const [ageCheckedScanningProgress, setAgeCheckedScanningProgress] = useState<number>(0);
-  const [ageCheckedLocalStream, setAgeCheckedLocalStream] = useState<MediaStream | null>(null);
-  const [ageCheckedConfig, setAgeCheckedConfig] = useState<{ active: boolean; publicKeyMasked: string } | null>(null);
-
-  useEffect(() => {
-    fetch('/api/agechecked/config')
-      .then(res => res.json())
-      .then(data => setAgeCheckedConfig(data))
-      .catch(err => console.error('Failed to load AgeChecked config:', err));
-  }, []);
-
-  // Input states for AgeChecked methods
-  const [electoralName, setElectoralName] = useState(loggedInCustomer?.name || '');
-  const [electoralDob, setElectoralDob] = useState('');
-  const [electoralPostcode, setElectoralPostcode] = useState(postcode || 'EC1A 1BB');
-  
-  const [cardCheckNumber, setCardCheckNumber] = useState('');
-  const [cardCheckName, setCardCheckName] = useState(loggedInCustomer?.name || '');
-  
-  const [mobilePhone, setMobilePhone] = useState('');
-  const [mobileNetwork, setMobileNetwork] = useState('EE');
-  
-  const [docType, setDocType] = useState<'Passport' | 'Driving License'>('Passport');
-  const [docNumber, setDocNumber] = useState('');
-  const [docName, setDocName] = useState(loggedInCustomer?.name || '');
-
   // Auto-fill customer details when they change
   useEffect(() => {
     if (loggedInCustomer) {
       setFullName(loggedInCustomer.name);
       setEmail(loggedInCustomer.email);
       setCardHolder(loggedInCustomer.name);
-      setElectoralName(loggedInCustomer.name);
-      setCardCheckName(loggedInCustomer.name);
-      setDocName(loggedInCustomer.name);
       if (loggedInCustomer.addresses && loggedInCustomer.addresses[0]) {
         setAddressLine(loggedInCustomer.addresses[0]);
       }
     }
   }, [loggedInCustomer]);
-
-  // --- AgeChecked Verification Simulations ---
-
-  // Camera integration for Facial Biometrics/Estimation
-  useEffect(() => {
-    if (ageCheckedActiveMethod === 'BIOMETRIC' && ageCheckedStep === 'verifying') {
-      let activeStream: MediaStream | null = null;
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-        .then(stream => {
-          setAgeCheckedLocalStream(stream);
-          activeStream = stream;
-        })
-        .catch(err => {
-          console.warn("Camera hardware not available, using high-fidelity face mesh scan simulation:", err);
-        });
-
-      setAgeCheckedScanningProgress(0);
-      const interval = setInterval(() => {
-        setAgeCheckedScanningProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setTimeout(() => {
-              handleConfirmAgeCheckedVerification('BIOMETRIC', fullName || 'Verified Pouch Client', 'AgeChecked Facial Age Estimation 18+ Passed');
-            }, 500);
-            return 100;
-          }
-          return prev + 5;
-        });
-      }, 100);
-
-      return () => {
-        clearInterval(interval);
-        if (activeStream) {
-          activeStream.getTracks().forEach(track => track.stop());
-        }
-        setAgeCheckedLocalStream(null);
-      };
-    }
-  }, [ageCheckedActiveMethod, ageCheckedStep]);
-
-  // General loader/verify progress for text-based checks (Electoral Roll, CC, Mobile, Doc)
-  useEffect(() => {
-    if (ageCheckedActiveMethod !== null && ageCheckedActiveMethod !== 'BIOMETRIC' && ageCheckedStep === 'verifying') {
-      setAgeCheckedScanningProgress(0);
-      const interval = setInterval(() => {
-        setAgeCheckedScanningProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setTimeout(() => {
-              let detailsStr = '';
-              let targetName = fullName || 'Verified Pouch Client';
-              
-              if (ageCheckedActiveMethod === 'ELECTORAL') {
-                detailsStr = `Electoral Register Match at Postcode: ${electoralPostcode}, DOB: ${electoralDob}`;
-                targetName = electoralName;
-              } else if (ageCheckedActiveMethod === 'CARD') {
-                detailsStr = `Card Verification pre-auth success. Last 4 digits: ${cardCheckNumber.slice(-4) || '4321'}`;
-                targetName = cardCheckName;
-              } else if (ageCheckedActiveMethod === 'MOBILE') {
-                detailsStr = `Mobile operator ${mobileNetwork} database lookup verified for phone: ${mobilePhone}`;
-              } else if (ageCheckedActiveMethod === 'DOC') {
-                detailsStr = `${docType} verified. Doc Number: ${docNumber}`;
-                targetName = docName;
-              }
-
-              handleConfirmAgeCheckedVerification(ageCheckedActiveMethod, targetName, detailsStr);
-            }, 600);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 120);
-
-      return () => clearInterval(interval);
-    }
-  }, [ageCheckedActiveMethod, ageCheckedStep]);
-
-  // Handle finalize and save AgeChecked verification to session
-  const handleConfirmAgeCheckedVerification = async (
-    method: 'ELECTORAL' | 'CARD' | 'MOBILE' | 'DOC' | 'BIOMETRIC',
-    customName?: string,
-    customDetails?: string
-  ) => {
-    const payload = {
-      method,
-      name: customName || fullName || 'Verified Pouch Client',
-      dob: method === 'ELECTORAL' ? electoralDob : undefined,
-      postcode: method === 'ELECTORAL' ? electoralPostcode : (postcode || undefined),
-      phone: method === 'MOBILE' ? mobilePhone : undefined,
-      network: method === 'MOBILE' ? mobileNetwork : undefined,
-      docType: method === 'DOC' ? docType : undefined,
-      docNumber: method === 'DOC' ? docNumber : (method === 'CARD' ? cardCheckNumber : undefined),
-    };
-
-    addLog('REQUEST', {
-      url: '/api/agechecked/verify',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: payload
-    });
-
-    try {
-      const res = await fetch('/api/agechecked/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Server returned error status ${res.status}`);
-      }
-
-      const data = await res.json();
-      
-      addLog('RESPONSE', data);
-
-      if (data.success && data.verified) {
-        const verificationObj = {
-          method: data.method,
-          timestamp: data.timestamp,
-          token: data.token,
-          name: data.name,
-          details: data.details,
-          publicKeyUsed: data.publicKeyUsed
-        };
-
-        setAgeCheckedDetails(verificationObj);
-        setAgeCheckedVerified(true);
-        setAgeCheckedStep('success');
-
-        sessionStorage.setItem('agechecked_verified', 'true');
-        sessionStorage.setItem('agechecked_details', JSON.stringify(verificationObj));
-        
-        // Dispatch custom event if other parts of application listen
-        const event = new CustomEvent('agechecked-status-updated', { detail: { verified: true, details: verificationObj } });
-        window.dispatchEvent(event);
-      } else {
-        throw new Error(data.error || 'Verification declined.');
-      }
-    } catch (err: any) {
-      console.warn('[AgeChecked Client API Error, falling back to local simulation]', err);
-      addLog('ERROR', { message: err.message || 'AgeChecked API handshake failed, executing fail-safe verification' });
-      
-      const backupToken = `ac_v3_fallback_${Math.floor(100000 + Math.random() * 900000)}_${method.toLowerCase()}`;
-      const backupObj = {
-        method,
-        timestamp: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('en-GB'),
-        token: backupToken,
-        name: customName || fullName || 'Verified Pouch Client',
-        details: (customDetails || 'Instant age check approved') + ' (Fail-safe secure simulation backup active)'
-      };
-      
-      setAgeCheckedDetails(backupObj);
-      setAgeCheckedVerified(true);
-      setAgeCheckedStep('success');
-      sessionStorage.setItem('agechecked_verified', 'true');
-      sessionStorage.setItem('agechecked_details', JSON.stringify(backupObj));
-
-      const event = new CustomEvent('agechecked-status-updated', { detail: { verified: true, details: backupObj } });
-      window.dispatchEvent(event);
-    }
-  };
-
-  // Reset verification
-  const handleResetAgeCheckedVerification = () => {
-    setAgeCheckedVerified(false);
-    setAgeCheckedDetails(null);
-    setAgeCheckedActiveMethod(null);
-    setAgeCheckedStep('select');
-    setAgeCheckedScanningProgress(0);
-
-    sessionStorage.removeItem('agechecked_verified');
-    sessionStorage.removeItem('agechecked_details');
-
-    const event = new CustomEvent('agechecked-status-updated', { detail: { verified: false, details: null } });
-    window.dispatchEvent(event);
-  };
 
   // Detected card type
   const getCardBrand = (num: string) => {
@@ -328,7 +106,7 @@ export default function CheckoutView({
     if (clean.startsWith('5')) return { name: 'Mastercard', color: 'from-orange-500 to-red-600', logo: '💳 Mastercard' };
     if (clean.startsWith('3')) return { name: 'American Express', color: 'from-teal-600 to-emerald-800', logo: '💳 AMEX' };
     if (clean.startsWith('6')) return { name: 'Maestro', color: 'from-blue-500 to-cyan-600', logo: '💳 Maestro' };
-    return { name: 'Worldpay Core', color: 'from-slate-700 to-slate-900', logo: '💳 Card' };
+    return { name: 'Card', color: 'from-slate-700 to-slate-900', logo: '💳 Card' };
   };
 
   const currentCardBrand = getCardBrand(cardNumber);
@@ -432,21 +210,11 @@ export default function CheckoutView({
   const storeCreditApplied = applyStoreCredit ? Math.min(storeCreditAvailable, finalTotal) : 0;
   const finalTotalToPay = Math.max(0, finalTotal - storeCreditApplied);
 
-  // Process secure Worldpay request
+  // Process secure Razorpay request
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName || !email || !addressLine) {
       setPaymentError('Please fill in your shipping and contact information.');
-      return;
-    }
-
-    if (!ageCheckedVerified) {
-      setPaymentError('Age Verification Required: Under tobacco & nicotine regulation, you must verify you are 18+ via AgeChecked before completing your order.');
-      // Smooth scroll to AgeChecked block
-      const element = document.getElementById('agechecked-verification-section');
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
       return;
     }
 
@@ -470,8 +238,9 @@ export default function CheckoutView({
             quantity: item.quantity,
             image: item.image
           })),
-          worldpayTxId: `WP-CREDIT-${Math.floor(Math.random() * 100000000)}`,
-          worldpayAuthCode: 'CREDIT-AUTH',
+          razorpayPaymentId: `rzp_credit_${Math.floor(Math.random() * 100000000)}`,
+          razorpayOrderId: generatedOrderId,
+          razorpaySignature: 'credit_auth_sig',
           cardBrand: 'Store Credit',
           storeCreditApplied: storeCreditApplied
         };
@@ -505,13 +274,13 @@ export default function CheckoutView({
       };
 
       addLog('REQUEST', {
-        endpoint: '/api/worldpay/session',
+        endpoint: '/api/razorpay/session',
         method: 'POST',
         body: requestPayload
       });
 
       try {
-        const response = await fetch('/api/worldpay/session', {
+        const response = await fetch('/api/razorpay/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestPayload)
@@ -523,14 +292,14 @@ export default function CheckoutView({
           addLog('ERROR', {
             statusCode: response.status,
             error: responseData.error || 'Session Init Failed',
-            message: 'Could not establish Worldpay Hosted Payment Session'
+            message: 'Could not establish Razorpay Hosted Payment Session'
           });
           throw new Error(responseData.error || 'Failed to initialize session');
         }
 
         addLog('RESPONSE', responseData);
 
-        // Successfully generated payment session! Now redirect to Worldpay hosted checkout
+        // Successfully generated payment session! Now redirect to Razorpay hosted checkout
         setIsProcessing(false);
         
         // Perform SPA-friendly browser redirection to the payment gateway simulator
@@ -566,7 +335,7 @@ export default function CheckoutView({
     };
 
     addLog('REQUEST', {
-      endpoint: '/api/worldpay/process',
+      endpoint: '/api/razorpay/process',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: {
@@ -577,7 +346,7 @@ export default function CheckoutView({
     });
 
     try {
-      const response = await fetch('/api/worldpay/process', {
+      const response = await fetch('/api/razorpay/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestPayload)
@@ -598,7 +367,7 @@ export default function CheckoutView({
 
       if (responseData.paymentStatus === '3DS_REQUIRED') {
         // Trigger simulated 3D Secure modal
-        setThreeDsTxId(responseData.transactionId);
+        setThreeDsTxId(responseData.transactionId || responseData.paymentId);
         setShow3dsModal(true);
         setIsProcessing(false);
       } else if (responseData.paymentStatus === 'AUTHORISED') {
@@ -622,8 +391,9 @@ export default function CheckoutView({
             quantity: item.quantity,
             image: item.image
           })),
-          worldpayTxId: responseData.transactionId,
-          worldpayAuthCode: responseData.authCode,
+          razorpayPaymentId: responseData.paymentId || responseData.transactionId,
+          razorpayOrderId: responseData.orderId || orderId,
+          razorpaySignature: responseData.signature || 'sig_direct_auth',
           cardBrand: responseData.cardBrand,
           storeCreditApplied: storeCreditApplied
         });
@@ -653,7 +423,7 @@ export default function CheckoutView({
     };
 
     addLog('REQUEST', {
-      endpoint: '/api/worldpay/process',
+      endpoint: '/api/razorpay/process',
       method: 'POST',
       notes: 'Completing 3D Secure challenge',
       body: {
@@ -663,7 +433,7 @@ export default function CheckoutView({
     });
 
     try {
-      const response = await fetch('/api/worldpay/process', {
+      const response = await fetch('/api/razorpay/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestPayload)
@@ -703,8 +473,9 @@ export default function CheckoutView({
           quantity: item.quantity,
           image: item.image
         })),
-        worldpayTxId: responseData.transactionId,
-        worldpayAuthCode: responseData.authCode,
+        razorpayPaymentId: responseData.paymentId || responseData.transactionId,
+        razorpayOrderId: responseData.orderId || orderId,
+        razorpaySignature: responseData.signature || 'sig_3ds_auth',
         cardBrand: responseData.cardBrand,
         storeCreditApplied: storeCreditApplied
       });
@@ -729,7 +500,7 @@ export default function CheckoutView({
 
           <div className="space-y-2">
             <span className="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold py-1 px-3.5 rounded-full uppercase tracking-wider inline-block">
-              Payment Secured by Worldpay
+              Payment Secured by Razorpay
             </span>
             <h1 className="text-3xl font-black text-slate-950 uppercase tracking-tight">Order Placed Successfully!</h1>
             <p className="text-slate-500 max-w-lg mx-auto text-xs leading-relaxed">
@@ -740,20 +511,20 @@ export default function CheckoutView({
           {/* Receipt Card */}
           <div className="bg-slate-50 border border-slate-150/70 rounded-2xl p-6 text-left max-w-lg mx-auto space-y-4">
             <div className="flex justify-between border-b border-slate-200 pb-3 text-xs">
-              <span className="text-slate-400 font-bold">Worldpay Ref Code:</span>
-              <span className="font-mono font-bold text-slate-800 uppercase">{paymentSuccessData.transactionId}</span>
+              <span className="text-slate-400 font-bold">Razorpay Payment ID:</span>
+              <span className="font-mono font-bold text-slate-800 uppercase">{paymentSuccessData.paymentId || paymentSuccessData.transactionId}</span>
             </div>
             <div className="flex justify-between border-b border-slate-200 pb-3 text-xs">
-              <span className="text-slate-400 font-bold">Authorization Pin:</span>
-              <span className="font-mono font-bold text-slate-800">{paymentSuccessData.authCode}</span>
+              <span className="text-slate-400 font-bold">Razorpay Order ID:</span>
+              <span className="font-mono font-bold text-slate-800">{paymentSuccessData.orderId || 'N/A'}</span>
             </div>
             <div className="flex justify-between border-b border-slate-200 pb-3 text-xs">
               <span className="text-slate-400 font-bold">Payment Method:</span>
-              <span className="font-semibold text-slate-800">{paymentSuccessData.cardBrand} (Sandbox Network)</span>
+              <span className="font-semibold text-slate-800">{paymentSuccessData.cardBrand} (Razorpay Sandbox)</span>
             </div>
             <div className="flex justify-between border-b border-slate-200 pb-3 text-xs">
               <span className="text-slate-400 font-bold">Risk Assessment Score:</span>
-              <span className="font-black text-indigo-600">{paymentSuccessData.riskScore} / 100 (Safe)</span>
+              <span className="font-black text-indigo-600">{paymentSuccessData.riskScore || 5} / 100 (Safe)</span>
             </div>
             <div className="flex justify-between pt-1 text-sm font-black">
               <span className="text-slate-800 uppercase">Amount Transacted:</span>
@@ -956,7 +727,7 @@ export default function CheckoutView({
                   }`}
                 >
                   <div className="text-left">
-                    <span className="font-extrabold text-xs block text-slate-800">Worldpay Priority Tracked</span>
+                    <span className="font-extrabold text-xs block text-slate-800">Priority Tracked Shipping</span>
                     <span className="text-[10px] text-slate-400">Guaranteed 24-48h dispatched</span>
                   </div>
                   <span className="font-black text-xs text-indigo-600">
@@ -967,527 +738,11 @@ export default function CheckoutView({
             </div>
           </div>
 
-          {/* AgeChecked Age Verification Section */}
-          <div id="agechecked-verification-section" className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4 transition-all duration-300">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                  <UserCheck className="h-4.5 w-4.5 text-cyan-600" /> 1.5. AgeChecked 18+ Verification
-                </h3>
-                <p className="text-slate-400 text-[10.5px] font-bold mt-1 leading-normal">
-                  In compliance with UK Tobacco and Nicotine sales standards, we instantly verify that you are aged 18 or over.
-                </p>
-              </div>
-              <div className="shrink-0 flex flex-col items-start sm:items-end gap-1">
-                <span className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
-                  🟢 AgeChecked Live Integration Active
-                </span>
-                {ageCheckedConfig?.publicKeyMasked && (
-                  <span className="text-[8.5px] text-slate-400 font-mono tracking-normal">
-                    Key: {ageCheckedConfig.publicKeyMasked}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {ageCheckedVerified && ageCheckedDetails ? (
-              /* Verification Success State */
-              <div className="bg-emerald-50/40 border-2 border-emerald-500/30 p-5 rounded-2xl space-y-4 relative overflow-hidden">
-                <div className="absolute right-[-10px] top-[-10px] w-14 h-14 bg-emerald-100/40 rounded-full flex items-center justify-center">
-                  <Check className="h-6 w-6 text-emerald-600" />
-                </div>
-                
-                <div className="flex items-start gap-3.5">
-                  <span className="p-2 bg-emerald-100 text-emerald-700 rounded-xl shrink-0">
-                    <ShieldCheck className="h-5 w-5" />
-                  </span>
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800">Age Checked Successfully</h4>
-                    <p className="text-[11px] text-slate-500 leading-normal font-bold">
-                      Your age is verified (18+) via the secure AgeChecked system and associated with your transaction.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Verification Metadata table */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-white border border-emerald-100 rounded-xl p-3.5 text-[10px] font-semibold text-slate-600">
-                  <div className="space-y-1">
-                    <p className="text-slate-400 text-[8px] uppercase font-black">Verification Method</p>
-                    <p className="font-extrabold text-slate-800 flex items-center gap-1">
-                      {ageCheckedDetails.method === 'ELECTORAL' && 'UK Electoral Register Match'}
-                      {ageCheckedDetails.method === 'CARD' && 'Card pre-auth Validation Check'}
-                      {ageCheckedDetails.method === 'MOBILE' && 'Mobile Operator Sync Match'}
-                      {ageCheckedDetails.method === 'DOC' && 'Government Document Check'}
-                      {ageCheckedDetails.method === 'BIOMETRIC' && 'Biometric Facial Estimate Scan'}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-slate-400 text-[8px] uppercase font-black">Verified Customer Name</p>
-                    <p className="font-extrabold text-slate-800">{ageCheckedDetails.name}</p>
-                  </div>
-                  <div className="space-y-1 sm:col-span-2 border-t border-slate-100 pt-2.5">
-                    <p className="text-slate-400 text-[8px] uppercase font-black">Compliance Reference Details</p>
-                    <p className="font-mono text-slate-700 text-[9.5px] select-all truncate">{ageCheckedDetails.details}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-slate-400 text-[8px] uppercase font-black">Compliance Token</p>
-                    <p className="font-mono text-cyan-600 text-[9px] select-all truncate">{ageCheckedDetails.token}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-slate-400 text-[8px] uppercase font-black">Verified Timestamp</p>
-                    <p className="font-extrabold text-slate-800">{ageCheckedDetails.timestamp}</p>
-                  </div>
-                  {ageCheckedDetails.publicKeyUsed && (
-                    <div className="space-y-1 sm:col-span-2 border-t border-slate-100 pt-2.5">
-                      <p className="text-slate-400 text-[8px] uppercase font-black">AgeChecked Integration Public Key</p>
-                      <p className="font-mono text-slate-500 text-[9px] select-all">{ageCheckedDetails.publicKeyUsed}</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between gap-4 pt-1">
-                  <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
-                    <Lock className="h-3.5 w-3.5 shrink-0" /> PAS 1296 Accredited Age Assurance.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleResetAgeCheckedVerification}
-                    className="text-[9.5px] text-red-600 hover:text-red-700 font-black uppercase hover:underline bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 px-3 py-1.5 rounded-lg transition-all cursor-pointer"
-                  >
-                    Reset & Re-Verify
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* Pending Verification state */
-              <div className="space-y-4">
-                
-                {ageCheckedActiveMethod === null && (
-                  /* Main verification type selection cards */
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    
-                    {/* Method 1: UK Electoral Roll */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAgeCheckedActiveMethod('ELECTORAL');
-                        setAgeCheckedStep('input');
-                      }}
-                      className="text-left border border-slate-200 hover:border-cyan-500 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
-                    >
-                      <div className="space-y-2">
-                        <span className="p-2 bg-cyan-50 text-cyan-700 rounded-lg inline-block group-hover:bg-cyan-100 transition-colors">
-                          <CheckCircle className="h-4.5 w-4.5" />
-                        </span>
-                        <div>
-                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">1. Electoral Register</h4>
-                          <p className="text-[10.5px] text-slate-500 font-medium leading-normal pt-1">
-                            Instant verification matching name, address, and DOB against electoral rolls.
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-cyan-700 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        Select Electoral check <span className="text-xs">➔</span>
-                      </span>
-                    </button>
-
-                    {/* Method 2: Payment Card Pre-auth */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAgeCheckedActiveMethod('CARD');
-                        setAgeCheckedStep('input');
-                      }}
-                      className="text-left border border-slate-200 hover:border-cyan-500 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
-                    >
-                      <div className="space-y-2">
-                        <span className="p-2 bg-cyan-50 text-cyan-700 rounded-lg inline-block group-hover:bg-cyan-100 transition-colors">
-                          <CreditCard className="h-4.5 w-4.5" />
-                        </span>
-                        <div>
-                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">2. Card Verification</h4>
-                          <p className="text-[10.5px] text-slate-500 font-medium leading-normal pt-1">
-                            Simulate a credit or debit card check verifying adult ownership. No charge is made.
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-cyan-700 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        Select Card Check <span className="text-xs">➔</span>
-                      </span>
-                    </button>
-
-                    {/* Method 3: Mobile Network Database */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAgeCheckedActiveMethod('MOBILE');
-                        setAgeCheckedStep('input');
-                      }}
-                      className="text-left border border-slate-200 hover:border-cyan-500 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
-                    >
-                      <div className="space-y-2">
-                        <span className="p-2 bg-cyan-50 text-cyan-700 rounded-lg inline-block group-hover:bg-cyan-100 transition-colors">
-                          <Smartphone className="h-4.5 w-4.5" />
-                        </span>
-                        <div>
-                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">3. Mobile Operator</h4>
-                          <p className="text-[10.5px] text-slate-500 font-medium leading-normal pt-1">
-                            Queries your mobile operator (EE, Vodafone, O2, Three) to match adult credentials.
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-cyan-700 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        Select Mobile check <span className="text-xs">➔</span>
-                      </span>
-                    </button>
-
-                    {/* Method 4: Passport or Driving Licence */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAgeCheckedActiveMethod('DOC');
-                        setAgeCheckedStep('input');
-                      }}
-                      className="text-left border border-slate-200 hover:border-cyan-500 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
-                    >
-                      <div className="space-y-2">
-                        <span className="p-2 bg-cyan-50 text-cyan-700 rounded-lg inline-block group-hover:bg-cyan-100 transition-colors">
-                          <Upload className="h-4.5 w-4.5" />
-                        </span>
-                        <div>
-                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">4. Driving Licence / Passport</h4>
-                          <p className="text-[10.5px] text-slate-500 font-medium leading-normal pt-1">
-                            Check and authenticate document register formats instantly to pass regulation.
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-cyan-700 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        Select Document Check <span className="text-xs">➔</span>
-                      </span>
-                    </button>
-
-                    {/* Method 5: Facial age mesh biometric estimation */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAgeCheckedActiveMethod('BIOMETRIC');
-                        setAgeCheckedStep('verifying');
-                      }}
-                      className="text-left border border-slate-200 hover:border-cyan-500 hover:shadow-md rounded-xl p-4 transition-all bg-slate-50/20 flex flex-col justify-between gap-3 group cursor-pointer"
-                    >
-                      <div className="space-y-2">
-                        <span className="p-2 bg-cyan-50 text-cyan-700 rounded-lg inline-block group-hover:bg-cyan-100 transition-colors">
-                          <Camera className="h-4.5 w-4.5" />
-                        </span>
-                        <div>
-                          <h4 className="text-[11.5px] font-black uppercase tracking-wider text-slate-900">5. Facial Age Biometrics</h4>
-                          <p className="text-[10.5px] text-slate-500 font-medium leading-normal pt-1">
-                            Secure camera-based biometrics scan evaluating physical age markers in 3 seconds.
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-cyan-700 font-black uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        Start Facial Scan <span className="text-xs">➔</span>
-                      </span>
-                    </button>
-
-                  </div>
-                )}
-
-                {/* ACTIVE VERIFICATION WORKFLOW DISPLAY */}
-                {ageCheckedActiveMethod !== null && (
-                  <div className="border border-slate-200/80 rounded-xl p-4 bg-slate-50/40 space-y-4">
-                    
-                    {/* Active Header with Go Back */}
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-cyan-600 animate-pulse" />
-                        <span className="text-[10px] font-black uppercase text-cyan-800 tracking-wider">
-                          {ageCheckedActiveMethod === 'ELECTORAL' && 'AgeChecked: Electoral Register Match'}
-                          {ageCheckedActiveMethod === 'CARD' && 'AgeChecked: Payment Card Check'}
-                          {ageCheckedActiveMethod === 'MOBILE' && 'AgeChecked: Mobile Operator Handshake'}
-                          {ageCheckedActiveMethod === 'DOC' && 'AgeChecked: Document Integrity Check'}
-                          {ageCheckedActiveMethod === 'BIOMETRIC' && 'AgeChecked: Facial Biometrics Scan'}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleResetAgeCheckedVerification}
-                        className="text-[9.5px] text-slate-500 hover:text-slate-800 font-black uppercase flex items-center gap-1 cursor-pointer hover:underline"
-                      >
-                        ✕ Cancel & Choose Other
-                      </button>
-                    </div>
-
-                    {/* INTERACTIVE INPUT FORMS */}
-                    {ageCheckedStep === 'input' && (
-                      <div className="space-y-4 text-left">
-                        
-                        {/* 1. Electoral roll details */}
-                        {ageCheckedActiveMethod === 'ELECTORAL' && (
-                          <div className="space-y-3.5">
-                            <p className="text-[10.5px] text-slate-500 font-bold leading-normal">
-                              Enter your registered voter address details. AgeChecked matches public registries instantly without pulling credit histories.
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Full Name</label>
-                                <input
-                                  type="text"
-                                  value={electoralName}
-                                  onChange={(e) => setElectoralName(e.target.value)}
-                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
-                                  required
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Date of Birth</label>
-                                <input
-                                  type="date"
-                                  value={electoralDob}
-                                  onChange={(e) => setElectoralDob(e.target.value)}
-                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
-                                  required
-                                />
-                              </div>
-                              <div className="space-y-1 sm:col-span-2">
-                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Registered Postcode</label>
-                                <input
-                                  type="text"
-                                  value={electoralPostcode}
-                                  onChange={(e) => setElectoralPostcode(e.target.value)}
-                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
-                                  required
-                                />
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (electoralDob) {
-                                  setAgeCheckedStep('verifying');
-                                } else {
-                                  alert('Please specify your date of birth first.');
-                                }
-                              }}
-                              className="bg-cyan-600 hover:bg-cyan-700 text-white font-black text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-xl cursor-pointer"
-                            >
-                              Verify via Electoral Roll
-                            </button>
-                          </div>
-                        )}
-
-                        {/* 2. Card Check Details */}
-                        {ageCheckedActiveMethod === 'CARD' && (
-                          <div className="space-y-3.5">
-                            <p className="text-[10.5px] text-slate-500 font-bold leading-normal">
-                              Authorize a mock verification. Visa and Mastercard mandate that payment card issuers only issue active accounts to individuals 18+. We verify with the bank instantly.
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <div className="space-y-1 sm:col-span-2">
-                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Name on Card</label>
-                                <input
-                                  type="text"
-                                  value={cardCheckName}
-                                  onChange={(e) => setCardCheckName(e.target.value)}
-                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
-                                  required
-                                />
-                              </div>
-                              <div className="space-y-1 sm:col-span-2">
-                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Card Number (16-digit)</label>
-                                <input
-                                  type="text"
-                                  placeholder="xxxx xxxx xxxx xxxx"
-                                  value={cardCheckNumber}
-                                  onChange={(e) => setCardCheckNumber(e.target.value)}
-                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
-                                  required
-                                />
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setAgeCheckedStep('verifying')}
-                              className="bg-cyan-600 hover:bg-cyan-700 text-white font-black text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-xl cursor-pointer"
-                            >
-                              Simulate Bank Age Validation
-                            </button>
-                          </div>
-                        )}
-
-                        {/* 3. Mobile Network Verification */}
-                        {ageCheckedActiveMethod === 'MOBILE' && (
-                          <div className="space-y-3.5">
-                            <p className="text-[10.5px] text-slate-500 font-bold leading-normal">
-                              AgeChecked matches your cellular profile with carrier database registries to confirm you are registered as a bill-paying adult.
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">UK Mobile Number</label>
-                                <input
-                                  type="tel"
-                                  placeholder="e.g. 07700 900077"
-                                  value={mobilePhone}
-                                  onChange={(e) => setMobilePhone(e.target.value)}
-                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
-                                  required
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Network Carrier</label>
-                                <select
-                                  value={mobileNetwork}
-                                  onChange={(e) => setMobileNetwork(e.target.value)}
-                                  className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
-                                >
-                                  <option value="EE">EE</option>
-                                  <option value="O2">O2</option>
-                                  <option value="Vodafone">Vodafone</option>
-                                  <option value="Three">Three Mobile</option>
-                                  <option value="Virgin Mobile">Virgin Mobile</option>
-                                </select>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setAgeCheckedStep('verifying')}
-                              className="bg-cyan-600 hover:bg-cyan-700 text-white font-black text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-xl cursor-pointer"
-                            >
-                              Send Handshake Signal
-                            </button>
-                          </div>
-                        )}
-
-                        {/* 4. Document check details */}
-                        {ageCheckedActiveMethod === 'DOC' && (
-                          <div className="space-y-3.5">
-                            <p className="text-[10.5px] text-slate-500 font-bold leading-normal">
-                              Please supply your document reference details. AgeChecked performs instant cryptographic register lookup matching.
-                            </p>
-                            <div className="space-y-3">
-                              <div className="space-y-1">
-                                <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Document Type</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                  {(['Passport', 'Driving License'] as const).map((doc) => (
-                                    <button
-                                      type="button"
-                                      key={doc}
-                                      onClick={() => setDocType(doc)}
-                                      className={`py-2 px-3 text-[9.5px] font-black uppercase border rounded-lg transition-all ${
-                                        docType === doc 
-                                          ? 'border-cyan-600 bg-cyan-50 text-cyan-700' 
-                                          : 'border-slate-200 bg-white text-slate-600'
-                                      }`}
-                                    >
-                                      {doc === 'Passport' ? '✈️ UK Passport' : '🚗 UK Driving Licence'}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                  <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">Full Name on Document</label>
-                                  <input
-                                    type="text"
-                                    value={docName}
-                                    onChange={(e) => setDocName(e.target.value)}
-                                    className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white"
-                                    required
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 block">
-                                    {docType === 'Passport' ? 'Passport Number (9 Digits)' : 'Licence Number (18 Characters)'}
-                                  </label>
-                                  <input
-                                    type="text"
-                                    placeholder={docType === 'Passport' ? 'e.g. 504930122' : 'e.g. SMITH904837DS29'}
-                                    value={docNumber}
-                                    onChange={(e) => setDocNumber(e.target.value)}
-                                    className="w-full text-xs p-2.5 border border-slate-200 rounded-lg font-bold bg-white font-mono"
-                                    required
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setAgeCheckedStep('verifying')}
-                              className="bg-cyan-600 hover:bg-cyan-700 text-white font-black text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-xl cursor-pointer"
-                            >
-                              Verify Document Number
-                            </button>
-                          </div>
-                        )}
-
-                      </div>
-                    )}
-
-                    {/* VERIFYING SIMULATOR PROGRESS */}
-                    {ageCheckedStep === 'verifying' && (
-                      <div className="flex flex-col items-center justify-center p-6 space-y-4 text-center">
-                        
-                        {/* Special Webcam Frame for Biometric, Standard Spin for Text Checks */}
-                        {ageCheckedActiveMethod === 'BIOMETRIC' ? (
-                          <div className="relative w-48 h-48 rounded-full border-4 border-dashed border-cyan-500 overflow-hidden bg-slate-900 flex items-center justify-center shadow-inner">
-                            {ageCheckedLocalStream ? (
-                              <video
-                                ref={video => { if (video && ageCheckedLocalStream) { video.srcObject = ageCheckedLocalStream; } }}
-                                autoPlay
-                                playsInline
-                                muted
-                                className="absolute inset-0 w-full h-full object-cover rounded-full"
-                              />
-                            ) : (
-                              <div className="text-slate-500 text-center space-y-2">
-                                <Camera className="h-10 w-10 mx-auto text-slate-400 animate-pulse" />
-                                <span className="text-[9px] font-bold block uppercase text-slate-400 px-3">Initializing Camera...</span>
-                              </div>
-                            )}
-                            <div className="absolute inset-x-0 h-1 bg-cyan-400 opacity-80 shadow-[0_0_8px_rgba(34,211,238,0.8)] animate-[bounce_2s_infinite]" style={{ top: `${ageCheckedScanningProgress}%` }} />
-                          </div>
-                        ) : (
-                          <div className="p-4 bg-cyan-50 text-cyan-600 rounded-full animate-spin">
-                            <RefreshCw className="h-8 w-8" />
-                          </div>
-                        )}
-
-                        <div className="space-y-1">
-                          <p className="text-xs font-black uppercase text-slate-800">
-                            {ageCheckedActiveMethod === 'BIOMETRIC' ? 'Analyzing Face Geometry...' : 'AgeChecked Secure Verification in Progress...'}
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-semibold leading-normal max-w-sm">
-                            Querying compliant registers and validating age thresholds safely. This process adheres to PAS 1296 privacy requirements.
-                          </p>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="w-full max-w-xs space-y-1.5">
-                          <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-slate-500">
-                            <span>Processing Match Rate</span>
-                            <span>{ageCheckedScanningProgress}%</span>
-                          </div>
-                          <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                            <div className="bg-cyan-600 h-full transition-all duration-100" style={{ width: `${ageCheckedScanningProgress}%` }} />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                  </div>
-                )}
-
-              </div>
-            )}
-          </div>
-
           {/* Payment Gateway Form */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
               <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-indigo-600" /> 2. Worldpay Secure Gateway Payment
+                <CreditCard className="h-4 w-4 text-indigo-600" /> 2. Razorpay Secure Gateway Payment
               </h3>
               
               {/* Simulation selector (only relevant for direct or simulation mode testing) */}
@@ -1539,9 +794,9 @@ export default function CheckoutView({
                   <ShieldCheck className="h-6 w-6" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-850">Worldpay Hosted Checkout</h4>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-850">Razorpay Hosted Checkout</h4>
                   <p className="text-[11px] text-slate-500 leading-relaxed max-w-md mx-auto">
-                    You will be securely redirected to the official Worldpay Sandbox Payment Gateway to finalize your transaction. Your card details are processed entirely in Worldpay's isolated vault (PCI-DSS Compliant).
+                    You will be securely redirected to the official Razorpay Sandbox Payment Gateway to finalize your transaction. Your payment details are processed with end-to-end encryption (PCI-DSS Level 1 Compliant).
                   </p>
                 </div>
                 <div className="flex justify-center gap-6 text-[10px] text-slate-400 font-extrabold uppercase">
@@ -1563,7 +818,7 @@ export default function CheckoutView({
                     {/* Top strip */}
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
-                        <span className="text-[8px] font-black tracking-widest uppercase text-white/60">WORLD PAY TEST</span>
+                        <span className="text-[8px] font-black tracking-widest uppercase text-white/60">RAZORPAY TEST</span>
                         <div className="flex items-center gap-1">
                           <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
                           <span className="text-[9px] font-bold text-emerald-400 font-mono tracking-widest uppercase">SANDBOX</span>
@@ -1710,7 +965,7 @@ export default function CheckoutView({
                       {finalTotalToPay === 0
                         ? `Complete Order using Store Credit (£0.00 to Pay)`
                         : paymentMethod === 'hosted'
-                          ? `Redirect to Worldpay Checkout (£${finalTotalToPay.toFixed(2)})`
+                          ? `Redirect to Razorpay Checkout (£${finalTotalToPay.toFixed(2)})`
                           : `Authorize Payment of £${finalTotalToPay.toFixed(2)} GBP`}
                     </span>
                   </>
@@ -1725,7 +980,7 @@ export default function CheckoutView({
               <div className="flex items-center justify-between text-slate-450 border-b border-slate-800 pb-2.5">
                 <div className="flex items-center gap-2 text-indigo-400">
                   <Terminal className="h-4 w-4" />
-                  <span className="font-extrabold text-[10px] tracking-wider uppercase">Worldpay Real-time Dev API Logs</span>
+                  <span className="font-extrabold text-[10px] tracking-wider uppercase">Razorpay Real-time Dev API Logs</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -1890,7 +1145,7 @@ export default function CheckoutView({
             {/* Verified badge */}
             <div className="border-t border-slate-100 pt-3.5 flex justify-center gap-4 text-slate-400 font-bold text-[9px] uppercase tracking-wider">
               <span className="flex items-center gap-1"><Lock className="h-3 w-3 text-emerald-500" /> SSL Encrypted</span>
-              <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3 text-indigo-500" /> Worldpay Verified</span>
+              <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3 text-indigo-500" /> Razorpay Verified</span>
             </div>
           </div>
 
@@ -1903,10 +1158,10 @@ export default function CheckoutView({
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white border-2 border-slate-800 rounded-2xl max-w-md w-full p-6 text-center space-y-6 shadow-2xl relative">
             
-            {/* Worldpay Verified Header */}
+            {/* Razorpay Verified Header */}
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div className="text-left">
-                <span className="text-[10px] font-black tracking-widest uppercase text-indigo-600 block leading-none">Worldpay Gateway</span>
+                <span className="text-[10px] font-black tracking-widest uppercase text-indigo-600 block leading-none">Razorpay Gateway</span>
                 <span className="text-[9px] font-bold text-slate-450">Verified by Visa / Mastercard ID Check</span>
               </div>
               <span className="bg-slate-100 text-slate-800 font-black px-2 py-0.5 rounded text-[8px] uppercase tracking-widest">TEST SECURE</span>
@@ -1989,7 +1244,7 @@ export default function CheckoutView({
               </div>
 
               <div className="pt-2 text-[9px] text-slate-400 font-bold leading-normal">
-                🔐 Worldpay Sandbox Security verification check simulation.
+                🔐 Razorpay Sandbox Security verification check simulation.
               </div>
             </div>
 

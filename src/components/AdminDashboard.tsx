@@ -668,7 +668,7 @@ export default function AdminDashboard({
     uriHost?: string;
   } | null>(null);
 
-  // MongoDB details modal state
+  // Database details modal state
   const [showDbDetailsModal, setShowDbDetailsModal] = useState(false);
   const [dbDetailsLoading, setDbDetailsLoading] = useState(false);
   const [dbDetailsData, setDbDetailsData] = useState<any | null>(null);
@@ -731,7 +731,7 @@ export default function AdminDashboard({
       if (response.ok) {
         setDbStatus(data);
         if (data.status === 'connected') {
-          setUriUpdateResult({ success: true, message: 'Successfully connected to MongoDB Atlas database!' });
+          setUriUpdateResult({ success: true, message: 'Successfully connected to Neon Postgres database!' });
           setTimeout(() => {
             window.location.reload();
           }, 1500);
@@ -739,8 +739,8 @@ export default function AdminDashboard({
           setUriUpdateResult({ 
             success: false, 
             message: data.isSslAlert 
-              ? 'SSL Handshake blocked by Atlas. IP address needs to be whitelisted (Allow all 0.0.0.0/0). IP Whitelist needed.'
-              : 'Connection attempt failed: ' + (data.error || 'Check layout format.') 
+              ? 'SSL Handshake blocked. Ensure sslmode=require is configured and connection URL is valid.'
+              : 'Connection attempt failed: ' + (data.error || 'Check connection string format.') 
           });
         } else {
           setUriUpdateResult({ success: false, message: 'Connection string changed, status ' + data.status });
@@ -783,7 +783,6 @@ export default function AdminDashboard({
       footerLogoDescription: 'Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.',
       footerLogoImage: '',
       klaviyoPublicKey: '',
-      imgbbApiKey: '',
       menuItems: [
         { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
         { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
@@ -2656,7 +2655,7 @@ export default function AdminDashboard({
               })}
             </nav>
 
-            {/* MongoDB Connection Button */}
+            {/* Neon Postgres Connection Button */}
             <div className="pt-2 border-t border-[#e1e3e5]/65 mt-2">
               <button
                 type="button"
@@ -2668,7 +2667,7 @@ export default function AdminDashboard({
               >
                 <div className="flex items-center gap-2 rounded select-none text-left">
                   <Database className="h-3.5 w-3.5 text-teal-600 shrink-0 animate-pulse" />
-                  <span>MongoDB Connection</span>
+                  <span>Neon Postgres Connection</span>
                 </div>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 block shrink-0 animate-pulse ml-1" />
               </button>
@@ -2799,7 +2798,7 @@ export default function AdminDashboard({
                       Offline-Safe Mode Enabled (Memory Cache & LocalStorage)
                     </p>
                     <p className="text-[10px] text-amber-800 leading-relaxed max-w-3xl">
-                      Configure a <code className="font-mono bg-amber-100/60 px-1 py-0.5 rounded font-bold text-amber-950">MONGODB_URI</code> below to persist layout, images, categories, and inventory securely in your own MongoDB Atlas database.
+                      Configure a <code className="font-mono bg-amber-100/60 px-1 py-0.5 rounded font-bold text-amber-950">DATABASE_URL</code> below to persist layout, images, categories, and inventory securely in your own Neon Postgres database.
                     </p>
                   </div>
                   <div className="shrink-0">
@@ -2812,12 +2811,12 @@ export default function AdminDashboard({
                 {/* Secure Configuration Input Form */}
                 <div className="bg-white/80 border border-amber-200 rounded-xl p-4 space-y-3 shadow-3xs">
                   <div>
-                    <span className="text-[10px] font-extrabold text-slate-600 uppercase tracking-wider block mb-1">Enter your MongoDB Atlas Connection String:</span>
+                    <span className="text-[10px] font-extrabold text-slate-600 uppercase tracking-wider block mb-1">Enter your Neon Postgres Connection String:</span>
                     <form onSubmit={handleUpdateUriSubmit} className="flex flex-col sm:flex-row gap-2">
                       <div className="relative flex-1 flex items-center">
                         <input
                           type={showPassword ? "text" : "password"}
-                          placeholder="mongodb+srv://<username>:<password>@cluster0.abcde.mongodb.net/dbname?retryWrites=true&w=majority"
+                          placeholder="postgresql://<user>:<password>@ep-xyz.us-east-2.aws.neon.tech/neondb?sslmode=require"
                           value={customUriInput}
                           onChange={(e) => setCustomUriInput(e.target.value)}
                           className="w-full text-xs font-mono border border-slate-200 p-2.5 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-505 bg-white font-bold"
@@ -2852,12 +2851,12 @@ export default function AdminDashboard({
                       </p>
                     )}
 
-                    {/* Vercel Environment Variable Guide Callout */}
+                    {/* Environment Variable Guide Callout */}
                     <div className="mt-3 p-3 bg-indigo-50 border border-indigo-150 rounded-lg text-[10.5px] leading-relaxed text-indigo-950 font-semibold flex items-start gap-2.5">
                       <div className="mt-0.5 text-xs text-indigo-600 font-bold select-none">💡</div>
                       <div>
-                        <span className="font-extrabold text-indigo-905 block uppercase tracking-wider text-[9px] mb-0.5">Vercel & Production Deployments note:</span>
-                        Because Vercel uses stateless, read-only serverless functions, the input box above only saves the connection in memory temporarily. To persist your database permanently, you <strong>MUST</strong> go to your <strong>Vercel Project Dashboard ➜ Settings ➜ Environment Variables</strong>, add a variable named <code className="font-mono bg-indigo-100/80 text-indigo-900 px-1 py-0.5 rounded text-[9.5px]">MONGODB_URI</code>, and paste your connection string there. Then redeploy the project!
+                        <span className="font-extrabold text-indigo-905 block uppercase tracking-wider text-[9px] mb-0.5">Production Deployments note:</span>
+                        To persist your database permanently across environments, set <code className="font-mono bg-indigo-100/80 text-indigo-900 px-1 py-0.5 rounded text-[9.5px]">DATABASE_URL</code> in your environment variables, and restart or redeploy the project!
                       </div>
                     </div>
                   </div>
@@ -2875,7 +2874,7 @@ export default function AdminDashboard({
                     </div>
                     <div>
                       <p className="text-[11px] font-bold text-slate-800">
-                        MongoDB Connection Inactive (Local fallback cache active)
+                        Neon Postgres Connection Inactive (Local fallback cache active)
                       </p>
                       <p className="text-[10px] text-slate-500 leading-relaxed font-semibold">
                         Your database is offline or unable to resolve. Data will be saved locally so you don't lose anything: <code className="font-mono text-slate-600 bg-slate-100/80 px-1 py-0.5 rounded text-[9.5px] select-all">{dbStatus.error ? dbStatus.error.slice(0, 150) + '...' : 'Connection Error'}</code>
@@ -2885,7 +2884,7 @@ export default function AdminDashboard({
                   <button
                     type="button"
                     onClick={() => {
-                      if (confirm("Are you sure you want to clear the custom MongoDB URI?")) {
+                      if (confirm("Are you sure you want to clear the custom database URI?")) {
                         setCustomUriInput('');
                         fetch('/api/update-db-uri', {
                           method: 'POST',
@@ -2902,15 +2901,15 @@ export default function AdminDashboard({
                   </button>
                 </div>
 
-                {/* Highly structured, simple, exact MongoDB whitelisting diagnostic manual */}
+                {/* Neon Postgres diagnostic manual */}
                 <div className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50 border border-indigo-150 rounded-xl p-5 space-y-4 shadow-sm">
                   <div className="flex items-center gap-2">
                     <div className="h-7 w-7 rounded-lg bg-indigo-600 flex items-center justify-center select-none shrink-0 text-white font-bold text-xs ring-4 ring-indigo-100">
                       ?
                     </div>
                     <div>
-                      <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wide">Why is your Atlas Whitelist failing? (Important diagnostic)</h4>
-                      <p className="text-[10px] text-indigo-700 font-semibold">The SSL Handshake Failed (TLS Alert 80) error results solely from dynamic container hosting.</p>
+                      <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wide">Neon Postgres Connection Diagnostic</h4>
+                      <p className="text-[10px] text-indigo-700 font-semibold">Serverless connection with Neon Postgres ensures low latency and automatic pooling.</p>
                     </div>
                   </div>
 
@@ -2918,19 +2917,19 @@ export default function AdminDashboard({
                     <div className="bg-white/90 border border-slate-150 p-3.5 rounded-lg space-y-2">
                       <span className="text-[9px] font-black uppercase text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">Diagnosis</span>
                       <p className="text-[10.5px] text-slate-700 leading-relaxed font-medium">
-                        This web app operates server-side in a secure <strong>Google Cloud Run container</strong>. The requests to MongoDB originate from our Cloud server, <strong>not</strong> your local computer.
+                        This web app connects to your serverless <strong>Neon Postgres Database</strong> using standard PostgreSQL connection strings.
                       </p>
                     </div>
                     <div className="bg-white/90 border border-slate-150 p-3.5 rounded-lg space-y-2">
-                      <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">The Conflict</span>
+                      <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Setup Tip</span>
                       <p className="text-[10.5px] text-slate-700 leading-relaxed font-medium">
-                        If you whitelisted your laptop's current IP address, Atlas blocks connection attempts from our server container. Cloud Run uses dynamic outbound IPs that rotate constantly.
+                        Neon Postgres provides instant serverless connection pooling with automatic SSL. Copy your connection URL from the Neon Console.
                       </p>
                     </div>
                     <div className="bg-white/90 border border-slate-150 p-3.5 rounded-lg space-y-2">
-                      <span className="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">The Solution</span>
+                      <span className="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Connection URL</span>
                       <p className="text-[10.5px] text-slate-700 leading-relaxed font-semibold">
-                        In your <strong>MongoDB Atlas Panel</strong> under <strong>Network Access</strong>, click <strong>+ Add IP Address</strong> and click the <strong>Allow Access from Anywhere</strong> button (this adds <code className="font-mono text-slate-900 bg-slate-100 px-1 text-[9.5px] rounded">0.0.0.0/0</code>). This instantly unblocks all Cloud containers!
+                        In your <strong>Neon Console</strong> dashboard, copy your pooled connection string (e.g. <code className="font-mono text-slate-900 bg-slate-100 px-1 text-[9.5px] rounded">postgresql://user:pass@ep-xyz.region.aws.neon.tech/neondb?sslmode=require</code>).
                       </p>
                     </div>
                   </div>
@@ -2938,12 +2937,12 @@ export default function AdminDashboard({
 
                 {/* Secure Configuration Input Form */}
                 <div className="bg-white/80 border border-slate-205 rounded-xl p-4 space-y-3 shadow-3xs">
-                  <span className="text-[10px] font-extrabold text-slate-605 uppercase tracking-wider block">Update MongoDB Connection URI string:</span>
+                  <span className="text-[10px] font-extrabold text-slate-605 uppercase tracking-wider block">Update Neon Postgres Connection URI string:</span>
                   <form onSubmit={handleUpdateUriSubmit} className="flex flex-col sm:flex-row gap-2">
                     <div className="relative flex-1 flex items-center">
                       <input
                         type={showPassword ? "text" : "password"}
-                        placeholder="Enter new MongoDB URI"
+                        placeholder="Enter new Neon Postgres URI (postgresql://...)"
                         value={customUriInput}
                         onChange={(e) => setCustomUriInput(e.target.value)}
                         className="w-full text-xs font-mono border border-slate-202 p-2.5 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-505 bg-white font-bold"
@@ -3640,7 +3639,7 @@ export default function AdminDashboard({
                           </span>
                         </div>
                         <span className="text-[10px] font-black tracking-widest text-indigo-600 block uppercase font-mono">
-                          Worldpay Secure Gateway
+                          Razorpay Gateway {selectedOrder.razorpayPaymentId ? `(${selectedOrder.razorpayPaymentId})` : ''}
                         </span>
                       </div>
 
@@ -9287,8 +9286,8 @@ export default function AdminDashboard({
                     <Database className="h-5 w-5 text-teal-600 animate-pulse" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-slate-900 text-sm">MongoDB Live Connection Inspector</h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Real-time audit of Cluster details, state, and collections.</p>
+                    <h3 className="font-extrabold text-slate-900 text-sm">Neon Postgres Live Connection Inspector</h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Real-time audit of Database details, connection state, and tables.</p>
                   </div>
                 </div>
                 <button 
@@ -9331,7 +9330,7 @@ export default function AdminDashboard({
                             Connection {dbDetailsData.status === 'connected' ? 'Active' : 'Offline'}
                           </p>
                           <p className="text-[10px] opacity-80 mt-0.5">
-                            Mongoose State: <span className="font-mono font-bold">{dbDetailsData.readyStateLabel}</span> ({dbDetailsData.readyState})
+                            Driver State: <span className="font-mono font-bold">{dbDetailsData.readyStateLabel}</span> ({dbDetailsData.readyState})
                           </p>
                         </div>
                       </div>
@@ -9398,10 +9397,10 @@ export default function AdminDashboard({
                       )}
                     </div>
 
-                    {/* Initialized Mongoose Models */}
+                    {/* Initialized Tables and Models */}
                     <div className="space-y-2">
                       <h4 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-widest">
-                        Active Mongoose Models ({dbDetailsData.models?.length || 0})
+                        Active Database Tables / Schemas ({dbDetailsData.models?.length || 0})
                       </h4>
                       <div className="flex flex-wrap gap-1.5">
                         {dbDetailsData.models?.map((modelName: string) => (

@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
 
 // Load environment variables
 dotenv.config();
@@ -12,15 +11,17 @@ import {
 } from './src/initialData';
 
 import {
-  ProductModel, CollectionModel, OrderModel, FileModel,
-  CustomerModel, DiscountModel, CustomPageModel, BlogModel,
-  UploadedImageModel, LayoutSettingsModel, connectMongoose, getMongooseStatus, resetConnection, DbStatus
-} from './mongooseDb';
+  getNeonStatus, testConnection, getNeonDetails, updateNeonUri,
+  fetchResourceFromNeon, saveResourceToNeon,
+  saveImageToNeon, getImageFromNeon,
+  fetchLayoutSettingsFromNeon, saveLayoutSettingsToNeon,
+  DbStatus
+} from './neonDb';
 
-// Re-export type if needed
+// Re-export type
 export type { DbStatus };
 
-// In-Memory state fallback cache in case MongoDB is not connected
+// In-Memory state fallback cache in case Neon Postgres is not connected or configuring
 const memoryCache: Record<string, any[]> = {
   products: [...INITIAL_PRODUCTS],
   collections: [...INITIAL_COLLECTIONS],
@@ -29,258 +30,131 @@ const memoryCache: Record<string, any[]> = {
   customers: [...INITIAL_CUSTOMERS],
   discounts: [...INITIAL_DISCOUNTS],
   customPages: [...DEFAULT_PAGES],
+  custompages: [...DEFAULT_PAGES],
   blogs: [...INITIAL_BLOGS],
 };
 
-function getModelForResource(resource: string) {
-  switch (resource) {
-    case 'products': return ProductModel;
-    case 'collections': return CollectionModel;
-    case 'orders': return OrderModel;
-    case 'files': return FileModel;
-    case 'customers': return CustomerModel;
-    case 'discounts': return DiscountModel;
-    case 'customPages':
-    case 'custompages': return CustomPageModel;
-    case 'blogs': return BlogModel;
-    default: return null;
-  }
-}
-
-async function seedIfEmpty() {
-  const seedPairs = [
-    { model: ProductModel, name: 'products', data: INITIAL_PRODUCTS },
-    { model: CollectionModel, name: 'collections', data: INITIAL_COLLECTIONS },
-    { model: OrderModel, name: 'orders', data: INITIAL_ORDERS },
-    { model: FileModel, name: 'files', data: INITIAL_FILES },
-    { model: CustomerModel, name: 'customers', data: INITIAL_CUSTOMERS },
-    { model: DiscountModel, name: 'discounts', data: INITIAL_DISCOUNTS },
-    { model: CustomPageModel, name: 'customPages', data: DEFAULT_PAGES },
-    { model: BlogModel, name: 'blogs', data: INITIAL_BLOGS },
-  ];
-
-  for (const pair of seedPairs) {
-    try {
-      const model = pair.model as any;
-      const count = await model.countDocuments();
-      if (count === 0 && pair.data && pair.data.length > 0) {
-        console.log(`[Mongoose Seeding] Collection "${pair.name}" is empty. Seeding with ${pair.data.length} default items...`);
-        // We clean documents from _id and other Mongoose-specific things to perform a clean insertMany
-        await model.insertMany(pair.data.map(item => ({ ...item })));
-      }
-    } catch (e) {
-      console.error(`[Mongoose Seeding] Failed to seed ${pair.name}:`, e);
-    }
-  }
-}
-
 export function getConnectionStatus(): DbStatus {
-  return getMongooseStatus();
+  return getNeonStatus();
 }
 
 export async function getDatabaseDetails(): Promise<any> {
-  try {
-    const status = getMongooseStatus();
-    
-    if (status.status !== 'connected') {
-      try {
-        await connectMongoose();
-      } catch (e) {}
-    }
-    
-    const currentStatus = getMongooseStatus();
-    const readyState = mongoose.connection.readyState;
-    
-    const details: any = {
-      status: currentStatus.status,
-      uriHost: currentStatus.uriHost || 'N/A',
-      error: currentStatus.error || null,
-      readyState,
-      readyStateLabel: getReadyStateLabel(readyState),
-      dbName: mongoose.connection.name || 'N/A',
-      collections: [],
-      models: Object.keys(mongoose.models),
-    };
-
-    if (readyState === 1 && mongoose.connection.db) {
-      try {
-        const db = mongoose.connection.db;
-        const collectionsList = await db.listCollections().toArray();
-        const collectionsInfo = [];
-        for (const col of collectionsList) {
-          const count = await db.collection(col.name).countDocuments();
-          collectionsInfo.push({
-            name: col.name,
-            count
-          });
-        }
-        details.collections = collectionsInfo;
-      } catch (err: any) {
-        details.collectionError = err.message || String(err);
-      }
-    }
-
-    return details;
-  } catch (err: any) {
-    console.error("[Database Info] Error inside getDatabaseDetails:", err);
-    return {
-      status: 'error',
-      uriHost: 'N/A',
-      error: err.message || String(err),
-      readyState: mongoose.connection.readyState,
-      readyStateLabel: getReadyStateLabel(mongoose.connection.readyState),
-      dbName: 'N/A',
-      collections: [],
-      models: []
-    };
-  }
+  return getNeonDetails();
 }
 
-function getReadyStateLabel(state: number): string {
-  switch (state) {
-    case 0: return 'Disconnected';
-    case 1: return 'Connected';
-    case 2: return 'Connecting';
-    case 3: return 'Disconnecting';
-    default: return 'Unknown';
-  }
+export function updateDbUri(newUri: string): DbStatus {
+  return updateNeonUri(newUri);
 }
 
+// Backward compatibility alias for any existing caller
 export function updateMongoUri(newUri: string): DbStatus {
-  const trimmedUri = newUri.trim();
-  process.env.MONGODB_URI = trimmedUri;
-
-  // Persist the new connection string in the local .env file
-  try {
-    const envPath = path.join(process.cwd(), '.env');
-    let envContent = '';
-    if (fs.existsSync(envPath)) {
-      envContent = fs.readFileSync(envPath, 'utf8');
-    }
-    
-    const regex = /^MONGODB_URI\s*=\s*.*$/m;
-    if (regex.test(envContent)) {
-      envContent = envContent.replace(regex, `MONGODB_URI="${trimmedUri}"`);
-    } else {
-      envContent = `${envContent.trim()}\nMONGODB_URI="${trimmedUri}"\n`;
-    }
-    fs.writeFileSync(envPath, envContent.trim() + '\n', 'utf8');
-    console.log('[Database Info] Successfully persisted MONGODB_URI configuration to /.env file');
-  } catch (err) {
-    console.warn("[Database Info] Failed to save MONGODB_URI to /.env configuration file:", err);
-  }
-
-  // Reset existing connections to force reconnect upon the next db call
-  resetConnection();
-  return getMongooseStatus();
+  return updateNeonUri(newUri);
 }
 
 export async function getDb(): Promise<any | null> {
-  const conn = await connectMongoose();
-  if (conn) {
-    await seedIfEmpty();
-    return conn.connection.db;
-  }
-  return null;
+  const status = await testConnection();
+  return status.status === 'connected' ? status : null;
 }
 
-// Global resource controllers that fetch from Mongoose DB or fallback to memory
+// Global resource controllers that fetch from Neon Postgres or fallback to memory
 export async function fetchResource(resource: string): Promise<any[]> {
-  const mongoUri = process.env.MONGODB_URI;
   try {
-    const conn = await connectMongoose();
-    const Model = getModelForResource(resource) as any;
-    if (conn && Model) {
-      const docs = await Model.find({}).lean().exec();
-      // Remove Mongoose/Mongo specific identifiers to map clean object models for the front-end
-      return docs.map((doc: any) => {
-        const { _id, __v, ...cleanDoc } = doc;
-        return cleanDoc;
-      });
-    } else if (mongoUri) {
-      console.warn(`[fetchResource] MongoDB connection failed despite being configured. Falling back to local memoryCache for "${resource}".`);
+    const neonData = await fetchResourceFromNeon(resource);
+    if (neonData && Array.isArray(neonData)) {
+      // Clean up legacy pouch / cans branding if present in custom pages
+      let cleanedData = neonData;
+      if (resource.toLowerCase() === 'custompages') {
+        const jsonStr = JSON.stringify(neonData)
+          .replace(/Pouch Supply Storefront/gi, 'Modern Storefront')
+          .replace(/Pouch Supply/gi, 'StoreFront')
+          .replace(/(\d+)\s+premium cans/gi, '$1 premium items')
+          .replace(/price per can/gi, 'price per item')
+          .replace(/additional can/gi, 'additional item')
+          .replace(/extra can/gi, 'extra item')
+          .replace(/FOR ANY ADDITIONAL CAN/gi, 'FOR ANY ADDITIONAL ITEM')
+          .replace(/certified compounding premium brands/gi, 'certified premium brands');
+        cleanedData = JSON.parse(jsonStr);
+      }
+      // Sync memory cache
+      memoryCache[resource] = [...cleanedData];
+      return cleanedData;
     }
   } catch (error: any) {
-    console.error(`[fetchResource] Error fetching "${resource}", falling back to memoryCache:`, error);
+    console.error(`[fetchResource] Error fetching "${resource}" from Neon Postgres:`, error);
   }
   return memoryCache[resource] || [];
 }
 
 export async function saveResource(resource: string, list: any[]): Promise<any[]> {
-  // Synchronously update local fallback cache
+  // Update local memory cache immediately
   memoryCache[resource] = [...list];
 
-  const mongoUri = process.env.MONGODB_URI;
   try {
-    const conn = await connectMongoose();
-    const Model = getModelForResource(resource) as any;
-    if (conn && Model) {
-      const currentIds = list.map(item => item.id).filter(Boolean);
-      console.log(`[saveResource] Syncing ${resource} collection. Total items in payload: ${list.length}. Active IDs:`, currentIds);
-      
-      // Delete items no longer in client list
-      const deleteResult = await Model.deleteMany({ id: { $nin: currentIds } });
-      if (deleteResult.deletedCount > 0) {
-        console.log(`[saveResource] Permanently deleted ${deleteResult.deletedCount} items from ${resource} not in active client list.`);
-      }
-      
-      // Upsert current items using replaceOne to avoid duplicate or outdated structures
-      for (const item of list) {
-        if (!item.id) continue;
-        // Strip out any _id or __v fields to prevent "Performing an update on the path '_id' would modify the immutable field '_id'" error
-        const { _id, __v, ...cleanItem } = item;
-        await Model.replaceOne({ id: item.id }, cleanItem, { upsert: true });
-      }
-      console.log(`[saveResource] Successfully upserted and synchronized all ${list.length} items to ${resource} collection.`);
-      return list;
-    } else if (mongoUri) {
-      console.warn(`[saveResource] MongoDB connection failed despite being configured during save. Saved to memoryCache fallback for "${resource}".`);
-    }
+    await saveResourceToNeon(resource, list);
   } catch (error: any) {
-    console.error(`[saveResource] Error during database synchronization for "${resource}", saved to memoryCache fallback:`, error);
+    console.error(`[saveResource] Error saving "${resource}" to Neon Postgres:`, error);
   }
   return memoryCache[resource];
 }
 
-// Memory cache buffer for uploaded files when MongoDB is offline
+// Memory cache buffer for uploaded files when Neon Postgres is offline
 const memoryImages: Record<string, { base64Data: string; mimeType: string }> = {};
 
 export async function saveUploadedImage(id: string, base64Data: string, mimeType: string): Promise<string> {
   // Store in memory cache fallback
   memoryImages[id] = { base64Data, mimeType };
 
-  // Sync to Mongoose MongoDB Atlas if connected
+  // Sync to Neon Postgres database if connected
   try {
-    const conn = await connectMongoose();
-    if (conn) {
-      const UploadedModel = UploadedImageModel as any;
-      await UploadedModel.replaceOne(
-        { id },
-        { id, base64Data, mimeType },
-        { upsert: true }
-      );
-      console.log(`[MongoDB Sync] Successfully saved image to Atlas database for ID: ${id}`);
-    }
+    await saveImageToNeon(id, base64Data, mimeType);
+    console.log(`[Neon Postgres Sync] Successfully saved image to database for ID: ${id}`);
   } catch (error) {
-    console.error("[Mongoose Engine] Failed to save uploaded image in DB:", error);
+    console.error("[Neon Postgres] Failed to save uploaded image in DB:", error);
   }
 
-  // Return the direct MongoDB streaming API URL
+  // Return the direct streaming API URL
   return `/api/images/${id}`;
 }
 
-export async function getUploadedImage(id: string): Promise<{ base64Data: string; mimeType: string } | null> {
+export async function getUploadedImage(rawId: string): Promise<{ base64Data: string; mimeType: string } | null> {
+  if (!rawId) return null;
+  // Handle paths like /api/images/img-123 or /uploads/img-123.png
+  let id = rawId;
+  if (id.includes('/')) {
+    id = id.substring(id.lastIndexOf('/') + 1);
+  }
+  const dotIndex = id.lastIndexOf('.');
+  const cleanId = dotIndex !== -1 ? id.substring(0, dotIndex) : id;
+
   // 1. Check local in-memory cache first
   if (memoryImages[id]) {
     return memoryImages[id];
   }
+  if (memoryImages[cleanId]) {
+    return memoryImages[cleanId];
+  }
 
-  // 2. Check local uploads folder on disk as a tertiary fallback for older local images
+  // 2. Check Neon Postgres database
+  try {
+    let neonImage = await getImageFromNeon(id);
+    if (!neonImage && cleanId !== id) {
+      neonImage = await getImageFromNeon(cleanId);
+    }
+    if (neonImage) {
+      memoryImages[id] = neonImage;
+      memoryImages[cleanId] = neonImage;
+      return neonImage;
+    }
+  } catch (error) {
+    console.error("[Neon Postgres] Failed to load image from DB:", error);
+  }
+
+  // 3. Check local uploads folder on disk as a tertiary fallback
   try {
     const uploadsDir = path.join(process.cwd(), 'uploads');
     if (fs.existsSync(uploadsDir)) {
       const files = fs.readdirSync(uploadsDir);
-      const matchedFile = files.find(f => f.startsWith(id + '.'));
+      const matchedFile = files.find(f => f === id || f === cleanId || f.startsWith(cleanId + '.') || f.startsWith(id + '.'));
       if (matchedFile) {
         const filePath = path.join(uploadsDir, matchedFile);
         const buffer = fs.readFileSync(filePath);
@@ -294,30 +168,14 @@ export async function getUploadedImage(id: string): Promise<{ base64Data: string
         else if (matchedFile.endsWith('.mp4')) mimeType = 'video/mp4';
         else if (matchedFile.endsWith('.webm')) mimeType = 'video/webm';
 
-        return { base64Data, mimeType };
+        const result = { base64Data, mimeType };
+        memoryImages[id] = result;
+        memoryImages[cleanId] = result;
+        return result;
       }
     }
   } catch (err) {
     console.error("[Local Storage] Error reading file from disk fallback:", err);
-  }
-
-  // 3. Check Mongoose/MongoDB Atlas database (Primary durable source)
-  try {
-    const conn = await connectMongoose();
-    if (conn) {
-      const UploadedModel = UploadedImageModel as any;
-      const doc = await UploadedModel.findOne({ id }).lean().exec();
-      if (doc) {
-        // Cache in memory for subsequent requests
-        memoryImages[id] = { base64Data: doc.base64Data, mimeType: doc.mimeType };
-        return {
-          base64Data: doc.base64Data,
-          mimeType: doc.mimeType
-        };
-      }
-    }
-  } catch (error) {
-    console.error("[Mongoose Engine] Failed to load image from DB:", error);
   }
 
   return null;
@@ -326,14 +184,13 @@ export async function getUploadedImage(id: string): Promise<{ base64Data: string
 export async function fetchLayoutSettings(): Promise<any> {
   const defaultSettings = {
     id: "layout_settings",
-    headerLogoText: 'POUCH SUPPLY',
-    headerLogoSubtext: 'Premium Nicotine',
+    headerLogoText: 'STOREFRONT',
+    headerLogoSubtext: 'Premium Essentials',
     headerLogoImage: '',
-    footerLogoText: 'POUCH SUPPLY',
-    footerLogoDescription: 'Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.',
+    footerLogoText: 'STOREFRONT',
+    footerLogoDescription: 'Curated premium eCommerce store delivering high-quality essentials directly to your door. Seamless online shopping, flexible subscriptions, and express tracked shipping.',
     footerLogoImage: '',
     klaviyoPublicKey: '',
-    imgbbApiKey: '',
     menuItems: [
       { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
       { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
@@ -343,33 +200,35 @@ export async function fetchLayoutSettings(): Promise<any> {
     ]
   };
 
-  try {
-    const conn = await connectMongoose();
-    if (conn) {
-      const Model = LayoutSettingsModel as any;
-      const doc = await Model.findOne({ id: "layout_settings" }).lean().exec();
-      if (doc) {
-        const { _id, __v, ...cleanDoc } = doc;
-        return cleanDoc;
-      }
+  const sanitizeSettings = (raw: any) => {
+    if (!raw) return defaultSettings;
+    const cleaned = { ...raw };
+    if (!cleaned.headerLogoText || /pouch supply/i.test(cleaned.headerLogoText)) {
+      cleaned.headerLogoText = 'STOREFRONT';
+    }
+    if (!cleaned.headerLogoSubtext || /premium nicotine/i.test(cleaned.headerLogoSubtext)) {
+      cleaned.headerLogoSubtext = 'Premium Essentials';
+    }
+    if (!cleaned.footerLogoText || /pouch supply/i.test(cleaned.footerLogoText)) {
+      cleaned.footerLogoText = 'STOREFRONT';
+    }
+    if (!cleaned.footerLogoDescription || /nicotine|canisters|pouch supply/i.test(cleaned.footerLogoDescription)) {
+      cleaned.footerLogoDescription = 'Curated premium eCommerce store delivering high-quality essentials directly to your door. Seamless online shopping, flexible subscriptions, and express tracked shipping.';
+    }
+    return cleaned;
+  };
 
-      // If database is connected but no document, let's try to seed from layout_settings.json
-      const filePath = path.join(process.cwd(), "layout_settings.json");
-      let seedSettings = { ...defaultSettings };
-      if (fs.existsSync(filePath)) {
-        try {
-          const content = fs.readFileSync(filePath, "utf-8");
-          seedSettings = { ...JSON.parse(content), id: "layout_settings" };
-        } catch (e) {
-          console.warn("[serverDb] Failed to parse local layout_settings.json:", e);
-        }
+  try {
+    const fromNeon = await fetchLayoutSettingsFromNeon();
+    if (fromNeon) {
+      const sanitized = sanitizeSettings(fromNeon);
+      if (sanitized.headerLogoText !== fromNeon.headerLogoText || sanitized.footerLogoDescription !== fromNeon.footerLogoDescription) {
+        saveLayoutSettingsToNeon(sanitized).catch(() => {});
       }
-      // Save it to MongoDB
-      await Model.replaceOne({ id: "layout_settings" }, seedSettings, { upsert: true });
-      return seedSettings;
+      return sanitized;
     }
   } catch (error) {
-    console.error("[serverDb] Failed to fetch layout settings from DB, falling back to local file:", error);
+    console.error("[serverDb] Failed to fetch layout settings from Neon, falling back to local file:", error);
   }
 
   // Fallback to reading file
@@ -377,7 +236,10 @@ export async function fetchLayoutSettings(): Promise<any> {
   if (fs.existsSync(filePath)) {
     try {
       const content = fs.readFileSync(filePath, "utf-8");
-      return JSON.parse(content);
+      const parsed = JSON.parse(content);
+      const sanitized = sanitizeSettings(parsed);
+      saveLayoutSettingsToNeon(sanitized).catch(() => {});
+      return sanitized;
     } catch (e) {
       console.warn("[serverDb] Failed fallback load of layout_settings.json:", e);
     }
@@ -389,7 +251,7 @@ export async function fetchLayoutSettings(): Promise<any> {
 export async function saveLayoutSettings(settings: any): Promise<any> {
   const payload = { ...settings, id: "layout_settings" };
   
-  // Write to local file as fallback/concurrency
+  // Write to local file as fallback
   try {
     const filePath = path.join(process.cwd(), "layout_settings.json");
     fs.writeFileSync(filePath, JSON.stringify(payload, null, 2), "utf-8");
@@ -398,15 +260,10 @@ export async function saveLayoutSettings(settings: any): Promise<any> {
   }
 
   try {
-    const conn = await connectMongoose();
-    if (conn) {
-      const Model = LayoutSettingsModel as any;
-      const { _id, __v, ...cleanItem } = payload;
-      await Model.replaceOne({ id: "layout_settings" }, cleanItem, { upsert: true });
-      console.log("[serverDb] Successfully saved layout settings to MongoDB.");
-    }
+    await saveLayoutSettingsToNeon(payload);
+    console.log("[serverDb] Successfully saved layout settings to Neon Postgres.");
   } catch (error) {
-    console.error("[serverDb] Failed to save layout settings to DB:", error);
+    console.error("[serverDb] Failed to save layout settings to Neon DB:", error);
   }
 
   return payload;

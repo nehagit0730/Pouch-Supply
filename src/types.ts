@@ -69,8 +69,9 @@ export interface Order {
   tags: string[];
   fulfillmentStatus: 'Unfulfilled' | 'Fulfilled' | 'Delivered';
   paymentStatus?: 'Pending' | 'Paid' | 'Failed' | 'Refunded';
-  worldpayTxId?: string;
-  worldpayAuthCode?: string;
+  razorpayPaymentId?: string;
+  razorpayOrderId?: string;
+  razorpaySignature?: string;
   cardBrand?: string;
   total: number;
   storeCreditApplied?: number;
@@ -318,6 +319,5 @@ export interface LayoutSettings {
   footerLogoImage: string; // Base64 or URL
   menuItems: MenuItem[];
   klaviyoPublicKey?: string;
-  imgbbApiKey?: string;
 }
 

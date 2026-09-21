@@ -1,6 +1,6 @@
 {
-  "name": "Pouch Supply",
-  "description": "At Pouch Supply, our mission is to make sure that never happens. With simple, flexible subscription plans, we keep your favourites delivered—right when you need them..",
+  "name": "StoreFront",
+  "description": "Modern, high-performance eCommerce store and admin dashboard with real-time inventory, customizable sections, and secure checkout.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

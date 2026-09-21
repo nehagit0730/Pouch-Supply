@@ -24,7 +24,7 @@ import TermsConditions from './components/TermsConditions';
 import ProductDetailView from './components/ProductDetailView';
 import CollectionDetailView from './components/CollectionDetailView';
 import CheckoutView from './components/CheckoutView';
-import { WorldpayGatewaySimulator, PaymentSuccessScreen, PaymentFailedScreen, PaymentCancelledScreen } from './components/PaymentStatusScreens';
+import { RazorpayGatewaySimulator, PaymentSuccessScreen, PaymentFailedScreen, PaymentCancelledScreen } from './components/PaymentStatusScreens';
 import { 
   Sparkles, ShieldCheck, Truck, RefreshCw, Star, ArrowRight, Package, ShoppingCart, Check, Heart, User, CheckCircle2, Save, AlertTriangle, Search, Undo, Mail, X
 } from 'lucide-react';
@@ -192,7 +192,6 @@ export default function App() {
       footerLogoDescription: 'Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.',
       footerLogoImage: '',
       klaviyoPublicKey: '',
-      imgbbApiKey: '',
       menuItems: [
         { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
         { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
@@ -314,12 +313,27 @@ export default function App() {
           fetch('/api/layoutsettings').then(r => r.ok ? r.json() : null),
         ]);
 
+        const normalizeUrl = (url?: string): string => {
+          if (!url) return '';
+          const m = url.match(/^https?:\/\/[^\/]+(\/(?:api\/images|uploads)\/[^?#]+.*)$/);
+          return m && m[1] ? m[1] : url;
+        };
+
         if (Array.isArray(prodsRes)) {
-          setProducts(prodsRes);
+          const sanitizedProds = prodsRes.map(p => ({
+            ...p,
+            image: normalizeUrl(p.image),
+            media: Array.isArray(p.media) ? p.media.map(normalizeUrl) : p.media
+          }));
+          setProducts(sanitizedProds);
           loadedProductsSuccess.current = true;
         }
         if (Array.isArray(collsRes)) {
-          setCollections(collsRes);
+          const sanitizedColls = collsRes.map(c => ({
+            ...c,
+            image: normalizeUrl(c.image)
+          }));
+          setCollections(sanitizedColls);
           loadedCollectionsSuccess.current = true;
         }
         if (Array.isArray(ordersRes)) {
@@ -327,7 +341,11 @@ export default function App() {
           loadedOrdersSuccess.current = true;
         }
         if (Array.isArray(filesRes)) {
-          setFiles(filesRes);
+          const sanitizedFiles = filesRes.map(f => ({
+            ...f,
+            url: normalizeUrl(f.url)
+          }));
+          setFiles(sanitizedFiles);
           loadedFilesSuccess.current = true;
         }
         if (Array.isArray(custsRes)) {
@@ -357,15 +375,24 @@ export default function App() {
           loadedPagesSuccess.current = true;
         }
         if (Array.isArray(blogsRes)) {
-          setBlogs(blogsRes);
+          const sanitizedBlogs = blogsRes.map(b => ({
+            ...b,
+            image: normalizeUrl(b.image)
+          }));
+          setBlogs(sanitizedBlogs);
           loadedBlogsSuccess.current = true;
         }
         
         if (layoutRes) {
-          setLayoutSettings(layoutRes.data || layoutRes);
+          const rawLayout = layoutRes.data || layoutRes;
+          setLayoutSettings({
+            ...rawLayout,
+            headerLogoImage: normalizeUrl(rawLayout.headerLogoImage),
+            footerLogoImage: normalizeUrl(rawLayout.footerLogoImage)
+          });
         }
       } catch (err) {
-        console.error("[State Loader] Failed to connect to backend MongoDB API. Using local backup state.", err);
+        console.error("[State Loader] Failed to connect to backend Neon Postgres API. Using local backup state.", err);
       } finally {
         setIsInitialLoadDone(true);
       }
@@ -391,7 +418,7 @@ export default function App() {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [emailToast, setEmailToast] = useState<{ to: string; subject: string; refund: number } | null>(null);
 
-  // Worldpay checkout persistent states
+  // Razorpay checkout persistent states
   const [checkoutDiscount, setCheckoutDiscount] = useState<Discount | null>(null);
   const [checkoutTotal, setCheckoutTotal] = useState<number>(0);
   const [isWithdrawalOpen, setIsWithdrawalOpen] = useState<boolean>(false);
@@ -505,8 +532,8 @@ export default function App() {
 
       if (path.startsWith('/payment/')) {
         const sub = path.replace('/payment/', '');
-        if (sub.startsWith('worldpay-gateway')) {
-          setCurrentTab('payment-worldpay-gateway');
+        if (sub.startsWith('razorpay-gateway')) {
+          setCurrentTab('payment-razorpay-gateway');
         } else if (sub.startsWith('success')) {
           setCartItems([]);
           localStorage.removeItem('ps_cart');
@@ -654,7 +681,7 @@ export default function App() {
     };
   }, []);
 
-  // --- Write to LocalStorage AND MongoDB Database on Changes ---
+  // --- Write to LocalStorage AND Neon Postgres Database on Changes ---
   useEffect(() => {
     safeSaveToLocalStorage('ps_products', products);
     if (isInitialLoadDone && loadedProductsSuccess.current) {
@@ -1032,8 +1059,9 @@ export default function App() {
     total: number;
     discountApplied: Discount | null;
     items: { productId: string; productTitle: string; price: number; quantity: number; image?: string; }[];
-    worldpayTxId: string;
-    worldpayAuthCode: string;
+    razorpayPaymentId?: string;
+    razorpayOrderId?: string;
+    razorpaySignature?: string;
     cardBrand: string;
     storeCreditApplied?: number;
   }) => {
@@ -1048,13 +1076,14 @@ export default function App() {
       tags: paymentDetails.discountApplied ? ['coupon', paymentDetails.discountApplied.title] : [],
       fulfillmentStatus: 'Unfulfilled',
       paymentStatus: 'Paid',
-      worldpayTxId: paymentDetails.worldpayTxId,
-      worldpayAuthCode: paymentDetails.worldpayAuthCode,
+      razorpayPaymentId: paymentDetails.razorpayPaymentId,
+      razorpayOrderId: paymentDetails.razorpayOrderId,
+      razorpaySignature: paymentDetails.razorpaySignature,
       cardBrand: paymentDetails.cardBrand,
       total: paymentDetails.total,
       destination: paymentDetails.address,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      deliveryMethod: 'Priority Courier Shipping via Worldpay | Tracked',
+      deliveryMethod: 'Priority Courier Shipping via Razorpay | Tracked',
       items: paymentDetails.items,
       trackingId: generatedTrackingId,
       carrier: 'Royal Mail',
@@ -1080,22 +1109,22 @@ export default function App() {
 
     const emailHtml = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 550px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); color: #334155;">
-        <div style="background-color: #e1192e; padding: 25px 20px; text-align: center;">
+        <div style="background-color: #0284c7; padding: 25px 20px; text-align: center;">
           <span style="font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">ROYAL MAIL TRACK & TRACE</span>
-          <div style="font-size: 10px; font-weight: bold; color: #ffd6d9; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">Pouch Supply Order Confirmation Advice</div>
+          <div style="font-size: 10px; font-weight: bold; color: #e0f2fe; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">Pouch Supply Order Confirmation Advice</div>
         </div>
         
         <div style="padding: 24px; text-align: left;">
           <p style="font-size: 14px; font-weight: bold; color: #0f172a; margin-top: 0;">Dear ${paymentDetails.customerName || 'Customer'},</p>
           <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
-            Thank you for shopping with <strong>Pouch Supply</strong>. Your order has been securely processed via <strong>Worldpay Secure Gateway</strong> and is preparing for immediate delivery partner handoff.
+            Thank you for shopping with <strong>Pouch Supply</strong>. Your order has been securely processed via <strong>Razorpay Secure Gateway</strong> and is preparing for immediate delivery partner handoff.
           </p>
 
           <!-- Royal Mail Tracking Box -->
-          <div style="background-color: #fef2f2; border: 1px solid #fee2e2; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #fecaca; padding-bottom: 8px;">
-              <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #dc2626; letter-spacing: 0.5px;">Delivery Partner Integration</span>
-              <span style="font-size: 10px; font-weight: bold; color: #991b1b; background-color: #fca5a5; padding: 2px 8px; border-radius: 4px;">ROYAL MAIL TRACKED</span>
+          <div style="background-color: #f0f9ff; border: 1px solid #e0f2fe; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #bae6fd; padding-bottom: 8px;">
+              <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #0284c7; letter-spacing: 0.5px;">Delivery Partner Integration</span>
+              <span style="font-size: 10px; font-weight: bold; color: #0369a1; background-color: #bae6fd; padding: 2px 8px; border-radius: 4px;">ROYAL MAIL TRACKED</span>
             </div>
             
             <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
@@ -1105,7 +1134,7 @@ export default function App() {
               </tr>
               <tr>
                 <td style="color: #64748b; padding: 4px 0;">Tracking reference number:</td>
-                <td style="font-family: monospace; font-weight: 900; color: #dc2626; text-align: right; padding: 4px 0; font-size: 13px; letter-spacing: 0.5px;">${generatedTrackingId}</td>
+                <td style="font-family: monospace; font-weight: 900; color: #0284c7; text-align: right; padding: 4px 0; font-size: 13px; letter-spacing: 0.5px;">${generatedTrackingId}</td>
               </tr>
               <tr>
                 <td style="color: #64748b; padding: 4px 0;">Parcel Status:</td>
@@ -1114,7 +1143,7 @@ export default function App() {
             </table>
 
             <div style="margin-top: 15px; text-align: center;">
-              <span style="display: inline-block; background-color: #dc2626; color: #ffffff; font-size: 11px; font-weight: bold; text-transform: uppercase; padding: 10px 20px; border-radius: 8px; letter-spacing: 1px;">
+              <span style="display: inline-block; background-color: #0284c7; color: #ffffff; font-size: 11px; font-weight: bold; text-transform: uppercase; padding: 10px 20px; border-radius: 8px; letter-spacing: 1px;">
                 Royal Mail Tracked 24
               </span>
             </div>
@@ -1134,9 +1163,9 @@ export default function App() {
           </div>
 
           <div style="font-size: 11.5px; color: #64748b; line-height: 1.5; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 12px; margin-bottom: 15px;">
-            <strong>Secure Worldpay Reference:</strong><br/>
-            Tx ID: <span style="font-family: monospace;">${paymentDetails.worldpayTxId}</span><br/>
-            Auth Code: <span style="font-family: monospace;">${paymentDetails.worldpayAuthCode}</span>
+            <strong>Secure Razorpay Reference:</strong><br/>
+            Payment ID: <span style="font-family: monospace;">${paymentDetails.razorpayPaymentId || 'N/A'}</span><br/>
+            Order ID: <span style="font-family: monospace;">${paymentDetails.razorpayOrderId || paymentDetails.orderId}</span>
           </div>
 
           <p style="font-size: 11.5px; color: #64748b; line-height: 1.5; margin-bottom: 0;">
@@ -1418,9 +1447,9 @@ export default function App() {
         <div className="bg-amber-600 text-white px-4 py-2.5 text-center text-[11px] font-bold flex flex-col sm:flex-row items-center justify-center gap-2 relative z-50 shadow-md">
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-white animate-ping shrink-0" />
-            <span>⚠️ MongoDB Connection Offline (Pending IP Whitelist):</span>
+            <span>⚠️ Neon Postgres Connection Offline:</span>
           </div>
-          <span className="opacity-95">Your Atlas firewall is blocking server connection. To save permanently, allow any IP address (0.0.0.0/0) inside your Atlas Network Access console.</span>
+          <span className="opacity-95">Ensure your NEON_DATABASE_URL or DATABASE_URL connection string is configured in your environment or Settings.</span>
           <button 
             type="button"
             onClick={() => setIsAdminActive(true)}
@@ -1923,7 +1952,7 @@ export default function App() {
               />
             )}
 
-            {/* FRONTEND VIEW - SECURE WORLDPAY CHECKOUT */}
+            {/* FRONTEND VIEW - SECURE RAZORPAY CHECKOUT */}
             {currentTab === 'frontend-checkout' && (
               <CheckoutView
                 cartItems={cartItems}
@@ -1938,9 +1967,9 @@ export default function App() {
               />
             )}
 
-            {/* FRONTEND VIEW - WORLDPAY SECURE GATEWAY */}
-            {currentTab === 'payment-worldpay-gateway' && (
-              <WorldpayGatewaySimulator 
+            {/* FRONTEND VIEW - RAZORPAY SECURE GATEWAY */}
+            {currentTab === 'payment-razorpay-gateway' && (
+              <RazorpayGatewaySimulator 
                 onReturnToShop={() => {
                   window.history.pushState({}, '', '/collections/all');
                   window.dispatchEvent(new Event('popstate'));
@@ -2397,7 +2426,7 @@ export default function App() {
             )}
 
             {/* FRONTEND VIEW - 404 NOT FOUND FOR NONEXISTENT PAGES */}
-            {!['frontend-home', 'frontend-shop', 'frontend-brands', 'frontend-subscribe', 'frontend-account', 'product-detail', 'collection-detail', 'blogs', 'blog-detail', 'privacy-policy', 'shipping-policy', 'refund-policy', 'terms-conditions', 'frontend-checkout', 'payment-worldpay-gateway', 'payment-success', 'payment-failed', 'payment-cancelled'].includes(currentTab) && !customPages.some(p => p.slug === currentTab) && (
+            {!['frontend-home', 'frontend-shop', 'frontend-brands', 'frontend-subscribe', 'frontend-account', 'product-detail', 'collection-detail', 'blogs', 'blog-detail', 'privacy-policy', 'shipping-policy', 'refund-policy', 'terms-conditions', 'frontend-checkout', 'payment-razorpay-gateway', 'payment-success', 'payment-failed', 'payment-cancelled'].includes(currentTab) && !customPages.some(p => p.slug === currentTab) && (
               <div className="max-w-6xl mx-auto py-24 px-4 text-center space-y-6">
                 <span className="text-7xl block">🔍</span>
                 <div className="space-y-1.5">
@@ -2554,7 +2583,7 @@ export default function App() {
       )}
 
       {/* Universal Footer layout */}
-      {!isAdminActive && !['payment-worldpay-gateway', 'payment-success', 'payment-failed', 'payment-cancelled', 'frontend-checkout'].includes(currentTab) && (
+      {!isAdminActive && !['payment-razorpay-gateway', 'payment-success', 'payment-failed', 'payment-cancelled', 'frontend-checkout'].includes(currentTab) && (
         <Footer onNavigate={navigateToTab} layoutSettings={layoutSettings} />
       )}
 

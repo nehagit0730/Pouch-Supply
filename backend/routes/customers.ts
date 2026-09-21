@@ -9,8 +9,16 @@ const router = Router();
 function hashPassword(password: string): string {
   return crypto
     .createHash("sha256")
-    .update(password + "pouch_supply_salt_123!")
+    .update(password + "store_secure_salt_123!")
     .digest("hex");
+}
+
+function verifyPassword(inputPassword: string, storedHash: string): boolean {
+  const newHash = hashPassword(inputPassword);
+  if (newHash === storedHash) return true;
+  // Legacy salt fallback
+  const legacyHash = crypto.createHash("sha256").update(inputPassword + "pouch_supply_salt_123!").digest("hex");
+  return legacyHash === storedHash;
 }
 
 // GET all customers (Admin use)
@@ -179,7 +187,7 @@ router.post("/login", async (req, res) => {
 
     // Support backward compatibility for legacy accounts without password hash
     if (found.passwordHash) {
-      if (found.passwordHash !== hashPassword(password)) {
+      if (!verifyPassword(password, found.passwordHash)) {
         return res.status(401).json({ error: "Incorrect password. Please try again." });
       }
     } else {
@@ -217,7 +225,7 @@ router.post("/admin-login", async (req, res) => {
       return res.status(400).json({ error: "Admin email and password are required." });
     }
 
-    const adminEmail = process.env.ADMIN_EMAIL || "Support@pouch-supply.com";
+    const adminEmail = process.env.ADMIN_EMAIL || "support@storefront.com";
     const adminPassword = process.env.ADMIN_PASSWORD || "January14!2019";
 
     if (
@@ -232,7 +240,7 @@ router.post("/admin-login", async (req, res) => {
         token: adminToken,
         adminUser: {
           email: adminEmail,
-          name: "Pouch Supply Administrator"
+          name: "Store Administrator"
         }
       });
     } else {

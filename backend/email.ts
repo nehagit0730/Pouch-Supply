@@ -2,11 +2,11 @@ import nodemailer from "nodemailer";
 import { Order } from "../src/types";
 
 // Setup SMTP connection credentials using environment variables with the user's defaults
-const SMTP_HOST = process.env.SMTP_HOST || "smtp.pouch-supply.com";
+const SMTP_HOST = process.env.SMTP_HOST || "smtp.storefront.com";
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || "465", 10);
 const SMTP_SECURE = process.env.SMTP_SECURE !== "false"; // default true for port 465
-const SMTP_USER = process.env.SMTP_USER || "Support@pouch-supply.com";
-const SMTP_PASS = process.env.SMTP_PASS || "January14!2019";
+const SMTP_USER = process.env.SMTP_USER || "support@storefront.com";
+const SMTP_PASS = process.env.SMTP_PASS || "";
 
 /**
  * Creates a nodemailer transporter and attempts to verify connectivity
@@ -29,7 +29,7 @@ function createTransporter() {
 
 /**
  * Sends a highly styled order confirmation email to the customer
- * and sends a notification copy to Support@pouch-supply.com
+ * and sends a notification copy to the store admin
  */
 export async function sendOrderConfirmationEmail(order: Order): Promise<boolean> {
   console.log(`[Email Service] Preparing order confirmation email for Order ID: ${order.id} to ${order.customerEmail}`);
@@ -69,7 +69,7 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
               <!-- Header -->
               <tr>
                 <td style="background-color: #0f172a; padding: 40px 32px; text-align: center;">
-                  <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 800; tracking: -0.025em; letter-spacing: -0.5px;">POUCH SUPPLY</h1>
+                  <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 800; tracking: -0.025em; letter-spacing: -0.5px;">STOREFRONT</h1>
                   <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Order Confirmed</p>
                 </td>
               </tr>
@@ -81,7 +81,7 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
                     Hello <strong>${order.customerName}</strong>,
                   </p>
                   <p style="font-size: 15px; color: #475569; line-height: 1.6;">
-                    Thank you for shopping with Pouch Supply! Your order has been securely processed and is being assembled by our logistics team. Here is your official purchase receipt:
+                    Thank you for shopping with us! Your order has been securely processed and is being assembled by our logistics team. Here is your official purchase receipt:
                   </p>
                   
                   <!-- Order Meta Table -->
@@ -128,10 +128,10 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
               <tr>
                 <td style="background-color: #f8fafc; padding: 24px 32px; border-top: 1px solid #e2e8f0; text-align: center;">
                   <p style="font-size: 12px; color: #64748b; margin: 0; line-height: 1.5;">
-                    If you have any questions regarding this order, feel free to reply directly to this email or reach out to our team at <strong>Support@pouch-supply.com</strong>.
+                    If you have any questions regarding this order, feel free to reply directly to this email or reach out to our team at <strong>${SMTP_USER}</strong>.
                   </p>
                   <p style="font-size: 11px; color: #94a3b8; margin-top: 12px;">
-                    © ${new Date().getFullYear()} Pouch Supply. All rights reserved.
+                    © ${new Date().getFullYear()} StoreFront. All rights reserved.
                   </p>
                 </td>
               </tr>
@@ -147,20 +147,20 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<boolean>
   try {
     // 1. Send Order Confirmation to customer
     const info = await transporter.sendMail({
-      from: `"Pouch Supply Support" <${SMTP_USER}>`,
+      from: `"StoreFront Support" <${SMTP_USER}>`,
       to: order.customerEmail,
-      subject: `Order Confirmation: ${order.id} - Pouch Supply`,
+      subject: `Order Confirmation: ${order.id} - StoreFront`,
       html: emailHtml,
     });
     console.log(`[Email Service] Success! Message sent to ${order.customerEmail}. Message ID: ${info.messageId}`);
 
-    // 2. Send Notification Copy to Support@pouch-supply.com
+    // 2. Send Notification Copy to Store Admin
     try {
       await transporter.sendMail({
-        from: `"Pouch Supply System" <${SMTP_USER}>`,
+        from: `"StoreFront System" <${SMTP_USER}>`,
         to: SMTP_USER,
         subject: `[NEW ORDER] ${order.id} placed by ${order.customerName} (£${order.total.toFixed(2)})`,
-        html: `<p>A new order has been placed on the Pouch Supply storefront.</p>
+        html: `<p>A new order has been placed on the storefront.</p>
                <p><strong>Order ID:</strong> ${order.id}</p>
                <p><strong>Customer Name:</strong> ${order.customerName}</p>
                <p><strong>Customer Email:</strong> ${order.customerEmail}</p>
