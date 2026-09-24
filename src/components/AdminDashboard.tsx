@@ -2084,100 +2084,93 @@ export default function AdminDashboard({
         backgroundColor: sectionType === 'Marquee text' ? '#E8BE74' : '#FFFFFF',
         headingColor: '#1E293B',
         textColor: sectionType === 'Marquee text' ? '#1A1C1D' : '#64748B',
-        title: sectionType === 'Image banner' ? 'Exclusive Pouch Launch' 
-             : sectionType === 'Image with text' ? 'Curate Your Premium Package'
-             : sectionType === 'Text column with image' ? 'Our Laboratory Certified Foundations'
+        title: sectionType === 'Image banner' ? 'Exclusive Capsule Drop' 
+             : sectionType === 'Image with text' ? 'Curate Your Wardrobe Capsule'
+             : sectionType === 'Text column with image' ? 'Our Bespoke Tailoring Foundations'
              : sectionType === 'Featured collection' ? 'Featured Collection Highlights'
-             : sectionType === 'Collection list' ? 'Explore Brand Collections'
-             : sectionType === 'Images gallery' ? 'Laboratory & Dispatch Facility Gallery'
-             : sectionType === 'Marquee text' ? 'DELIVERY // CANCEL ANYTIME // LOYALTY SCHEME // NEVER RUN OUT // DELIVERED ON YOUR SCHEDULE // SAVE VS. SHOP PRICES // DISCREET DELIVERY'
-             : sectionType === 'Marquee images' ? 'Fresh Stock Dispatch Reel'
-             : sectionType === 'Logo list' ? 'Official Lab Partner Register'
+             : sectionType === 'Collection list' ? 'Explore Wardrobe Collections'
+             : sectionType === 'Images gallery' ? 'Tailoring Atelier & Fabric Archives'
+             : sectionType === 'Marquee text' ? 'COMPLIMENTARY SHIPPING // CURATED CAPSULES // BESPOKE TAILORING // ORGANIC MATERIALS // TIMELESS SILHOUETTES // ETHICAL CRAFTSMANSHIP'
+             : sectionType === 'Marquee images' ? 'Seasonal Lookbook Reel'
+             : sectionType === 'Logo list' ? 'Official Partner Design Houses'
              : sectionType === 'FAQs' ? 'Frequently Answered Questions'
              : sectionType === 'Blog post' ? 'Latest From Our Journal'
-             : sectionType === 'Brand list' ? 'Shop Premium Brands'
+             : sectionType === 'Brand list' ? 'Shop Partner Ateliers'
              : sectionType === 'Brands we offer' ? 'Brands we offer'
-             : sectionType === 'Icon with text' ? 'Why subscribe to Pouch Supply?'
-             : sectionType === 'Video banner' ? 'Watch Our Laboratory Showcase'
-             : sectionType === 'Clearance Sale' ? 'Clearance Sale Event'
+             : sectionType === 'Icon with text' ? 'Why subscribe to Atelier Studio?'
+             : sectionType === 'Video banner' ? 'Watch Our Tailoring & Runway Showcase'
+             : sectionType === 'Clearance Sale' ? 'Archive Sale Event'
              : `Custom ${sectionType}`,
-        description: sectionType === 'Image with text' ? 'Our plant-fiber formulations are packed under sterile medical conditions for persistent, smooth boosts.'
-                 : sectionType === 'Text column with image' ? 'Every single canister batch is vacuum-sealed inside high-density polymer tubes guaranteeing pristine flavor locks.'
-                 : sectionType === 'Featured collection' ? 'Sourced cleanly from European chemical compounding centers with direct-to-door courier dispatch.'
-                 : sectionType === 'Collection list' ? 'Select from your favorite pouch strengths, cooling impacts, or specific lab series.'
-                 : sectionType === 'FAQs' ? 'Find quick validations regarding shipping rules, subscriptions, and formulation safety standards.'
-                 : sectionType === 'Blog post' ? 'Scientific reports, dosage guides, and news bulletins straight from Scandinavia.'
-                 : sectionType === 'Brand list' ? 'Check our collection of premium, laboratory-certified brand canisters.'
-                 : sectionType === 'Brands we offer' ? 'Explore our curated roster of premium nicotine pouches and global compounding series.'
-                 : sectionType === 'Icon with text' ? 'Explore exclusive rewards and reliable logistics built directly into our ecosystem.'
-                  : sectionType === 'Video banner' ? 'Witness the clinical sterile compounding process behind our sub-zero cooling pouches.'
-                  : sectionType === 'Clearance Sale' ? 'Save big on our premium selected stock items. Final clearance, while stocks last!'
+        description: sectionType === 'Image with text' ? 'Each garment is crafted with meticulous attention to detail, utilizing organic textiles and bespoke finishing.'
+                 : sectionType === 'Text column with image' ? 'Every seasonal piece is precision-cut from heavyweight organic cotton and virgin wool for an enduring silhouette.'
+                 : sectionType === 'Featured collection' ? 'Curated selections crafted by European master tailors with international express delivery.'
+                 : sectionType === 'Collection list' ? 'Select from your favorite silhouettes, tailoring cuts, and capsule drops.'
+                 : sectionType === 'FAQs' ? 'Find answers regarding sizing, complimentary returns, garment care, and materials.'
+                 : sectionType === 'Blog post' ? 'Sartorial essays, fabric breakdowns, and seasonal lookbook features.'
+                 : sectionType === 'Brand list' ? 'Check our collection of verified fashion ateliers and designer labels.'
+                 : sectionType === 'Brands we offer' ? 'Explore our curated roster of contemporary labels and ready-to-wear designers.'
+                 : sectionType === 'Icon with text' ? 'Explore exclusive member benefits, seasonal tailoring allocations, and seamless logistics.'
+                  : sectionType === 'Video banner' ? 'Witness the bespoke pattern-making and tailoring process behind our seasonal capsules.'
+                  : sectionType === 'Clearance Sale' ? 'Acquire select archival pieces and seasonal overstock at exclusive member pricing.'
                  : 'Edit option elements inside options sidebar',
         columnsDesktop: sectionType === 'Blog post' ? 3 : undefined,
         columnsMobile: sectionType === 'Blog post' ? 1 : undefined,
         brandItems: (sectionType === 'Brand list' || sectionType === 'Brands we offer') ? [
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: '77 Nicotine' },
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Clew Pouches' },
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Cuba Black' },
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Maggie Original' },
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Nordic Spirit' },
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'XQS Sweden' },
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'ZYN Mint' },
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Pablo Strong' },
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Killa Double' },
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Fumi Fresh' },
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Velo Active' },
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'White Fox' },
-          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Snü Fruity' }
+          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Atelier Minimal' },
+          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Studio Noir' },
+          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Maison Luxe' },
+          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Nordic Drape' },
+          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Sartorial Form' },
+          { imageUrl: '/placeholder.png', linkUrl: 'frontend-shop', title: 'Pure Cotton' }
         ] : undefined,
-        buttonText: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text' || sectionType === 'Video banner') ? 'Purchase Packs' : undefined,
+        buttonText: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text' || sectionType === 'Video banner') ? 'Shop Collection' : undefined,
         buttonLink: (sectionType === 'Image banner' || sectionType === 'Image with text' || sectionType === 'Rich text' || sectionType === 'Video banner') ? 'frontend-shop' : undefined,
         marqueeSpeed: 3,
         itemsCount: (sectionType === 'Featured collection' || sectionType === 'Marquee images' || sectionType === 'Collection list') ? 4 : undefined,
         selectedProductIds: sectionType === 'Clearance Sale' ? localProducts.filter(p => p.status === 'Active').slice(0, 4).map(p => p.id) : undefined,
         videoUrl: sectionType === 'Video banner' ? '' : undefined,
-        videoMp4Url: sectionType === 'Video banner' ? 'https://assets.mixkit.co/videos/preview/mixkit-laboratory-test-tubes-40436-large.mp4' : undefined,
+        videoMp4Url: sectionType === 'Video banner' ? 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-black-jacket-walking-41487-large.mp4' : undefined,
         imageUrl: (sectionType === 'Image banner' || sectionType === 'Image with text') ? '/placeholder.png' : undefined,
         slides: sectionType === 'Slideshow' ? [
           {
-            title: 'Precision-Engineered Pouch Purity',
-            description: 'Sourced directly from certified laboratories utilizing medical-grade plant fiber and vacuum-fresh locks.',
-            imageUrl: '/placeholder.png',
-            buttonText: 'View Laboratory Journal',
+            title: 'Precision Sartorial Tailoring',
+            description: 'Cut from certified organic long-staple cotton and structured virgin wool for effortless elegance.',
+            imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1800&q=80',
+            buttonText: 'View Fashion Journal',
             buttonLink: 'blogs'
           },
           {
-            title: 'Extreme Mint Cryo Freeze',
-            description: 'Sub-zero locking technology delivering an immediate, absolute sensory refreshing experience.',
-            imageUrl: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=1200&q=80',
-            buttonText: 'Explore Sub-Zero Bundles',
+            title: 'The Autumn Capsule Collection',
+            description: 'Minimalist coats, cashmere essentials, and hand-finished garments built to endure.',
+            imageUrl: 'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1800&q=80',
+            buttonText: 'Explore Capsule',
             buttonLink: 'frontend-shop'
           }
         ] : undefined,
         iconColor: sectionType === 'Icon with text' ? '#4F46E5' : undefined,
         iconItems: sectionType === 'Icon with text' ? [
           { iconName: 'Truck', title: 'Delivered on your schedule', description: 'Flexible delivery, when you need it.', linkUrl: 'frontend-shop' },
-          { iconName: 'Zap', title: 'Save vs. shop prices', description: 'Better prices than retail stores.', linkUrl: 'frontend-shop' },
-          { iconName: 'Shield', title: 'Discreet delivery', description: 'Plain, private, and secure packaging.', linkUrl: 'frontend-shop' },
-          { iconName: 'Clock', title: 'Cancel anytime', description: 'No commitments, full control.', linkUrl: 'frontend-shop' },
-          { iconName: 'Award', title: 'Loyalty scheme', description: 'Earn rewards on every order.', linkUrl: 'frontend-shop' },
-          { iconName: 'Package', title: 'Never run out', description: 'Auto-refill and easy reordering.', linkUrl: 'frontend-shop' }
+          { iconName: 'Zap', title: 'Direct atelier pricing', description: 'Exceptional value without luxury markup.', linkUrl: 'frontend-shop' },
+          { iconName: 'Shield', title: 'Discreet luxury delivery', description: 'Custom canvas garment bags and secure dispatch.', linkUrl: 'frontend-shop' },
+          { iconName: 'Clock', title: 'Cancel or pause anytime', description: 'No commitments, full wardrobe control.', linkUrl: 'frontend-shop' },
+          { iconName: 'Award', title: 'Private member perks', description: 'Exclusive allocations on seasonal drops.', linkUrl: 'frontend-shop' },
+          { iconName: 'Package', title: 'Guaranteed sizing allocation', description: 'Priority reserve slots on core sizes.', linkUrl: 'frontend-shop' }
         ] : undefined,
         stepItems: sectionType === 'How it works' ? [
-          { number: '1', title: 'Choose your plan', description: 'Select one of our flexible subscription plans', imageUrl: '/placeholder.png' },
-          { number: '2', title: 'Choose your pouches', description: 'Mix and match your favourite brands, flavours and strengths. (these can be changed at anytime)', imageUrl: '/placeholder.png' },
-          { number: '3', title: 'We handle the rest', description: 'Delivered automatically to your door hassle free weekly, Bi-weekly or monthly', imageUrl: '/placeholder.png' }
+          { number: '1', title: 'Choose your plan', description: 'Select one of our flexible capsule subscription tiers', imageUrl: '/placeholder.png' },
+          { number: '2', title: 'Choose your garments', description: 'Mix and match your favourite silhouettes, fabrics and sizes.', imageUrl: '/placeholder.png' },
+          { number: '3', title: 'We handle the rest', description: 'Delivered directly to your door with pre-paid return options', imageUrl: '/placeholder.png' }
         ] : undefined,
         trustBadges: sectionType === 'Trust badges' ? [
-          { iconType: 'badge', title: '100% AUTHENTIC', description: 'Direct from official suppliers.' },
-          { iconType: 'shield', title: 'PREMIUM QUALITY', description: 'Only trusted, proven brands.' },
-          { iconType: 'globe', title: 'GLOBAL SELECTION', description: 'The best from around the world.' },
-          { iconType: 'tag', title: 'MEMBER PRICING', description: 'Better prices, always.' }
+          { iconType: 'badge', title: '100% AUTHENTIC', description: 'Direct from official designers & ateliers.' },
+          { iconType: 'shield', title: 'PREMIUM MATERIALS', description: 'Only long-staple cotton & virgin wool.' },
+          { iconType: 'globe', title: 'WORLDWIDE SHIPPING', description: 'Complimentary tracked global courier dispatch.' },
+          { iconType: 'tag', title: 'MEMBER PRICING', description: 'Sub-retail atelier rates for subscribers.' }
         ] : undefined,
         faqItems: sectionType === 'FAQs' ? [
-          { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon dispatch.' },
-          { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' },
-          { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific interval. Pause or cancel anytime for free.' }
+          { q: 'Is delivery fully tracked?', a: 'Yes, all orders generate functional, real-time tracking codes emailed instantly upon dispatch.' },
+          { q: 'What materials are used?', a: 'Crafted exclusively from organic long-staple cotton, virgin wool, and sustainable certified textiles.' },
+          { q: 'How do size exchanges work?', a: 'We offer complimentary pre-paid return slips for quick exchanges within 30 days.' }
         ] : undefined,
         alertBadgeText: sectionType === 'Plans' ? 'Most customers save up to £55/month' : undefined,
         promoBannerText: sectionType === 'Plans' ? '★ FIRST 50 SUBSCRIBERS - Get 10% OFF FOR LIFE >' : undefined,
@@ -2607,7 +2600,7 @@ export default function AdminDashboard({
                 <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
               </div>
               <div>
-                <h2 className="text-sm font-bold text-[#1a1c1d]">Pouch Supply</h2>
+                <h2 className="text-sm font-bold text-[#1a1c1d]">Atelier Studio</h2>
                 <span className="bg-gray-100 text-[9px] px-1.5 py-0.5 rounded border border-gray-200 text-gray-500 uppercase font-bold tracking-tighter">Admin</span>
               </div>
             </div>
@@ -2711,7 +2704,7 @@ export default function AdminDashboard({
         {!selectedBuilderPageId && (
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-250">
             <div>
-              <span className="text-[10px] text-indigo-600 bg-indigo-50 font-black uppercase py-1 px-3 rounded-full border border-indigo-100">Pouch Supply Partner Portal</span>
+              <span className="text-[10px] text-indigo-600 bg-indigo-50 font-black uppercase py-1 px-3 rounded-full border border-indigo-100">Atelier Studio Management</span>
               <h1 className="text-2xl font-black text-slate-900 mt-2 capitalize flex items-center gap-2">
                 {activeTab} Management Panel
               </h1>
@@ -3380,7 +3373,7 @@ export default function AdminDashboard({
                               const emailHtml = `
                                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #334155;">
                                   <div style="background-color: #10b981; padding: 25px 20px; text-align: center;">
-                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">POUCH SUPPLY</span>
+                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">ATELIER STUDIO</span>
                                     <div style="font-size: 9px; font-weight: bold; color: #ecfdf5; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">WITHDRAWAL APPROVED</div>
                                   </div>
                                   
@@ -3401,7 +3394,7 @@ export default function AdminDashboard({
                                   </div>
                                   
                                   <div style="background-color: #f8fafc; padding: 15px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8;">
-                                    Thank you for choosing PouchSupply.
+                                    Thank you for choosing Atelier Studio.
                                   </div>
                                 </div>
                               `;
@@ -3456,7 +3449,7 @@ export default function AdminDashboard({
                               const emailHtml = `
                                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #334155;">
                                   <div style="background-color: #ef4444; padding: 25px 20px; text-align: center;">
-                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">POUCH SUPPLY</span>
+                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">ATELIER STUDIO</span>
                                     <div style="font-size: 9px; font-weight: bold; color: #fee2e2; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">WITHDRAWAL DECLINED</div>
                                   </div>
                                   
@@ -4966,7 +4959,7 @@ export default function AdminDashboard({
                         <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
                       </div>
                       <div className="bg-white border rounded py-1 px-8 text-center text-slate-500 w-64 truncate">
-                        pouch-supply.com/pages/{currentlyEditingPage?.slug}
+                        atelier-studio.com/pages/{currentlyEditingPage?.slug}
                       </div>
                       <Globe className="h-3.5 w-3.5" />
                     </div>
@@ -5097,7 +5090,7 @@ export default function AdminDashboard({
                                       <div className="absolute inset-0 bg-black/40" />
                                     </div>
                                     <h3 className="text-sm font-black uppercase" style={{ color: sec.settings.headingColor || '#1E293B' }}>
-                                      {sec.settings.title || 'Exclusive Pouch Launch'}
+                                      {sec.settings.title || 'Exclusive Capsule Drop'}
                                     </h3>
                                     <p className="text-[10px] leading-relaxed max-w-sm mx-auto text-slate-500">{sec.settings.description || 'Banner details...'}</p>
                                     {sec.settings.buttonText && (

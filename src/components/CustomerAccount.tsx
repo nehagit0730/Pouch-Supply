@@ -291,8 +291,8 @@ export default function CustomerAccount({
         nextDelivery: (loggedInCustomer as any).nextDelivery || '24 June 2026',
         unlockedRewards: (loggedInCustomer as any).unlockedRewards || [
           { id: 'reward_1', title: 'Free Express Delivery', desc: 'Complimentary shipping upgrade', redeemed: false, code: 'FREESHIP' },
-          { id: 'reward_2', title: '£5.00 Off Order', desc: 'Direct cash discount voucher', redeemed: false, code: 'POUCH5OFF' },
-          { id: 'reward_3', title: 'Free Extra Can', desc: 'Unlock a free sample in next box', redeemed: false, code: 'FREECAN' }
+          { id: 'reward_2', title: '£5.00 Off Order', desc: 'Direct cash discount voucher', redeemed: false, code: 'ATELIER5OFF' },
+          { id: 'reward_3', title: 'Free Extra Piece', desc: 'Unlock a free wardrobe accessory in next box', redeemed: false, code: 'FREEPIECE' }
         ],
         referralCode: realReferralCode,
         referredCount: referredCount,
@@ -435,7 +435,7 @@ export default function CustomerAccount({
           <div className="p-8 lg:p-12 space-y-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xl font-black text-[#071d37] tracking-wider uppercase">Pouch Supply</span>
+                <span className="text-xl font-black text-[#071d37] tracking-wider uppercase">Atelier Studio</span>
                 <span className="w-1.5 h-1.5 bg-[#dfa047] rounded-full self-end mb-1"></span>
               </div>
               <div className="flex bg-slate-100 p-1 rounded-xl">
@@ -461,7 +461,7 @@ export default function CustomerAccount({
               <p className="text-slate-500 text-xs">
                 {authMode === 'login' 
                   ? 'Access your personalized subscription portal, track order progress, and unlock free premium rewards.'
-                  : 'Join Pouch Supply today to get 15% off subscription boxes and start unlocking direct premium gifts.'}
+                  : 'Join Atelier Studio today to get 15% off subscription capsules and start unlocking direct premium gifts.'}
               </p>
             </div>
 
@@ -729,7 +729,7 @@ export default function CustomerAccount({
             {/* Store Brand / Logo */}
             <div className="space-y-1">
               <div className="flex items-center gap-1">
-                <span className="text-2xl font-black text-white tracking-widest uppercase">Pouch Supply</span>
+                <span className="text-2xl font-black text-white tracking-widest uppercase">Atelier Studio</span>
                 <span className="w-2 h-2 bg-[#dfa047] rounded-full self-end mb-1"></span>
               </div>
               {/* Golden dots under name matching the mockup */}
@@ -779,9 +779,9 @@ export default function CustomerAccount({
             </div>
 
             <div className="text-center pt-2 border-t border-white/10">
-              <span className="inline-block bg-white/10 text-[9px] border border-white/20 py-0.5 px-2 rounded-full text-slate-200 font-bold mb-1.5">18+ Only</span>
+              <span className="inline-block bg-white/10 text-[9px] border border-white/20 py-0.5 px-2 rounded-full text-slate-200 font-bold mb-1.5">Artisanal Tailoring</span>
               <p className="text-[9px] text-slate-400 leading-snug">
-                Nicotine pouches are for adult consumers only. Please consume responsibly.
+                Timeless wardrobe silhouettes crafted from organic cotton and natural fibers.
               </p>
             </div>
           </div>
@@ -801,7 +801,7 @@ export default function CustomerAccount({
                   </span>
                 )}
               </div>
-              <p className="text-slate-500 text-xs mt-0.5">Here's what's happening with your Pouch Supply account today.</p>
+              <p className="text-slate-500 text-xs mt-0.5">Here's what's happening with your Atelier account today.</p>
             </div>
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <button 
@@ -1028,7 +1028,7 @@ export default function CustomerAccount({
                           </div>
                           <div>
                             <p className="text-[9px] text-slate-400 uppercase font-bold">Box Items</p>
-                            <p className="text-xs font-extrabold text-[#071d37] mt-0.5">{custState.subCansCount} canisters</p>
+                            <p className="text-xs font-extrabold text-[#071d37] mt-0.5">{custState.subCansCount} capsule items</p>
                           </div>
                           <div>
                             <p className="text-[9px] text-slate-400 uppercase font-bold">Total Price</p>
@@ -1063,7 +1063,7 @@ export default function CustomerAccount({
                         </div>
 
                         <div className="flex flex-col md:flex-row gap-6 items-center">
-                          {/* Left: overlapping canisters preview */}
+                          {/* Left: overlapping items preview */}
                           <div className="flex -space-x-4 shrink-0">
                             {(() => {
                               const images = (custState.subItems || [])
@@ -1080,7 +1080,7 @@ export default function CustomerAccount({
                                   key={i} 
                                   src={imgSrc} 
                                   className="w-14 h-14 object-cover rounded-full border-2 border-white shadow-md bg-slate-100" 
-                                  alt="canister preview" 
+                                  alt="capsule item preview" 
                                   referrerPolicy="no-referrer"
                                 />
                               ));
@@ -1183,8 +1183,8 @@ export default function CustomerAccount({
                           onClick={() => {
                             if (navigator.share) {
                               navigator.share({
-                                title: 'Join Pouch Supply',
-                                text: 'Join me on Pouch Supply for the ultimate subscription box experience!',
+                                title: 'Join Atelier Studio',
+                                text: 'Join me on Atelier Studio for the ultimate wardrobe capsule experience!',
                                 url: custState.referralCode
                               }).catch(() => {});
                             } else {
@@ -1224,7 +1224,7 @@ export default function CustomerAccount({
                           </div>
                           <div>
                             <p className="text-xs font-black text-[#071d37]">Order {myOrders[0].id}</p>
-                            <p className="text-[10px] text-slate-500">{myOrders[0].date} • {myOrders[0].items.reduce((sum, item) => sum + item.quantity, 0)} canisters</p>
+                            <p className="text-[10px] text-slate-500">{myOrders[0].date} • {myOrders[0].items.reduce((sum, item) => sum + item.quantity, 0)} garments</p>
                           </div>
                         </div>
 
@@ -1318,7 +1318,7 @@ export default function CustomerAccount({
                                 <span className="text-xs font-bold text-slate-800 mt-0.5 block">
                                   {trackedOrder.trackingHistory && trackedOrder.trackingHistory.length > 0
                                     ? trackedOrder.trackingHistory[0].location
-                                    : 'Pouch Supply Hub, London MC'}
+                                    : 'Atelier Studio Hub, London MC'}
                                 </span>
                               </div>
                               <div>
@@ -1404,7 +1404,7 @@ export default function CustomerAccount({
                                   <span className="text-[9px] bg-slate-800 text-slate-300 font-bold py-0.5 px-2 rounded">TESTING PANEL</span>
                                 </div>
                                 <p className="text-[10px] text-slate-400 leading-normal">
-                                  Since this is a sandbox environment, you can act as the **Royal Mail delivery agent** to push transit state updates and test how customers track their pouches.
+                                  Since this is a sandbox environment, you can act as the **Courier delivery agent** to push transit state updates and test how customers track their shipments.
                                 </p>
                                 <div className="flex flex-wrap gap-2 pt-1">
                                   {trackedOrder.fulfillmentStatus === 'Unfulfilled' && (
@@ -1474,12 +1474,12 @@ export default function CustomerAccount({
                                             </div>
                                             <div style="padding: 20px; font-size: 13px; line-height: 1.5; color: #334155;">
                                               <p>Hello ${trackedOrder.customerName},</p>
-                                              <p>There is a new update on your <strong>Pouch Supply</strong> shipment tracked with Royal Mail reference <strong>${trackedOrder.trackingId}</strong>.</p>
+                                              <p>There is a new update on your <strong>Atelier Studio</strong> shipment tracked with Royal Mail reference <strong>${trackedOrder.trackingId}</strong>.</p>
                                               <div style="background-color: #f8fafc; border-left: 4px solid #e1192e; padding: 12px; margin: 15px 0;">
                                                 <strong>Current Status:</strong> ${trackedOrder.fulfillmentStatus === 'Delivered' ? 'DELIVERED & SIGNED' : 'IN TRANSIT'}<br/>
                                                 <strong>Scan Location:</strong> ${trackedOrder.trackingHistory && trackedOrder.trackingHistory[0] ? trackedOrder.trackingHistory[0].location : 'En Route'}
                                               </div>
-                                              <p>If you have questions, visit your account dashboard or contact <a href="mailto:scott@pouch-supply.com" style="color: #dc2626; text-decoration: none;">scott@pouch-supply.com</a>.</p>
+                                              <p>If you have questions, visit your account dashboard or contact <a href="mailto:concierge@atelier-studio.com" style="color: #dc2626; text-decoration: none;">concierge@atelier-studio.com</a>.</p>
                                             </div>
                                           </div>
                                         `,
@@ -1661,10 +1661,10 @@ export default function CustomerAccount({
                             }}
                             className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-xl focus:ring-2 focus:ring-[#071d37] bg-white outline-none"
                           >
-                            <option value="lite">LITE (6 Canisters - £27.99)</option>
-                            <option value="core">CORE (8 Canisters - £35.99)</option>
-                            <option value="pro">PRO (10 Canisters - £40.99)</option>
-                            <option value="ultimate">ULTIMATE (12 Canisters - £46.99)</option>
+                            <option value="lite">LITE (6 Pieces - £27.99)</option>
+                            <option value="core">CORE (8 Pieces - £35.99)</option>
+                            <option value="pro">PRO (10 Pieces - £40.99)</option>
+                            <option value="ultimate">ULTIMATE (12 Pieces - £46.99)</option>
                           </select>
                         </div>
 
@@ -1703,7 +1703,7 @@ export default function CustomerAccount({
                             <span className="text-[10px] text-slate-500 font-bold">/ delivery</span>
                           </div>
                           <p className="text-[11px] text-slate-500 leading-relaxed">
-                            Includes personalized nicotine strength choices, custom flavor ratios, priority shipping, and complimentary VIP loyalty rewards.
+                            Includes personalized size selections, tailoring options, priority shipping, and complimentary VIP loyalty rewards.
                           </p>
                         </div>
 
@@ -1746,7 +1746,7 @@ export default function CustomerAccount({
                         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
                           <div>
                             <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Your Current Box Lineup</h3>
-                            <p className="text-slate-400 text-[10.5px]">Adjust canister quantities or swap flavors to customize your recurring delivery.</p>
+                            <p className="text-slate-400 text-[10.5px]">Adjust garment quantities or swap silhouettes to customize your recurring delivery.</p>
                           </div>
                           {(() => {
                             const subItems = custState.subItems || [];
@@ -1761,7 +1761,7 @@ export default function CustomerAccount({
                                   isExact ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
                                   isOver ? 'bg-rose-50 text-rose-700 border border-rose-100' : 'bg-amber-50 text-amber-700 border border-amber-100'
                                 }`}>
-                                  Box Capacity: {totalSelected} / {capacity} Cans
+                                  Box Capacity: {totalSelected} / {capacity} Pieces
                                 </span>
                               </div>
                             );
@@ -1799,9 +1799,9 @@ export default function CustomerAccount({
                                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                                   <div>
                                     {isOver ? (
-                                      <p><strong>Limit Exceeded:</strong> Your selected canisters ({totalSelected}) exceed your <strong>{capacity} Cans</strong> subscription plan. Please reduce quantities to complete your box customizations.</p>
+                                      <p><strong>Limit Exceeded:</strong> Your selected items ({totalSelected}) exceed your <strong>{capacity} Pieces</strong> subscription plan. Please reduce quantities to complete your box customizations.</p>
                                     ) : (
-                                      <p><strong>Fill Your Box:</strong> You have selected {totalSelected} of your allowed <strong>{capacity} Cans</strong>. Please increase quantities or add new flavors from the catalog below to make the most of your delivery!</p>
+                                      <p><strong>Fill Your Box:</strong> You have selected {totalSelected} of your allowed <strong>{capacity} Pieces</strong>. Please increase quantities or add new silhouettes from the catalog below to make the most of your delivery!</p>
                                     )}
                                   </div>
                                 </div>
@@ -1886,11 +1886,11 @@ export default function CustomerAccount({
                       )}
                     </div>
 
-                    {/* Part 2: Add other available canisters */}
+                    {/* Part 2: Add other available pieces */}
                     <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
                       <div>
-                        <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Add Premium Flavors to Box</h3>
-                        <p className="text-slate-400 text-[10.5px]">Select any of these premium nicotine pouch brands to add to your recurring deliveries.</p>
+                        <h3 className="font-extrabold text-sm text-[#071d37] uppercase tracking-wider">Add Capsule Garments to Box</h3>
+                        <p className="text-slate-400 text-[10.5px]">Select any of these tailored ready-to-wear pieces to add to your recurring deliveries.</p>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1935,7 +1935,7 @@ export default function CustomerAccount({
                     
                     <div className="space-y-2 text-center md:text-left">
                       <span className="text-[10px] font-bold bg-[#dfa047] text-[#071d37] py-1 px-3 rounded-full uppercase tracking-wider inline-block">Loyalty Club</span>
-                      <h2 className="text-2xl font-black uppercase text-white tracking-wide">Pouch Supply VIP Scheme</h2>
+                      <h2 className="text-2xl font-black uppercase text-white tracking-wide">Atelier Studio VIP Scheme</h2>
                       <p className="text-slate-300 text-xs max-w-lg leading-relaxed">
                         No complex formulas, math points, or expiration clocks. Simply complete shop orders to trigger direct premium gifts, complimentary deliveries, and discount credit codes.
                       </p>
@@ -1970,7 +1970,7 @@ export default function CustomerAccount({
                           ],
                           milestones: [
                             { order: 1, reward: "Members receive 10% OFF", code: "BRONZE1" },
-                            { order: 3, reward: "FREE can of your choice", code: "BRONZE3" },
+                            { order: 3, reward: "FREE garment accessory of your choice", code: "BRONZE3" },
                             { order: 5, reward: "Free Express Delivery on your next order", code: "BRONZE5" }
                           ]
                         },
@@ -1983,15 +1983,15 @@ export default function CustomerAccount({
                           unlockMsg: "Unlock: Gold Member",
                           benefits: [
                             "Silver Account Badge 🥈",
-                            "Early Access to New Flavours 🎁",
+                            "Early Access to New Drops 🎁",
                             "Exclusive Subscriber-Only Offers 💰"
                           ],
                           milestones: [
-                            { order: 7, reward: "FREE can 🥫", code: "SILVER7" },
+                            { order: 7, reward: "FREE wardrobe accessory 🎁", code: "SILVER7" },
                             { order: 9, reward: "£5 Store Credit 🎁", code: "SILVER9" },
-                            { order: 11, reward: "FREE can 🥫", code: "SILVER11" },
-                            { order: 13, reward: "Exclusive Pouch Supply merchandise (stickers, keyring, bottle opener, etc.) 🎁", code: "SILVER13" },
-                            { order: 15, reward: "2 FREE cans 🥫", code: "SILVER15" }
+                            { order: 11, reward: "FREE garment piece 👕", code: "SILVER11" },
+                            { order: 13, reward: "Exclusive Atelier Studio merchandise (tote, cap, styling pin) 🎁", code: "SILVER13" },
+                            { order: 15, reward: "2 FREE wardrobe pieces 👕", code: "SILVER15" }
                           ]
                         },
                         {
@@ -2009,12 +2009,12 @@ export default function CustomerAccount({
                           ],
                           milestones: [
                             { order: 17, reward: "20% off your purchase 🎁", code: "GOLD17" },
-                            { order: 19, reward: "2 FREE cans 🥫", code: "GOLD19" },
-                            { order: 21, reward: "Mystery Reward (chosen by Pouch Supply) 🎁", code: "GOLD21" },
-                            { order: 23, reward: "2 FREE cans 🥫", code: "GOLD23" },
-                            { order: 25, reward: "Premium Pouch Supply merchandise 👕", code: "GOLD25" },
+                            { order: 19, reward: "2 FREE wardrobe pieces 👕", code: "GOLD19" },
+                            { order: 21, reward: "Mystery Reward (chosen by Atelier Studio) 🎁", code: "GOLD21" },
+                            { order: 23, reward: "2 FREE wardrobe pieces 👕", code: "GOLD23" },
+                            { order: 25, reward: "Premium Atelier Studio merchandise 👕", code: "GOLD25" },
                             { order: 27, reward: "20% off your purchase 🎁", code: "GOLD27" },
-                            { order: 29, reward: "2 FREE cans 🥫", code: "GOLD29" },
+                            { order: 29, reward: "2 FREE wardrobe pieces 👕", code: "GOLD29" },
                             { order: 30, reward: "Unlock Platinum Member 🏆", code: "GOLD30" }
                           ]
                         },
@@ -2033,7 +2033,7 @@ export default function CustomerAccount({
                             "Priority Customer Support ⭐"
                           ],
                           milestones: [
-                            { order: 31, reward: "Odd order reward: Choose 3 FREE cans, £10 Store Credit, Free Priority Delivery, Exclusive merchandise, or Mystery Reward", code: "PLATINUM_ODD" }
+                            { order: 31, reward: "Odd order reward: Choose 3 FREE garments, £10 Store Credit, Free Priority Delivery, Exclusive merchandise, or Mystery Reward", code: "PLATINUM_ODD" }
                           ]
                         }
                       ].map((tier) => {
@@ -2097,10 +2097,10 @@ export default function CustomerAccount({
                                     <div className="bg-white/80 p-3 rounded-lg border border-violet-100 space-y-2">
                                       <p className="text-[10px] font-bold text-slate-700">Odd Order Rewards (Choose ONE at checkout/delivery):</p>
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] font-medium text-slate-600">
-                                        <span className="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">🥫 3 FREE Cans of choice</span>
+                                        <span className="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">✨ 3 FREE Garments of choice</span>
                                         <span className="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">💷 £10.00 Store Credit</span>
                                         <span className="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">🚚 Free Priority Fast Delivery</span>
-                                        <span className="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">🎁 Exclusive Pouch Supply Merch</span>
+                                        <span className="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">🎁 Exclusive Atelier Studio Merch</span>
                                         <span className="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">🎲 Mystery Custom Reward</span>
                                       </div>
                                     </div>
@@ -2277,7 +2277,7 @@ export default function CustomerAccount({
                       <span className="text-[10px] font-bold bg-[#dfa047] text-[#071d37] py-1 px-3 rounded-full uppercase tracking-wider inline-block">Referrals Hub</span>
                       <h2 className="text-2xl font-black uppercase tracking-wide">Invite Friends, Earn Wallet Credit</h2>
                       <p className="text-slate-300 text-xs max-w-lg leading-relaxed">
-                        Earn cash credit directly into your Pouch Supply wallet! For every friend who registers and triggers a box subscription, we reward you with £5.00 in direct credits.
+                        Earn cash credit directly into your Atelier wallet! For every friend who registers and triggers a box subscription, we reward you with £5.00 in direct credits.
                       </p>
                     </div>
 
@@ -2416,7 +2416,7 @@ export default function CustomerAccount({
                         <p className="font-mono text-base font-bold tracking-widest mt-4">•••• •••• •••• {card.last4}</p>
                         <div className="flex justify-between text-[10px] text-slate-300 font-semibold mt-2">
                           <span>EXPIRY: {card.exp}</span>
-                          <span>POUCH SUPPLY CUSTOMER</span>
+                          <span>ATELIER STUDIO MEMBER</span>
                         </div>
                       </div>
                     ))}
@@ -2593,8 +2593,8 @@ export default function CustomerAccount({
                     
                     <div className="space-y-3 text-xs">
                       {[
-                        { q: 'Can I swap can flavors?', a: 'Yes! Simply use the Swapper in your Subscriptions tab before shipment day.' },
-                        { q: 'How do loyalty gifts work?', a: 'Place regular orders to unlock free delivery coupons or premium extra pouch cans.' },
+                        { q: 'Can I swap wardrobe styles?', a: 'Yes! Simply use the Swapper in your Subscriptions tab before dispatch day.' },
+                        { q: 'How do loyalty gifts work?', a: 'Place regular orders to unlock free delivery coupons or premium extra garments.' },
                         { q: 'How do referrals trigger?', a: 'When friends join using your unique code, a £5.00 wallet discount applies automatically.' }
                       ].map((faq, idx) => (
                         <div key={idx} className="space-y-1 p-2 bg-slate-50 border border-slate-100 rounded-xl">

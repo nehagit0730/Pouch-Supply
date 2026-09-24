@@ -52,11 +52,11 @@ const PLANS: PlanConfig[] = [
     limit: 12,
     price: 46.99,
     perCan: '£3.92',
-    extraLabel: '£3.80 for any additional can',
+    extraLabel: '£3.80 for any additional piece',
   },
 ];
 
-// Helper components for the high-fidelity pouch illustrations
+// Helper components for capsule illustrations
 const CanSVG = ({ brand, color }: { brand: string, color: string }) => {
   return (
     <div 
@@ -177,12 +177,12 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
         ...p,
         subtitle: p.slug === 'lite' ? 'Best for getting started' : p.slug === 'core' ? 'Most flexible' : p.slug === 'pro' ? 'Best value' : 'Maximum savings',
         features: p.slug === 'lite' 
-          ? ['6 premium cans', 'Flexible delivery', 'Change flavours anytime', 'Skip or pause anytime']
+          ? ['6 capsule garments', 'Flexible delivery', 'Swap styles anytime', 'Skip or pause anytime']
           : p.slug === 'core'
-          ? ['8 premium cans', 'Lower price per can', 'Change or swap brands', 'Skip or pause anytime']
+          ? ['8 capsule garments', 'Lower price per item', 'Swap styles anytime', 'Skip or pause anytime']
           : p.slug === 'pro'
-          ? ['10 premium cans', 'FREE delivery 📦', 'Best price per can', 'Loyalty rewards boost', 'Skip or pause anytime']
-          : ['12 premium cans', 'FREE delivery 📦', 'Lowest price per can', '£3.80 for any extra can', 'Skip or pause anytime'],
+          ? ['10 capsule garments', 'FREE delivery 📦', 'Best price per item', 'Member rewards boost', 'Skip or pause anytime']
+          : ['12 capsule garments', 'FREE delivery 📦', 'Lowest price per item', '£3.80 for any extra piece', 'Skip or pause anytime'],
         saveAmountText: p.slug === 'lite' ? 'Save £5.00/month' : p.slug === 'core' ? 'Save £10.00/month' : p.slug === 'pro' ? 'Save £14.00/month' : 'Save £19.00/month',
       }));
 
@@ -209,7 +209,7 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
   const handleAddProduct = (product: Product, forcedVariantId?: string) => {
     if (totalSelectedCount >= activeLimit) {
       if (activePlanSlug === 'ultimate') {
-        // Ultimate plan allows adding more than 12 cans at £3.80 each!
+        // Ultimate plan allows adding more than 12 items at £3.80 each!
       } else {
         alert(`You have already selected ${activeLimit} items. Please remove some items if you'd like to choose different ones.`);
         return;
@@ -272,12 +272,12 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
       return { product: finalProduct, quantity };
     });
 
-    const extraCans = isUltimate && totalSelectedCount > 12 ? totalSelectedCount - 12 : 0;
-    const finalPrice = activePrice + (extraCans * 3.80);
+    const extraItems = isUltimate && totalSelectedCount > 12 ? totalSelectedCount - 12 : 0;
+    const finalPrice = activePrice + (extraItems * 3.80);
 
-    const displayName = isUltimate && extraCans > 0 
-      ? `${activePlan?.name || 'Ultimate'} Pack (+${extraCans} Extra)` 
-      : `${activePlan?.name || 'Custom'} Subscription Pack`;
+    const displayName = isUltimate && extraItems > 0 
+      ? `${activePlan?.name || 'Ultimate'} Capsule (+${extraItems} Extra)` 
+      : `${activePlan?.name || 'Custom'} Subscription Capsule`;
 
     onAddSubToCart(displayName, compiledItems, frequency, finalPrice);
     
@@ -401,7 +401,7 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
                       </p>
                     </div>
 
-                    {/* Plan image wrapper - uses dynamic custom image if uploaded, or high-fidelity canister overlap */}
+                    {/* Plan image wrapper - uses dynamic custom image if uploaded, or high-fidelity capsule overlay */}
                     <div className="relative h-44 w-full bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden flex items-center justify-center p-2 shadow-inner">
                       {plan.imageUrl ? (
                         <img 
@@ -418,7 +418,7 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
                     {/* Pricing Details */}
                     <div className="text-center pt-2 border-t border-slate-100 space-y-1">
                       <div className="text-xs font-extrabold uppercase tracking-widest text-slate-400">
-                        Includes {plan.limit} Cans
+                        Includes {plan.limit} Pieces
                       </div>
                       <div className="text-3xl font-black text-slate-950 tracking-tight leading-none">
                         £{plan.price.toFixed(2)}
@@ -748,7 +748,7 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
                     <span>Allocated: {totalSelectedCount} / 12 products</span>
                     {totalSelectedCount > 12 ? (
                       <span className="text-emerald-600 font-extrabold">
-                        +{totalSelectedCount - 12} Extra Can{totalSelectedCount - 12 > 1 ? 's' : ''}
+                        +{totalSelectedCount - 12} Extra Piece{totalSelectedCount - 12 > 1 ? 's' : ''}
                       </span>
                     ) : (
                       <span className="text-[#dfb55a] font-extrabold">Complete!</span>

@@ -504,7 +504,7 @@ export default function CheckoutView({
             </span>
             <h1 className="text-3xl font-black text-slate-950 uppercase tracking-tight">Order Placed Successfully!</h1>
             <p className="text-slate-500 max-w-lg mx-auto text-xs leading-relaxed">
-              Thank you for shopping with us! Your nicotine pouches are being packed and dispatched directly from our UK-licensed laboratory pouch facility.
+              Thank you for shopping with us! Your order is being carefully hand-packed and dispatched directly from our luxury atelier fulfillment center.
             </p>
           </div>
 
@@ -566,10 +566,10 @@ export default function CheckoutView({
           <div className="space-y-3">
             <h2 className="text-xl font-black text-[#071d37] uppercase tracking-wider">Account Required to Subscribe</h2>
             <p className="text-slate-500 text-xs leading-relaxed max-w-md mx-auto">
-              Your cart contains a customized **Pouch Supply Subscription Pack**. To complete a subscription purchase, you are required to create a free customer account or sign in.
+              Your cart contains a customized **Atelier Subscription Capsule**. To complete a subscription purchase, you are required to create a free customer account or sign in.
             </p>
             <p className="text-slate-400 text-[11px] leading-relaxed max-w-lg mx-auto bg-slate-50 border border-slate-100 rounded-xl p-3.5 mt-2">
-              Having an account ensures your selected nicotine pouch quantities are securely synced to our cloud database. This allows you to manage swaps, skip deliveries, track milestones, and secure rewards anytime with zero data loss.
+              Having an account ensures your selected wardrobe pieces are securely synced to our cloud database. This allows you to manage swaps, skip deliveries, track milestones, and secure rewards anytime with zero data loss.
             </p>
           </div>
           
@@ -712,7 +712,7 @@ export default function CheckoutView({
                   }`}
                 >
                   <div className="text-left">
-                    <span className="font-extrabold text-xs block text-slate-800">Standard Pouch Mail</span>
+                    <span className="font-extrabold text-xs block text-slate-800">Standard Atelier Courier</span>
                     <span className="text-[10px] text-slate-400">Arrives in 3-5 business days</span>
                   </div>
                   <span className="font-black text-xs text-slate-800">FREE</span>
@@ -1182,7 +1182,7 @@ export default function CheckoutView({
             <div className="bg-slate-50 rounded-xl p-3 text-left text-[10px] space-y-1.5 font-semibold text-slate-600">
               <div className="flex justify-between">
                 <span>Merchant:</span>
-                <span className="font-bold text-slate-800">POUCH SUPPLY CO.</span>
+                <span className="font-bold text-slate-800">ATELIER STUDIO</span>
               </div>
               <div className="flex justify-between">
                 <span>Total Charge:</span>

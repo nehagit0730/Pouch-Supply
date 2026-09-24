@@ -400,20 +400,20 @@ export default function BlogContentEditor({
     let generatedHtml = '';
     
     if (templateType === 'intro') {
-      generatedHtml = `<p>Welcome to our definitive guide! In the fast-evolving world of premium compounding standards, choosing the correct ingredients and understanding raw chemistry properties is essential for crafting superior, eye-safe, and highly satisfying solutions. Today, we break down the leading hacks that store owners and consumers can utilize immediately.</p>`;
+      generatedHtml = `<p>Welcome to our definitive style guide. In the realm of luxury ready-to-wear, understanding fabric provenance, weave architecture, and garment care is essential for building an enduring capsule wardrobe. Today, our atelier tailors share essential practices for preserving fine textiles.</p>`;
     } else if (templateType === 'hacks') {
-      generatedHtml = `<h3>Top 3 Hacks For Canister Storage</h3>
-<p>To preserve fresh moisture, taste consistency, and organic strength, proper storage environment parameters are key:</p>
+      generatedHtml = `<h3>Top 3 Practices For Fine Garment Care</h3>
+<p>To preserve natural fiber elasticity, drape, and enduring luster, master these foundational garment care habits:</p>
 <ul class="list-disc pl-5 my-2 space-y-1">
-  <li><strong>Hack 1: Maintain tight temperature seals</strong> - Storing canisters away from direct sunlight at steady room temperatures blocks crystallization.</li>
-  <li><strong>Hack 2: Use low-humidity buffer packets</strong> - Incorporating food-safe humidity sheets guards the structural moisture.</li>
-  <li><strong>Hack 3: Rotational stocking</strong> - Implement first-in, first-out stock systems so users enjoy the peak chemical integrity.</li>
+  <li><strong>Practice 1: Structured wooden hangers</strong> - Using wide contoured hangers preserves delicate shoulder architecture in blazers and wool coats.</li>
+  <li><strong>Practice 2: Steam instead of dry iron</strong> - Gentle steam relaxes organic cotton and virgin wool fibers without compressing delicate weave structures.</li>
+  <li><strong>Practice 3: Breathable canvas storage</strong> - Store seasonal coats inside breathable cotton garment covers rather than synthetic plastic wraps.</li>
 </ul>`;
     } else if (templateType === 'science') {
-      generatedHtml = `<h3>The Science Behind Modern Formulation</h3>
-<p>Analytical laboratory studies demonstrate that food-grade compounds react dynamically to atmosphere conditions. When molecules encounter humidity, they form covalent buffers. Formulators can offset this degradation through pure organic additives, securing a longer shelf-life and pristine product quality.</p>`;
+      generatedHtml = `<h3>The Architecture of Heavyweight Weaves</h3>
+<p>Textile analyses reveal that long-staple organic cotton fibers provide superior tensile strength and tactile drape compared to conventional blends. When spun with zero chemical finishes, natural fibers retain breathability while developing an exquisite patina over years of wear.</p>`;
     } else if (templateType === 'conclusion') {
-      generatedHtml = `<p><strong>Summary:</strong> By implementing these premium compound and storage standards, you secure ultimate product consistency. Subscribe to our monthly journal to keep your laboratory compounds, buying guidelines, and warehouse science fully optimized.</p>`;
+      generatedHtml = `<p><strong>Summary:</strong> By investing in purposeful silhouettes and proper garment care, your capsule wardrobe transcends seasonal trends. Subscribe to our monthly journal to explore upcoming atelier collections, designer profiles, and bespoke tailoring guides.</p>`;
     }
 
     if (isCodeView) {

@@ -512,11 +512,11 @@ export default function CollectionDetailView({
               </div>
             </div>
 
-            {/* 3. STRENGTH CHECKBOX LIST */}
+            {/* 3. FIT & SILHOUETTE CHECKBOX LIST */}
             <div className="space-y-2.5 pt-4 border-t border-slate-100">
               <div className="flex items-center gap-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                <span>Strength</span>
-                <HelpCircle className="h-3 w-3 text-slate-300 cursor-help" title="Strength categorized by standard ranges" />
+                <span>Fit & Silhouette</span>
+                <HelpCircle className="h-3 w-3 text-slate-300 cursor-help" title="Fit categorized by tailoring ranges" />
               </div>
               <div className="space-y-1.5">
                 {filterOptionsAndCounts.strengths.map(str => {

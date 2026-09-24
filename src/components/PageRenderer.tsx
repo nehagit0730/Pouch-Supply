@@ -180,7 +180,7 @@ function PlansSection({ sec, handleLinkClick }: PlansSectionProps) {
       limit: 6,
       saveAmountText: 'Save £5.00/month',
       imageUrl: '',
-      features: ['6 premium cans', 'Flexible delivery', 'Change flavours anytime', 'Skip or pause anytime'],
+      features: ['6 capsule garments', 'Flexible seasonal delivery', 'Swap styles anytime', 'Skip or pause anytime'],
       isPopular: false
     },
     {
@@ -191,7 +191,7 @@ function PlansSection({ sec, handleLinkClick }: PlansSectionProps) {
       limit: 8,
       saveAmountText: 'Save £10.00/month',
       imageUrl: '',
-      features: ['8 premium cans', 'Lower price per can', 'Change or swap brands', 'Skip or pause anytime'],
+      features: ['8 capsule garments', 'Lower price per piece', 'Swap styles anytime', 'Skip or pause anytime'],
       isPopular: false
     },
     {
@@ -202,7 +202,7 @@ function PlansSection({ sec, handleLinkClick }: PlansSectionProps) {
       limit: 10,
       saveAmountText: 'Save £14.00/month',
       imageUrl: '',
-      features: ['10 premium cans', 'FREE delivery 📦', 'Best price per can', 'Loyalty rewards boost', 'Skip or pause anytime'],
+      features: ['10 capsule garments', 'FREE express delivery 📦', 'Best price per piece', 'Member rewards boost', 'Skip or pause anytime'],
       isPopular: true
     },
     {
@@ -213,8 +213,8 @@ function PlansSection({ sec, handleLinkClick }: PlansSectionProps) {
       limit: 12,
       saveAmountText: 'Save £19.00/month',
       imageUrl: '',
-      features: ['12 premium cans', 'FREE delivery 📦', 'Lowest price per can', '£3.80 for any extra can', 'Skip or pause anytime'],
-      extraText: '£3.80 FOR ANY ADDITIONAL CAN',
+      features: ['12 capsule garments', 'FREE express delivery 📦', 'Lowest price per piece', '£3.80 for any extra piece', 'Skip or pause anytime'],
+      extraText: '£3.80 FOR ANY ADDITIONAL PIECE',
       isPopular: false
     }
   ];
@@ -324,7 +324,7 @@ function PlansSection({ sec, handleLinkClick }: PlansSectionProps) {
                   {/* Pricing Details */}
                   <div className="text-center pt-2 border-t border-slate-100 space-y-1">
                     <div className="text-xs font-extrabold uppercase tracking-widest text-slate-400">
-                      Includes {plan.limit} Cans
+                      Includes {plan.limit} Pieces
                     </div>
                     <div className="text-3xl font-black text-slate-950 tracking-tight leading-none">
                       £{plan.price.toFixed(2)}
