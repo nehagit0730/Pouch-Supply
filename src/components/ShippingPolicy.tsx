@@ -16,12 +16,12 @@ export default function ShippingPolicy({ onNavigate }: ShippingPolicyProps) {
       content: (
         <div className="space-y-4">
           <p className="text-slate-650 leading-relaxed text-sm sm:text-base font-medium">
-            At <strong className="text-slate-900 font-extrabold">Pouch Supply</strong>, we are committed to delivering your orders quickly, safely, and reliably. This Shipping Policy outlines how we process, ship, and deliver your premium canisters.
+            At <strong className="text-slate-900 font-extrabold">Atelier Studio</strong>, we are committed to delivering your orders quickly, safely, and reliably. This Shipping Policy outlines how we process, pack, and deliver your garments and curated capsules.
           </p>
-          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3 text-indigo-850">
-            <Clipboard className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex gap-3 text-slate-800">
+            <Clipboard className="h-5 w-5 text-slate-700 shrink-0 mt-0.5" />
             <p className="text-xs font-semibold leading-relaxed">
-              We focus on discrete, highly insulated packaging that keeps your compounding nicotine canisters in clinical room temperatures during freight.
+              Every garment is packed in breathable garment bags within sturdy protective outer boxes to preserve fabric structure and drape during transit.
             </p>
           </div>
         </div>
@@ -108,12 +108,12 @@ export default function ShippingPolicy({ onNavigate }: ShippingPolicyProps) {
               <span>The selected shipping carrier tier (Standard or Express Air)</span>
             </li>
             <li className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 bg-indigo-505 rounded-full" />
-              <span>Bulk canister weight or volumetric constraints</span>
+              <span className="h-1.5 w-1.5 bg-slate-900 rounded-full" />
+              <span>Bulk garment weight or volumetric box constraints</span>
             </li>
           </ul>
           <p className="text-xs text-slate-550 leading-relaxed font-semibold bg-slate-50 p-3 rounded-lg border border-dashed">
-            All applicable shipping costs, including taxes and special handling surcharges of active canister boxes, are clearly disclosed in the order manifest before you commit payment.
+            All applicable shipping costs and duties are clearly disclosed in the order manifest before you commit payment.
           </p>
         </div>
       )
@@ -133,28 +133,28 @@ export default function ShippingPolicy({ onNavigate }: ShippingPolicyProps) {
               Exclusion of Liability Parameters
             </p>
             <p className="leading-relaxed">We cannot accept liability or provide cash refunds for delays caused by incorrect street addresses, invalid postal indices, or failed handovers resulting from incomplete delivery details.</p>
-            <p className="leading-relaxed text-indigo-650 pt-1 border-t">If an order package is returned to our dispatch terminal due to incomplete/incorrect addresses, additional postage fees will be assessed to trigger a re-delivery.</p>
+            <p className="leading-relaxed text-slate-700 pt-1 border-t">If an order package is returned to our dispatch terminal due to incomplete/incorrect addresses, additional postage fees will be assessed to trigger a re-delivery.</p>
           </div>
         </div>
       )
     },
     {
       id: 6,
-      title: '6. Age Verification on Delivery',
+      title: '6. Signature on Delivery',
       icon: ShieldCheck,
       content: (
         <div className="space-y-4">
-          <div className="bg-rose-50 border border-rose-200/60 p-4.5 rounded-2xl flex gap-3 text-rose-850">
-            <ShieldCheck className="h-6 w-6 text-rose-650 shrink-0 mt-0.5" />
+          <div className="bg-slate-50 border border-slate-200 p-4.5 rounded-2xl flex gap-3 text-slate-800">
+            <ShieldCheck className="h-6 w-6 text-slate-700 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <span className="block font-black text-xs uppercase tracking-wider text-rose-900">Mandatory Adult Handover</span>
-              <p className="text-xs font-semibold leading-relaxed text-rose-800">
-                Because our functional white pouches contain chemical nicotine compounds, valid adult age proof is mandatory upon package reception.
+              <span className="block font-black text-xs uppercase tracking-wider text-slate-900">Secure Delivery Confirmation</span>
+              <p className="text-xs font-semibold leading-relaxed text-slate-600">
+                To guarantee secure handover of high-value garments and outerwear, priority shipments may require a signature upon arrival.
               </p>
             </div>
           </div>
           <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-medium">
-            Our couriers are legally instructed to request standard government-issued photo ID (driving license or passport) validating that the recipient is <strong className="text-slate-900">18 years or older</strong>. Packaging will not under any scenario be released to minors. Failed verification returns are subject to restocking fees.
+            Our couriers will leave a calling card if no one is available to receive the package, offering local depot collection or rescheduled delivery.
           </p>
         </div>
       )
@@ -181,7 +181,7 @@ export default function ShippingPolicy({ onNavigate }: ShippingPolicyProps) {
       content: (
         <div className="space-y-3">
           <p className="text-slate-650 text-xs sm:text-sm leading-relaxed">
-            We operate fully traceable logistics. The moment your box of canisters leaves our high-security dispatch bay, we broadcast a priority email with your personal courier tracking link.
+            We operate fully traceable logistics. The moment your parcel leaves our studio dispatch bay, we broadcast a priority email with your personal courier tracking link.
           </p>
           <p className="text-xs text-slate-500 font-semibold leading-relaxed">
             * Please allow up to 24 hours from dispatch for the courier's electronic system to synchronize and update scanning checkpoints.
@@ -201,14 +201,14 @@ export default function ShippingPolicy({ onNavigate }: ShippingPolicyProps) {
           <div className="p-4 bg-slate-50 border rounded-2xl border-dashed space-y-2.5">
             <p className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-slate-400 inline-block" />
-              Contact us immediately with your unique order number
+              Contact our concierge immediately with your unique order number
             </p>
             <p className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-slate-400 inline-block" />
-              We will raise a transit investigation file with the courier team
+              We will raise an urgent transit investigation with the courier team
             </p>
             <p className="text-xs font-semibold text-slate-705">
-              Although we are legally exempt from delays triggered by independent third-party carriers, we pride ourselves on exceptional support and will exhaust all pathways to retrieve or replace lost canisters.
+              We pride ourselves on exceptional client support and will exhaust all pathways to expedite or replace delayed parcels.
             </p>
           </div>
         </div>
@@ -221,39 +221,39 @@ export default function ShippingPolicy({ onNavigate }: ShippingPolicyProps) {
       content: (
         <div className="space-y-3">
           <p className="text-slate-650 text-xs sm:text-sm leading-relaxed">
-            We service shipments to selected overseas jurisdictions subject to regional nicotine import regulations:
+            We service worldwide shipments across Europe, North America, Asia, and Oceania:
           </p>
           <ul className="space-y-2 text-[11px] text-slate-550 pl-2 list-disc font-medium">
-            <li>Overseas transit times vary significantly depending on flight routes and processing structures.</li>
-            <li>Import customs duties, regional excise taxes, and local declaration fees are the absolute responsibility of the client.</li>
-            <li>We recommend evaluating your native border rules before committing to high-tier imports.</li>
+            <li>Express international delivery typically completes in 3-5 business days.</li>
+            <li>Import customs duties and local taxes may be applied depending on destination sovereignty.</li>
+            <li>All items are insured during transit for peace of mind.</li>
           </ul>
         </div>
       )
     },
     {
       id: 11,
-      title: '11. Support Contact Desk',
+      title: '11. Client Concierge Desk',
       icon: Mail,
       content: (
-        <div className="p-5 bg-indigo-950 text-white rounded-2xl space-y-4">
+        <div className="p-5 bg-slate-900 text-white rounded-2xl space-y-4">
           <div>
-            <span className="block text-[10px] font-black uppercase text-indigo-300 tracking-widest mb-1">Direct Courier Inquiries</span>
-            <h4 className="text-lg font-black text-white leading-none">Pouch Supply Dispatch Helpdesk</h4>
+            <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Direct Courier Inquiries</span>
+            <h4 className="text-lg font-black text-white leading-none">Atelier Concierge Helpdesk</h4>
           </div>
 
-          <p className="text-indigo-200 text-xs leading-relaxed font-medium">
-            Our dispatch managers maintain direct communications with Royal Mail, DPD, DHL and regional carrier depots to fast-track package issues.
+          <p className="text-slate-300 text-xs leading-relaxed font-medium">
+            Our logistics team maintains direct communication lines with priority express couriers to resolve package inquiries promptly.
           </p>
           
-          <div className="text-xs font-bold text-indigo-300">
-            Email: <a href="mailto:support@pouchsupply.com" className="underline hover:text-white font-mono">support@pouchsupply.com</a>
+          <div className="text-xs font-bold text-slate-300">
+            Email: <a href="mailto:concierge@atelier-studio.com" className="underline hover:text-white font-mono">concierge@atelier-studio.com</a>
           </div>
 
-          <div className="pt-2 border-t border-indigo-900 flex gap-2">
+          <div className="pt-2 border-t border-slate-800 flex gap-2">
             <button
               onClick={() => onNavigate('contact')}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs px-4 py-2.5 rounded-xl transition cursor-pointer uppercase tracking-wider"
+              className="bg-white text-slate-900 font-black text-xs px-4 py-2.5 rounded-xl transition cursor-pointer uppercase tracking-wider hover:bg-slate-100"
             >
               Raise Dispatch Ticket
             </button>
@@ -261,7 +261,7 @@ export default function ShippingPolicy({ onNavigate }: ShippingPolicyProps) {
               onClick={() => onNavigate('frontend-shop')}
               className="bg-white/10 hover:bg-white/15 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition cursor-pointer"
             >
-              Shop Pouches
+              Explore Collection
             </button>
           </div>
         </div>
@@ -348,7 +348,7 @@ export default function ShippingPolicy({ onNavigate }: ShippingPolicyProps) {
                   onClick={() => onNavigate('frontend-shop')}
                   className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-wider py-2.5 rounded-xl cursor-pointer transition shadow-xs flex items-center justify-center gap-1.5"
                 >
-                  Return to Canisters <ArrowRight className="h-3 w-3 animate-pulse" />
+                  Return to Store <ArrowRight className="h-3 w-3 animate-pulse" />
                 </button>
               </div>
             </div>
@@ -358,11 +358,11 @@ export default function ShippingPolicy({ onNavigate }: ShippingPolicyProps) {
           <div className="col-span-1 lg:col-span-8 space-y-8">
             
             {/* Quick Summary card box */}
-            <div className="border border-emerald-150 rounded-[22px] bg-emerald-500/5 p-5 sm:p-6 space-y-3 shadow-xs">
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-100/60 py-0.5 px-2.5 rounded-full inline-block">EXECUTIVE GUARANTEE</span>
-              <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Fast, Discreet, & Reliable delivery</h3>
+            <div className="border border-slate-200 rounded-[22px] bg-slate-50 p-5 sm:p-6 space-y-3 shadow-xs">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 bg-white py-0.5 px-2.5 rounded-full inline-block border border-slate-200">EXECUTIVE GUARANTEE</span>
+              <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Fast, Careful & Insured Delivery</h3>
               <p className="text-slate-655 text-xs sm:text-sm font-medium leading-relaxed">
-                All Pouch Supply orders are compiled in plain, unbranded double-walled cardboard packaging to guarantee absolute delivery discretion. No commercial logos, warnings, or brand marks are marked on outer layers, ensuring your privacy remains protected during absolute transit.
+                All Atelier orders are hand-inspected, wrapped in protective garment tissue, and placed in durable structured packaging to guarantee pristine arrival.
               </p>
             </div>
 

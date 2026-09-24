@@ -843,13 +843,13 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
             {/* Total Subscription Box pricing */}
             <div className="border-t border-slate-100 pt-4 space-y-3 bg-slate-50 p-4 rounded-xl">
               <div className="flex justify-between items-center text-xs text-slate-600">
-                <span>{activeLimit} pouches flat rate</span>
+                <span>{activeLimit} capsule items flat rate</span>
                 <span className="line-through text-slate-400">£{(activePrice * 1.2).toFixed(2)}</span>
               </div>
 
               {activePlanSlug === 'ultimate' && totalSelectedCount > 12 && (
                 <div className="flex justify-between items-center text-xs text-slate-600 animate-fade-in">
-                  <span>Additional cans ({totalSelectedCount - 12} × £3.80)</span>
+                  <span>Additional items ({totalSelectedCount - 12} × £3.80)</span>
                   <span className="text-slate-800 font-extrabold">£{((totalSelectedCount - 12) * 3.80).toFixed(2)}</span>
                 </div>
               )}
@@ -865,9 +865,9 @@ export default function SubscriptionBuilder({ allProducts, collections, onAddSub
               {activePlan.slug === 'ultimate' && (
                 <div className="text-[10px] text-rose-600 font-extrabold uppercase text-center py-1.5 bg-rose-50 border border-rose-100 rounded-lg">
                   {totalSelectedCount >= 12 ? (
-                    <span>★ Add additional cans below for £3.80 each!</span>
+                    <span>★ Add additional items below for £3.80 each!</span>
                   ) : (
-                    <span>£3.80 for any additional can</span>
+                    <span>£3.80 for any additional item</span>
                   )}
                 </div>
               )}

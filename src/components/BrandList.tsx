@@ -34,11 +34,11 @@ export default function BrandList({ collections, onBrandClick }: BrandListProps)
       {/* Intro display block */}
       <div className="text-center max-w-2xl mx-auto mb-12">
         <span className="text-[10px] bg-slate-100 text-slate-800 font-bold py-1 px-3.5 rounded-full uppercase tracking-widest inline-flex items-center gap-1.5">
-          <Library className="h-3.5 w-3.5" /> Pouch Brands Directory
+          <Library className="h-3.5 w-3.5" /> Designers & Houses Directory
         </span>
-        <h2 className="text-3xl font-extrabold text-slate-800 mt-3 tracking-snug">EXPLORE BRAND COLLECTIONS</h2>
+        <h2 className="text-3xl font-extrabold text-slate-800 mt-3 tracking-snug">EXPLORE ATELIER COLLECTIONS</h2>
         <p className="text-slate-400 text-xs mt-2">
-          Click on any premium brand partner to open their dedicated collection page. View ratings, flavor options, and filter based on nicotine levels.
+          Explore our partnered design houses and seasonal capsules. View fabric weights, tailoring cuts, and limited-run pieces.
         </p>
       </div>
 
@@ -54,7 +54,7 @@ export default function BrandList({ collections, onBrandClick }: BrandListProps)
               className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between hover:border-slate-350 hover:shadow-xs transition-all cursor-pointer group"
             >
               <div>
-                {/* Brand visually styled can header banner */}
+                {/* Brand visually styled header banner */}
                 <div className={`h-36 rounded-xl bg-gradient-to-tr ${meta.gradient} flex items-center justify-center p-4 relative overflow-hidden mb-4 shadow-inner`}>
                   
                   {/* Subtle vector patterns */}
@@ -62,7 +62,7 @@ export default function BrandList({ collections, onBrandClick }: BrandListProps)
                   
                   <div className="text-center">
                     <span className="font-extrabold text-white text-3xl tracking-widest uppercase block drop-shadow-md">{meta.logoText}</span>
-                    <span className="text-[9px] text-white/70 tracking-widest uppercase block mt-1">Official Can</span>
+                    <span className="text-[9px] text-white/70 tracking-widest uppercase block mt-1">Official Studio</span>
                   </div>
 
                   <span className="absolute bottom-2.5 right-2 text-[9px] bg-black/45 text-white font-bold py-0.5 px-2 rounded-md">
@@ -75,7 +75,7 @@ export default function BrandList({ collections, onBrandClick }: BrandListProps)
                   <h3 className="font-black text-slate-800 text-xs uppercase tracking-wide flex items-center justify-between">
                     <span>{col.title}</span>
                     <span className="text-[9px] text-indigo-600 bg-indigo-50 font-bold py-0.5 px-2 rounded-full border border-indigo-100">
-                      {col.productIds.length} Canisters
+                      {col.productIds.length} Items
                     </span>
                   </h3>
                   <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">{col.description}</p>
@@ -88,7 +88,7 @@ export default function BrandList({ collections, onBrandClick }: BrandListProps)
                   <Building className="h-3.5 w-3.5 text-slate-400" /> Go to Collection
                 </span>
                 <span className="text-indigo-600 font-extrabold group-hover:translate-x-1.5 transition-transform flex items-center gap-1">
-                  Browse Pouches <ArrowRight className="h-3.5 w-3.5" />
+                  Explore Wardrobe <ArrowRight className="h-3.5 w-3.5" />
                 </span>
               </div>
             </div>

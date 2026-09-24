@@ -16,42 +16,39 @@ export default function TermsConditions({ onNavigate }: TermsConditionsProps) {
       content: (
         <div className="space-y-4">
           <p className="text-slate-650 leading-relaxed text-sm sm:text-base font-medium">
-            Welcome to <strong className="text-slate-900 font-extrabold">Pouch Supply</strong>. By accessing, browsing, or utilizing this website, you explicitly consent to comply with and be bound by the following Terms & Conditions. These comprehensive terms govern all transactions, orders, and interactions executed through our platform.
+            Welcome to <strong className="text-slate-900 font-extrabold">Atelier Studio</strong>. By accessing, browsing, or utilizing this website, you explicitly consent to comply with and be bound by the following Terms & Conditions. These comprehensive terms govern all transactions, orders, and interactions executed through our platform.
           </p>
           <div className="bg-[#FAF9F5] border border-slate-150 p-4 rounded-xl text-xs font-semibold leading-relaxed text-slate-650">
-            By issuing payments and finalizing checkouts on this store, you confirm that you have read, understood, and accepted these Terms, as well as our concurrent processing of personal information documented inside our <span onClick={() => onNavigate('privacy-policy')} className="text-indigo-600 underline cursor-pointer hover:text-indigo-800">Privacy Policy</span>.
+            By issuing payments and finalizing checkouts on this store, you confirm that you have read, understood, and accepted these Terms, as well as our concurrent processing of personal information documented inside our <span onClick={() => onNavigate('privacy-policy')} className="text-slate-900 underline cursor-pointer hover:text-slate-700 font-bold">Privacy Policy</span>.
           </div>
           <p className="text-xs text-slate-500 font-medium">
-            We reserve the absolute right to renew, adjust, or completely overhaul these terms at discretionary intervals. Any updates take effect immediately upon their publication on this page.
+            We reserve the right to update or adjust these terms at discretionary intervals. Any updates take effect immediately upon their publication on this page.
           </p>
         </div>
       )
     },
     {
       id: 2,
-      title: '2. Eligibility Mandate',
+      title: '2. Eligibility & Account',
       icon: UserCheck,
       content: (
         <div className="space-y-4">
-          <div className="bg-rose-50 border border-rose-200/60 p-4.5 rounded-2xl flex gap-3 text-rose-850">
-            <ShieldAlert className="h-5 w-5 text-rose-650 shrink-0 mt-0.5" />
+          <div className="bg-slate-50 border border-slate-200 p-4.5 rounded-2xl flex gap-3 text-slate-800">
+            <BadgeCheck className="h-5 w-5 text-slate-700 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <span className="block font-black text-xs uppercase tracking-wider text-rose-900">Adult Material Lock</span>
-              <p className="text-xs font-semibold leading-relaxed text-rose-800 animate-pulse">
-                All nicotine-bearing white pouches featured on our platform are strictly restricted to mature individuals aged 18 years or older.
+              <span className="block font-black text-xs uppercase tracking-wider text-slate-900">Account Eligibility</span>
+              <p className="text-xs font-semibold leading-relaxed text-slate-650">
+                You must possess the legal capacity to enter into binding contracts to make purchases on Atelier.
               </p>
             </div>
           </div>
           
           <div className="space-y-2 text-slate-650 text-xs sm:text-sm font-medium leading-relaxed">
-            <p>By browsing this store or committing purchases, you solemnly certify and declare that:</p>
+            <p>By browsing this store or committing purchases, you declare that:</p>
             <ul className="space-y-1.5 pl-4 list-disc text-xs text-slate-550 font-sans">
-              <li>You are chronologically at least 18 years of age.</li>
-              <li>You are legally authorized to purchase, import, and hold nicotine products inside your native sovereign territory.</li>
+              <li>All payment and contact information provided during checkout is authentic and accurate.</li>
+              <li>You are authorized to utilize the specified credit card or alternative payment instruments.</li>
             </ul>
-            <p className="text-xs text-slate-500 pt-1">
-              We maintain active rights to reject service, void accounts, purge transaction requests, or restrict specific IP segments instantly if we suspect age eligibility fields were falsified.
-            </p>
           </div>
         </div>
       )
@@ -67,33 +64,29 @@ export default function TermsConditions({ onNavigate }: TermsConditionsProps) {
           </p>
           <div className="p-4 bg-slate-50 border border-[#E2E8F0] rounded-xl text-xs font-semibold text-slate-600 leading-relaxed">
             <p className="text-slate-800 font-extrabold uppercase text-[10px] tracking-wider mb-1">Contractual Formation Threshold</p>
-            This initial communication confirms reception of order variables only and is not a guarantee of transaction acceptance. A formal binding sales agreement is established strictly when the parcel passes inspection at our docks and is officially <strong className="text-slate-950">dispatched to the shipping carrier</strong>.
+            This initial communication confirms reception of order variables only and is not a guarantee of transaction acceptance. A formal binding sales agreement is established strictly when the parcel passes quality inspection at our atelier and is officially <strong className="text-slate-950">dispatched to the shipping carrier</strong>.
           </div>
           <p className="text-slate-650 text-xs leading-relaxed font-semibold">
-            We retain absolute rights to refuse service, limit product volumes, or cancel transactions suspected of commercial resale, bulk redistribution, or platform misuse.
+            We retain rights to limit order quantities or cancel transactions suspected of commercial resale, bulk bot automation, or payment discrepancies.
           </p>
         </div>
       )
     },
     {
       id: 4,
-      title: '4. Products & Responsible Use',
+      title: '4. Garment Care & Craftsmanship',
       icon: AlertTriangle,
       content: (
         <div className="space-y-3">
           <p className="text-slate-650 text-xs sm:text-sm leading-relaxed">
-            Each of our compounded canisters or pouch series is designed and stocked strictly for personal adult lifestyle use.
+            Each garment and curated capsule piece is designed and tailored with premium natural fibers and artisanal textiles.
           </p>
           
-          <div className="border border-amber-250 bg-amber-500/5 rounded-xl p-4 text-amber-900 text-xs leading-relaxed space-y-1.5 font-sans font-semibold">
-            <p className="font-black text-[10px] tracking-wider uppercase text-amber-950">Severe Hazard Declaration</p>
-            <p>Our products contain chemical nicotine compounds — which represent highly addictive and habit-forming substances. Under no circumstances should these items be processed by minors, pregnant women, or individuals displaying cardiovascular sensitivities.</p>
-            <p>Users must consult manufacturer dilution parameters and display absolute personal responsibility when managing pouch dosages.</p>
+          <div className="border border-slate-200 bg-slate-50 rounded-xl p-4 text-slate-800 text-xs leading-relaxed space-y-1.5 font-sans font-semibold">
+            <p className="font-black text-[10px] tracking-wider uppercase text-slate-900">Fabric Care Guidelines</p>
+            <p>Natural cottons, virgin wools, and fine silks require respectful laundering. Please follow all sewn care labels, wash in cold cycles or dry clean as specified to maintain structural integrity.</p>
+            <p>Slight shade variations in naturally-dyed textiles are natural hallmarks of authentic artisanal processing.</p>
           </div>
-
-          <p className="text-xs text-slate-450 italic pt-1">
-            * Pouch Supply rejects any operational or systemic liability for health effects, bodily impact, or misuse caused by improper compound placement.
-          </p>
         </div>
       )
     },
@@ -147,11 +140,11 @@ export default function TermsConditions({ onNavigate }: TermsConditionsProps) {
       content: (
         <div className="space-y-3">
           <p className="text-slate-650 text-xs sm:text-sm leading-relaxed">
-            We operate in concert with priority courier services to dispatch your canisters securely. Please observe the following operational rules:
+            We operate in concert with priority courier services to dispatch your garments securely. Please observe the following operational rules:
           </p>
           <ul className="space-y-1.5 text-xs text-slate-600 pl-4 list-disc font-medium font-sans">
             <li>Dispatch estimations represent calendar guidelines and are not contractual guarantees.</li>
-            <li>We cannot assume logistical liabilities for delayed routes caused by courier company malfunctions or border clearance backlogs.</li>
+            <li>We cannot assume logistical liabilities for delayed routes caused by carrier disruptions or customs inspections.</li>
             <li>Loss or delivery errors resulting from inaccurate postal entries entered at check-out remain the customer’s financial responsibility.</li>
           </ul>
         </div>
@@ -159,15 +152,15 @@ export default function TermsConditions({ onNavigate }: TermsConditionsProps) {
     },
     {
       id: 8,
-      title: '8. Consumable Returns',
+      title: '8. Returns & Exchanges',
       icon: RefreshCw,
       content: (
         <div className="space-y-3">
           <p className="text-slate-650 text-sm leading-relaxed">
-            Due to strict sterile and hygiene regulations, returns for consumable white compound pouches are heavily restricted:
+            We offer 30-day returns and size exchanges on unworn garments with all tags intact:
           </p>
           <p className="text-xs text-slate-500 font-semibold bg-slate-50 p-3 rounded-lg border">
-            We only authorize returns or refunds if canisters arrived damaged, or if the courier misdelivered order components. All items must remain unopened next to original seals. Review our holistic <span onClick={() => onNavigate('refund-policy')} className="text-indigo-650 underline cursor-pointer hover:text-indigo-800 font-bold">Refund Policy</span> for complete instructions.
+            Review our complete <span onClick={() => onNavigate('refund-policy')} className="text-slate-900 underline cursor-pointer hover:text-slate-700 font-bold">Return & Exchange Policy</span> for guidelines on initiating a size exchange or store return.
           </p>
         </div>
       )
@@ -179,7 +172,7 @@ export default function TermsConditions({ onNavigate }: TermsConditionsProps) {
       content: (
         <div className="space-y-3 text-xs sm:text-sm text-slate-650 leading-relaxed font-semibold">
           <p>
-            If you create an active registration account on Pouch Supply:
+            If you create an active member account on Atelier:
           </p>
           <ul className="space-y-1 pl-4 list-disc text-xs text-slate-550 font-medium font-sans">
             <li>You accept sole responsibility for shielding your passcode, email links, and transaction tokens from third parties.</li>
@@ -196,12 +189,12 @@ export default function TermsConditions({ onNavigate }: TermsConditionsProps) {
       content: (
         <div className="space-y-3">
           <div className="bg-slate-900 text-white rounded-2xl p-5 sm:p-6 space-y-4">
-            <h4 className="text-xs font-black uppercase text-[#F43F5E] tracking-widest flex items-center gap-1.5 font-mono">
-              <span className="h-2 w-2 bg-[#F43F5E] rounded-full inline-block animate-ping" />
-              CONSTITUTIONAL LIABILITY EXCLUSION
+            <h4 className="text-xs font-black uppercase text-amber-400 tracking-widest flex items-center gap-1.5 font-mono">
+              <span className="h-2 w-2 bg-amber-400 rounded-full inline-block" />
+              LIABILITY LIMITATION
             </h4>
             <p className="text-xs text-slate-300 leading-relaxed font-semibold font-sans">
-              To the complete boundaries authorized by applicable regional laws, Pouch Supply and its dispatch agents shall not under any situation be liable for any indirect, incidental, punitive, or consecutive health damages, metabolic reactions, or losses arising from the purchase, delivery, or processing of chemical nicotine pouches. Consumables are handled at the sole risk and discretion of the adult consumer.
+              To the maximum extent permitted by law, Atelier Studio and its fulfillment partners shall not be held liable for indirect, incidental, or consequential damages resulting from product use beyond the total purchase price paid for the affected goods.
             </p>
           </div>
         </div>
@@ -218,7 +211,7 @@ export default function TermsConditions({ onNavigate }: TermsConditionsProps) {
           </p>
           <button
             onClick={() => onNavigate('privacy-policy')}
-            className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-bold hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-slate-900 hover:text-slate-700 font-bold hover:underline"
           >
             Review our active Privacy Policy <ArrowRight className="h-3 w-3" />
           </button>
@@ -231,33 +224,33 @@ export default function TermsConditions({ onNavigate }: TermsConditionsProps) {
       icon: RefreshCw,
       content: (
         <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-medium">
-          We preserve rights to calibrate or adjust any aspect of these Terms & Conditions without direct prior broadcasts. Your continuous interaction with the Pouch Supply platform following changes asserts your binding acceptance of renewed conditions.
+          We preserve rights to calibrate or adjust any aspect of these Terms & Conditions without prior broadcast. Your continuous interaction with the Atelier platform following changes asserts your binding acceptance of renewed conditions.
         </p>
       )
     },
     {
       id: 13,
-      title: '13. Regulatory Compliance Contact',
+      title: '13. Atelier Concierge & Legal Desk',
       icon: Mail,
       content: (
         <div className="p-5 bg-[#FAF9F5] border border-slate-155 rounded-2xl space-y-3.5">
           <div>
-            <span className="block text-[10px] font-black uppercase text-indigo-600 tracking-wider mb-1">Contractual Registry Division</span>
-            <h4 className="text-base font-black text-slate-900 leading-none font-sans">Pouch Supply Compliance Desk</h4>
+            <span className="block text-[10px] font-black uppercase text-slate-900 tracking-wider mb-1">Contractual Registry Division</span>
+            <h4 className="text-base font-black text-slate-900 leading-none font-sans">Atelier Concierge Desk</h4>
           </div>
 
           <p className="text-xs text-slate-500 font-medium leading-normal">
-            For structured queries mapping these Terms, commercial limitations, or statutory certifications, route communication packets to:
+            For questions mapping these Terms, sizing queries, or commercial requests, route communication to:
           </p>
           
-          <div className="text-xs font-bold text-indigo-700">
-            Email: <a href="mailto:support@pouchsupply.com" className="underline font-mono">support@pouchsupply.com</a>
+          <div className="text-xs font-bold text-slate-900">
+            Email: <a href="mailto:concierge@atelier-studio.com" className="underline font-mono">concierge@atelier-studio.com</a>
           </div>
 
           <div className="pt-2 border-t border-slate-150 flex gap-2">
             <button
               onClick={() => onNavigate('contact')}
-              className="bg-indigo-650 hover:bg-indigo-750 text-white font-black text-xs uppercase px-4 py-2 rounded-xl transition cursor-pointer tracking-wider"
+              className="bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase px-4 py-2 rounded-xl transition cursor-pointer tracking-wider"
             >
               Access Contact Desk
             </button>
@@ -352,7 +345,7 @@ export default function TermsConditions({ onNavigate }: TermsConditionsProps) {
                   onClick={() => onNavigate('frontend-shop')}
                   className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-wider py-2.5 rounded-xl cursor-pointer transition shadow-xs flex items-center justify-center gap-1.5"
                 >
-                  Shop White Pouches <ArrowRight className="h-3 w-3" />
+                  Explore Collection <ArrowRight className="h-3 w-3" />
                 </button>
               </div>
             </div>
@@ -361,14 +354,14 @@ export default function TermsConditions({ onNavigate }: TermsConditionsProps) {
           {/* Right Detailed Sections Panel */}
           <div className="col-span-1 lg:col-span-8 space-y-8">
             
-            {/* Quick Warning box */}
-            <div className="border border-red-200 rounded-[22px] bg-red-500/5 p-5 sm:p-6 space-y-3 shadow-xs">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#E11D48] bg-rose-100 py-0.5 px-2.5 rounded-full inline-block">ADULT WARNING LABEL</span>
-              <p className="text-[#9F1239] text-xs sm:text-sm font-extrabold uppercase tracking-tight leading-normal">
-                "This website is intended for adults aged 18+. Nicotine is an addictive substance."
+            {/* Storefront standard notice */}
+            <div className="border border-slate-200 rounded-[22px] bg-slate-50 p-5 sm:p-6 space-y-3 shadow-xs">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 bg-white py-0.5 px-2.5 rounded-full inline-block border border-slate-200">TERMS OVERVIEW</span>
+              <p className="text-slate-900 text-xs sm:text-sm font-extrabold uppercase tracking-tight leading-normal">
+                "Craftsmanship, Transparency, and Elevated Wardrobe Staples."
               </p>
               <p className="text-slate-655 text-xs font-medium leading-relaxed">
-                By entering or processing transactional parameters, you represent and declare to Pouch Supply that you correspond to legal consuming ages within your state, city, or county borders. False declaration is a breach of agreement covenants.
+                By entering or processing transactional purchases on Atelier Studio, you acknowledge that all orders are subject to availability, quality fulfillment standards, and our terms of sale.
               </p>
             </div>
 

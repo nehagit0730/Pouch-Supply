@@ -78,7 +78,7 @@ export default function Header({
               <Search className="h-5 w-5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search canisters, series types, strength grades, brand manufacturers..."
+                placeholder="Search garments, outerwear, knitwear, tailoring, collections..."
                 value={searchQuery}
                 autoFocus
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -150,7 +150,7 @@ export default function Header({
                         className="p-2.5 bg-slate-50 hover:bg-indigo-50/50 rounded-xl cursor-pointer border border-transparent hover:border-indigo-100 transition-all font-sans"
                       >
                         <span className="block text-xs font-black text-slate-800 truncate">{c.title}</span>
-                        <span className="block text-[9px] text-slate-400 line-clamp-1 mt-0.5">{c.description || 'Explore curated series canisters.'}</span>
+                        <span className="block text-[9px] text-slate-400 line-clamp-1 mt-0.5">{c.description || 'Explore curated wardrobe collections.'}</span>
                       </div>
                     ))}
                     {filteredCollections.length === 0 && (
@@ -179,20 +179,20 @@ export default function Header({
             <img 
               src={layoutSettings.headerLogoImage} 
               className="max-h-11 max-w-[150px] object-contain rounded-md transition-transform group-hover:scale-102" 
-              alt={layoutSettings?.headerLogoText || 'Pouch Supply'} 
+              alt={layoutSettings?.headerLogoText || 'ATELIER'} 
               referrerPolicy="no-referrer"
             />
           ) : (
             <>
-              <div className="w-9 h-9 bg-gradient-to-tr from-[#008060] to-[#00a880] rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 group-hover:rotate-3 transition-all duration-300">
-                <div className="w-4 h-4 border-2 border-white rounded-md"></div>
+              <div className="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-all duration-300">
+                <div className="w-4 h-4 border-2 border-white rounded-xs"></div>
               </div>
               <div className="flex flex-col">
-                <span className="font-extrabold text-[#1a1c1d] tracking-tight text-base sm:text-lg leading-none transition-colors group-hover:text-[#008060]">
-                  {layoutSettings?.headerLogoText || 'Pouch Supply'}
+                <span className="font-extrabold text-slate-900 tracking-tight text-base sm:text-lg leading-none transition-colors group-hover:text-black uppercase">
+                  {layoutSettings?.headerLogoText || 'ATELIER'}
                 </span>
                 <span className="text-[8px] sm:text-[9px] text-[#707579] font-extrabold uppercase tracking-widest mt-1">
-                  {layoutSettings?.headerLogoSubtext || 'Premium Nicotine'}
+                  {layoutSettings?.headerLogoSubtext || 'STUDIO & ESSENTIALS'}
                 </span>
               </div>
             </>
@@ -331,15 +331,15 @@ export default function Header({
                   />
                 ) : (
                   <>
-                    <div className="w-7 h-7 bg-[#008060] rounded flex items-center justify-center">
+                    <div className="w-7 h-7 bg-slate-900 rounded flex items-center justify-center">
                       <div className="w-3.5 h-3.5 border-2 border-white rounded-xs"></div>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-bold text-slate-800 text-xs leading-none">
-                        {layoutSettings?.headerLogoText || 'Pouch Supply'}
+                      <span className="font-bold text-slate-800 text-xs leading-none uppercase">
+                        {layoutSettings?.headerLogoText || 'ATELIER'}
                       </span>
                       <span className="text-[7px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-                        {layoutSettings?.headerLogoSubtext || 'Premium Nicotine'}
+                        {layoutSettings?.headerLogoSubtext || 'STUDIO & ESSENTIALS'}
                       </span>
                     </div>
                   </>
@@ -362,10 +362,10 @@ export default function Header({
                 <div className="grid grid-cols-2 gap-2">
                   {(layoutSettings?.menuItems || [
                     { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
-                    { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
-                    { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
-                    { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
-                    { id: '5', label: 'About', tab: 'about', type: 'tab' }
+                    { id: '2', label: 'Shop Collection', tab: 'frontend-shop', type: 'tab' },
+                    { id: '3', label: 'Capsule Wardrobe', tab: 'frontend-subscribe', type: 'tab' },
+                    { id: '4', label: 'Ateliers', tab: 'frontend-brands', type: 'tab' },
+                    { id: '5', label: 'Journal', tab: 'blogs', type: 'tab' }
                   ]).map((item) => {
                     const itemTab = getMenuItemTab(item);
                     const isActive = currentTab === itemTab && !isAdminActive;
@@ -374,9 +374,9 @@ export default function Header({
                     const labelLower = item.label.toLowerCase();
                     let iconEl = <Info className="h-4 w-4 shrink-0" />;
                     if (labelLower.includes('home')) iconEl = <Home className="h-4 w-4 shrink-0" />;
-                    else if (labelLower.includes('subscribe') || labelLower.includes('plan')) iconEl = <Sparkles className="h-4 w-4 shrink-0 text-amber-500 fill-amber-400/20" />;
-                    else if (labelLower.includes('shop') || labelLower.includes('now') || labelLower.includes('pouches')) iconEl = <ShoppingBag className="h-4 w-4 shrink-0" />;
-                    else if (labelLower.includes('brand')) iconEl = <Award className="h-4 w-4 shrink-0 text-indigo-600" />;
+                    else if (labelLower.includes('subscribe') || labelLower.includes('plan') || labelLower.includes('capsule')) iconEl = <Sparkles className="h-4 w-4 shrink-0 text-amber-500 fill-amber-400/20" />;
+                    else if (labelLower.includes('shop') || labelLower.includes('collection') || labelLower.includes('clothing')) iconEl = <ShoppingBag className="h-4 w-4 shrink-0" />;
+                    else if (labelLower.includes('brand') || labelLower.includes('atelier')) iconEl = <Award className="h-4 w-4 shrink-0 text-slate-900" />;
 
                     return (
                       <button
@@ -481,15 +481,15 @@ export default function Header({
             <div className="p-4 bg-slate-50/90 border-t border-slate-100 flex flex-col gap-1.5 shrink-0">
               <div className="flex items-center justify-between text-[9px] text-slate-500 font-extrabold tracking-wider">
                 <div className="flex items-center gap-1">
-                  <Store className="h-3 w-3 text-emerald-600" />
-                  <span>POUCH SUPPLY EU</span>
+                  <Store className="h-3 w-3 text-slate-900" />
+                  <span>ATELIER LONDON & EU</span>
                 </div>
                 <span>• UK Tracked •</span>
               </div>
               <div className="text-[9.5px] text-slate-500 font-semibold truncate flex items-center gap-1">
-                <span>✉️ Support:</span>
-                <a href="mailto:Support@pouch-supply.com" className="font-bold text-slate-700 hover:text-indigo-600 select-all underline">
-                  Support@pouch-supply.com
+                <span>✉️ Concierge:</span>
+                <a href="mailto:concierge@atelier-studio.com" className="font-bold text-slate-700 hover:text-slate-950 select-all underline">
+                  concierge@atelier-studio.com
                 </a>
               </div>
             </div>
@@ -502,24 +502,24 @@ export default function Header({
         <div className="max-w-[1440px] mx-auto w-full flex justify-between items-center">
           <div className="flex items-center gap-4">
             <span className="text-slate-600 flex items-center gap-1.5">
-              <Store className="h-3.5 w-3.5 text-emerald-600" /> 
-              <span>EU Official Supplier</span>
+              <Store className="h-3.5 w-3.5 text-slate-900" /> 
+              <span>Artisanal European Ateliers</span>
             </span>
             <span className="h-3 w-px bg-slate-200 hidden md:block" />
             <span className="hidden md:inline-flex items-center gap-1.5 text-slate-500">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>UK Tracked Courier Shipping via Royal Mail</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-900 animate-pulse" />
+              <span>Complimentary Courier Shipping on orders over £100</span>
             </span>
           </div>
           <div className="flex items-center gap-5">
             <span className="hover:text-slate-800 transition-colors cursor-pointer flex items-center gap-1">
-              <HelpCircle className="h-3.5 w-3.5 text-indigo-500" /> 
-              <span>Quick Help & FAQs</span>
+              <HelpCircle className="h-3.5 w-3.5 text-slate-600" /> 
+              <span>Client Concierge & Care</span>
             </span>
             <span className="h-3 w-px bg-slate-200" />
             <span className="text-slate-600 flex items-center gap-1 select-all">
               <span>✉️</span> 
-              <span>Support Desk: <strong className="text-slate-700">Support@pouch-supply.com</strong></span>
+              <span>Desk: <strong className="text-slate-700">concierge@atelier-studio.com</strong></span>
             </span>
           </div>
         </div>

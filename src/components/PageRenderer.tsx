@@ -307,7 +307,7 @@ function PlansSection({ sec, handleLinkClick }: PlansSectionProps) {
                     </p>
                   </div>
 
-                  {/* Plan image wrapper - uses dynamic custom image if uploaded, or high-fidelity canister overlap */}
+                  {/* Plan image wrapper - uses dynamic custom image if uploaded, or high-fidelity capsule overlay */}
                   <div className="relative h-44 w-full bg-transparent overflow-hidden flex items-center justify-center p-2">
                     {plan.imageUrl ? (
                       <img 
@@ -438,50 +438,41 @@ function HowItWorksSection({ sec, handleLinkClick }: HowItWorksSectionProps) {
     if (sidx === 0) {
       return (
         <div className="w-full bg-slate-50/50 rounded-2xl p-4 border border-slate-100 flex flex-col items-center my-4">
-          <div className="grid grid-cols-4 gap-1 w-full">
-            {/* LITE */}
-            <div className="bg-white rounded-lg border border-slate-200/60 p-1.5 flex flex-col items-center justify-between text-center shadow-2xs h-32">
-              <span className="text-[8px] font-black tracking-wider text-slate-400">LITE</span>
+          <div className="grid grid-cols-3 gap-2 w-full">
+            {/* ESSENTIALS */}
+            <div className="bg-white rounded-lg border border-slate-200/60 p-2 flex flex-col items-center justify-between text-center shadow-2xs h-32">
+              <span className="text-[8px] font-black tracking-wider text-slate-400 uppercase">ESSENTIALS</span>
               <div className="my-1 text-center">
-                <span className="block text-[11px] font-black text-slate-800 leading-tight">5 Cans</span>
-                <span className="block text-[10px] font-bold text-[#D4AF37] leading-tight">£27.99</span>
-                <span className="text-[7px] text-slate-400 block -mt-0.5">per month</span>
+                <span className="block text-[11px] font-black text-slate-800 leading-tight">3 Pieces</span>
+                <span className="block text-[10px] font-bold text-slate-900 leading-tight">£69.00</span>
+                <span className="text-[7px] text-slate-400 block -mt-0.5">per season</span>
               </div>
+              <span className="text-[5px] font-bold text-slate-500 uppercase tracking-wider">WARDROBE BASE</span>
             </div>
             
-            {/* CORE */}
-            <div className="bg-white rounded-lg border border-slate-200/60 p-1.5 flex flex-col items-center justify-between text-center shadow-2xs h-32">
-              <span className="text-[8px] font-black tracking-wider text-slate-450">CORE</span>
-              <div className="my-1 text-center">
-                <span className="block text-[11px] font-black text-slate-800 leading-tight">8 Cans</span>
-                <span className="block text-[10px] font-bold text-[#D4AF37] leading-tight">£35.99</span>
-                <span className="text-[7px] text-slate-400 block -mt-0.5">per month</span>
-              </div>
-            </div>
-
-            {/* PRO */}
-            <div className="bg-[#0C1017] rounded-lg border border-[#D4AF37] p-1.5 flex flex-col items-center justify-between text-center shadow-sm h-32 relative overflow-hidden transform scale-105 z-10">
-              <div className="absolute top-0 left-0 right-0 bg-[#D4AF37] text-[5px] font-black text-slate-950 py-0.5 uppercase tracking-wider text-center">
+            {/* SIGNATURE */}
+            <div className="bg-[#0F172A] rounded-lg border border-amber-500/60 p-2 flex flex-col items-center justify-between text-center shadow-md h-32 relative overflow-hidden transform scale-105 z-10">
+              <div className="absolute top-0 left-0 right-0 bg-amber-400 text-[5px] font-black text-slate-950 py-0.5 uppercase tracking-wider text-center">
                 MOST POPULAR
               </div>
-              <span className="text-[8px] font-black tracking-wider text-white mt-1.5">PRO</span>
+              <span className="text-[8px] font-black tracking-wider text-white mt-1.5 uppercase">SIGNATURE</span>
               <div className="my-1 text-center">
-                <span className="block text-[11px] font-black text-white leading-tight">10 Cans</span>
-                <span className="block text-[10px] font-bold text-[#D4AF37] leading-tight">£40.99</span>
-                <span className="text-[7px] text-slate-350 block -mt-0.5">per month</span>
+                <span className="block text-[11px] font-black text-white leading-tight">5 Pieces</span>
+                <span className="block text-[10px] font-bold text-amber-400 leading-tight">£119.00</span>
+                <span className="text-[7px] text-slate-400 block -mt-0.5">per season</span>
               </div>
-              <span className="text-[4px] font-bold text-emerald-400 tracking-wider uppercase">FREE DEV</span>
+              <span className="text-[5px] font-bold text-amber-400 tracking-wider uppercase">SAVE £35</span>
             </div>
 
-            {/* ULTIMATE */}
-            <div className="bg-white rounded-lg border border-[#D4AF37]/50 p-1.5 flex flex-col items-center justify-between text-center shadow-2xs h-32">
-              <span className="text-[8px] font-black tracking-wider text-slate-450">ULTIMATE</span>
+            {/* ATELIER */}
+            <div className="bg-white rounded-lg border border-slate-200/60 p-2 flex flex-col items-center justify-between text-center shadow-2xs h-32">
+              <span className="text-[8px] font-black tracking-wider text-slate-400 uppercase">ATELIER</span>
               <div className="my-1 text-center">
-                <span className="block text-[11px] font-black text-slate-800 leading-tight">12 Cans</span>
-                <span className="block text-[10px] font-bold text-[#D4AF37] leading-tight">£46.99</span>
-                <span className="text-[7px] text-slate-400 block -mt-0.5">per month</span>
+                <span className="block text-[11px] font-black text-slate-800 leading-tight">8 Pieces</span>
+                <span className="block text-[10px] font-bold text-slate-900 leading-tight">£189.00</span>
+                <span className="text-[7px] text-slate-400 block -mt-0.5">per season</span>
               </div>
-              <span className="text-[4px] font-bold text-[#D4AF37] tracking-wider uppercase">FREE DEV</span>
+              <span className="text-[5px] font-bold text-slate-500 uppercase tracking-wider">FULL CAPSULE</span>
             </div>
           </div>
         </div>
@@ -492,51 +483,36 @@ function HowItWorksSection({ sec, handleLinkClick }: HowItWorksSectionProps) {
       return (
         <div className="w-full h-40 relative my-4 flex items-center justify-center overflow-hidden">
           <div className="relative w-full max-w-[260px] h-full flex items-center justify-center">
-            {/* CAN 1: ZYN */}
-            <div className="absolute left-1 top-4 w-[64px] h-[64px] rounded-full bg-white border border-slate-200 shadow-md flex flex-col items-center justify-center p-0.5 transform -rotate-12 z-10 transition-transform duration-300 hover:scale-105">
-              <div className="w-[56px] h-[56px] rounded-full border border-sky-400/30 flex flex-col items-center justify-center bg-sky-50/20">
-                <span className="text-[9px] font-extrabold text-sky-600 tracking-tight leading-none">ZYN</span>
-                <span className="text-[4px] font-bold text-sky-400 uppercase tracking-widest mt-0.5">COOL MINT</span>
+            {/* Garment 1: Heavyweight Knit */}
+            <div className="absolute left-2 top-3 w-[110px] h-[75px] rounded-xl bg-slate-900 border border-slate-700 shadow-lg flex flex-col justify-between p-2 transform -rotate-6 z-10 hover:scale-105 transition-transform">
+              <span className="text-[8px] font-black text-white uppercase tracking-wider">CASHMERE KNIT</span>
+              <span className="text-[6px] text-slate-300">7-Gauge Mongolian</span>
+              <div className="flex justify-between items-center text-[6px] font-mono text-amber-400">
+                <span>SIZE M</span>
+                <span>OATMEAL</span>
               </div>
             </div>
 
-            {/* CAN 2: VELO */}
-            <div className="absolute right-1 top-4 w-[64px] h-[64px] rounded-full bg-white border border-slate-200 shadow-md flex flex-col items-center justify-center p-0.5 transform rotate-12 z-10 transition-transform duration-300 hover:scale-105">
-              <div className="w-[56px] h-[56px] rounded-full border border-blue-500/30 flex flex-col items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600">
-                <span className="text-[9px] font-extrabold text-white tracking-tight leading-none">VELO</span>
-                <span className="text-[3px] font-bold text-sky-200 uppercase tracking-widest mt-0.5">FREEZE</span>
+            {/* Garment 2: Pleated Trousers */}
+            <div className="absolute right-2 top-3 w-[110px] h-[75px] rounded-xl bg-white border border-slate-200 shadow-lg flex flex-col justify-between p-2 transform rotate-6 z-10 hover:scale-105 transition-transform">
+              <span className="text-[8px] font-black text-slate-900 uppercase tracking-wider">TAILORED PANT</span>
+              <span className="text-[6px] text-slate-500">Virgin Wool Blend</span>
+              <div className="flex justify-between items-center text-[6px] font-mono text-slate-600">
+                <span>SIZE 32</span>
+                <span>OLIVE</span>
               </div>
             </div>
 
-            {/* CAN 3: FUMI */}
-            <div className="absolute left-9 bottom-2 w-[60px] h-[60px] rounded-full bg-white border border-slate-200 shadow-md flex flex-col items-center justify-center p-0.5 transform rotate-6 z-20 transition-transform duration-300 hover:scale-105">
-              <div className="w-[52px] h-[52px] rounded-full border border-purple-500/20 flex flex-col items-center justify-center bg-gradient-to-br from-purple-500 to-purple-700">
-                <span className="text-[8px] font-extrabold text-white tracking-tight leading-none">FUMI</span>
-                <span className="text-[3px] font-bold text-purple-200 uppercase tracking-widest mt-0.5">BERRY</span>
+            {/* Garment 3: Double Wool Overcoat */}
+            <div className="absolute top-10 w-[125px] h-[80px] rounded-xl bg-[#0F172A] border border-amber-500/70 shadow-2xl flex flex-col justify-between p-2.5 z-20 hover:scale-105 transition-transform">
+              <div className="flex justify-between items-center">
+                <span className="text-[8px] font-black text-white uppercase tracking-wider">MELTON OVERCOAT</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               </div>
-            </div>
-
-            {/* CAN 4: PABLO */}
-            <div className="absolute right-9 bottom-2 w-[60px] h-[60px] rounded-full bg-white border border-slate-200 shadow-md flex flex-col items-center justify-center p-0.5 transform -rotate-6 z-20 transition-transform duration-300 hover:scale-105">
-              <div className="w-[52px] h-[52px] rounded-full border border-red-650/30 flex flex-col items-center justify-center bg-slate-50">
-                <span className="text-[8px] font-black text-red-650 tracking-tighter leading-none italic">PABLO</span>
-                <span className="text-[3px] font-black text-slate-800 uppercase tracking-widest mt-0.5">EXCLUSIVE</span>
-              </div>
-            </div>
-
-            {/* CAN 5: 77 */}
-            <div className="absolute left-[38%] top-2 w-[70px] h-[70px] rounded-full bg-white border border-slate-200 shadow-lg flex flex-col items-center justify-center p-0.5 transform -translate-x-1/2 -rotate-3 z-30 transition-transform duration-300 hover:scale-105">
-              <div className="w-[62px] h-[62px] rounded-full border border-slate-900 flex flex-col items-center justify-center bg-[#0C1017]">
-                <span className="text-[14px] font-black text-white tracking-tighter leading-none">77</span>
-                <span className="text-[3.5px] font-bold text-[#D4AF37] uppercase tracking-widest -mt-0.5">NICOTINE</span>
-              </div>
-            </div>
-
-            {/* CAN 6: CUBA */}
-            <div className="absolute right-[38%] top-2 w-[70px] h-[70px] rounded-full bg-white border border-slate-200 shadow-lg flex flex-col items-center justify-center p-0.5 transform translate-x-1/2 rotate-3 z-30 transition-transform duration-300 hover:scale-105">
-              <div className="w-[62px] h-[62px] rounded-full border border-amber-500 flex flex-col items-center justify-center bg-slate-900">
-                <span className="text-[11px] font-black text-amber-400 tracking-wider leading-none">CUBA</span>
-                <span className="text-[3.5px] font-bold text-white uppercase tracking-widest mt-0.5">BLACK</span>
+              <span className="text-[6px] text-slate-300">Double-Faced Wool</span>
+              <div className="flex justify-between items-center text-[6px] font-mono text-amber-400">
+                <span>DROPPED SHOULDER</span>
+                <span>CHARCOAL</span>
               </div>
             </div>
           </div>
@@ -547,38 +523,25 @@ function HowItWorksSection({ sec, handleLinkClick }: HowItWorksSectionProps) {
     if (sidx === 2) {
       return (
         <div className="w-full h-40 relative my-4 flex items-center justify-center">
-          <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
-            <div className="w-40 h-20 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 blur-xl rounded-full" />
-            <span className="text-emerald-500 text-sm absolute left-12 top-6 animate-pulse">🌿</span>
-            <span className="text-emerald-500 text-xs absolute right-12 bottom-6 animate-pulse" style={{ animationDelay: '1s' }}>🌿</span>
-          </div>
-
-          <div className="w-48 h-28 bg-[#0C1017] rounded-xl border border-slate-800 shadow-[0_12px_24px_rgba(0,0,0,0.25)] relative overflow-hidden transform rotate-2 hover:rotate-0 transition-transform duration-500 flex flex-col justify-between p-2.5 select-none">
-            <div className="absolute top-2 right-3 w-12 h-10 bg-white/95 rounded-sm p-0.5 shadow-2xs flex flex-col justify-between border-l border-b border-slate-200 text-slate-800">
-              <div className="w-full h-0.5 bg-slate-400 rounded-2xs" />
-              <div className="space-y-[1.5px]">
-                <div className="w-6 h-[1.5px] bg-slate-300" />
-                <div className="w-8 h-[1.5px] bg-slate-300" />
+          <div className="w-52 h-28 bg-[#0F172A] rounded-xl border border-slate-700 shadow-xl relative overflow-hidden transform rotate-1 hover:rotate-0 transition-transform duration-500 flex flex-col justify-between p-3 select-none">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5 text-left">
+                <span className="block text-[10px] font-black tracking-widest text-white leading-none">ATELIER EXPRESS</span>
+                <span className="block text-[6px] font-mono text-emerald-400 uppercase">CARBON-NEUTRAL</span>
               </div>
-              <div className="flex gap-[0.5px] h-2 items-end">
-                <div className="w-[1px] h-full bg-slate-800" />
-                <div className="w-[1.5px] h-full bg-slate-800" />
-                <div className="w-[1px] h-[70%] bg-slate-800" />
-                <div className="w-[1px] h-full bg-slate-800" />
+              <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[9px]">
+                📦
               </div>
             </div>
 
-            <div className="mt-1 space-y-0.5 text-left">
-              <span className="block text-[11px] font-black tracking-[0.12em] text-[#D4AF37] leading-none">POUCH</span>
-              <span className="block text-[11px] font-black tracking-[0.12em] text-[#D4AF37] leading-none">SUPPLY</span>
+            <div className="space-y-1 text-left">
+              <div className="w-24 h-1 bg-white/20 rounded" />
+              <div className="w-16 h-1 bg-white/10 rounded" />
             </div>
 
-            <div className="border-t border-slate-800/65 pt-1.5 flex items-center justify-between">
-              <span className="text-[4.5px] font-bold text-slate-450 uppercase tracking-[0.18em]">NICOTINE ON AUTOPILOT</span>
-              <div className="flex gap-0.5">
-                <div className="w-0.5 h-0.5 rounded-full bg-slate-800" />
-                <div className="w-0.5 h-0.5 rounded-full bg-slate-800" />
-              </div>
+            <div className="border-t border-slate-700 pt-1.5 flex items-center justify-between text-[6px] font-mono text-slate-400">
+              <span>TRACKED DISPATCH</span>
+              <span className="text-amber-400 font-bold">ROYAL MAIL 24H</span>
             </div>
           </div>
         </div>
@@ -985,7 +948,7 @@ function FeaturedCollectionSection({
   onToggleWishlist,
   onNavigate
 }: FeaturedCollectionSectionProps) {
-  const [activeTab, setActiveTab] = useState<'All' | 'Mint' | 'Berry' | 'Citrus' | 'Strong' | 'New Arrivals' | 'Bestsellers'>('All');
+  const [activeTab, setActiveTab] = useState<'All' | 'New In' | 'Outerwear' | 'Knitwear' | 'Tops & Tees' | 'Tailoring' | 'Bestsellers'>('All');
 
   const targetCollectionId = sec.settings.selectedCollectionId;
   const selectedColl = React.useMemo(() => {
@@ -994,174 +957,148 @@ function FeaturedCollectionSection({
 
   // Filter products by collection and active tab
   const filteredProducts = React.useMemo(() => {
-    // First, filter by collection
     let list = allProducts.filter(p => p.status === 'Active');
     if (targetCollectionId && selectedColl) {
       list = list.filter(p => (selectedColl.productIds || []).includes(p.id));
     }
 
-    // Now, filter by active tab
-    if (activeTab === 'Mint') {
-      list = list.filter(p => {
-        const titleL = p.title.toLowerCase();
-        const descL = (p.description || '').toLowerCase();
-        const tags = (p.tags || []).map(t => t.toLowerCase());
-        return titleL.includes('mint') || titleL.includes('cool') || titleL.includes('ice') || titleL.includes('peppermint') || titleL.includes('freeze') || descL.includes('mint') || tags.includes('mint') || tags.includes('ice');
-      });
-    } else if (activeTab === 'Berry') {
-      list = list.filter(p => {
-        const titleL = p.title.toLowerCase();
-        const descL = (p.description || '').toLowerCase();
-        const tags = (p.tags || []).map(t => t.toLowerCase());
-        return titleL.includes('berry') || titleL.includes('cola') || titleL.includes('strawberry') || titleL.includes('fumi') || titleL.includes('pablo') || titleL.includes('cherry') || titleL.includes('grape') || descL.includes('berry') || tags.includes('berry');
-      });
-    } else if (activeTab === 'Citrus') {
-      list = list.filter(p => {
-        const titleL = p.title.toLowerCase();
-        const descL = (p.description || '').toLowerCase();
-        const tags = (p.tags || []).map(t => t.toLowerCase());
-        return titleL.includes('citrus') || titleL.includes('lime') || titleL.includes('lemon') || titleL.includes('orange') || titleL.includes('tangerine') || titleL.includes('grapefruit') || descL.includes('citrus') || tags.includes('citrus');
-      });
-    } else if (activeTab === 'Strong') {
-      list = list.filter(p => {
-        const strengthVal = parseFloat(p.strength || '0');
-        const isStrongTag = (p.tags || []).some(t => t.toLowerCase().includes('strong'));
-        const titleL = p.title.toLowerCase();
-        return strengthVal >= 10 || isStrongTag || titleL.includes('strong') || titleL.includes('extra strong') || titleL.includes('pablo');
-      });
-    } else if (activeTab === 'New Arrivals') {
+    // Filter by active fashion category tab
+    if (activeTab === 'New In') {
       list = list.filter(p => {
         const tags = (p.tags || []).map(t => t.toLowerCase());
-        return tags.includes('new') || tags.includes('latest') || p.vendor === 'VELO' || p.vendor === 'FUMI';
+        return tags.includes('new in') || tags.includes('new') || p.category === 'New In';
+      });
+    } else if (activeTab === 'Outerwear') {
+      list = list.filter(p => {
+        const cat = (p.category || '').toLowerCase();
+        const titleL = p.title.toLowerCase();
+        const tags = (p.tags || []).map(t => t.toLowerCase());
+        return cat.includes('outerwear') || titleL.includes('overcoat') || titleL.includes('jacket') || titleL.includes('coat') || tags.includes('outerwear');
+      });
+    } else if (activeTab === 'Knitwear') {
+      list = list.filter(p => {
+        const cat = (p.category || '').toLowerCase();
+        const titleL = p.title.toLowerCase();
+        const tags = (p.tags || []).map(t => t.toLowerCase());
+        return cat.includes('knit') || titleL.includes('sweater') || titleL.includes('cashmere') || tags.includes('knitwear');
+      });
+    } else if (activeTab === 'Tops & Tees') {
+      list = list.filter(p => {
+        const cat = (p.category || '').toLowerCase();
+        const titleL = p.title.toLowerCase();
+        const tags = (p.tags || []).map(t => t.toLowerCase());
+        return cat.includes('tee') || cat.includes('top') || cat.includes('streetwear') || titleL.includes('hoodie') || titleL.includes('tee') || tags.includes('cotton');
+      });
+    } else if (activeTab === 'Tailoring') {
+      list = list.filter(p => {
+        const cat = (p.category || '').toLowerCase();
+        const titleL = p.title.toLowerCase();
+        const tags = (p.tags || []).map(t => t.toLowerCase());
+        return cat.includes('tailoring') || titleL.includes('blazer') || titleL.includes('trouser') || titleL.includes('pant') || tags.includes('tailoring');
       });
     } else if (activeTab === 'Bestsellers') {
       list = list.filter(p => {
         const tags = (p.tags || []).map(t => t.toLowerCase());
-        return tags.includes('bestseller') || tags.includes('best') || p.vendor === 'ZYN' || p.vendor === 'VELO' || p.title.toLowerCase().includes('peppermint') || p.title.toLowerCase().includes('cool mint');
+        return tags.includes('bestseller') || tags.includes('trending');
       });
     }
 
     return list;
-  }, [activeTab, allProducts, allCollections, sec.settings.selectedCollectionId]);
+  }, [activeTab, allProducts, allCollections, sec.settings.selectedCollectionId, selectedColl]);
 
-  // Limit items as specified in section settings, default to 4 (as in screenshot)
-  const itemsCount = sec.settings.itemsCount || 4;
+  const itemsCount = sec.settings.itemsCount || 8;
   const displayedProducts = filteredProducts.slice(0, itemsCount);
 
-  // Helper to determine the badge for a product card to match the high-fidelity screenshot
   const getProductBadge = (p: Product) => {
-    const titleL = p.title.toLowerCase();
-    const vendorL = p.vendor.toLowerCase();
-    if (titleL.includes('peppermint') || vendorL.includes('velo')) {
-      return { text: 'BESTSELLER', bg: 'bg-amber-400 text-slate-950 font-black' };
+    const tags = (p.tags || []).map(t => t.toLowerCase());
+    if (tags.includes('bestseller')) {
+      return { text: 'BESTSELLER', bg: 'bg-slate-900 text-white font-bold' };
     }
-    if (titleL.includes('berry') || vendorL.includes('fumi')) {
-      return { text: 'NEW', bg: 'bg-emerald-500 text-white font-black' };
+    if (tags.includes('new in') || tags.includes('new')) {
+      return { text: 'NEW IN', bg: 'bg-emerald-600 text-white font-bold' };
     }
-    if (vendorL.includes('zyn')) {
-      return { text: 'OFFICIAL', bg: 'bg-slate-900 text-white font-black' };
+    if (tags.includes('trending')) {
+      return { text: 'TRENDING', bg: 'bg-amber-500 text-slate-950 font-bold' };
     }
-    if (vendorL.includes('pablo') || titleL.includes('cola')) {
-      return { text: 'TRENDING ↗', bg: 'bg-amber-500 text-white font-black' };
+    if (p.compareAtPrice > p.price) {
+      return { text: 'SALE', bg: 'bg-rose-600 text-white font-bold' };
     }
     return null;
   };
 
   return (
-    <div className="space-y-8 px-4 sm:px-6 py-6 max-w-7xl mx-auto">
+    <div className="space-y-10 px-4 sm:px-6 py-8 max-w-7xl mx-auto">
       {/* Top Header section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 border-b border-slate-150 gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f59e0b]">
-              NOT READY TO SUBSCRIBE?
-            </span>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end pb-6 border-b border-slate-200 gap-6">
+        <div className="space-y-2 text-left">
+          <div className="inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.25em] text-slate-500">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>CURATED APPAREL · 2026 COLLECTION</span>
           </div>
           <h2 
-            className="text-3xl md:text-4xl font-black uppercase tracking-tight text-[#0F172A]"
+            className="text-3xl md:text-4xl font-black uppercase tracking-tight text-slate-900"
             style={{ color: sec.settings.headingColor || '#0f172a' }}
           >
-            {sec.settings.title || (selectedColl ? selectedColl.title : 'Try Before You Subscribe')}
+            {sec.settings.title || (selectedColl ? selectedColl.title : 'Trending This Week')}
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 max-w-xl font-medium">
-            {sec.settings.description || (selectedColl && selectedColl.description ? selectedColl.description : 'Find your favourite flavours before committing to a plan.')}
+          <p className="text-xs sm:text-sm text-slate-500 max-w-xl">
+            {sec.settings.description || (selectedColl && selectedColl.description ? selectedColl.description : 'Explore contemporary menswear and womenswear tailored from organic textiles and virgin wool.')}
           </p>
-          <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 font-bold pt-1">
-            <span>Fast UK delivery</span>
-            <span>•</span>
-            <span>No commitment</span>
-            <span>•</span>
-            <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">18+ only</span>
-          </div>
         </div>
         
-        {/* Trust Badges and Browse All Brands button */}
-        <div className="flex flex-col sm:flex-row md:flex-col items-start sm:items-center md:items-end gap-4 w-full md:w-auto shrink-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto shrink-0">
           <button
             onClick={() => onNavigate('frontend-shop')}
-            className="bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-black py-3 px-6 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-300 shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.01] active:scale-95 text-center w-full sm:w-auto"
+            className="bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-bold py-3.5 px-7 rounded-full flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer hover:shadow-lg hover:scale-[1.02] active:scale-95 text-center w-full sm:w-auto uppercase tracking-widest"
           >
-            <span className="uppercase tracking-widest text-[10px]">Browse All Brands</span>
-            <ArrowRight className="h-3.5 w-3.5" />
+            <span>VIEW ALL APPAREL</span>
+            <ArrowRight className="h-4 w-4" />
           </button>
-
-          {/* Mini Trust indicators row */}
-          <div className="flex flex-wrap items-center gap-4 text-[9.5px] text-slate-500 font-bold">
-            <div className="flex items-center gap-1">
-              <ShieldCheck className="h-3.5 w-3.5 text-slate-405" />
-              <span>100% Authentic <span className="text-slate-400 font-medium">Official suppliers</span></span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Truck className="h-3.5 w-3.5 text-slate-405" />
-              <span>UK Tracked Delivery <span className="text-slate-400 font-medium">1-2 working days</span></span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-              <span>Trusted <span className="text-slate-400 font-medium">by 1,000+ UK customers</span></span>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Categories Tabs row matching the screenshot */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-none py-2 px-1 border-b border-slate-100">
+      {/* Categories Tabs row */}
+      <div className="flex gap-2 overflow-x-auto scrollbar-none py-1">
         {[
-          { id: 'All', label: 'All Products', icon: null },
-          { id: 'Mint', label: 'Mint', icon: Snowflake },
-          { id: 'Berry', label: 'Berry', icon: Heart },
-          { id: 'Citrus', label: 'Citrus', icon: Sparkles },
-          { id: 'Strong', label: 'Strong', icon: Zap },
-          { id: 'New Arrivals', label: 'New Arrivals', icon: Sparkles },
-          { id: 'Bestsellers', label: 'Bestsellers', icon: Crown }
+          { id: 'All', label: 'All Garments' },
+          { id: 'New In', label: 'New In' },
+          { id: 'Outerwear', label: 'Coats & Outerwear' },
+          { id: 'Knitwear', label: 'Knitwear & Sweaters' },
+          { id: 'Tops & Tees', label: 'Tops & Streetwear' },
+          { id: 'Tailoring', label: 'Tailoring' },
+          { id: 'Bestsellers', label: 'Bestsellers' }
         ].map(tab => {
-          const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-1.5 py-2 px-4 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer select-none ${
+              className={`py-2.5 px-5 rounded-full text-xs font-bold tracking-wider transition-all whitespace-nowrap cursor-pointer select-none uppercase ${
                 isActive 
-                  ? 'bg-[#0F172A] text-white shadow-sm' 
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  ? 'bg-[#0F172A] text-white shadow-md' 
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
               }`}
             >
-              {Icon && <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-amber-400 fill-amber-400' : 'text-slate-400'}`} />}
-              <span>{tab.label}</span>
+              {tab.label}
             </button>
           );
         })}
       </div>
 
-      {/* Dynamic Products Grid with Hover Animations and Larger Images */}
+      {/* Dynamic Products Grid */}
       {displayedProducts.length === 0 ? (
-        <div className="py-16 text-center text-slate-400 bg-slate-50 border border-dashed rounded-2xl">
-          <p className="text-sm font-bold">No active products found matching the filter.</p>
-          <p className="text-xs mt-1">Please try choosing another category tab above.</p>
+        <div className="py-20 text-center text-slate-400 bg-slate-50 border border-slate-200 rounded-3xl">
+          <p className="text-sm font-bold text-slate-700">No garments currently match this filter.</p>
+          <p className="text-xs mt-1 text-slate-400">Please select another category above or view our complete catalog.</p>
+          <button 
+            onClick={() => setActiveTab('All')}
+            className="mt-4 px-5 py-2 rounded-full bg-slate-900 text-white text-xs font-bold uppercase tracking-wider cursor-pointer"
+          >
+            Show All Items
+          </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {displayedProducts.map(prod => {
             const isWishlisted = loggedInCustomer?.wishlist.includes(prod.id);
             const badge = getProductBadge(prod);
@@ -1170,11 +1107,11 @@ function FeaturedCollectionSection({
               <div 
                 key={prod.id} 
                 onClick={() => onNavigate(`/products/${prod.id}`)}
-                className="bg-white border border-slate-200/85 rounded-2xl overflow-hidden p-4 space-y-4 group transition-all duration-300 relative flex flex-col justify-between cursor-pointer hover:-translate-y-2 hover:shadow-2xl hover:border-amber-400 hover:shadow-amber-100/10"
+                className="bg-white border border-slate-200 rounded-2xl overflow-hidden group transition-all duration-300 relative flex flex-col justify-between cursor-pointer hover:shadow-xl hover:border-slate-400 hover:-translate-y-1"
               >
-                {/* Badge (Best Seller, New, etc.) */}
+                {/* Badge */}
                 {badge && (
-                  <span className={`absolute top-3.5 left-3.5 text-[8.5px] font-black tracking-wider uppercase py-1 px-2.5 rounded shadow-3xs z-10 ${badge.bg}`}>
+                  <span className={`absolute top-4 left-4 text-[9px] font-black tracking-widest uppercase py-1 px-3 rounded-full shadow-sm z-10 ${badge.bg}`}>
                     {badge.text}
                   </span>
                 )}
@@ -1185,78 +1122,72 @@ function FeaturedCollectionSection({
                     e.stopPropagation();
                     onToggleWishlist(prod.id);
                   }}
-                  className="absolute top-3.5 right-3.5 p-2 rounded-full bg-white/95 backdrop-blur-md border border-slate-200 shadow-3xs text-slate-400 hover:text-red-500 hover:scale-105 active:scale-95 transition-all z-10 cursor-pointer"
+                  className="absolute top-4 right-4 p-2.5 rounded-full bg-white/90 backdrop-blur-md border border-slate-200 shadow-sm text-slate-400 hover:text-rose-500 hover:scale-110 active:scale-95 transition-all z-10 cursor-pointer"
+                  aria-label="Add to wishlist"
                 >
-                  <Heart className={`h-4 w-4 ${isWishlisted ? 'text-red-500 fill-red-500' : ''}`} />
+                  <Heart className={`h-4 w-4 ${isWishlisted ? 'text-rose-500 fill-rose-500' : ''}`} />
                 </button>
 
-                <div className="space-y-4 flex-1 flex flex-col justify-between">
-                  {/* Image takes 55%+ of height, dominates card */}
-                  <div className="w-full h-56 bg-transparent overflow-hidden relative flex items-center justify-center p-1">
-                    <img
-                      src={prod.image}
-                      className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-                      alt={prod.title}
-                      referrerPolicy="no-referrer"
-                    />
-                    
-                    {prod.compareAtPrice > prod.price && (
-                      <span className="absolute bottom-2.5 left-2.5 bg-rose-600 text-white text-[8px] font-black tracking-widest uppercase py-0.5 px-2 rounded">
-                        SALE DISCOUNT
-                      </span>
+                {/* Tall Fashion Image */}
+                <div className="w-full h-80 bg-slate-100 overflow-hidden relative">
+                  <img
+                    src={prod.image}
+                    className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+                    alt={prod.title}
+                    referrerPolicy="no-referrer"
+                  />
+                  
+                  {prod.compareAtPrice > prod.price && (
+                    <span className="absolute bottom-3 left-3 bg-rose-600 text-white text-[8px] font-black tracking-widest uppercase py-1 px-2.5 rounded-full">
+                      SAVE £{(prod.compareAtPrice - prod.price).toFixed(2)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Product Info */}
+                <div className="p-5 flex flex-col flex-1 justify-between space-y-4">
+                  <div className="space-y-1 text-left">
+                    <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-slate-400">
+                      <span>{prod.vendor || 'Atelier'}</span>
+                      <span>{prod.flavour || prod.category || 'Contemporary'}</span>
+                    </div>
+
+                    <h4 className="font-extrabold text-sm text-slate-900 group-hover:text-slate-600 transition-colors uppercase tracking-tight line-clamp-1 pt-0.5">
+                      {prod.title}
+                    </h4>
+
+                    {prod.strength && (
+                      <p className="text-xs text-slate-500 font-medium">
+                        {prod.strength}
+                      </p>
                     )}
                   </div>
 
-                  {/* Reduced Visual Clutter (Flavour & Strength tags only) */}
-                  <div className="text-center space-y-1.5 px-1">
-                    <h4 className="font-extrabold text-sm text-slate-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight line-clamp-1">
-                      {prod.title.toLowerCase().startsWith(prod.vendor.toLowerCase()) ? prod.title : `${prod.vendor} ${prod.title}`}
-                    </h4>
-                    
-                    <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-450 font-bold uppercase tracking-wider">
-                      <span className="text-indigo-600 font-extrabold">{prod.strength || '6mg'}</span>
-                      <span className="text-slate-300 font-normal">•</span>
-                      <span>{prod.tags?.[0] || 'Mint'}</span>
+                  {/* Pricing and Add to Bag */}
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                    <div className="text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-black text-slate-950">£{prod.price.toFixed(2)}</span>
+                        {prod.compareAtPrice > prod.price && (
+                          <span className="text-xs text-slate-400 line-through">£{prod.compareAtPrice.toFixed(2)}</span>
+                        )}
+                      </div>
+                      <span className="text-[9px] text-emerald-600 font-bold block uppercase tracking-wider">
+                        In Stock · Express Delivery
+                      </span>
                     </div>
-                  </div>
-                </div>
 
-                {/* Pricing & Subscription Savings */}
-                <div className="space-y-3 pt-3 border-t border-slate-55">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <span className="text-base font-black text-slate-900 font-mono">£{prod.price.toFixed(2)}</span>
-                      <span className="text-[9.5px] text-slate-400 font-semibold uppercase">each</span>
-                    </div>
-                    {/* Subscription nudge right under price */}
-                    <p className="text-[10px] text-[#D4AF37] font-extrabold mt-0.5">
-                      Subscribers from <span className="font-mono">£3.80</span>
-                    </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToCart(prod, 1);
+                      }}
+                      className="bg-[#0F172A] hover:bg-slate-800 text-white text-[10px] font-extrabold py-2.5 px-4 rounded-full flex items-center gap-1.5 cursor-pointer transition-all uppercase tracking-wider shrink-0 hover:scale-105 active:scale-95 shadow-sm"
+                    >
+                      <ShoppingCart className="h-3.5 w-3.5" />
+                      <span>Add</span>
+                    </button>
                   </div>
-
-                  {/* Save more with Subscription gentle badge and link */}
-                  <div 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onNavigate('frontend-subscribe');
-                    }}
-                    className="w-full bg-[#FAFAFA] hover:bg-amber-50 hover:border-amber-200 transition-all border border-slate-100 py-2 px-2.5 rounded-xl flex items-center justify-between text-[9px] text-slate-500 font-bold cursor-pointer font-sans"
-                  >
-                    <span className="text-[#B45309]">Save up to 20% with Sub</span>
-                    <span className="text-slate-700 underline flex items-center gap-0.5 hover:text-indigo-600 font-extrabold">Compare Plans →</span>
-                  </div>
-
-                  {/* Dynamic checkout/basket button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddToCart(prod, 1);
-                    }}
-                    className="w-full bg-[#0F172A] hover:bg-indigo-600 text-white text-[11px] font-black py-3 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-all duration-300 uppercase tracking-widest shadow-sm active:scale-97"
-                  >
-                    <ShoppingCart className="h-3.5 w-3.5" />
-                    <span>Add to Basket</span>
-                  </button>
                 </div>
               </div>
             );
@@ -1264,53 +1195,22 @@ function FeaturedCollectionSection({
         </div>
       )}
 
-      {/* Want the best value transition row bar */}
-      <div className="w-full bg-slate-50/80 rounded-2xl p-6 border border-slate-150 flex flex-col md:flex-row items-center justify-between gap-6 mt-8 shadow-3xs">
-        <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-          {/* Overlapping circular tins for high fidelity design */}
-          <div className="relative w-24 h-16 shrink-0 flex items-center justify-center select-none">
-            <div className="absolute left-0 w-11 h-11 rounded-full bg-indigo-50 border border-indigo-200 shadow-md flex items-center justify-center overflow-hidden transform rotate-[-12deg]">
-              <img src="https://images.unsplash.com/photo-1543257580-7269da773bf5?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
-            </div>
-            <div className="absolute left-6 w-11 h-11 rounded-full bg-emerald-50 border border-emerald-200 shadow-md flex items-center justify-center overflow-hidden transform rotate-[8deg] z-10">
-              <img src="https://images.unsplash.com/photo-1589984662646-e7b2e4962f18?auto=format&fit=crop&w=80&q=80" className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
-            </div>
-            {/* Save 20% golden badge */}
-            <div className="absolute -right-2 -top-1 w-10 h-10 rounded-full bg-amber-400 border border-white text-slate-950 font-black text-[7.5px] leading-tight flex flex-col items-center justify-center shadow-md transform rotate-[15deg] z-20">
-              <span>Save</span>
-              <span>20%</span>
-            </div>
-          </div>
-          
-          <div>
-            <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">Want the best value?</h3>
-            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed font-medium">
-              Subscribe and save up to <span className="font-bold text-slate-800">£55/month</span>. Never run out. Cancel anytime.
-            </p>
-          </div>
+      {/* Sustainable European Craftsmanship Strip */}
+      <div className="w-full bg-slate-900 rounded-3xl p-8 sm:p-10 text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl mt-12">
+        <div className="space-y-2 text-center md:text-left max-w-xl">
+          <span className="text-[10px] font-bold tracking-[0.25em] text-amber-400 uppercase">THE STOREFRONT COMMITMENT</span>
+          <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">Sustainable European Craftsmanship</h3>
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Every garment is crafted using 100% GOTS organic cotton and recycled virgin wool in fair-wage ateliers across Portugal and Italy.
+          </p>
         </div>
-        
-        {/* Value badges and View Plans Action Button */}
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-slate-500 text-[10px] font-extrabold">
-          <div className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Free Delivery</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Change Anytime</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Loyalty Rewards</span>
-          </div>
-          
+
+        <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
           <button
-            onClick={() => onNavigate('frontend-subscribe')}
-            className="bg-amber-500 hover:bg-amber-600 hover:scale-[1.01] active:scale-95 text-white font-black text-xs py-2.5 px-5 rounded-xl transition-all cursor-pointer shadow-xs flex items-center gap-1 ml-2 uppercase tracking-wider"
+            onClick={() => onNavigate('frontend-shop')}
+            className="bg-white text-slate-950 hover:bg-slate-100 text-xs font-black py-4 px-8 rounded-full uppercase tracking-widest transition-all cursor-pointer shadow-lg hover:scale-105"
           >
-            <span>View Plans</span>
-            <ArrowRight className="h-3 w-3" />
+            EXPLORE THE ATELIER
           </button>
         </div>
       </div>
@@ -1443,9 +1343,9 @@ export default function PageRenderer({
                       {/* Content block aligned */}
                       <div className="max-w-7xl mx-auto w-full px-6 sm:px-12 md:px-16 relative z-10 text-white">
                         <div className="max-w-2xl space-y-4 sm:space-y-6">
-                          <div className="inline-flex items-center gap-1.5 bg-indigo-600/90 text-white font-extrabold uppercase tracking-widest text-[8px] sm:text-[9px] py-1 px-3 rounded-full border border-indigo-400/30">
+                          <div className="inline-flex items-center gap-1.5 bg-slate-900/90 text-white font-extrabold uppercase tracking-widest text-[8px] sm:text-[9px] py-1 px-3 rounded-full border border-white/20">
                             <Sparkles className="h-3 w-3 text-amber-300 animate-spin" />
-                            <span>Exclusive Pouch Launch</span>
+                            <span>Exclusive Capsule Drop</span>
                           </div>
 
                           {sec.settings.title && (
@@ -1540,13 +1440,13 @@ export default function PageRenderer({
                   const ytId = getYouTubeId(sec.settings.videoUrl || '');
                   // Check if there is a custom user video or if we should use our premium background image
                   const hasCustomVideo = ytId || (sec.settings.videoMp4Url && !sec.settings.videoMp4Url.includes('laboratory-test-tubes'));
-                  const bgImage = '/src/assets/images/nicotine_pouches_hero_1784094944394.jpg';
+                  const bgImage = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1800&q=85';
 
                   // Text replacements to match sent design
                   const titleInput = sec.settings.title || '';
                   const isLabTitle = !titleInput || titleInput.toLowerCase().includes('laboratory') || titleInput.toLowerCase().includes('showcase') || titleInput.toLowerCase().includes('watch');
                   
-                  const headingLine1 = isLabTitle ? "YOUR NICOTINE," : titleInput;
+                  const headingLine1 = isLabTitle ? "YOUR WARDROBE," : titleInput;
                   const headingLine2 = isLabTitle ? "ON AUTOPILOT." : "";
 
                   const descInput = sec.settings.description || '';
@@ -1581,7 +1481,7 @@ export default function PageRenderer({
                         ) : (
                           <img
                             src={bgImage}
-                            alt="Premium Nicotine Pouches Collection"
+                            alt="Premium Atelier Clothing Collection"
                             className="w-full h-full object-cover object-center sm:object-right lg:object-right-bottom opacity-85"
                             referrerPolicy="no-referrer"
                           />
@@ -1608,9 +1508,9 @@ export default function PageRenderer({
 
                             {isLabDesc ? (
                               <div className="space-y-1.5 pt-2 text-slate-200 text-sm sm:text-base md:text-[17px] leading-relaxed font-bold tracking-wide drop-shadow-sm opacity-95">
-                                <p>Premium nicotine pouch subscriptions.</p>
-                                <p>Your favourite brands. Delivered your way.</p>
-                                <p>Every week, fortnight or month.</p>
+                                <p>Curated luxury capsule subscriptions.</p>
+                                <p>Your essential wardrobe staples. Delivered your way.</p>
+                                <p>Every month, season, or quarter.</p>
                               </div>
                             ) : (
                               <p className="text-slate-200 text-sm sm:text-base leading-relaxed max-w-xl font-bold tracking-wide drop-shadow-sm pt-1">
@@ -1694,7 +1594,7 @@ export default function PageRenderer({
 
                         </div>
 
-                        {/* Right column empty spacing to let the canister background shine on large screens */}
+                        {/* Right column empty spacing to let the hero background shine on large screens */}
                         <div className="hidden lg:block lg:col-span-5 h-full min-h-[250px]" />
 
                       </div>
@@ -1797,21 +1697,21 @@ export default function PageRenderer({
                 {sec.type === 'Text column with image' && (
                   <div className="space-y-12 px-4 sm:px-6">
                     <div className="text-center max-w-2xl mx-auto space-y-3">
-                      <span className="text-[10px] tracking-widest font-black uppercase text-indigo-600 bg-indigo-50/90 py-1 px-3.5 rounded-full inline-block">Our Foundations</span>
+                      <span className="text-[10px] tracking-widest font-black uppercase text-slate-900 bg-slate-100 py-1 px-3.5 rounded-full inline-block">Our Foundations</span>
                       <h2 
                         className="text-3xl font-black uppercase tracking-tight"
                         style={{ color: sec.settings.headingColor || '#000000' }}
                       >
-                        {sec.settings.title || 'Laboratory Certified Excellence'}
+                        {sec.settings.title || 'Artisanal Craftsmanship & Materials'}
                       </h2>
-                      <p className="text-xs sm:text-sm text-slate-500">{sec.settings.description || 'Scientifically balanced plant extracts providing rich, uniform strength.'}</p>
+                      <p className="text-xs sm:text-sm text-slate-500">{sec.settings.description || 'Sustainably sourced natural fibers, organic cottons, and master European tailoring.'}</p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                       {[
-                        { title: 'Global Certified Lab Testing', desc: 'Every batch is sourced strictly from laboratory test lines adhering to absolute security and clean protocols.', img: '/placeholder.png', badge: 'LAB VERIFIED' },
-                        { title: 'Preservative Free Aroma Boost', desc: 'Crafted using pure food-grade crystalline ingredients, delivering rich natural aromas and smooth fresh locks.', img: '/placeholder.png', badge: '100% TOBACCO-FREE' },
-                        { title: 'Vacuum Sealed Freeze Guard', desc: 'Sealed instantly into high-density polymer canisters ensuring 100% cooling impact remains intact during shipping.', img: '/placeholder.png', badge: 'FRESHNESS LOCK' }
+                        { title: 'Sustainably Milled Organic Cotton', desc: 'Crafted from 450gsm heavyweight French terry and combed jersey woven with certified sustainable water management.', img: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=600&q=80', badge: 'GOTS ORGANIC' },
+                        { title: 'Artisanal European Tailoring', desc: 'Constructed by second-generation master tailors in Porto and Biella with reinforced bar-tacking and hand-pressed seams.', img: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80', badge: 'HANDCRAFTED' },
+                        { title: 'Timeless Proportions & Fit', desc: 'Engineered for enduring versatility and effortless day-to-night transitions across every wardrobe capsule.', img: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=600&q=80', badge: 'ARCHITECTURAL' }
                       ].map((col, cIdx) => (
                         <div key={cIdx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden p-4 space-y-4 shadow-sm hover:shadow-xl hover:border-slate-300/60 transition-all group flex flex-col justify-between">
                           <div className="space-y-3">
@@ -1824,8 +1724,8 @@ export default function PageRenderer({
                           </div>
                           
                           <div className="pt-2 border-t border-slate-50 flex items-center justify-between text-[9px] text-slate-450 font-mono">
-                            <span>ISO STANDARDS COMPLIANT</span>
-                            <span className="text-emerald-600 font-bold">✓ RECONSTRUCTED</span>
+                            <span>ETHICAL ATELIER STANDARDS</span>
+                            <span className="text-emerald-600 font-bold">✓ VERIFIED</span>
                           </div>
                         </div>
                       ))}
@@ -1928,19 +1828,19 @@ export default function PageRenderer({
                         className="text-xs font-black uppercase tracking-widest text-slate-400 block"
                         style={{ color: sec.settings.headingColor || '#94A3B8' }}
                       >
-                        {sec.settings.title || 'OFFICIAL LAB PARTNER REGISTER'}
+                        {sec.settings.title || 'PARTNER MILLS & ATELIERS'}
                       </h3>
-                      <p className="text-[10px] text-slate-400">Clinically formulated nicotine lines distributed under licensing agreements</p>
+                      <p className="text-[10px] text-slate-400">Master textile mills and weaving heritage houses across Europe</p>
                     </div>
 
                     <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6">
-                      {['77', 'clew', 'cuba', 'maggie', 'nordic spirit', 'xqs', 'zyn', 'pablo', 'killa', 'fumi', 'velo', 'white fox', 'snu'].map((logo, lIdx) => (
+                      {['Atelier Studio', 'Nordic Workshop', 'Porto Weaving Co.', 'Biella Textiles', 'Florence Tailors', 'Kyoto Cloth', 'Copenhagen Studio'].map((logo, lIdx) => (
                         <div 
                           key={lIdx} 
                           onClick={() => onNavigate('frontend-brands')}
                           className="bg-white border border-slate-150 rounded-xl px-5 py-3 shadow-xs hover:border-slate-400 hover:shadow-md transition-all cursor-pointer text-xs font-extrabold tracking-wider text-slate-700 flex items-center gap-1.5"
                         >
-                          <span className="text-indigo-600">●</span>
+                          <span className="text-slate-900">●</span>
                           <span>{logo}</span>
                         </div>
                       ))}
@@ -1953,44 +1853,60 @@ export default function PageRenderer({
                    const filteredCollections = sec.settings.selectedCollectionIds && sec.settings.selectedCollectionIds.length > 0
                      ? allCollections.filter(col => sec.settings.selectedCollectionIds!.includes(col.id))
                      : allCollections.slice(0, Math.min(sec.settings.itemsCount || 4, allCollections.length));
- 
+
                    return (
-                     <div className="space-y-8 px-4 sm:px-6">
-                       <div className="text-center space-y-2">
-                         <h3 
-                           className="text-xs font-black uppercase tracking-widest text-[#0F172A]"
-                           style={{ color: sec.settings.headingColor || '#0F172A' }}
+                     <div className="space-y-8 px-4 sm:px-6 max-w-7xl mx-auto">
+                       <div className="flex flex-col md:flex-row justify-between items-start md:items-end pb-4 border-b border-slate-200 gap-4">
+                         <div className="space-y-1 text-left">
+                           <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">CURATED LINES</span>
+                           <h3 
+                             className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-900"
+                             style={{ color: sec.settings.headingColor || '#0F172A' }}
+                           >
+                             {sec.settings.title || 'EXPLORE CATEGORIES'}
+                           </h3>
+                           {sec.settings.description && (
+                             <p className="text-xs text-slate-500 max-w-md">{sec.settings.description}</p>
+                           )}
+                         </div>
+                         <button
+                           onClick={() => onNavigate('frontend-shop')}
+                           className="text-xs font-bold uppercase tracking-widest text-slate-900 hover:text-slate-600 flex items-center gap-1.5 cursor-pointer"
                          >
-                           {sec.settings.title || 'EXPLORE BRAND COLLECTIONS'}
-                         </h3>
-                         {sec.settings.description && (
-                           <p className="text-xs text-slate-500 max-w-md mx-auto">{sec.settings.description}</p>
-                         )}
+                           <span>View All Categories</span>
+                           <ArrowRight className="h-3.5 w-3.5" />
+                         </button>
                        </div>
- 
-                       {/* Highly responsive 2-col to 4-col display */}
+
+                       {/* Editorial category cards with tall portrait aspect */}
                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
                          {filteredCollections.map(col => (
                            <div
                              key={col.id}
                              onClick={() => onNavigate('frontend-shop', col.id)}
-                             className="bg-white border border-slate-150 hover:border-slate-400 rounded-2xl p-5 text-center cursor-pointer transition-all hover:shadow-lg group flex flex-col justify-between overflow-hidden"
+                             className="group relative h-80 sm:h-96 rounded-2xl overflow-hidden cursor-pointer shadow-md transition-all hover:shadow-2xl"
                            >
-                             <div className="h-24 bg-slate-50 group-hover:bg-slate-100 rounded-xl flex items-center justify-center mb-4 transition-colors overflow-hidden relative">
-                               {col.image ? (
-                                 <img 
-                                   src={col.image} 
-                                   className="h-full w-full object-cover transform group-hover:scale-105 transition-transform" 
-                                   alt={col.title}
-                                   referrerPolicy="no-referrer"
-                                 />
-                               ) : (
-                                 <span className="text-4xl transform group-hover:scale-108 transition-transform">🥫</span>
-                               )}
-                             </div>
-                             <div>
-                               <h4 className="font-extrabold text-xs text-slate-800 group-hover:text-indigo-650 transition-colors uppercase tracking-wide truncate">{col.title}</h4>
-                               <p className="text-[10px] text-slate-400 mt-1 font-mono">{col.productIds.length} FLAVORS</p>
+                             <img 
+                               src={col.image || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80'} 
+                               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" 
+                               alt={col.title}
+                               referrerPolicy="no-referrer"
+                             />
+                             {/* Gradient Overlay */}
+                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent" />
+                             
+                             {/* Text info bottom */}
+                             <div className="absolute bottom-0 inset-x-0 p-5 text-left text-white space-y-1.5">
+                               <span className="text-[9px] font-mono tracking-widest text-amber-400 uppercase">
+                                 {col.productIds ? `${col.productIds.length} PIECES` : 'COLLECTION'}
+                               </span>
+                               <h4 className="font-black text-lg uppercase tracking-tight leading-tight group-hover:text-amber-300 transition-colors">
+                                 {col.title}
+                               </h4>
+                               <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-1 group-hover:translate-y-0">
+                                 <span>Explore Drop</span>
+                                 <ArrowRight className="h-3 w-3" />
+                               </div>
                              </div>
                            </div>
                          ))}
@@ -2024,165 +1940,31 @@ export default function PageRenderer({
                   />
                 )}
 
-                {false && sec.type === 'Featured collection' && (
-                  <div className="space-y-8 px-4 sm:px-6">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end pb-4 border-b border-slate-200">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
-                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Direct From Laboratories</span>
-                        </div>
-                        <h2 
-                          className="text-2xl font-black uppercase tracking-tight text-[#0F172A]"
-                          style={{ color: sec.settings.headingColor || '#0f172a' }}
-                        >
-                          {sec.settings.title || 'FEATURED COLLECTION'}
-                        </h2>
-                        {sec.settings.description && (
-                          <p className="text-xs text-slate-500 max-w-xl">
-                            {sec.settings.description}
-                          </p>
-                        )}
-                      </div>
-                      
-                      <button
-                        onClick={() => onNavigate('frontend-shop')}
-                        className="text-xs font-black text-indigo-600 hover:text-indigo-700 hover:underline cursor-pointer pt-3 sm:pt-0 uppercase tracking-widest flex items-center gap-1.5"
-                      >
-                        <span>All Categories</span>
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {(() => {
-                        const targetCollectionId = sec.settings.selectedCollectionId;
-                        const selectedColl = targetCollectionId ? allCollections.find(c => c.id === targetCollectionId) : null;
-                        const filtered = allProducts
-                          .filter(p => p.status === 'Active')
-                          .filter(p => !targetCollectionId || selectedColl?.productIds.includes(p.id));
-                        
-                        return filtered.slice(0, sec.settings.itemsCount || 4).map(prod => {
-                          const isWishlisted = loggedInCustomer?.wishlist.includes(prod.id);
-                          return (
-                            <div 
-                              key={prod.id} 
-                              onClick={() => onNavigate(`/products/${prod.id}`)}
-                              className="bg-white border border-slate-150 rounded-2xl overflow-hidden p-4 space-y-4 group hover:shadow-xl hover:border-slate-300 transition-all relative flex flex-col justify-between cursor-pointer"
-                            >
-                              {/* Wishlist triggers */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onToggleWishlist(prod.id);
-                                }}
-                                className="absolute top-3 right-3 p-2 rounded-full bg-white/90 backdrop-blur-md border border-slate-200 shadow-sm text-slate-400 hover:text-red-500 transition-colors z-10 cursor-pointer"
-                              >
-                                <Heart className={`h-4 w-4 ${isWishlisted ? 'text-red-500 fill-red-500' : ''}`} />
-                              </button>
-
-                              <div className="space-y-3">
-                                <div className="h-48 bg-slate-50 rounded-xl overflow-hidden border border-slate-100 relative shadow-inner">
-                                  <img
-                                    src={prod.image}
-                                    className="h-full w-full object-cover group-hover:scale-102 transition-transform duration-500"
-                                    alt=""
-                                    referrerPolicy="no-referrer"
-                                  />
-                                  <span className="absolute top-2.5 left-2.5 bg-slate-900 text-white text-[8px] font-black tracking-widest uppercase py-0.5 px-2 rounded-md">
-                                    {prod.vendor}
-                                  </span>
-                                  
-                                  {prod.compareAtPrice > prod.price && (
-                                    <span className="absolute bottom-2.5 left-2.5 bg-rose-650 text-white text-[8px] font-black tracking-widest uppercase py-0.5 px-2 rounded">
-                                      SALE DISCOUNT
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-1 text-[8.5px] font-bold text-slate-400 uppercase tracking-widest">
-                                    <span>Suppled Lab Grade</span>
-                                    <span>•</span>
-                                    <span>Fresh Locks</span>
-                                  </div>
-                                  <h4 className="font-extrabold text-xs text-slate-800 truncate uppercase tracking-tight">{prod.title}</h4>
-                                  
-                                  <div className="flex items-center gap-1 text-amber-500 pb-1">
-                                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                                    <span className="text-[9px] text-slate-400 font-mono ml-1 font-bold">5.0 (48)</span>
-                                  </div>
-
-                                  {/* Beautiful medical specification specs list */}
-                                  <div className="bg-slate-50/70 py-1.5 px-2 rounded-lg border border-slate-100 space-y-1">
-                                    <div className="flex justify-between text-[8px] text-slate-450 font-bold uppercase font-mono">
-                                      <span>Strength Aroma</span>
-                                      <span className="text-slate-800 font-black">X-Strong Freeze</span>
-                                    </div>
-                                    <div className="flex justify-between text-[8px] text-slate-450 font-bold uppercase font-mono">
-                                      <span>Dispatch Type</span>
-                                      <span className="text-indigo-650 font-black">Laboratory Fresh</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="space-y-2 pt-2 border-t border-slate-50">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-wide">Single Tin</span>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-xs font-black text-slate-900 font-mono">£{prod.price.toFixed(2)}</span>
-                                    {prod.compareAtPrice > prod.price && (
-                                      <span className="text-[9.5px] text-slate-405 line-through font-mono">£{prod.compareAtPrice.toFixed(2)}</span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <button
-                                  onClick={() => onAddToCart(prod, 1)}
-                                  className="w-full bg-slate-900 hover:bg-indigo-600 text-white text-[10px] font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-colors uppercase tracking-widest shadow-xs"
-                                >
-                                  <ShoppingCart className="h-3.5 w-3.5" />
-                                  <span>Add to Cart</span>
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        });
-                      })()}
-                    </div>
-                  </div>
-                )}
-
                 {/* 11. IMAGES GALLERY */}
                 {sec.type === 'Images gallery' && (
-                  <div className="space-y-8 px-4 sm:px-6">
+                  <div className="space-y-8 px-4 sm:px-6 max-w-7xl mx-auto">
                     <div className="text-center space-y-2">
-                      <span className="text-[10px] tracking-widest font-black uppercase text-indigo-600 bg-indigo-50/90 py-1 px-3.5 rounded-full inline-block">Visual Verification</span>
+                      <span className="text-[10px] tracking-widest font-black uppercase text-slate-500 bg-slate-100 py-1 px-3.5 rounded-full inline-block">CAMPAIGN LOOKBOOK</span>
                       <h3 
-                        className="text-center text-2xl font-black uppercase tracking-tight text-[#0F172A]"
+                        className="text-center text-2xl sm:text-3xl font-black uppercase tracking-tight text-[#0F172A]"
                         style={{ color: sec.settings.headingColor || '#0F172A' }}
                       >
-                        {sec.settings.title || 'Laboratory & Dispatch Facility Gallery'}
+                        {sec.settings.title || 'Season Lookbook & Atelier Campaign'}
                       </h3>
-                      <p className="text-xs text-slate-500 max-w-md mx-auto">Inspected clean-room assembly lines yielding high-density plant-fiber purity.</p>
+                      <p className="text-xs text-slate-500 max-w-md mx-auto">Behind the scenes at our artisanal European workshops, crafting enduring silhouettes from organic textiles.</p>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                       {[
-                        'https://images.unsplash.com/photo-1543257580-7269da773bf5?auto=format&fit=crop&w=400&q=80',
-                        'https://images.unsplash.com/photo-1589984662646-e7b2e4962f18?auto=format&fit=crop&w=400&q=80',
-                        'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=400&q=80',
-                        'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?auto=format&fit=crop&w=400&q=80'
+                        'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80',
+                        'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=600&q=80',
+                        'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80',
+                        'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=600&q=80'
                       ].map((imgUrl, galIdx) => (
-                        <div key={galIdx} className="h-44 rounded-2xl overflow-hidden border border-slate-150 shadow-sm relative group bg-slate-50">
-                          <img src={imgUrl} className="h-full w-full object-cover hover:scale-103 transition-transform duration-500" alt="" referrerPolicy="no-referrer" />
-                          <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <span className="bg-white/90 backdrop-blur-xs text-[9px] font-black uppercase tracking-widest py-1 px-3.5 text-slate-900 rounded-lg shadow-sm">View Facility</span>
+                        <div key={galIdx} className="h-64 sm:h-80 rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative group bg-slate-100">
+                          <img src={imgUrl} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Lookbook visual" referrerPolicy="no-referrer" />
+                          <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="bg-white/95 backdrop-blur-xs text-[9px] font-black uppercase tracking-widest py-2 px-4 text-slate-900 rounded-full shadow-md">View Editorial</span>
                           </div>
                         </div>
                       ))}
@@ -2194,22 +1976,22 @@ export default function PageRenderer({
                 {sec.type === 'FAQs' && (
                   <div className="max-w-3xl mx-auto space-y-8 px-4 sm:px-6">
                     <div className="text-center space-y-2">
-                      <span className="text-[10px] tracking-widest font-black uppercase text-indigo-600 bg-indigo-50/90 py-1 px-3.5 rounded-full inline-block">Answered Live</span>
+                      <span className="text-[10px] tracking-widest font-black uppercase text-slate-500 bg-slate-100 py-1 px-3.5 rounded-full inline-block">HELP & ASSISTANCE</span>
                       <h2 
                         className="text-3xl font-black uppercase tracking-tight text-[#0F172A]"
                         style={{ color: sec.settings.headingColor || '#0F172A' }}
                       >
                         {sec.settings.title || 'Frequently Asked Questions'}
                       </h2>
-                      <p className="text-xs text-slate-500">Instant validation regarding formulation standards, tracking, and deliveries.</p>
+                      <p className="text-xs text-slate-500">Everything you need to know about our sizing, ethical fabrics, and global express shipping.</p>
                     </div>
 
                     <div className="space-y-4">
                       {(sec.settings.faqItems || [
-                        { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon fulfillment lines dispatch.' },
-                        { q: 'Are these pouches 100% tobacco-free?', a: 'Under all current EU & UK reseller regulations, our catalog consists strictly of plant-fiber pouch variants utilizing medical crystalline formats.' },
-                        { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific week layouts. Pause, skip custom flavors, or cancel anytime for free in the account dashboard.' },
-                        { q: 'Where are the canisters formulated?', a: 'Formulated in certified European laboratories under strict vacuum sterile protocols, ensuring consistent aroma and maximum flavor lock.' }
+                        { q: 'What is your sizing and fit guarantee?', a: 'All our garments are tailored true to European standards with relaxed contemporary silhouettes. We offer 30-day complimentary exchanges on any unworn item with original tags attached.' },
+                        { q: 'Where are your fabrics sourced and manufactured?', a: 'We partner directly with family-owned heritage mills in Northern Portugal and Northern Italy, exclusively using 100% GOTS-certified organic cotton, virgin wool, and sustainable recycled fibers.' },
+                        { q: 'How fast is dispatch and express delivery?', a: 'Orders placed before 2 PM GMT ship same day via tracked courier. Domestic UK orders arrive within 1-2 business days, and international deliveries arrive in 3-5 business days.' },
+                        { q: 'How does the wardrobe capsule plan work?', a: 'Our seasonal capsule service delivers curated essential wardrobe pieces at your chosen schedule. You can preview, customize sizes, skip a drop, or cancel at any time with zero commitment.' }
                       ]).map((faq: any, fIdx: number) => {
                         const isChosen = openFaqIdx === `${sec.id}-${fIdx}`;
                         return (
@@ -2268,15 +2050,15 @@ export default function PageRenderer({
                   const displayBlogs = activeBlogs.length > 0 
                     ? activeBlogs 
                     : [
-                        { id: '1', title: 'Swedish Pouch Manufacturing Regulations', category: 'Standards', date: 'June 19, 2026', image: 'https://images.unsplash.com/photo-1543257580-7269da773bf5?auto=format&fit=crop&w=400&q=80', excerpt: 'Behind the clinical clean rooms compounding sterile medical fiber pouches under modern Scandinavian compliance.', author: 'Dr. Anders' },
-                        { id: '2', title: 'Why Sterile Medical Fiber is Better', category: 'Science', date: 'June 18, 2026', image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=400&q=80', excerpt: 'Traditional pouches use coarse paper. Our laboratory leverages vacuum plant cellulose fibers for smooth flavor dispersion.', author: 'Sara Storm' },
-                        { id: '3', title: 'Understanding Nicotine Salt Deliveries', category: 'Formulas', date: 'June 17, 2026', image: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=400&q=80', excerpt: 'An in-depth breakdown of molecular compounding and how sub-zero cooling agents trigger persistent fresh releases.', author: 'Nils Vance' }
+                        { id: '1', title: 'The Anatomy of 450GSM Organic Loopback Cotton', category: 'Craftsmanship', date: 'June 19, 2026', image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=600&q=80', excerpt: 'Exploring the tactile difference, durability, and drape of heavyweight French terry manufactured in northern Portugal.', author: 'Elena Rossi' },
+                        { id: '2', title: 'Building a Timeless 10-Piece Capsule Wardrobe', category: 'Style Guide', date: 'June 18, 2026', image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80', excerpt: 'How precision tailoring and neutral mineral palettes create effortless versatility across every season.', author: 'Marcus Vance' },
+                        { id: '3', title: 'Natural Dyes and Sustainable Water Systems in Biella', category: 'Sustainability', date: 'June 17, 2026', image: 'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=600&q=80', excerpt: 'Inside the historic Italian dye mills setting new standards for zero-waste luxury fashion production.', author: 'Sofia Lind' }
                       ];
 
                   return (
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 py-4">
                       <div className="text-center space-y-2">
-                        <span className="text-[10px] tracking-widest font-black uppercase text-white bg-indigo-600/90 py-1 px-3.5 rounded-full inline-block">Pouch Journal</span>
+                        <span className="text-[10px] tracking-widest font-black uppercase text-white bg-slate-900 py-1 px-3.5 rounded-full inline-block">Atelier Journal</span>
                         <h2 
                           className="text-3xl font-black uppercase tracking-tight text-slate-900"
                           style={{ color: sec.settings.headingColor || '#0F172A' }}
@@ -2477,9 +2259,9 @@ export default function PageRenderer({
                     }
                     if (normIcon.includes('package') || normTitle.includes('never run out') || normTitle.includes('auto')) {
                       return {
-                        title: 'NEVER RUN OUT',
-                        desc: 'Auto-refill systems lock in your favorite pouches at sub-retail price thresholds.',
-                        benefits: ['Auto-refill', 'Priority stock', 'Price lock-in'],
+                        title: 'ALWAYS PREPARED',
+                        desc: 'Seasonal capsule releases deliver your curated essential wardrobe staples with zero friction.',
+                        benefits: ['Auto-delivery', 'Priority allocation', 'Member pricing'],
                         iconName: 'Package'
                       };
                     }

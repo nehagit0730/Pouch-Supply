@@ -16,12 +16,12 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
       content: (
         <div className="space-y-4">
           <p className="text-slate-650 leading-relaxed text-sm sm:text-base font-medium">
-            At <strong className="text-slate-900 font-extrabold">Pouch Supply</strong>, we aim to provide premium, laboratory-certified products and a professional shopping experience. Due to the regulated nature of our products, specific conditions apply strictly to returns and refunds.
+            At <strong className="text-slate-900 font-extrabold">Atelier Studio</strong>, we aim to provide exceptional artisanal garments and a seamless shopping experience. We offer straightforward 30-day returns and size exchanges on unworn items.
           </p>
-          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3 text-indigo-850">
-            <CheckCircle2 className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex gap-3 text-slate-800">
+            <CheckCircle2 className="h-5 w-5 text-slate-700 shrink-0 mt-0.5" />
             <p className="text-xs font-semibold leading-relaxed">
-              By completing and checking out an order on our website, you consciously agree to all terms and conditions set forth under this Refund Policy.
+              By completing and checking out an order on our website, you agree to all terms and conditions set forth under this Return & Exchange Policy.
             </p>
           </div>
         </div>
@@ -34,16 +34,16 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
       content: (
         <div className="space-y-4">
           <p className="text-slate-650 leading-relaxed text-sm">
-            Because nicotine chemical pouches are consumable personal goods, we maintain high sanitation standards and accept returns only under the following explicit conditions:
+            We accept returns and size exchanges under the following straightforward conditions:
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
-              { type: 'Wrong Canisters Received', details: 'The logistics courier dispatched items mismatched with your purchased receipt.' },
-              { type: 'Damage or defect upon arrival', details: 'The hermetic canister seal was broken, or packaging arrived crushed.' },
-              { type: 'Logistical Missing Items', details: 'Items are missing from your sealed carton packet delivery.' }
+              { type: 'Size or Style Exchange', details: 'The garment does not fit as desired or you prefer an alternative colorway.' },
+              { type: 'Damage or Defect on Arrival', details: 'A seam or fabric imperfection was detected upon initial unboxing.' },
+              { type: 'Incorrect Item Received', details: 'The logistics courier dispatched items mismatched with your invoice.' }
             ].map((p, idx) => (
-              <div key={idx} className="p-4 border rounded-xl bg-[#FAF9F6] space-y-1 hover:border-indigo-150 transition-colors">
-                <span className="block text-[10px] font-black uppercase text-indigo-600 tracking-wider">CRITERIA {idx + 1}</span>
+              <div key={idx} className="p-4 border rounded-xl bg-[#FAF9F6] space-y-1 hover:border-slate-300 transition-colors">
+                <span className="block text-[10px] font-black uppercase text-slate-900 tracking-wider">CRITERIA {idx + 1}</span>
                 <span className="block text-xs font-bold text-[#0F172A]">{p.type}</span>
                 <span className="block text-[11px] text-slate-500 font-medium leading-relaxed">{p.details}</span>
               </div>
@@ -51,11 +51,11 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
           </div>
 
           <div className="border border-slate-150 rounded-xl p-4 space-y-2 bg-slate-50 text-xs font-bold text-slate-650">
-            <span className="block text-[10px] uppercase font-black tracking-widest text-[#1E293B] border-b pb-1">Essential Compliance Thresholds</span>
+            <span className="block text-[10px] uppercase font-black tracking-widest text-[#1E293B] border-b pb-1">Essential Return Standards</span>
             <ul className="space-y-1 list-disc pl-4 text-[11px] text-slate-500 font-semibold font-sans">
-              <li>The canister must be strictly unused, unopened, and maintain original manufacturer hermetic shrink-wraps.</li>
-              <li>The original shipping delivery packaging boxes must remain fully intact.</li>
-              <li>You must raise a formal support email within <strong className="text-slate-800 font-extrabold">48 hours of postal courier delivery</strong>. We cannot accept claims beyond this chronological window.</li>
+              <li>The garment must be strictly unworn, unwashed, and retain all original designer tags attached.</li>
+              <li>Garments must remain free from perfume, makeup stains, alterations, or pet hair.</li>
+              <li>You must initiate your return request within <strong className="text-slate-800 font-extrabold">30 days of delivery</strong>.</li>
             </ul>
           </div>
         </div>
@@ -67,24 +67,24 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
       icon: Ban,
       content: (
         <div className="space-y-3">
-          <div className="bg-rose-50 border border-rose-200/60 p-4.5 rounded-2xl flex gap-3 text-rose-850">
-            <ShieldAlert className="h-5 w-5 text-rose-650 shrink-0 mt-0.5" />
+          <div className="bg-slate-50 border border-slate-200 p-4.5 rounded-2xl flex gap-3 text-slate-800">
+            <ShieldAlert className="h-5 w-5 text-slate-700 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <span className="block font-black text-xs uppercase tracking-wider text-rose-900">Zero-Tolerance Hygiene Exceptions</span>
-              <p className="text-xs font-semibold leading-relaxed text-rose-800">
-                To guarantee safety and absolute sterility for our entire consumer network, we strictly refuse returns, replacements, or refunds for the following elements:
+              <span className="block font-black text-xs uppercase tracking-wider text-slate-900">Non-Returnable Exceptions</span>
+              <p className="text-xs font-semibold leading-relaxed text-slate-650">
+                To maintain hygiene and fair atelier standards, we cannot accept returns for:
               </p>
             </div>
           </div>
           <div className="space-y-1.5 pl-1.5">
             {[
-              { t: 'Opened or Used Canisters', d: 'Any item where the tamper seals have been cut or manipulated.' },
-              { t: 'Post-Checkout Change of Mind', d: 'Once the transaction is validated and canisters transit, orders are locked.' },
-              { t: 'Customer Ordering Faults', d: 'Mispurchasing incorrect strengths, flavor sheets, or brand formulations.' },
-              { t: 'Uncertified Safe returns', d: 'Packages shipped back to warehouses without our explicit consent tickets.' }
+              { t: 'Worn or Washed Garments', d: 'Any clothing piece showing perfume scents, wear marks, or washed fibers.' },
+              { t: 'Customized & Altered Pieces', d: 'Made-to-order tailored garments altered to personal measurements.' },
+              { t: 'Final Archive Sale Items', d: 'Pieces purchased during clearance archive sales marked as final sale.' },
+              { t: 'Intimates & Undergarments', d: 'Socks, base-layers, and intimates with removed protective packaging.' }
             ].map((exc, idx) => (
               <div key={idx} className="flex gap-2.5 items-start text-xs font-semibold">
-                <span className="text-rose-500 mt-0.5 font-bold">•</span>
+                <span className="text-slate-500 mt-0.5 font-bold">•</span>
                 <p className="text-slate-600">
                   <strong className="text-slate-900 font-extrabold">{exc.t}:</strong> {exc.d}
                 </p>
@@ -101,7 +101,7 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
       content: (
         <div className="space-y-3">
           <p className="text-slate-650 text-xs sm:text-sm leading-relaxed">
-            Upon receipt and certification audit of your returned canisters at our testing bays, we process credits in accordance with standard bank timelines:
+            Upon receipt and quality inspection of your returned garments at our studio, we process refunds promptly:
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
             <div className="p-4 bg-slate-50 border rounded-2xl space-y-1">
@@ -137,15 +137,15 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
               </div>
             </div>
             <div className="flex gap-2.5 items-start">
-              <span className="p-1 rounded-lg bg-indigo-100 text-indigo-700 text-[10px] font-black h-5 w-5 flex items-center justify-center font-mono">2</span>
+              <span className="p-1 rounded-lg bg-slate-150 text-slate-900 text-[10px] font-black h-5 w-5 flex items-center justify-center font-mono">2</span>
               <div>
-                <span className="block text-xs font-bold text-slate-800 uppercase tracking-tight">High-Definition Photographic Proof</span>
-                <span className="block text-[11px] text-slate-500 font-medium font-sans">Clear images capturing the damaged hermetic seals, outer parcel markings, and compounding canisters.</span>
+                <span className="block text-xs font-bold text-slate-800 uppercase tracking-tight">Photographic Documentation</span>
+                <span className="block text-[11px] text-slate-500 font-medium font-sans">Clear images capturing the garment tags, seam defect or incorrect colorway/size.</span>
               </div>
             </div>
           </div>
           <p className="text-[11px] text-slate-450 italic">
-            * Our compliance managers will review submission packets as a priority to secure rapid approvals.
+            * Our concierge team reviews exchange and return requests within 24 business hours.
           </p>
         </div>
       )
@@ -157,12 +157,12 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
       content: (
         <div className="space-y-3">
           <p className="text-slate-650 text-xs sm:text-sm leading-relaxed">
-            Our logistics center operates on near real-time pipelines to achieve immediate freight deadlines. Order cancellation parameters are restricted:
+            Our fulfillment center operates quickly to dispatch garments on schedule. Order modification parameters:
           </p>
           <div className="bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A] p-4 rounded-xl text-xs font-semibold space-y-1.5 leading-relaxed">
-            <p className="font-extrabold uppercase text-[10px] tracking-wider text-amber-900">Immediate Lock Sequence</p>
-            <p>Orders can only be cancelled or updated if they have not yet entered processing or transit.</p>
-            <p>Once a package receives a system shipping courier label, the cargo cannot be intercepted or cancelled. In these conditions, customers must receive the package securely and explore returns compatibility afterward.</p>
+            <p className="font-extrabold uppercase text-[10px] tracking-wider text-amber-900">Pre-Fulfillment Changes</p>
+            <p>Orders can only be modified or cancelled if they have not yet been packed or assigned a tracking label.</p>
+            <p>Once a shipment has departed our studio, please allow the parcel to arrive and request a complimentary exchange or return through our portal.</p>
           </div>
         </div>
       )
@@ -174,12 +174,12 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
       content: (
         <div className="space-y-3 text-xs sm:text-sm text-slate-650 leading-relaxed font-semibold">
           <p>
-            Excepting scenarios where we acknowledge terminal shipping errors on behalf of our logistics crew:
+            Excepting scenarios where we acknowledge incorrect or defective garment shipments:
           </p>
           <ul className="space-y-1.5 pl-4 list-disc text-xs text-slate-550 font-medium font-sans">
-            <li>Primary and priority shipping costs paid to delivery courier services are entirely non-refundable.</li>
-            <li>The consumer holds responsibility for financing return shipping courier charges back to our depot.</li>
-            <li>We strongly advise utilizing a tracked standard postal mail service for return transits, as our desk cannot issue approvals for return letters lost in standard shipping lanes.</li>
+            <li>Primary priority shipping fees are non-refundable once courier service has executed transit.</li>
+            <li>We offer pre-paid return labels for size exchanges on all domestic orders.</li>
+            <li>For standard returns, return postage can be deducted directly from your refund amount.</li>
           </ul>
         </div>
       )
@@ -191,46 +191,46 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
       content: (
         <div className="space-y-3">
           <p className="text-slate-650 text-xs sm:text-sm leading-relaxed">
-            If you choose to reject parcel transit upon door delivery or fail to collect packages deposited at local regional lockers:
+            If you reject parcel delivery or fail to collect a package from a local carrier depot:
           </p>
-          <div className="p-4 bg-rose-50/50 rounded-xl border border-rose-100 text-xs font-semibold text-rose-900 leading-relaxed space-y-1">
-            <span className="block font-black text-[10px] tracking-wider uppercase text-rose-900">Restocking Deductions Applied</span>
-            <p className="text-rose-800">Upon system return check-in of a rejected box, original shipping fees and the specific round-trip courier processing tariffs charged to Pouch Supply will be calculated and subtracted from your final order refund balance.</p>
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 leading-relaxed space-y-1">
+            <span className="block font-black text-[10px] tracking-wider uppercase text-slate-900">Return Transit Processing</span>
+            <p className="text-slate-600">Upon system return check-in of a rejected box, courier processing charges will be deducted from your final refund balance.</p>
           </div>
         </div>
       )
     },
     {
       id: 9,
-      title: '9. Contact Support Desk',
+      title: '9. Atelier Concierge Desk',
       icon: Mail,
       content: (
-        <div className="p-5 bg-gradient-to-tr from-slate-900 to-indigo-950 text-white rounded-2xl space-y-4">
+        <div className="p-5 bg-slate-900 text-white rounded-2xl space-y-4">
           <div>
-            <span className="block text-[10px] font-black uppercase text-indigo-300 tracking-widest mb-1">Direct Claims Inbound</span>
-            <h4 className="text-lg font-black text-white leading-none">Pouch Supply Audits Desk</h4>
+            <span className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Direct Claims Inbound</span>
+            <h4 className="text-lg font-black text-white leading-none">Atelier Concierge Desk</h4>
           </div>
 
-          <p className="text-indigo-200 text-xs leading-relaxed font-semibold">
-            Our dispatch audit crew handles product resolution logs with complete transparency. For rapid processing, specify your email order receipt ID.
+          <p className="text-slate-300 text-xs leading-relaxed font-semibold">
+            Our client support team handles size exchanges and return inquiries with complete care. Please specify your order number in your message.
           </p>
           
-          <div className="text-xs font-mono text-indigo-300 font-bold">
-            Email: <a href="mailto:support@pouchsupply.com" className="underline hover:text-white">support@pouchsupply.com</a>
+          <div className="text-xs font-mono text-slate-300 font-bold">
+            Email: <a href="mailto:concierge@atelier-studio.com" className="underline hover:text-white">concierge@atelier-studio.com</a>
           </div>
 
-          <div className="pt-2 border-t border-indigo-900 flex gap-2">
+          <div className="pt-2 border-t border-slate-800 flex gap-2">
             <button
               onClick={() => onNavigate('contact')}
-              className="bg-indigo-605 hover:bg-indigo-705 text-white font-black text-xs px-4 py-2.5 rounded-xl transition cursor-pointer uppercase tracking-wider"
+              className="bg-white text-slate-900 hover:bg-slate-100 font-black text-xs px-4 py-2.5 rounded-xl transition cursor-pointer uppercase tracking-wider"
             >
-              Contact Support
+              Contact Concierge
             </button>
             <button
               onClick={() => onNavigate('frontend-shop')}
               className="bg-white/10 hover:bg-white/15 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition cursor-pointer"
             >
-              Shop Pouches
+              Explore Collection
             </button>
           </div>
         </div>
@@ -317,7 +317,7 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
                   onClick={() => onNavigate('frontend-shop')}
                   className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-wider py-2.5 rounded-xl cursor-pointer transition shadow-xs flex items-center justify-center gap-1.5"
                 >
-                  Return to Canisters <ArrowRight className="h-3 w-3" />
+                  Return to Store <ArrowRight className="h-3 w-3" />
                 </button>
               </div>
             </div>
@@ -327,11 +327,11 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
           <div className="col-span-1 lg:col-span-8 space-y-8">
             
             {/* Quick Summary card box */}
-            <div className="border border-pink-150 rounded-[22px] bg-pink-500/5 p-5 sm:p-6 space-y-3 shadow-xs">
-              <span className="text-[10px] font-black uppercase tracking-widest text-pink-700 bg-pink-100/60 py-0.5 px-2.5 rounded-full inline-block">HYGIENE SECURITY OUTLINE</span>
-              <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Highly Regulated Consumables</h3>
+            <div className="border border-slate-200 rounded-[22px] bg-slate-50 p-5 sm:p-6 space-y-3 shadow-xs">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 bg-white py-0.5 px-2.5 rounded-full inline-block border border-slate-200">CLIENT PROMISE</span>
+              <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Simple Exchanges & Curated Quality</h3>
               <p className="text-slate-655 text-xs sm:text-sm font-medium leading-relaxed">
-                Nicotine compounds represent highly sterile laboratory formulations. Consequently, once a tamper-resistant outer seal is cracked, opened, or altered by a customer, sanitization integrity is terminated, and we are legally forbidden from introducing the compound back to active inventory lists. We enforce these criteria precisely to protect our entire client community.
+                Every garment is crafted to uncompromising quality benchmarks. If a style or fit doesn't meet your expectations, we provide simple size exchanges and full refunds on items returned in unworn condition within 30 days.
               </p>
             </div>
 
@@ -347,14 +347,14 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
                     onMouseEnter={() => setActiveTab(sec.id)}
                     className={`border rounded-2xl md:rounded-[24px] bg-white p-5 sm:p-6 md:p-8 space-y-4 transition-all duration-300 ${
                       isActive 
-                        ? 'border-pink-200 outline-none ring-1 ring-pink-200/50 shadow-md' 
+                        ? 'border-slate-400 outline-none ring-1 ring-slate-400/50 shadow-md' 
                         : 'border-slate-150 hover:border-slate-205 shadow-xs'
                     }`}
                   >
                     <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
                       <span className={`p-2 rounded-xl border shrink-0 transition-colors ${
                         isActive 
-                          ? 'bg-rose-50 border-rose-100 text-rose-650' 
+                          ? 'bg-slate-900 border-slate-900 text-white' 
                           : 'bg-slate-50 border-slate-100 text-slate-450'
                       }`}>
                         <IconComponent className="h-5 w-5" />
@@ -375,16 +375,16 @@ export default function RefundPolicy({ onNavigate }: RefundPolicyProps) {
             {/* Bottom Support Call to Action Box */}
             <div className="bg-[#FAF9F5] border border-slate-205 rounded-[22px] p-6 text-center space-y-4">
               <div className="max-w-md mx-auto space-y-1">
-                <span className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Mismatched or Missing Order?</span>
+                <span className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Need a Size Exchange?</span>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                  We maintain swift response records. If your packet arrived with incorrect canister varieties, reach out with photos immediately.
+                  We maintain swift response records. If you need an alternative size or fitting advice, reach out to our concierge team.
                 </p>
               </div>
               <button
                 onClick={() => onNavigate('contact')}
-                className="bg-indigo-650 hover:bg-indigo-750 text-white font-black text-xs uppercase px-6 py-3 rounded-xl transition cursor-pointer shadow-sm tracking-wider font-semibold"
+                className="bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase px-6 py-3 rounded-xl transition cursor-pointer shadow-sm tracking-wider font-semibold"
               >
-                Launch Audit Request
+                Request Size Exchange
               </button>
             </div>
 

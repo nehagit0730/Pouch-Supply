@@ -16,10 +16,10 @@ export default function PrivacyPolicy({ onNavigate }: PrivacyPolicyProps) {
       content: (
         <div className="space-y-4">
           <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
-            At <strong className="text-slate-900 font-extrabold">Pouch Supply</strong>, we value your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you visit or make a purchase from our website.
+            At <strong className="text-slate-900 font-extrabold">Atelier Studio</strong>, we value your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you visit or make a purchase from our website.
           </p>
-          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3 text-indigo-850">
-            <CheckCircle2 className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex gap-3 text-slate-800">
+            <CheckCircle2 className="h-5 w-5 text-slate-700 shrink-0 mt-0.5" />
             <p className="text-xs font-semibold leading-relaxed">
               By using our website, you agree to the practices described in this policy. We ensure that our data handling methods correspond to national and European privacy compliance requirements.
             </p>
@@ -90,15 +90,15 @@ export default function PrivacyPolicy({ onNavigate }: PrivacyPolicyProps) {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
-              { t: 'Fulfill Orders', d: 'Process, package, and deliver your canisters safely.' },
+              { t: 'Fulfill Orders', d: 'Process, package, and deliver your garment orders safely.' },
               { t: 'Support', d: 'Provide state-of-the-art responses to customer issues.' },
               { t: 'Confirmations', d: 'Send transactional receipts and automatic shipping trackers.' },
               { t: 'Optimization', d: 'Regularly diagnostics of user-experience and storefront layout.' },
               { t: 'Anti-Fraud', d: 'Maintain continuous network monitor filters for transactions.' },
               { t: 'Legal Integrity', d: 'Retain specific logs required by corporate taxation rules.' }
             ].map((item, idx) => (
-              <div key={idx} className="p-3 bg-slate-50 border rounded-xl hover:border-indigo-150 transition-colors">
-                <span className="block text-xs font-black uppercase text-indigo-650 mb-0.5">{item.t}</span>
+              <div key={idx} className="p-3 bg-slate-50 border rounded-xl hover:border-slate-300 transition-colors">
+                <span className="block text-xs font-black uppercase text-slate-900 mb-0.5">{item.t}</span>
                 <span className="block text-[11px] text-slate-500 font-medium leading-relaxed">{item.d}</span>
               </div>
             ))}
@@ -111,21 +111,21 @@ export default function PrivacyPolicy({ onNavigate }: PrivacyPolicyProps) {
     },
     {
       id: 4,
-      title: '4. Age Restriction',
+      title: '4. Privacy of Minors',
       icon: UserCheck,
       content: (
         <div className="space-y-4">
-          <div className="bg-amber-50 border border-amber-200/60 p-4.5 rounded-2xl flex gap-3 text-amber-850">
-            <AlertCircle className="h-5 w-5 text-amber-650 shrink-0 mt-0.5" />
+          <div className="bg-slate-50 border border-slate-200 p-4.5 rounded-2xl flex gap-3 text-slate-800">
+            <AlertCircle className="h-5 w-5 text-slate-700 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <span className="block font-black text-xs uppercase tracking-wider text-amber-900">Adult Verification Mandate</span>
-              <p className="text-xs font-semibold leading-relaxed text-amber-800">
-                Our website is intended only for individuals aged 18 years or older. Nicotine delivery white canisters represent restricted adult materials.
+              <span className="block font-black text-xs uppercase tracking-wider text-slate-900">Child Privacy Protection</span>
+              <p className="text-xs font-semibold leading-relaxed text-slate-600">
+                Our services are intended for general audiences. We do not intentionally collect or solicit personal information from children under the age of 16.
               </p>
             </div>
           </div>
           <p className="text-slate-605 text-xs sm:text-sm leading-relaxed font-medium">
-            We do not knowingly collect personal data from minors. If we become aware that data has been collected from someone under 18, we will take immediate proactive steps to purge and delete it from our servers.
+            If we become aware that data has been collected from a child under 16 without verifiable parental consent, we will take immediate proactive steps to purge and delete it from our servers.
           </p>
         </div>
       )
@@ -145,11 +145,11 @@ export default function PrivacyPolicy({ onNavigate }: PrivacyPolicyProps) {
           <div className="space-y-2">
             {[
               { party: 'Payment Gateway Providers', details: 'Stripe & relevant encrypted modules processing secure token checkouts.' },
-              { party: 'Shipping & Delivery Couriers', details: 'Royal Mail & regional priority couriers to dispatch white canisters.' },
+              { party: 'Shipping & Delivery Couriers', details: 'DHL, DPD, Royal Mail & priority couriers to dispatch your orders.' },
               { party: 'Analytics Platforms', details: 'Privacy-first analytics suites evaluating system traffic indicators.' }
             ].map((p, idx) => (
               <div key={idx} className="flex gap-3 p-3 bg-[#FAF9F5] border border-slate-150 rounded-xl items-start">
-                <span className="bg-indigo-100 text-indigo-700 text-[10px] font-black h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 font-mono">{idx + 1}</span>
+                <span className="bg-slate-200 text-slate-800 text-[10px] font-black h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 font-mono">{idx + 1}</span>
                 <div>
                   <span className="block text-xs font-bold text-slate-800 uppercase tracking-tight">{p.party}</span>
                   <span className="block text-[11px] text-slate-500 font-medium leading-normal">{p.details}</span>
@@ -174,12 +174,12 @@ export default function PrivacyPolicy({ onNavigate }: PrivacyPolicyProps) {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
             {[
-              { type: 'Essential Prefs', desc: 'Saves your cart canisters and user token state over session duration.' },
-              { type: 'Technical Logs', desc: 'Caches custom page builders sections and rendering frames.' },
-              { type: 'Behavior Analytics', desc: 'Measures page routing flows to discard low performance layouts.' }
+              { type: 'Essential Prefs', desc: 'Saves your cart items and user session token state securely.' },
+              { type: 'Technical Logs', desc: 'Caches custom page sections and rendering frames.' },
+              { type: 'Behavior Analytics', desc: 'Measures site responsiveness to enhance user shopping journeys.' }
             ].map((c, idx) => (
               <div key={idx} className="p-3.5 bg-[#FAF9F6] border rounded-xl space-y-1">
-                <span className="block text-[10px] font-black uppercase text-indigo-600 tracking-wider">{c.type}</span>
+                <span className="block text-[10px] font-black uppercase text-slate-900 tracking-wider">{c.type}</span>
                 <span className="block text-[11px] text-slate-500 font-medium leading-relaxed">{c.desc}</span>
               </div>
             ))}
@@ -274,8 +274,8 @@ export default function PrivacyPolicy({ onNavigate }: PrivacyPolicyProps) {
               </div>
             ))}
           </div>
-          <p className="text-xs font-semibold text-indigo-700 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 inline-block">
-            To invoke any of these security rights, please launch a transmission directly to support@pouchsupply.com.
+          <p className="text-xs font-semibold text-slate-900 bg-slate-100 p-3 rounded-xl border border-slate-200 inline-block">
+            To invoke any of these privacy rights, please reach out directly to concierge@atelier-studio.com.
           </p>
         </div>
       )
@@ -287,10 +287,10 @@ export default function PrivacyPolicy({ onNavigate }: PrivacyPolicyProps) {
       content: (
         <div className="space-y-3">
           <p className="text-slate-650 text-xs sm:text-sm leading-relaxed">
-            Our app features hyperlinks mapping external resources (e.g. tracking courier pages, partner manufacturers, educational health briefs).
+            Our app may feature hyperlinks mapping external resources (e.g. tracking courier portals or partner textile mill stories).
           </p>
           <p className="text-slate-600 text-xs leading-normal">
-            We hold zero authority or command over external domain structures. Once you depart Pouch Supply, our Privacy Policy is no longer active. We recommend always checking their local disclosures before committing personal detail fields.
+            We hold zero authority over external domain structures. Once you depart Atelier Studio, our Privacy Policy is no longer active. We recommend checking their local disclosures.
           </p>
         </div>
       )
@@ -317,21 +317,21 @@ export default function PrivacyPolicy({ onNavigate }: PrivacyPolicyProps) {
       content: (
         <div className="p-5 bg-[#FAF9F5] border border-slate-150 rounded-2xl space-y-4">
           <div>
-            <span className="block text-[10px] font-black uppercase text-indigo-600 tracking-wider mb-1">Direct Communications Access</span>
-            <h4 className="text-base font-black text-slate-900 leading-none">Pouch Supply Compliance Desk</h4>
+            <span className="block text-[10px] font-black uppercase text-slate-900 tracking-wider mb-1">Direct Communications Access</span>
+            <h4 className="text-base font-black text-slate-900 leading-none">Atelier Privacy & Compliance Desk</h4>
           </div>
           
-          <div className="space-y-2 text-slate-650 text-xs font-medium">
+          <div className="space-y-2 text-slate-655 text-xs font-medium">
             <p className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-slate-400" />
-              <span>Email: <a href="mailto:support@pouchsupply.com" className="text-indigo-650 hover:underline font-bold">support@pouchsupply.com</a></span>
+              <span>Email: <a href="mailto:concierge@atelier-studio.com" className="text-slate-900 hover:underline font-bold">concierge@atelier-studio.com</a></span>
             </p>
           </div>
 
           <div className="pt-2 border-t border-slate-150 flex gap-2">
             <button
               onClick={() => onNavigate('contact')}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs px-4 py-2 rounded-xl transition cursor-pointer uppercase tracking-wider"
+              className="bg-slate-900 hover:bg-slate-800 text-white font-black text-xs px-4 py-2 rounded-xl transition cursor-pointer uppercase tracking-wider"
             >
               Contact Page
             </button>
@@ -437,7 +437,7 @@ export default function PrivacyPolicy({ onNavigate }: PrivacyPolicyProps) {
                   onClick={() => onNavigate('frontend-shop')}
                   className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-wider py-2.5 rounded-xl cursor-pointer transition shadow-xs flex items-center justify-center gap-1.5"
                 >
-                  Return to Canisters <ArrowRight className="h-3 w-3" />
+                  Return to Store <ArrowRight className="h-3 w-3" />
                 </button>
               </div>
             </div>
@@ -447,11 +447,11 @@ export default function PrivacyPolicy({ onNavigate }: PrivacyPolicyProps) {
           <div className="col-span-1 lg:col-span-8 space-y-8">
             
             {/* Quick Summary card box */}
-            <div className="border border-indigo-150 rounded-[22px] bg-indigo-50/20 p-5 sm:p-6 space-y-3 shadow-xs">
-              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700 bg-indigo-100/60 py-0.5 px-2.5 rounded-full inline-block">EXECUTIVE SUMMARY</span>
+            <div className="border border-slate-200 rounded-[22px] bg-slate-50 p-5 sm:p-6 space-y-3 shadow-xs">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 bg-white py-0.5 px-2.5 rounded-full inline-block border border-slate-200">EXECUTIVE SUMMARY</span>
               <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Our Absolute Commitment</h3>
               <p className="text-slate-655 text-xs sm:text-sm font-medium leading-relaxed">
-                We design and host Pouch Supply directory to offer curated access to laboratory-certified can white pouch series. Under absolutely no scenarios do we sell your registration profiles, physical addresses, or order details to promotional networks. Data is utilized exclusively to complete payment gateways, packet couriers, and to protect user safety verification boundaries.
+                We design Atelier to offer seamless, curated access to artisanal clothing and capsules. Under no circumstances do we sell your profile, physical address, or purchase history to advertisers. Your data is used exclusively to fulfill purchases, arrange courier deliveries, and ensure safe account protection.
               </p>
             </div>
 

@@ -3,7 +3,8 @@ import { Product, Collection, Customer } from '../types';
 import { 
   Search, Heart, ArrowUpDown, Tag, ShoppingCart, Info, Sparkles, 
   Grid, List, Check, CheckCircle2, ChevronRight, HelpCircle, 
-  X, Award, ShieldCheck, Zap, Flame, RefreshCw, Compass, Filter
+  X, Award, ShieldCheck, Zap, Flame, RefreshCw, Compass, Filter,
+  SlidersHorizontal, Scissors, Sparkle
 } from 'lucide-react';
 
 interface ProductsGridProps {
@@ -30,13 +31,14 @@ export default function ProductsGrid({
   // Filter States
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [selectedStrengths, setSelectedStrengths] = useState<string[]>([]);
-  const [selectedFlavours, setSelectedFlavours] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<number>(6.00);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
+  const [selectedFits, setSelectedFits] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState<number>(600);
   
   // Custom Toggles
-  const [inStockOnly, setInStockOnly] = useState(true);
-  const [subscriptionEligible, setSubscriptionEligible] = useState(true);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [capsuleEligible, setCapsuleEligible] = useState(false);
   const [bestSellersOnly, setBestSellersOnly] = useState(false);
   const [newArrivalsOnly, setNewArrivalsOnly] = useState(false);
 
@@ -46,12 +48,12 @@ export default function ProductsGrid({
 
   // Sidebar expanders
   const [showAllBrands, setShowAllBrands] = useState(false);
-  const [showAllFlavours, setShowAllFlavours] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   // Local product quantities
   const [quantities, setQuantities] = useState<Record<string, number>>({});
 
-  // Quiz Modal State
+  // Style Quiz Modal State
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [quizStep, setQuizStep] = useState(1);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
@@ -61,6 +63,40 @@ export default function ProductsGrid({
   const allBrandsInStore = useMemo(() => {
     return Array.from(new Set(products.map(p => p.vendor))).filter(Boolean);
   }, [products]);
+
+  // Dynamic Categories from raw products list
+  const allCategoriesInStore = useMemo(() => {
+    const cats = new Set<string>();
+    products.forEach(p => {
+      if (p.category) cats.add(p.category);
+    });
+    if (cats.size === 0) {
+      ['Outerwear', 'Knitwear', 'Tops & Shirts', 'Tailoring', 'Accessories'].forEach(c => cats.add(c));
+    }
+    return Array.from(cats);
+  }, [products]);
+
+  // Helper to extract material
+  const getProductMaterial = (p: Product): string => {
+    const text = `${p.title} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+    if (text.includes('cashmere')) return 'Cashmere';
+    if (text.includes('wool') || text.includes('merino')) return 'Virgin Wool';
+    if (text.includes('cotton')) return 'Organic Cotton';
+    if (text.includes('denim')) return 'Japanese Denim';
+    if (text.includes('leather')) return 'Italian Leather';
+    if (text.includes('linen')) return 'Pure Linen';
+    if (text.includes('silk')) return 'Mulberry Silk';
+    return 'Artisanal Blend';
+  };
+
+  // Helper to extract fit
+  const getProductFit = (p: Product): string => {
+    const text = `${p.title} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+    if (text.includes('oversized')) return 'Oversized';
+    if (text.includes('relaxed')) return 'Relaxed Cut';
+    if (text.includes('tailored') || text.includes('slim')) return 'Tailored Fit';
+    return 'Classic Cut';
+  };
 
   // Handle wishlist clicks safely
   const handleHeartClick = (pId: string) => {
@@ -87,118 +123,35 @@ export default function ProductsGrid({
     );
   };
 
-  const toggleStrength = (strength: string) => {
-    setSelectedStrengths(prev => 
-      prev.includes(strength) ? prev.filter(s => s !== strength) : [...prev, strength]
+  const toggleCategory = (cat: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     );
   };
 
-  const toggleFlavour = (flavour: string) => {
-    setSelectedFlavours(prev => 
-      prev.includes(flavour) ? prev.filter(f => f !== flavour) : [...prev, flavour]
+  const toggleMaterial = (mat: string) => {
+    setSelectedMaterials(prev => 
+      prev.includes(mat) ? prev.filter(m => m !== mat) : [...prev, mat]
+    );
+  };
+
+  const toggleFit = (fit: string) => {
+    setSelectedFits(prev => 
+      prev.includes(fit) ? prev.filter(f => f !== fit) : [...prev, fit]
     );
   };
 
   const resetAllFilters = () => {
     setSearchTerm('');
     setSelectedBrands([]);
-    setSelectedStrengths([]);
-    setSelectedFlavours([]);
-    setPriceRange(6.00);
+    setSelectedCategories([]);
+    setSelectedMaterials([]);
+    setSelectedFits([]);
+    setPriceRange(600);
     setInStockOnly(false);
-    setSubscriptionEligible(false);
+    setCapsuleEligible(false);
     setBestSellersOnly(false);
     setNewArrivalsOnly(false);
-  };
-
-  // Helper to map products to generic strengths
-  const getProductStrength = (p: Product): { id: string; label: string; score: number } => {
-    let mgVal: number | null = null;
-    
-    if (p.strength) {
-      const match = p.strength.match(/(\d+(?:\.\d+)?)/);
-      if (match) {
-        mgVal = parseFloat(match[1]);
-      }
-    }
-    
-    if (mgVal === null) {
-      const titleMatch = p.title.match(/(\d+(?:\.\d+)?)\s*mg/i);
-      if (titleMatch) {
-        mgVal = parseFloat(titleMatch[1]);
-      }
-    }
-    
-    if (mgVal !== null) {
-      if (mgVal <= 5) {
-        return { id: 'mild', label: `Mild (${mgVal}mg)`, score: 1 };
-      } else if (mgVal <= 10) {
-        return { id: 'regular', label: `Regular (${mgVal}mg)`, score: 3 };
-      } else if (mgVal <= 16) {
-        return { id: 'strong', label: `Strong (${mgVal}mg)`, score: 4 };
-      } else {
-        return { id: 'xstrong', label: `X-Strong (${mgVal}mg)`, score: 5 };
-      }
-    }
-
-    const titleL = p.title.toLowerCase();
-    const tagString = (p.tags || []).join(' ').toLowerCase();
-    
-    if (titleL.includes('1mg') || titleL.includes('2mg') || titleL.includes('3mg') || titleL.includes('4mg') || titleL.includes('5mg') || tagString.includes('mild')) {
-      return { id: 'mild', label: 'Mild (1-5mg)', score: 1 };
-    }
-    if (titleL.includes('6mg') || titleL.includes('7mg') || titleL.includes('8mg') || titleL.includes('9mg') || titleL.includes('10mg') || tagString.includes('standard') || tagString.includes('regular')) {
-      return { id: 'regular', label: 'Regular (6-10mg)', score: 3 };
-    }
-    if (titleL.includes('11mg') || titleL.includes('12mg') || titleL.includes('13mg') || titleL.includes('14mg') || titleL.includes('15mg') || titleL.includes('16mg') || tagString.includes('strong')) {
-      return { id: 'strong', label: 'Strong (11-16mg)', score: 4 };
-    }
-    return { id: 'xstrong', label: 'X-Strong (17mg+)', score: 5 };
-  };
-
-  // Helper to map products to generic flavours
-  const getProductFlavours = (p: Product): string[] => {
-    const result: string[] = [];
-    
-    if (p.flavour) {
-      result.push(p.flavour.toLowerCase());
-    } else {
-      const titleL = p.title.toLowerCase();
-      const tagString = (p.tags || []).join(' ').toLowerCase();
-      
-      if (titleL.includes('mint') || titleL.includes('menthol') || titleL.includes('ice') || tagString.includes('mint') || tagString.includes('fresh')) {
-        result.push('mint');
-      }
-      if (titleL.includes('berry') || titleL.includes('cherry') || titleL.includes('strawberry') || titleL.includes('raspberry') || tagString.includes('berry')) {
-        result.push('berry');
-      }
-      if (titleL.includes('citrus') || titleL.includes('lemon') || titleL.includes('lime') || titleL.includes('orange') || tagString.includes('citrus')) {
-        result.push('citrus');
-      }
-      if (titleL.includes('fruit') || titleL.includes('grape') || titleL.includes('mango') || titleL.includes('apple') || titleL.includes('peach') || tagString.includes('fruit')) {
-        result.push('fruit');
-      }
-      if (titleL.includes('cola') || titleL.includes('soda') || tagString.includes('cola')) {
-        result.push('cola');
-      }
-      if (titleL.includes('coffee') || titleL.includes('latte') || titleL.includes('mocha') || tagString.includes('coffee')) {
-        result.push('coffee');
-      }
-      if (titleL.includes('sweet') || titleL.includes('candy') || tagString.includes('sweet')) {
-        result.push('sweet');
-      }
-      if (titleL.includes('tea') || titleL.includes('chai') || titleL.includes('matcha') || tagString.includes('tea')) {
-        result.push('tea');
-      }
-      if (titleL.includes('other') || tagString.includes('other')) {
-        result.push('other');
-      }
-    }
-    
-    if (result.length === 0) {
-      result.push('mint');
-    }
-    return result;
   };
 
   // Expand product variants into individual virtual products
@@ -216,7 +169,6 @@ export default function ProductsGrid({
             description: variant.description || p.description,
             image: (variant.images && variant.images.length > 0) ? variant.images[0] : p.image,
             inventory: variant.inventory !== undefined ? variant.inventory : p.inventory,
-            flavour: variant.flavour || p.flavour,
             isVariantCard: true,
             concreteVariantId: variant.id,
             parentSlug: p.slug || p.id,
@@ -256,7 +208,8 @@ export default function ProductsGrid({
       list = list.filter(p => 
         p.title.toLowerCase().includes(q) || 
         p.vendor.toLowerCase().includes(q) || 
-        p.category.toLowerCase().includes(q)
+        p.category.toLowerCase().includes(q) ||
+        (p.description && p.description.toLowerCase().includes(q))
       );
     }
 
@@ -265,20 +218,19 @@ export default function ProductsGrid({
       list = list.filter(p => selectedBrands.includes(p.vendor));
     }
 
-    // Strength checkbox filter
-    if (selectedStrengths.length > 0) {
-      list = list.filter(p => {
-        const strInfo = getProductStrength(p);
-        return selectedStrengths.includes(strInfo.id);
-      });
+    // Category checkbox filter
+    if (selectedCategories.length > 0) {
+      list = list.filter(p => selectedCategories.includes(p.category));
     }
 
-    // Flavour checkbox filter
-    if (selectedFlavours.length > 0) {
-      list = list.filter(p => {
-        const pFlavours = getProductFlavours(p);
-        return pFlavours.some(f => selectedFlavours.includes(f));
-      });
+    // Material filter
+    if (selectedMaterials.length > 0) {
+      list = list.filter(p => selectedMaterials.includes(getProductMaterial(p)));
+    }
+
+    // Fit filter
+    if (selectedFits.length > 0) {
+      list = list.filter(p => selectedFits.includes(getProductFit(p)));
     }
 
     // Max Price slider filter
@@ -301,7 +253,7 @@ export default function ProductsGrid({
 
     // Sorting implementations
     if (sortBy === 'featured') {
-      // Default / Featured sequence
+      // Default sequence
     } else if (sortBy === 'price-asc') {
       list = [...list].sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-desc') {
@@ -315,36 +267,27 @@ export default function ProductsGrid({
     return list;
   }, [
     expandedProducts, collections, activeCollectionId, searchTerm, 
-    selectedBrands, selectedStrengths, selectedFlavours, 
+    selectedBrands, selectedCategories, selectedMaterials, selectedFits,
     priceRange, inStockOnly, bestSellersOnly, newArrivalsOnly, sortBy
   ]);
 
   // Dynamic filter lists counting stats
   const filterCounts = useMemo(() => {
     const brandCounts: Record<string, number> = {};
-    const strengthCounts: Record<string, number> = { mild: 0, regular: 0, strong: 0, xstrong: 0 };
-    const flavourCounts: Record<string, number> = { mint: 0, berry: 0, citrus: 0, fruit: 0, cola: 0, coffee: 0 };
+    const categoryCounts: Record<string, number> = {};
+    const materialCounts: Record<string, number> = {};
+    const fitCounts: Record<string, number> = {};
 
     expandedProducts.forEach(p => {
-      // Brand count
-      if (p.vendor) {
-        brandCounts[p.vendor] = (brandCounts[p.vendor] || 0) + 1;
-      }
-
-      // Strength count
-      const strInfo = getProductStrength(p);
-      if (strengthCounts[strInfo.id] !== undefined) {
-        strengthCounts[strInfo.id]++;
-      }
-
-      // Flavour count
-      const flavs = getProductFlavours(p);
-      flavs.forEach(f => {
-        if (f in flavourCounts) flavourCounts[f]++;
-      });
+      if (p.vendor) brandCounts[p.vendor] = (brandCounts[p.vendor] || 0) + 1;
+      if (p.category) categoryCounts[p.category] = (categoryCounts[p.category] || 0) + 1;
+      const mat = getProductMaterial(p);
+      materialCounts[mat] = (materialCounts[mat] || 0) + 1;
+      const fit = getProductFit(p);
+      fitCounts[fit] = (fitCounts[fit] || 0) + 1;
     });
 
-    return { brandCounts, strengthCounts, flavourCounts };
+    return { brandCounts, categoryCounts, materialCounts, fitCounts };
   }, [expandedProducts]);
 
   // Quantity controllers per product card
@@ -375,24 +318,19 @@ export default function ProductsGrid({
     if (quizStep < 3) {
       setQuizStep(prev => prev + 1);
     } else {
-      // Calculate recommended product based on quiz answers
-      const level = nextAnswers['strength'] === 'gentle' ? 'mild' :
-                    nextAnswers['strength'] === 'standard' ? 'regular' :
-                    nextAnswers['strength'] === 'energetic' ? 'strong' : 'xstrong';
+      const preferredCategory = nextAnswers['category'];
+      const preferredFit = nextAnswers['fit'];
       
-      const flavorMatch = nextAnswers['flavor']; // mint, berry, citrus, fruit, cola, coffee
-      
-      // Search candidate
       let match = products.find(p => {
         if (p.status !== 'Active') return false;
-        const sInfo = getProductStrength(p);
-        const fInfo = getProductFlavours(p);
-        return sInfo.id === level && fInfo.includes(flavorMatch);
+        const fits = getProductFit(p).toLowerCase();
+        const cats = (p.category || '').toLowerCase();
+        return (preferredCategory ? cats.includes(preferredCategory) : true) &&
+               (preferredFit ? fits.includes(preferredFit) : true);
       });
 
-      // Broaden search if exact match doesn't exist
       if (!match) {
-        match = products.find(p => p.status === 'Active' && getProductStrength(p).id === level);
+        match = products.find(p => p.status === 'Active' && (p.category || '').toLowerCase().includes(preferredCategory || ''));
       }
       if (!match) {
         match = products.find(p => p.status === 'Active');
@@ -411,28 +349,28 @@ export default function ProductsGrid({
   };
 
   return (
-    <div id="shop-grids-page" className="w-full bg-[#f8fafc]/40 pb-12 animate-fade-in">
+    <div id="shop-grids-page" className="w-full bg-[#FAF9F7] pb-16 animate-fade-in text-slate-900">
       
-      {/* Dynamic top safety/certification bar */}
-      <div className="bg-white border-b border-slate-100 py-2.5 px-4 text-[10px] sm:text-[11px] text-slate-500 font-bold tracking-wide">
+      {/* Top Value Assurance Bar */}
+      <div className="bg-white border-b border-slate-200/80 py-2.5 px-4 text-[10px] sm:text-[11px] text-slate-600 font-semibold tracking-wider uppercase">
         <div className="max-w-[1440px] mx-auto w-full flex flex-wrap justify-between items-center gap-y-2 gap-x-6">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 mx-auto sm:mx-0">
-            <span className="flex items-center gap-1.5 text-slate-600">
-              <span className="text-sm">🇪🇺</span> EU Official Supplier
+            <span className="flex items-center gap-1.5">
+              <span>🌿</span> 100% GOTS Organic Certified
             </span>
-            <span className="flex items-center gap-1.5 text-slate-600">
-              <span className="text-sm">🇸🇪</span> Fresh Scandinavian Stock
+            <span className="flex items-center gap-1.5">
+              <span>🧵</span> Heritage European Ateliers
             </span>
-            <span className="flex items-center gap-1.5 text-slate-600">
-              <span className="text-sm">🚚</span> Royal Mail Tracked Delivery
+            <span className="flex items-center gap-1.5">
+              <span>📦</span> Tracked Express Courier
             </span>
           </div>
           <div className="flex items-center gap-6 mx-auto sm:mx-0">
-            <span className="flex items-center gap-1.5 text-slate-600">
-              <span className="text-sm">🔒</span> Secure Checkout
+            <span className="flex items-center gap-1.5">
+              <span>✨</span> 30-Day Complimentary Exchanges
             </span>
-            <span className="flex items-center gap-1.5 text-slate-600">
-              <span className="text-sm">🛡️</span> Yoti Age Verified
+            <span className="flex items-center gap-1.5">
+              <span>🔒</span> Encrypted Checkout
             </span>
           </div>
         </div>
@@ -440,64 +378,78 @@ export default function ProductsGrid({
 
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
         
-        {/* White Header Banner Block */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 flex flex-col lg:flex-row justify-between items-stretch gap-6 shadow-xs relative overflow-hidden">
+        {/* Editorial Header Banner Block */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 flex flex-col lg:flex-row justify-between items-stretch gap-6 shadow-xs relative overflow-hidden">
           
-          {/* Left Column (Brand title and Trustpilot details) */}
-          <div className="flex-1 flex flex-col justify-between space-y-6">
-            <div className="space-y-3">
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
-                Shop Nicotine Pouches
+          {/* Left Column (Editorial Title & Philosophy) */}
+          <div className="flex-1 flex flex-col justify-between space-y-5">
+            <div className="space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">
+                AUTUMN / WINTER COLLECTION
+              </span>
+              <h1 className="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight leading-none uppercase">
+                Curated Wardrobe & Apparel
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                Over 150+ premium flavours from the world's leading brands.
+              <p className="text-xs sm:text-sm text-slate-500 max-w-xl leading-relaxed">
+                Refined modern silhouettes tailored with virgin wool, organic cotton, and recycled cashmere. Crafted to endure beyond fleeting seasons.
               </p>
               
-              {/* Pills row */}
-              <div className="flex flex-wrap gap-2 pt-1.5">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 bg-slate-50/80 border border-slate-150 py-1.5 px-3 rounded-full">
-                  🚚 Tracked UK Delivery
-                </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 bg-slate-50/80 border border-slate-150 py-1.5 px-3 rounded-full">
-                  🇸🇪 Fresh Stock
-                </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 bg-slate-50/80 border border-slate-150 py-1.5 px-3 rounded-full">
-                  🛡️ Official Brands
-                </span>
+              {/* Category fast filters */}
+              <div className="flex flex-wrap gap-2 pt-2">
+                <button
+                  onClick={() => onActiveCollectionChange('all')}
+                  className={`text-[10px] font-bold uppercase tracking-wider py-1.5 px-3 rounded-full border transition-all cursor-pointer ${
+                    activeCollectionId === 'all'
+                      ? 'bg-slate-950 text-white border-slate-950'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                  }`}
+                >
+                  All Pieces ({products.length})
+                </button>
+                {collections.filter(c => c.id !== 'all').map(col => (
+                  <button
+                    key={col.id}
+                    onClick={() => onActiveCollectionChange(col.id)}
+                    className={`text-[10px] font-bold uppercase tracking-wider py-1.5 px-3 rounded-full border transition-all cursor-pointer ${
+                      activeCollectionId === col.id
+                        ? 'bg-slate-950 text-white border-slate-950'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                    }`}
+                  >
+                    {col.title} ({col.productIds ? col.productIds.length : 0})
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Trustpilot Score */}
-            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-xs text-slate-500 font-medium">
-              <span className="text-slate-800 font-bold">Excellent</span>
-              <div className="flex items-center gap-0.5 text-emerald-500">
-                <span className="h-4 w-4 bg-emerald-550 text-white rounded-xs flex items-center justify-center font-bold text-[9px]">★</span>
-                <span className="h-4 w-4 bg-emerald-550 text-white rounded-xs flex items-center justify-center font-bold text-[9px]">★</span>
-                <span className="h-4 w-4 bg-emerald-550 text-white rounded-xs flex items-center justify-center font-bold text-[9px]">★</span>
-                <span className="h-4 w-4 bg-emerald-550 text-white rounded-xs flex items-center justify-center font-bold text-[9px]">★</span>
-                <span className="h-4 w-4 bg-emerald-550 text-white rounded-xs flex items-center justify-center font-bold text-[9px]">★</span>
+            {/* Atelier Trust Metric */}
+            <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-100 text-xs text-slate-500 font-medium">
+              <span className="text-slate-900 font-bold">Atelier Standard</span>
+              <div className="flex items-center gap-0.5 text-amber-400">
+                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
               </div>
-              <span>4.9/5 from 500+ reviews</span>
-              <span className="text-slate-400">|</span>
-              <span className="flex items-center gap-1 text-slate-800 font-extrabold tracking-tight">
-                <span className="text-emerald-500">★</span> Trustpilot
-              </span>
+              <span>4.95/5 Client Satisfaction</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-slate-700 font-semibold">Limited Small-Batch Production</span>
             </div>
           </div>
 
-          {/* Right Column (SAVE MORE WITH SUBSCRIPTION Box) */}
-          <div className="lg:w-[380px] bg-slate-50 border border-slate-150 rounded-xl p-4.5 flex items-center justify-between gap-4 relative overflow-hidden group">
-            <div className="space-y-2.5 z-10 max-w-[210px]">
-              <span className="inline-flex items-center gap-1 text-[8.5px] font-extrabold tracking-widest text-amber-600 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-full uppercase">
-                ⭐ SAVE MORE WITH SUBSCRIPTION
+          {/* Right Column (Wardrobe Capsule Plan Promo) */}
+          <div className="lg:w-[380px] bg-slate-950 text-white rounded-2xl p-6 flex flex-col justify-between gap-4 relative overflow-hidden group shadow-lg">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl" />
+            <div className="space-y-2 z-10">
+              <span className="inline-flex items-center gap-1 text-[8.5px] font-extrabold tracking-widest text-amber-300 bg-amber-400/10 border border-amber-300/20 px-2.5 py-1 rounded-full uppercase">
+                ✦ WARDROBE CAPSULE SERVICE
               </span>
-              <h3 className="text-sm font-black text-slate-800 leading-tight">
-                Save up to 20% on every order
+              <h3 className="text-lg font-black tracking-tight leading-tight uppercase">
+                Build your seasonal wardrobe & save 20%
               </h3>
-              <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">
-                Choose any flavours • Change anytime
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Handpick signature outerwear, knitwear, and pants delivered on your terms with complimentary bespoke alterations.
               </p>
-              
+            </div>
+
+            <div className="flex items-center justify-between z-10 pt-2 border-t border-white/10">
               <button 
                 onClick={() => {
                   try {
@@ -505,36 +457,12 @@ export default function ProductsGrid({
                   } catch (e) {}
                   window.dispatchEvent(new Event('popstate'));
                 }}
-                className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[10.5px] py-2 px-4 rounded-lg flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                className="bg-white hover:bg-slate-100 text-slate-950 font-black text-[11px] uppercase tracking-wider py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
               >
-                <span>Compare Plans</span>
-                <ChevronRight className="h-3 w-3" />
+                <span>Curate Capsule</span>
+                <ChevronRight className="h-3.5 w-3.5" />
               </button>
-            </div>
-
-            {/* Custom high-fidelity CSS 3D Box Illustration */}
-            <div className="relative w-28 h-24 flex items-center justify-center shrink-0">
-              {/* Outer perspective wrapper */}
-              <div className="w-24 h-16 bg-slate-900 border border-slate-800 rounded-lg shadow-md flex flex-col justify-end p-2 relative overflow-hidden transform group-hover:scale-103 transition-transform">
-                <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 to-slate-850 opacity-95" />
-                
-                {/* Simulated box depth line */}
-                <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-slate-750" />
-                
-                <div className="relative z-10 text-[7px] font-extrabold text-amber-500 tracking-widest">POUCH</div>
-                <div className="relative z-10 text-[9px] font-black text-white tracking-widest leading-none">SUPPLY</div>
-                
-                {/* Canisters popping out dynamically */}
-                <div className="absolute -top-5 -left-1 w-9 h-9 rounded-full bg-indigo-650 border border-indigo-400 shadow-lg flex items-center justify-center text-[7px] font-black text-white transform -rotate-12 animate-bounce duration-2000">
-                  ZYN
-                </div>
-                <div className="absolute -top-7 right-4 w-10 h-10 rounded-full bg-emerald-650 border border-emerald-400 shadow-xl flex items-center justify-center text-[7.5px] font-black text-white transform rotate-12">
-                  77
-                </div>
-                <div className="absolute -top-4 -right-2 w-9 h-9 rounded-full bg-rose-600 border border-rose-450 shadow-lg flex items-center justify-center text-[7px] font-black text-white transform -rotate-6">
-                  VELO
-                </div>
-              </div>
+              <span className="text-[10px] text-slate-400 font-mono font-bold">Cancel Anytime</span>
             </div>
           </div>
 
@@ -543,72 +471,84 @@ export default function ProductsGrid({
         {/* Catalog Main Split Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           
-          {/* LEFT SIDEBAR - FILTER PRODUCTS PANEL */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-6 shadow-xs">
+          {/* LEFT SIDEBAR - FILTER PANEL */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 space-y-6 shadow-xs">
             
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h2 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-1.5">
-                <Filter className="h-3.5 w-3.5 text-slate-400" /> FILTER PRODUCTS
+              <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-slate-400" /> FILTER PIECES
               </h2>
-              {(selectedBrands.length > 0 || selectedStrengths.length > 0 || selectedFlavours.length > 0 || priceRange < 6.00 || !inStockOnly || bestSellersOnly || newArrivalsOnly) && (
+              {(selectedBrands.length > 0 || selectedCategories.length > 0 || selectedMaterials.length > 0 || selectedFits.length > 0 || priceRange < 600 || inStockOnly || bestSellersOnly || newArrivalsOnly) && (
                 <button
                   onClick={resetAllFilters}
-                  className="text-[10px] text-indigo-650 hover:text-indigo-800 font-black cursor-pointer transition-colors"
+                  className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold uppercase tracking-wider cursor-pointer transition-colors"
                 >
-                  Reset all filters
+                  Reset all
                 </button>
               )}
             </div>
 
             {/* Keyword search inside sidebar */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Search Products</label>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Search Catalog</label>
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Type product name..."
+                  placeholder="e.g. Overcoat, Cashmere, Pleated..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full text-xs p-2.5 pb-2.5 pl-8 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-400 bg-slate-50/50"
+                  className="w-full text-xs p-2.5 pl-8 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-900 bg-slate-50/50"
                 />
                 <Search className="absolute left-2.5 top-3 h-3.5 w-3.5 text-slate-400" />
               </div>
             </div>
 
-            {/* 1. BRAND CHECKBOX LIST */}
+            {/* 1. CATEGORY CHECKBOX LIST */}
             <div className="space-y-2.5">
-              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Brand</label>
-              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                <label className="flex items-center justify-between text-xs text-slate-700 font-semibold hover:text-slate-900 cursor-pointer py-1">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedBrands.length === 0}
-                      onChange={() => setSelectedBrands([])}
-                      className="rounded border-slate-300 text-slate-900 focus:ring-slate-500 h-3.5 w-3.5"
-                    />
-                    <span>All Brands</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-bold bg-slate-50 px-1.5 py-0.5 rounded">
-                    {products.length}
-                  </span>
-                </label>
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Garment Category</label>
+              <div className="space-y-1.5">
+                {allCategoriesInStore.slice(0, showAllCategories ? undefined : 6).map(cat => {
+                  const count = filterCounts.categoryCounts[cat] || 0;
+                  const isChecked = selectedCategories.includes(cat);
+                  return (
+                    <label key={cat} className="flex items-center justify-between text-xs text-slate-700 font-semibold hover:text-slate-950 cursor-pointer py-1">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleCategory(cat)}
+                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-3.5 w-3.5"
+                        />
+                        <span>{cat}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded">
+                        {count}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
 
+            {/* 2. DESIGNER / ATELIER CHECKBOX LIST */}
+            <div className="space-y-2.5 pt-2 border-t border-slate-100">
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Atelier & Studio</label>
+              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                 {allBrandsInStore.slice(0, showAllBrands ? undefined : 6).map(brand => {
                   const count = filterCounts.brandCounts[brand] || 0;
                   const isChecked = selectedBrands.includes(brand);
                   return (
-                    <label key={brand} className="flex items-center justify-between text-xs text-slate-700 font-semibold hover:text-slate-900 cursor-pointer py-1">
+                    <label key={brand} className="flex items-center justify-between text-xs text-slate-700 font-semibold hover:text-slate-950 cursor-pointer py-1">
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => toggleBrand(brand)}
-                          className="rounded border-slate-300 text-indigo-650 focus:ring-indigo-500 h-3.5 w-3.5"
+                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-3.5 w-3.5"
                         />
                         <span>{brand}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 font-bold bg-slate-50 px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded">
                         {count}
                       </span>
                     </label>
@@ -627,33 +567,31 @@ export default function ProductsGrid({
               )}
             </div>
 
-            {/* 2. STRENGTH CHECKBOX LIST */}
+            {/* 3. MATERIAL / FABRIC LIST */}
             <div className="space-y-2.5 pt-2 border-t border-slate-100">
-              <div className="flex items-center gap-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                <span>Strength</span>
-                <HelpCircle className="h-3 w-3 text-slate-300 cursor-help" title="Strength mapped dynamically from standard nicotine weight levels" />
-              </div>
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Fabric & Material</label>
               <div className="space-y-1.5">
                 {[
-                  { id: 'mild', label: 'Mild (1-5mg)' },
-                  { id: 'regular', label: 'Regular (6-10mg)' },
-                  { id: 'strong', label: 'Strong (11-16mg)' },
-                  { id: 'xstrong', label: 'X-Strong (17mg+)' }
-                ].map(str => {
-                  const isChecked = selectedStrengths.includes(str.id);
-                  const count = filterCounts.strengthCounts[str.id] || 0;
+                  { id: 'Organic Cotton', label: '100% Organic Cotton' },
+                  { id: 'Virgin Wool', label: 'Virgin Wool & Merino' },
+                  { id: 'Cashmere', label: 'Pure Cashmere' },
+                  { id: 'Japanese Denim', label: 'Heavy Selvedge Denim' },
+                  { id: 'Italian Leather', label: 'Full Grain Leather' }
+                ].map(mat => {
+                  const isChecked = selectedMaterials.includes(mat.id);
+                  const count = filterCounts.materialCounts[mat.id] || 0;
                   return (
-                    <label key={str.id} className="flex items-center justify-between text-xs text-slate-700 font-semibold hover:text-slate-900 cursor-pointer py-1">
+                    <label key={mat.id} className="flex items-center justify-between text-xs text-slate-700 font-semibold hover:text-slate-950 cursor-pointer py-1">
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
                           checked={isChecked}
-                          onChange={() => toggleStrength(str.id)}
-                          className="rounded border-slate-300 text-indigo-650 focus:ring-indigo-500 h-3.5 w-3.5"
+                          onChange={() => toggleMaterial(mat.id)}
+                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-3.5 w-3.5"
                         />
-                        <span>{str.label}</span>
+                        <span>{mat.label}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 font-bold bg-slate-50 px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded">
                         {count}
                       </span>
                     </label>
@@ -662,253 +600,201 @@ export default function ProductsGrid({
               </div>
             </div>
 
-            {/* 3. FLAVOUR CHECKBOX LIST WITH DECORATIVE DOTS */}
+            {/* 4. SILHOUETTE & FIT */}
             <div className="space-y-2.5 pt-2 border-t border-slate-100">
-              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Flavour</label>
-              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+              <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Cut & Silhouette</label>
+              <div className="space-y-1.5">
                 {[
-                  { id: 'mint', label: 'Mint', dotColor: 'bg-emerald-400' },
-                  { id: 'berry', label: 'Berry', dotColor: 'bg-rose-400' },
-                  { id: 'citrus', label: 'Citrus', dotColor: 'bg-amber-400' },
-                  { id: 'fruit', label: 'Fruit', dotColor: 'bg-orange-400' },
-                  { id: 'cola', label: 'Cola', dotColor: 'bg-amber-800' },
-                  { id: 'coffee', label: 'Coffee', dotColor: 'bg-yellow-800' },
-                  { id: 'sweet', label: 'Sweet', dotColor: 'bg-pink-400' },
-                  { id: 'tea', label: 'Tea', dotColor: 'bg-teal-600' },
-                  { id: 'other', label: 'Other', dotColor: 'bg-slate-400' }
-                ].slice(0, showAllFlavours ? undefined : 6).map(flav => {
-                  const isChecked = selectedFlavours.includes(flav.id);
-                  const count = filterCounts.flavourCounts[flav.id] || 0;
+                  { id: 'Relaxed Cut', label: 'Relaxed Cut' },
+                  { id: 'Oversized', label: 'Oversized' },
+                  { id: 'Tailored Fit', label: 'Tailored Slim' },
+                  { id: 'Classic Cut', label: 'Classic Straight' }
+                ].map(fit => {
+                  const isChecked = selectedFits.includes(fit.id);
+                  const count = filterCounts.fitCounts[fit.id] || 0;
                   return (
-                    <label key={flav.id} className="flex items-center justify-between text-xs text-slate-700 font-semibold hover:text-slate-900 cursor-pointer py-1">
+                    <label key={fit.id} className="flex items-center justify-between text-xs text-slate-700 font-semibold hover:text-slate-950 cursor-pointer py-1">
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
                           checked={isChecked}
-                          onChange={() => toggleFlavour(flav.id)}
-                          className="rounded border-slate-300 text-indigo-650 focus:ring-indigo-500 h-3.5 w-3.5"
+                          onChange={() => toggleFit(fit.id)}
+                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-3.5 w-3.5"
                         />
-                        <span className={`h-2 w-2 rounded-full ${flav.dotColor} inline-block shrink-0`} />
-                        <span>{flav.label}</span>
+                        <span>{fit.label}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 font-bold bg-slate-50 px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded">
                         {count}
                       </span>
                     </label>
                   );
                 })}
               </div>
-
-              {/* Show more flavours toggle if list expands */}
-              <button
-                onClick={() => setShowAllFlavours(!showAllFlavours)}
-                className="text-[10px] text-slate-400 hover:text-slate-600 font-bold flex items-center gap-1 focus:outline-none pt-1"
-              >
-                <span>{showAllFlavours ? 'Show less' : 'Show more'}</span>
-                <span className="text-[8px]">{showAllFlavours ? '▲' : '▼'}</span>
-              </button>
             </div>
 
-            {/* 4. PRICE RANGE SLIDER */}
+            {/* 5. PRICE RANGE SLIDER */}
             <div className="space-y-2.5 pt-2 border-t border-slate-100">
               <div className="flex justify-between items-center text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                <span>Price Range</span>
-                <span className="text-slate-800 font-black text-xs">Max £{priceRange.toFixed(2)}</span>
+                <span>Maximum Price</span>
+                <span className="text-slate-950 font-black text-xs font-mono">£{priceRange.toFixed(0)}</span>
               </div>
               <input
                 type="range"
-                min="1.99"
-                max="6.00"
-                step="0.10"
+                min="30"
+                max="600"
+                step="10"
                 value={priceRange}
                 onChange={(e) => setPriceRange(parseFloat(e.target.value))}
                 className="w-full accent-slate-950 h-1.5 bg-slate-100 rounded-lg cursor-pointer"
               />
-              <div className="flex justify-between text-[9px] text-slate-400 font-bold">
-                <span>£1.99</span>
-                <span>£6.00+</span>
+              <div className="flex justify-between text-[9px] text-slate-400 font-bold font-mono">
+                <span>£30</span>
+                <span>£600+</span>
               </div>
             </div>
 
-            {/* 5. AVAILABILITY CHECKBOX MATRIX */}
+            {/* 6. AVAILABILITY CHECKBOX MATRIX */}
             <div className="space-y-1.5 pt-3 border-t border-slate-100">
-              <label className="flex items-center gap-2 text-xs text-slate-700 font-semibold hover:text-slate-900 cursor-pointer py-1">
+              <label className="flex items-center gap-2 text-xs text-slate-700 font-semibold hover:text-slate-950 cursor-pointer py-1">
                 <input
                   type="checkbox"
                   checked={inStockOnly}
                   onChange={(e) => setInStockOnly(e.target.checked)}
-                  className="rounded border-slate-300 text-indigo-650 focus:ring-indigo-500 h-3.5 w-3.5"
+                  className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-3.5 w-3.5"
                 />
                 <span>In Stock Only</span>
               </label>
 
-              <label className="flex items-center gap-2 text-xs text-slate-700 font-semibold hover:text-slate-900 cursor-pointer py-1">
-                <input
-                  type="checkbox"
-                  checked={subscriptionEligible}
-                  onChange={(e) => setSubscriptionEligible(e.target.checked)}
-                  className="rounded border-slate-300 text-indigo-650 focus:ring-indigo-500 h-3.5 w-3.5"
-                />
-                <span>Subscription Eligible</span>
-              </label>
-
-              <label className="flex items-center gap-2 text-xs text-slate-700 font-semibold hover:text-slate-900 cursor-pointer py-1">
+              <label className="flex items-center gap-2 text-xs text-slate-700 font-semibold hover:text-slate-950 cursor-pointer py-1">
                 <input
                   type="checkbox"
                   checked={bestSellersOnly}
                   onChange={(e) => setBestSellersOnly(e.target.checked)}
-                  className="rounded border-slate-300 text-indigo-650 focus:ring-indigo-500 h-3.5 w-3.5"
+                  className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-3.5 w-3.5"
                 />
-                <span>Best Sellers</span>
+                <span>Best Sellers & Sale</span>
               </label>
 
-              <label className="flex items-center gap-2 text-xs text-slate-700 font-semibold hover:text-slate-900 cursor-pointer py-1">
+              <label className="flex items-center gap-2 text-xs text-slate-700 font-semibold hover:text-slate-950 cursor-pointer py-1">
                 <input
                   type="checkbox"
                   checked={newArrivalsOnly}
                   onChange={(e) => setNewArrivalsOnly(e.target.checked)}
-                  className="rounded border-slate-300 text-indigo-650 focus:ring-indigo-500 h-3.5 w-3.5"
+                  className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-3.5 w-3.5"
                 />
-                <span>New Arrivals</span>
+                <span>New Season Arrivals</span>
               </label>
+            </div>
+
+            {/* Style & Fit Quiz Promo Card */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-2 text-slate-900">
+                <Scissors className="h-4 w-4" />
+                <h4 className="text-xs font-black uppercase tracking-wider">Style & Fit Finder</h4>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Answer 3 quick questions to discover tailored pieces matched to your height and silhouette.
+              </p>
+              <button
+                onClick={handleStartQuiz}
+                className="w-full bg-white hover:bg-slate-100 text-slate-900 border border-slate-200 font-black text-[10px] uppercase tracking-wider py-2 rounded-lg transition-colors cursor-pointer"
+              >
+                Launch Style Finder
+              </button>
             </div>
 
           </div>
 
-          {/* RIGHT CONTAINER - CATALOG PRODUCTS GRID */}
-          <div className="lg:col-span-3 space-y-5">
+          {/* RIGHT COLUMN - CATALOG RESULTS & SORTING */}
+          <div className="lg:col-span-3 space-y-6">
             
-            {/* Toolbar section */}
-            <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <span className="text-xs text-slate-500 font-semibold pl-2">
-                Showing <strong className="text-slate-800">{filteredProducts.length}</strong> of {products.length} products
-              </span>
-              
-              <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
-                
-                {/* Sort dropdown */}
-                <div className="flex items-center gap-2 flex-1 sm:flex-initial">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Sort by:</span>
-                  <select
-                    id="shop-sort-by"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="text-xs border border-slate-200 p-2 py-1.5 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 w-full sm:w-auto font-semibold text-slate-700"
-                  >
-                    <option value="featured">Best Sellers</option>
-                    <option value="price-asc">Price: Low to High</option>
-                    <option value="price-desc">Price: High to Low</option>
-                    <option value="title-asc">Alphabetically: A-Z</option>
-                    <option value="title-desc">Alphabetically: Z-A</option>
-                  </select>
-                </div>
+            {/* Top Toolbar */}
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xs">
+              <div className="text-xs text-slate-500 font-medium">
+                Showing <strong className="text-slate-950 font-bold">{filteredProducts.length}</strong> of {products.length} curated pieces
+              </div>
 
-                {/* Grid / List View Toggle */}
-                <div className="bg-slate-100 rounded-lg p-0.5 flex items-center shrink-0">
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                {/* View toggle */}
+                <div className="flex items-center border border-slate-200 rounded-xl p-0.5 bg-slate-50">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-1.5 rounded-md transition-all ${
-                      viewMode === 'grid' 
-                        ? 'bg-slate-800 text-white shadow-xs' 
-                        : 'text-slate-400 hover:text-slate-700'
+                    className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                      viewMode === 'grid' ? 'bg-white shadow-xs text-slate-950' : 'text-slate-400 hover:text-slate-700'
                     }`}
-                    title="Grid view"
+                    title="Grid View"
                   >
-                    <Grid className="h-3.5 w-3.5" />
+                    <Grid className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-1.5 rounded-md transition-all ${
-                      viewMode === 'list' 
-                        ? 'bg-slate-800 text-white shadow-xs' 
-                        : 'text-slate-400 hover:text-slate-700'
+                    className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                      viewMode === 'list' ? 'bg-white shadow-xs text-slate-950' : 'text-slate-400 hover:text-slate-700'
                     }`}
-                    title="List view"
+                    title="Editorial List View"
                   >
-                    <List className="h-3.5 w-3.5" />
+                    <List className="h-4 w-4" />
                   </button>
                 </div>
 
+                {/* Sort Selector */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Sort:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                  >
+                    <option value="featured">Featured Curation</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="title-asc">Designation: A to Z</option>
+                    <option value="title-desc">Designation: Z to A</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* Empty filter state */}
+            {/* Empty State */}
             {filteredProducts.length === 0 ? (
-              <div className="text-center py-20 bg-white border border-slate-200 rounded-2xl p-8 space-y-4 shadow-xs">
-                <span className="text-4xl block">🔍</span>
-                <h3 className="font-extrabold text-slate-800 text-sm">No Products Found</h3>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
-                  None of our active products match your combination of filters. Try clearing some selections or search for another keyword.
-                </p>
+              <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center space-y-4">
+                <div className="h-14 w-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
+                  <Search className="h-6 w-6" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">No Pieces Match Filter Criteria</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Try broadening your price range, clearing selected fabric tags, or searching for a different keyword.
+                  </p>
+                </div>
                 <button
                   onClick={resetAllFilters}
-                  className="text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-6 rounded-xl cursor-pointer transition-colors"
+                  className="bg-slate-950 text-white text-xs font-black uppercase tracking-wider py-2.5 px-5 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
                 >
-                  Reset Search Filters
+                  Reset Catalog Filters
                 </button>
               </div>
             ) : (
-              /* PRODUCTS LIST (GRID OR LIST VIEW MODE) */
+              /* PRODUCTS DISPLAY */
               <div className={
                 viewMode === 'grid' 
-                  ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5" 
+                  ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" 
                   : "space-y-4"
               }>
                 {filteredProducts.map(prod => {
                   const inWishlist = isProductInWishlist(prod.id);
-                  const strengthInfo = getProductStrength(prod);
-                  
-                  // Generate custom tag pairings dynamically to mimic exact photo aesthetics
-                  const subTags = prod.tags.slice(0, 2).map(t => t.charAt(0).toUpperCase() + t.slice(1));
-                  if (subTags.length === 0) {
-                    subTags.push(prod.category || 'Pouch');
-                    subTags.push('Official');
-                  } else if (subTags.length === 1) {
-                    subTags.push('Premium Blend');
-                  }
-
-                  // Local quantity for this product
+                  const material = getProductMaterial(prod);
+                  const fit = getProductFit(prod);
                   const localQty = getProductQuantity(prod.id);
 
                   return (
                     <div 
                       key={prod.id} 
-                      className={`bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-4.5 flex transition-all group hover:shadow-sm relative ${
-                        viewMode === 'grid' ? 'flex-col justify-between' : 'flex-row items-center gap-6 justify-between'
+                      className={`bg-white border border-slate-200 hover:border-slate-400 rounded-2xl overflow-hidden transition-all duration-300 group hover:shadow-xl relative flex ${
+                        viewMode === 'grid' ? 'flex-col justify-between' : 'flex-col sm:flex-row items-stretch sm:items-center gap-6 p-4'
                       }`}
                     >
-                      
-                      {/* Badge Tag indicator top-left (Best Seller / New / Brand) */}
-                      <div className="absolute top-4 left-4 z-20 flex flex-col gap-1.5">
-                        {prod.tags.includes('best-seller') || prod.price < 4.50 ? (
-                          <span className="bg-amber-500 text-white font-black text-[8px] uppercase tracking-widest py-1 px-2 rounded-md shadow-xs leading-none">
-                            BEST SELLER
-                          </span>
-                        ) : prod.tags.includes('new') ? (
-                          <span className="bg-emerald-600 text-white font-black text-[8px] uppercase tracking-widest py-1 px-2 rounded-md shadow-xs leading-none">
-                            NEW
-                          </span>
-                        ) : (
-                          <span className="bg-slate-800 text-slate-100 font-black text-[8px] uppercase tracking-widest py-1 px-2 rounded-md shadow-xs leading-none">
-                            {prod.vendor || 'VELO'}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Wishlist Heart Top Right */}
-                      <button
-                        onClick={() => handleHeartClick(prod.id)}
-                        className={`absolute top-4 right-4 z-20 p-1.5 rounded-full border shadow-xs transition-transform hover:scale-110 cursor-pointer bg-white ${
-                          inWishlist 
-                            ? 'border-red-100 text-red-500 bg-red-50/20' 
-                            : 'border-slate-150 text-slate-400 hover:text-slate-600'
-                        }`}
-                        title={inWishlist ? "Saved in your Wishlist" : "Save to Wishlist"}
-                      >
-                        <Heart className={`h-4 w-4 ${inWishlist ? 'fill-red-500 text-red-500' : ''}`} />
-                      </button>
-
-                      {/* CANISTER IMAGE SECTION (With radial background for maximum pop) */}
+                      {/* Image Frame */}
                       <div 
                         onClick={() => {
                           try {
@@ -919,126 +805,101 @@ export default function ProductsGrid({
                           } catch (e) {}
                           window.dispatchEvent(new Event('popstate'));
                         }}
-                        className={`relative cursor-pointer flex items-center justify-center shrink-0 ${
-                          viewMode === 'grid' 
-                            ? 'w-full aspect-square mb-4.5 rounded-xl bg-transparent overflow-hidden' 
-                            : 'w-32 h-32 rounded-xl bg-transparent overflow-hidden'
+                        className={`relative cursor-pointer overflow-hidden bg-slate-100 shrink-0 ${
+                          viewMode === 'grid' ? 'w-full aspect-[4/5]' : 'w-full sm:w-48 aspect-[4/5] rounded-xl'
                         }`}
                       >
                         <img
                           src={prod.image}
                           alt={prod.title}
-                          className="w-full h-full object-contain p-1 transition-transform duration-300 group-hover:scale-105 relative z-10"
+                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                           referrerPolicy="no-referrer"
                         />
+
+                        {/* Top Badges */}
+                        <div className="absolute top-3.5 left-3.5 z-10 flex flex-col gap-1">
+                          {prod.compareAtPrice > prod.price ? (
+                            <span className="bg-rose-600 text-white text-[8px] font-black uppercase tracking-widest py-1 px-2.5 rounded-md shadow-xs">
+                              SALE ARCHIVE
+                            </span>
+                          ) : prod.tags.includes('new') ? (
+                            <span className="bg-slate-900 text-white text-[8px] font-black uppercase tracking-widest py-1 px-2.5 rounded-md shadow-xs">
+                              NEW SEASON
+                            </span>
+                          ) : (
+                            <span className="bg-white/90 backdrop-blur-xs text-slate-900 text-[8px] font-black uppercase tracking-widest py-1 px-2.5 rounded-md border border-slate-200 shadow-xs">
+                              {prod.vendor}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Wishlist Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleHeartClick(prod.id);
+                          }}
+                          className={`absolute top-3.5 right-3.5 z-10 p-2 rounded-full border shadow-xs transition-transform hover:scale-110 cursor-pointer ${
+                            inWishlist 
+                              ? 'bg-white text-rose-600 border-rose-200 shadow-sm' 
+                              : 'bg-white/80 backdrop-blur-xs text-slate-400 hover:text-slate-900 border-white/60'
+                          }`}
+                          title={inWishlist ? "Saved in Wishlist" : "Save to Wishlist"}
+                        >
+                          <Heart className={`h-4 w-4 ${inWishlist ? 'fill-rose-600 text-rose-600' : ''}`} />
+                        </button>
                       </div>
 
-                      {/* PRODUCT METADATA INFO */}
-                      <div className={`flex-1 flex flex-col justify-between ${viewMode === 'grid' ? 'space-y-4' : 'px-2'}`}>
+                      {/* Content Details */}
+                      <div className={`flex-1 flex flex-col justify-between ${viewMode === 'grid' ? 'p-5 space-y-4' : 'space-y-3'}`}>
                         <div className="space-y-2">
                           
-                          {/* Colored category tags */}
-                          <div className="flex flex-wrap gap-1">
-                            {subTags.map((st, sIdx) => (
-                              <span 
-                                key={sIdx} 
-                                className={`text-[8.5px] font-bold py-0.5 px-2 rounded-full ${
-                                  sIdx === 0 
-                                    ? 'bg-amber-50 text-amber-800 border border-amber-200/50' 
-                                    : 'bg-indigo-50 text-indigo-700 border border-indigo-150/40'
-                                }`}
-                              >
-                                {st}
-                              </span>
-                            ))}
+                          {/* Fabric & Fit Pills */}
+                          <div className="flex items-center gap-2 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                            <span>{material}</span>
+                            <span>•</span>
+                            <span>{fit}</span>
                           </div>
 
-                          {/* Brand & Title */}
-                          <div>
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
-                              {prod.vendor || 'Pouch'} Official
-                            </span>
-                            <h3 
-                              onClick={() => {
-                                try {
-                                  const navArg = prod.isVariantCard
-                                    ? `${prod.parentSlug || prod.parentId}?variant=${prod.concreteVariantId}`
-                                    : (prod.slug || prod.id);
-                                  window.history.pushState({}, '', `/products/${navArg}`);
-                                } catch (e) {}
-                                window.dispatchEvent(new Event('popstate'));
-                              }}
-                              className="text-xs sm:text-sm font-black text-slate-800 tracking-tight leading-snug hover:text-indigo-650 transition-colors cursor-pointer"
-                            >
-                              {prod.title}
-                            </h3>
-                          </div>
-
-                          {/* Nicotine Strength indicators (Filled/Unfilled dots based on strength level) */}
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-0.5">
-                              {[1, 2, 3, 4, 5].map(dot => (
-                                <span 
-                                  key={dot}
-                                  className={`h-1.5 w-1.5 rounded-full ${
-                                    dot <= strengthInfo.score 
-                                      ? 'bg-amber-500 border border-amber-500' 
-                                      : 'bg-slate-100 border border-slate-200'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-[9.5px] text-slate-400 font-bold">
-                              Strength: <strong className="text-slate-600">{strengthInfo.label.split(' ')[0]}</strong>
-                            </span>
-                          </div>
-
-                          {/* Pricing block */}
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="text-sm sm:text-base font-black text-slate-900">
-                              £{(prod.price * localQty).toFixed(2)}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-medium">
-                              {localQty > 1 ? `(£${prod.price.toFixed(2)} each)` : 'each'}
-                            </span>
-                          </div>
-
-                          {/* Subscription saving badge with dynamic calculation */}
-                          <div className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-100/70 text-emerald-800 font-bold text-[9px] py-1 px-2.5 rounded-lg">
-                            <span>Save from £{(prod.price * 0.8).toFixed(2)} with Subscription</span>
-                            <span>🏷️</span>
-                          </div>
-
-                        </div>
-
-                        {/* Delivery quality badges list */}
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 py-1.5 border-t border-b border-slate-100 text-[8.5px] text-slate-400 font-bold">
-                          <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3 text-slate-350" /> Official Stock</span>
-                          <span className="flex items-center gap-1"><Zap className="h-3 w-3 text-slate-350" /> Ships Today</span>
-                          <span className="flex items-center gap-1"><Award className="h-3 w-3 text-slate-350" /> Lab Tested</span>
-                        </div>
-
-                        {/* Quantity selection & Action CTA Row */}
-                        <div className="flex items-center justify-between gap-2.5 pt-2">
-                          
-                          {/* Basket trigger CTA */}
-                          <button
+                          {/* Title */}
+                          <h3 
                             onClick={() => {
-                              onAddToCart(prod, localQty);
-                              // reset local quantity to 1 after successful add
-                              setQuantities(prev => ({ ...prev, [prod.id]: 1 }));
+                              try {
+                                const navArg = prod.isVariantCard
+                                  ? `${prod.parentSlug || prod.parentId}?variant=${prod.concreteVariantId}`
+                                  : (prod.slug || prod.id);
+                                window.history.pushState({}, '', `/products/${navArg}`);
+                              } catch (e) {}
+                              window.dispatchEvent(new Event('popstate'));
                             }}
-                            className="flex-1 bg-slate-950 hover:bg-slate-850 text-white font-extrabold py-2 px-3 text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-xs shrink-0 cursor-pointer"
+                            className="text-sm font-black text-slate-900 tracking-tight leading-snug hover:text-indigo-600 transition-colors cursor-pointer uppercase line-clamp-2"
                           >
-                            <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
-                            <span>Add to Basket</span>
-                          </button>
+                            {prod.title}
+                          </h3>
 
-                          {/* Local Quantity selector */}
-                          <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl h-9 shrink-0 px-1 overflow-hidden">
+                          {/* Pricing Row */}
+                          <div className="flex items-baseline gap-2 pt-1">
+                            <span className="text-base font-black text-slate-950 font-mono">
+                              £{prod.price.toFixed(2)}
+                            </span>
+                            {prod.compareAtPrice > prod.price && (
+                              <span className="text-xs text-slate-400 line-through font-mono">
+                                £{prod.compareAtPrice.toFixed(2)}
+                              </span>
+                            )}
+                            <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider bg-emerald-50 px-2 py-0.5 rounded ml-auto">
+                              Capsule eligible
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action CTA & Quantity */}
+                        <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                          {/* Quantity Selector */}
+                          <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl h-9 px-1 shrink-0">
                             <button
                               onClick={() => handleQuantityChange(prod.id, -1)}
-                              className="w-7 h-7 text-slate-500 hover:text-slate-850 font-extrabold flex items-center justify-center text-xs transition-colors"
+                              className="w-7 h-7 text-slate-500 hover:text-slate-900 font-extrabold flex items-center justify-center text-xs transition-colors cursor-pointer"
                             >
                               -
                             </button>
@@ -1047,14 +908,24 @@ export default function ProductsGrid({
                             </span>
                             <button
                               onClick={() => handleQuantityChange(prod.id, 1)}
-                              className="w-7 h-7 text-slate-500 hover:text-slate-850 font-extrabold flex items-center justify-center text-xs transition-colors"
+                              className="w-7 h-7 text-slate-500 hover:text-slate-900 font-extrabold flex items-center justify-center text-xs transition-colors cursor-pointer"
                             >
                               +
                             </button>
                           </div>
 
+                          {/* Add to Bag Button */}
+                          <button
+                            onClick={() => {
+                              onAddToCart(prod, localQty);
+                              setQuantities(prev => ({ ...prev, [prod.id]: 1 }));
+                            }}
+                            className="flex-1 bg-slate-950 hover:bg-slate-850 text-white font-black py-2 px-3 text-[11px] rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer uppercase tracking-wider"
+                          >
+                            <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
+                            <span>Add to Bag</span>
+                          </button>
                         </div>
-
                       </div>
                     </div>
                   );
@@ -1062,139 +933,28 @@ export default function ProductsGrid({
               </div>
             )}
 
-            {/* Banner: Build Your Box & Save */}
-            <div className="bg-slate-900 text-white rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden shadow-xs">
-              <div className="absolute right-0 top-0 opacity-15 pointer-events-none blur-2xl bg-amber-500 h-64 w-64 rounded-full" />
-              
-              <div className="space-y-3 z-10 text-center md:text-left">
-                <div className="flex flex-col sm:flex-row items-center gap-2">
-                  <span className="p-1.5 rounded-xl bg-amber-550 text-slate-950 font-black text-[9px] uppercase tracking-wider leading-none">
-                    ⭐ EXCLUSIVE PACKS
-                  </span>
-                  <h3 className="text-base sm:text-lg font-black tracking-tight text-white leading-none">
-                    Build Your Box & Save
-                  </h3>
-                </div>
-                <p className="text-xs text-slate-400 font-medium">
-                  Add any 8 cans to your subscription box and save up to 20%
-                </p>
-                
-                {/* Tickmarks checklist */}
-                <div className="flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-1.5 pt-1 text-[10px] text-slate-300 font-bold">
-                  <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-amber-500 shrink-0" /> Mix any brands</span>
-                  <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-amber-500 shrink-0" /> Change anytime</span>
-                  <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-amber-500 shrink-0" /> Skip or pause</span>
-                  <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-amber-500 shrink-0" /> Free delivery on Pro & Ultimate</span>
-                </div>
+            {/* Ethical Atelier Guarantee Banner */}
+            <div className="bg-white border border-slate-200/80 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-4 text-slate-700 shadow-xs">
+              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-800">
+                <ShieldCheck className="h-5 w-5" />
               </div>
-
-              {/* Graphic + Build Button */}
-              <div className="flex items-center gap-4 z-10">
-                <div className="hidden sm:flex items-center -space-x-4">
-                  <div className="w-10 h-10 rounded-full bg-slate-850 border border-slate-700 shadow-lg flex items-center justify-center text-[8px] font-black transform -rotate-12">ZYN</div>
-                  <div className="w-10 h-10 rounded-full bg-indigo-950 border border-indigo-700 shadow-xl flex items-center justify-center text-[8px] font-black transform rotate-12">VELO</div>
-                  <div className="w-10 h-10 rounded-full bg-emerald-950 border border-emerald-700 shadow-lg flex items-center justify-center text-[8px] font-black transform -rotate-6">77</div>
-                </div>
-                
-                <button
-                  onClick={() => {
-                    try {
-                      window.history.pushState({}, '', '/subscribe');
-                    } catch (e) {}
-                    window.dispatchEvent(new Event('popstate'));
-                  }}
-                  className="bg-amber-550 hover:bg-amber-600 text-slate-950 font-black text-xs py-2.5 px-6 rounded-xl flex items-center gap-1 shadow-sm transition-all cursor-pointer whitespace-nowrap"
-                >
-                  <span>Build Your Box</span>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Bottom Section: Recently Viewed & Matchmaker Strength Quiz */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-4">
-              
-              {/* Recently Viewed block (2 cols) */}
-              <div className="md:col-span-2 bg-white border border-slate-200 rounded-2xl p-4.5 space-y-4 shadow-xs">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                    Recently Viewed
-                  </h3>
-                  <button 
-                    onClick={() => {
-                      setSelectedBrands([]);
-                      setSelectedStrengths([]);
-                    }}
-                    className="text-[10px] font-bold text-slate-400 hover:text-indigo-650"
-                  >
-                    View all
-                  </button>
-                </div>
-
-                {/* Horizontal canisters row */}
-                <div className="flex items-center gap-4 overflow-x-auto py-1.5 scrollbar-thin">
-                  {products.slice(0, 5).map((p, idx) => (
-                    <div 
-                      key={p.id || idx}
-                      onClick={() => {
-                        try {
-                          window.history.pushState({}, '', `/products/${p.slug || p.id}`);
-                        } catch (e) {}
-                        window.dispatchEvent(new Event('popstate'));
-                      }}
-                      className="flex flex-col items-center gap-1 shrink-0 cursor-pointer group"
-                    >
-                      <div className="w-11 h-11 rounded-full bg-slate-50 border border-slate-150/80 p-1.5 relative flex items-center justify-center group-hover:border-slate-350 transition-colors shadow-xs">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(226,232,240,0.7)_0%,transparent_70%)]" />
-                        <img 
-                          src={p.image} 
-                          alt={p.title} 
-                          className="w-8 h-8 object-contain relative z-10 group-hover:scale-108 transition-transform" 
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                      <span className="text-[9px] font-black text-slate-700 uppercase tracking-tighter">
-                        {p.vendor || 'VELO'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Take strength quiz Matchmaker Block (1 col) */}
-              <div className="bg-emerald-50/50 border border-emerald-150/60 rounded-2xl p-4.5 flex flex-col justify-between space-y-3 shadow-xs">
-                <div className="space-y-1.5">
-                  <div className="h-7 w-7 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800">
-                    🎯
-                  </div>
-                  <h4 className="text-xs font-black text-slate-800 leading-tight">
-                    Not sure what strength?
-                  </h4>
-                  <p className="text-[10px] text-slate-500 font-semibold leading-normal">
-                    Find your perfect compounding pouch match in 3 clicks.
-                  </p>
-                </div>
-
-                <button
-                  onClick={handleStartQuiz}
-                  className="w-full text-center bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-250 font-black text-[10px] py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 shadow-xs"
-                >
-                  <span>Take Strength Quiz</span>
-                  <ChevronRight className="h-3 w-3 text-emerald-700" />
-                </button>
-              </div>
-
-            </div>
-
-            {/* Quick delivery disclaimer banner */}
-            <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex gap-3 text-amber-800 shadow-xs">
-              <Info className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-              <div className="text-xs space-y-1">
-                <span className="font-bold block text-amber-900 leading-snug">Age Restricted Nicotine Pouches Policy</span>
-                <p className="text-slate-500 leading-relaxed text-[11px]">
-                  By purchasing these items you strictly affirm you meet the full age criteria (18+/21+ depending on country regulations). Full verification triggers prior to any shipping handovers.
+              <div className="text-xs space-y-0.5 flex-1">
+                <span className="font-black text-slate-900 uppercase tracking-wide block">Ethical Craftsmanship & Sustainability Guarantee</span>
+                <p className="text-slate-500 text-[11px] leading-relaxed">
+                  Every garment is patterned, cut, and assembled by skilled artisans under safe European labor agreements using renewable energy and organic plant fibers.
                 </p>
               </div>
+              <button 
+                onClick={() => {
+                  try {
+                    window.history.pushState({}, '', '/pages/our-story');
+                  } catch (e) {}
+                  window.dispatchEvent(new Event('popstate'));
+                }}
+                className="text-[11px] font-black uppercase tracking-wider text-slate-900 hover:underline shrink-0 cursor-pointer"
+              >
+                Read Manifesto →
+              </button>
             </div>
 
           </div>
@@ -1203,85 +963,80 @@ export default function ProductsGrid({
 
       </div>
 
-      {/* QUIZ DIALOG OVERLAY */}
+      {/* STYLE & FIT QUIZ DIALOG */}
       {isQuizOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-6">
             
             {/* Close */}
             <button 
               onClick={() => setIsQuizOpen(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
             >
               <X className="h-4.5 w-4.5" />
             </button>
 
             {/* Quiz Heading */}
             <div className="text-center space-y-1.5">
-              <span className="text-[9px] font-black uppercase text-emerald-700 bg-emerald-55/90 border border-emerald-200/50 px-2.5 py-1 rounded-full">
-                🎯 Pouch Matchmaker
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                ✦ BESPOKE STYLING
               </span>
-              <h3 className="text-base font-black text-slate-900">
-                Pouch Strength & Flavour Quiz
+              <h3 className="text-lg font-black text-slate-950 uppercase tracking-tight">
+                Style & Fit Matchmaker
               </h3>
-              <p className="text-[11px] text-slate-400 font-medium">
-                Answer these simple questions to find your optimal formula
+              <p className="text-xs text-slate-500">
+                Answer 3 quick preferences to find your ideal wardrobe cornerstone
               </p>
             </div>
 
-            {/* STEP 1: Nicotine Experience */}
+            {/* STEP 1: Silhouette preference */}
             {quizStep === 1 && (
               <div className="space-y-3 animate-fade-in">
                 <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider text-center">
                   Question 1 of 3
                 </span>
-                <p className="text-xs font-bold text-slate-700 text-center pb-1">
-                  Have you used nicotine pouches or vaping before?
+                <p className="text-xs font-bold text-slate-800 text-center pb-1">
+                  What silhouette or fit do you gravitate towards most?
                 </p>
                 <div className="space-y-2">
                   {[
-                    { id: 'none', title: 'No, I am completely new', desc: 'Recommends mild & gentle pouch lines' },
-                    { id: 'occasional', title: 'Yes, occasionally / social user', desc: 'Recommends regular or intermediate strengths' },
-                    { id: 'regular', title: 'Yes, regular user / smoker fallback', desc: 'Recommends strong or intense formulas' }
+                    { id: 'relaxed', title: 'Relaxed & Contemporary', desc: 'Slightly dropped shoulders, fluid drapery, everyday comfort' },
+                    { id: 'oversized', title: 'Architectural Oversized', desc: 'Bold structured volume, generous layering room, statement presence' },
+                    { id: 'tailored', title: 'Modern Tailored Slim', desc: 'Precise cuts, clean lines, sharp shoulder and waist geometry' }
                   ].map(opt => (
                     <button
                       key={opt.id}
-                      onClick={() => handleSelectQuizAnswer('experience', opt.id)}
-                      className="w-full text-left p-3 border border-slate-200 hover:border-indigo-500 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-all cursor-pointer space-y-0.5"
+                      onClick={() => handleSelectQuizAnswer('fit', opt.id)}
+                      className="w-full text-left p-3.5 border border-slate-200 hover:border-slate-950 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-all cursor-pointer space-y-0.5"
                     >
-                      <span className="text-xs font-black text-slate-800 block">{opt.title}</span>
-                      <span className="text-[10px] text-slate-500 font-medium">{opt.desc}</span>
+                      <span className="text-xs font-black text-slate-900 block uppercase">{opt.title}</span>
+                      <span className="text-[10px] text-slate-500">{opt.desc}</span>
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* STEP 2: Flavor preferences */}
+            {/* STEP 2: Category priority */}
             {quizStep === 2 && (
               <div className="space-y-3 animate-fade-in">
                 <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider text-center">
                   Question 2 of 3
                 </span>
-                <p className="text-xs font-bold text-slate-700 text-center pb-1">
-                  What kind of flavour palette appeals to you the most?
+                <p className="text-xs font-bold text-slate-800 text-center pb-1">
+                  Which wardrobe area are you looking to upgrade right now?
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { id: 'mint', label: 'Minty & Frosty ❄️' },
-                    { id: 'berry', label: 'Berry & Sour 🍒' },
-                    { id: 'citrus', label: 'Zesty Citrus 🍋' },
-                    { id: 'fruit', label: 'Sweet Fruit 🥭' },
-                    { id: 'cola', label: 'Classic Cola 🥤' },
-                    { id: 'coffee', label: 'Warm Coffee ☕' },
-                    { id: 'sweet', label: 'Sugary Sweet 🍭' },
-                    { id: 'tea', label: 'Soothing Tea 🍵' },
-                    { id: 'other', label: 'Other Blends 🧪' }
+                    { id: 'outerwear', label: '🧥 Outerwear & Coats' },
+                    { id: 'knitwear', label: '🧶 Heavy Knitwear' },
+                    { id: 'tailoring', label: '👖 Tailored Trousers' },
+                    { id: 'tops', label: '👔 Shirts & Essentials' }
                   ].map(opt => (
                     <button
                       key={opt.id}
-                      onClick={() => handleSelectQuizAnswer('flavor', opt.id)}
-                      className="p-3 text-center border border-slate-200 hover:border-indigo-500 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-all cursor-pointer text-xs font-black text-slate-800"
+                      onClick={() => handleSelectQuizAnswer('category', opt.id)}
+                      className="p-3.5 text-center border border-slate-200 hover:border-slate-950 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-all cursor-pointer text-xs font-bold text-slate-800"
                     >
                       {opt.label}
                     </button>
@@ -1290,26 +1045,25 @@ export default function ProductsGrid({
               </div>
             )}
 
-            {/* STEP 3: Nicotine Kick intensity */}
+            {/* STEP 3: Fabric & Tone */}
             {quizStep === 3 && (
               <div className="space-y-3 animate-fade-in">
                 <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider text-center">
                   Question 3 of 3
                 </span>
-                <p className="text-xs font-bold text-slate-700 text-center pb-1">
-                  What level of kick intensity or feeling do you prefer?
+                <p className="text-xs font-bold text-slate-800 text-center pb-1">
+                  What fabric tactile texture suits your daily routine?
                 </p>
                 <div className="space-y-2">
                   {[
-                    { id: 'gentle', label: 'Gentle (1-5mg/g) - Smooth and lightweight' },
-                    { id: 'standard', label: 'Standard (6-10mg/g) - Steady balanced absorption' },
-                    { id: 'energetic', label: 'Energetic (11-16mg/g) - Highly intense release' },
-                    { id: 'intense', label: 'Ultra-Kick (17mg/g+) - Extreme immediate buzz' }
+                    { id: 'wool', label: 'Heavy Virgin Wool & Recycled Cashmere (Crisp & Thermal)' },
+                    { id: 'cotton', label: '100% Dense Organic Cotton Poplin (Breathable & Crisp)' },
+                    { id: 'denim', label: 'Raw Japanese Selvedge Twill (Structured & Rigid)' }
                   ].map(opt => (
                     <button
                       key={opt.id}
-                      onClick={() => handleSelectQuizAnswer('strength', opt.id)}
-                      className="w-full text-left p-3 border border-slate-200 hover:border-indigo-500 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-all cursor-pointer text-xs font-bold text-slate-800"
+                      onClick={() => handleSelectQuizAnswer('fabric', opt.id)}
+                      className="w-full text-left p-3.5 border border-slate-200 hover:border-slate-950 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-all cursor-pointer text-xs font-semibold text-slate-800"
                     >
                       {opt.label}
                     </button>
@@ -1321,48 +1075,39 @@ export default function ProductsGrid({
             {/* STEP 4: Results */}
             {quizStep === 4 && (
               <div className="space-y-4 text-center animate-fade-in">
-                <span className="text-3xl block">🏆 MATCH FOUND</span>
+                <span className="text-2xl block">✦ YOUR MATCH</span>
                 
                 {quizResult ? (
                   <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 flex flex-col items-center">
                     <img 
                       src={quizResult.image} 
                       alt={quizResult.title} 
-                      className="w-20 h-20 object-contain" 
+                      className="w-28 h-36 object-cover rounded-xl shadow-xs" 
                       referrerPolicy="no-referrer"
                     />
-                    <div>
-                      <span className="text-[10px] font-bold text-indigo-600 block uppercase">
-                        {quizResult.vendor} Official
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                        {quizResult.vendor}
                       </span>
-                      <h4 className="text-xs font-black text-slate-800">
+                      <h4 className="text-xs font-black text-slate-900 uppercase">
                         {quizResult.title}
                       </h4>
-                      <p className="text-[10px] text-slate-400 mt-1">
-                        Price: £{quizResult.price.toFixed(2)}
+                      <p className="text-xs font-black text-slate-900 font-mono">
+                        £{quizResult.price.toFixed(2)}
                       </p>
                     </div>
 
                     <button
                       onClick={handleAddQuizRecommendedToCart}
-                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold py-2 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      className="w-full bg-slate-950 hover:bg-slate-800 text-white font-black py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer uppercase tracking-wider"
                     >
                       <ShoppingCart className="h-3.5 w-3.5" />
-                      <span>Add Match to Basket</span>
+                      <span>Add Match to Bag</span>
                     </button>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-500 italic">
-                    We couldn't locate a precise model match. Browse our standard list for best offers!
-                  </p>
+                  <p className="text-xs text-slate-500">Explore the full catalog to find your tailored piece.</p>
                 )}
-
-                <button
-                  onClick={() => setQuizStep(1)}
-                  className="text-xs text-slate-500 hover:text-slate-800 font-bold transition-colors cursor-pointer"
-                >
-                  Restart Quiz
-                </button>
               </div>
             )}
 

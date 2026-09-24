@@ -429,7 +429,7 @@ export default function CollectionDetailView({
               {collection.title}
             </h1>
             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-sans">
-              {collection.description || 'Discover our hand-picked portfolio of the finest crystal-freeze cans and refreshing pouch formulas available.'}
+              {collection.description || 'Discover our curated selection of luxury garments, minimalist tailoring, and timeless capsule silhouettes.'}
             </p>
             <div className="text-[10px] text-slate-400 font-extrabold uppercase bg-white/5 py-1 px-3 rounded-md w-fit">
               {collectionProducts.length} matching item{collectionProducts.length !== 1 ? 's' : ''}
@@ -483,10 +483,10 @@ export default function CollectionDetailView({
               </div>
             </div>
 
-            {/* 2. NICOTINE CONTENT CHECKBOX LIST */}
+            {/* 2. SPEC CHECKBOX LIST */}
             <div className="space-y-2.5 pt-4 border-t border-slate-100">
               <div className="flex items-center gap-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                <span>Nicotine content</span>
+                <span>Fabric Weight & Spec</span>
               </div>
               <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                 {filterOptionsAndCounts.nicotines.map(nic => {
@@ -639,7 +639,7 @@ export default function CollectionDetailView({
                   // Generate custom tags dynamic pairings to match exact design language
                   const subTags = (prod.tags || []).slice(0, 2).map(t => t.charAt(0).toUpperCase() + t.slice(1));
                   if (subTags.length === 0) {
-                    subTags.push(prod.category || 'Pouch');
+                    subTags.push(prod.category || 'Garment');
                     subTags.push('Official');
                   } else if (subTags.length === 1) {
                     subTags.push('Premium Blend');
@@ -687,7 +687,7 @@ export default function CollectionDetailView({
                         <Heart className={`h-4 w-4 ${inWishlist ? 'fill-red-500 text-red-500' : ''}`} />
                       </button>
 
-                      {/* CANISTER IMAGE SECTION */}
+                      {/* PRODUCT IMAGE SECTION */}
                       <div 
                         onClick={() => {
                           try {
@@ -738,7 +738,7 @@ export default function CollectionDetailView({
                           {/* Brand & Title */}
                           <div>
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
-                              {prod.vendor || 'Pouch'} Official
+                              {prod.vendor || 'Atelier'} Official
                             </span>
                             <h3 
                               onClick={() => {

@@ -41,44 +41,26 @@ import {
 } from './utils/klaviyo';
 
 const ALLOWED_BRANDS = [
-  '77',
-  'clew',
-  'cuba',
-  'maggie',
-  'nordic spirit',
-  'xqs',
-  'zyn',
-  'pablo',
-  'killa',
-  'fumi',
-  'velo',
-  'white fox',
-  'snu'
+  'Atelier',
+  'Essentials',
+  'Studio',
+  'Knitwear',
+  'Footwear',
+  'Nordic Studio',
+  'European Workshop',
+  'Heritage Atelier',
+  'Florence Atelier'
 ];
 
 export const mapVendorToAllowedBrand = (vendor: string | undefined): string => {
-  if (!vendor) return '77';
+  if (!vendor) return 'Atelier';
   const vLower = vendor.trim().toLowerCase();
-  if (vLower === '77 pouches' || vLower === '77pouches' || vLower === '77') return '77';
-  if (vLower === 'clew' || vLower === 'clew white') return 'clew';
-  if (vLower === 'cuba' || vLower === 'cuba power') return 'cuba';
-  if (vLower === 'maggie') return 'maggie';
-  if (vLower === 'nordic spirit' || vLower === 'nordic_spirit' || vLower === 'nordic') return 'nordic spirit';
-  if (vLower === 'xqs') return 'xqs';
-  if (vLower === 'zyn') return 'zyn';
-  if (vLower === 'pablo') return 'pablo';
-  if (vLower === 'killa' || vLower === 'killa siberian') return 'killa';
-  if (vLower === 'fumi') return 'fumi';
-  if (vLower === 'velo' || vLower === 'velo eucalyptus') return 'velo';
-  if (vLower === 'white fox' || vLower === 'whitefox') return 'white fox';
-  if (vLower === 'snu') return 'snu';
-
   for (const b of ALLOWED_BRANDS) {
-    if (vLower.includes(b.toLowerCase()) || b.toLowerCase().includes(vLower)) {
+    if (vLower === b.toLowerCase() || vLower.includes(b.toLowerCase()) || b.toLowerCase().includes(vLower)) {
       return b;
     }
   }
-  return '77';
+  return vendor.trim() || 'Atelier';
 };
 
 export default function App() {
@@ -185,19 +167,19 @@ export default function App() {
 
   const [layoutSettings, setLayoutSettings] = useState<LayoutSettings>(() => {
     return safeLoadFromLocalStorage<LayoutSettings>('ps_layout_settings', {
-      headerLogoText: 'Pouch Supply',
-      headerLogoSubtext: 'Premium Nicotine',
+      headerLogoText: 'ATELIER',
+      headerLogoSubtext: 'STUDIO & ESSENTIALS',
       headerLogoImage: '',
-      footerLogoText: 'POUCH SUPPLY',
-      footerLogoDescription: 'Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.',
+      footerLogoText: 'ATELIER',
+      footerLogoDescription: 'Contemporary luxury fashion house and wardrobe capsules crafted from organic textiles and sustainable materials in European ateliers.',
       footerLogoImage: '',
       klaviyoPublicKey: '',
       menuItems: [
         { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
-        { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
-        { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
-        { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
-        { id: '5', label: 'About', tab: 'about', type: 'tab' },
+        { id: '2', label: 'Shop Collection', tab: 'frontend-shop', type: 'tab' },
+        { id: '3', label: 'Curated Capsule', tab: 'frontend-subscribe', type: 'tab' },
+        { id: '4', label: 'Ateliers', tab: 'frontend-brands', type: 'tab' },
+        { id: '5', label: 'Editorial Journal', tab: 'blogs', type: 'tab' },
       ]
     });
   });
@@ -1091,7 +1073,7 @@ export default function App() {
         {
           status: 'Sender dispatching item',
           date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          location: 'Pouch Supply Hub, London MC',
+          location: 'Atelier Fulfillment Hub, London',
           description: 'We have received sender advice. Royal Mail is awaiting receipt of the physical package.'
         }
       ]
@@ -1099,7 +1081,7 @@ export default function App() {
 
     setOrders(prev => [newOrder, ...prev]);
 
-    // Send Simulated Outbound Emails to Customer and scott@pouch-supply.com
+    // Send Simulated Outbound Emails to Customer and concierge@atelier-studio.com
     const itemsHtml = paymentDetails.items.map(item => `
       <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
         <span style="color: #334155; font-weight: 600;">${item.productTitle} &times; ${item.quantity}</span>
@@ -1109,22 +1091,22 @@ export default function App() {
 
     const emailHtml = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 550px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); color: #334155;">
-        <div style="background-color: #0284c7; padding: 25px 20px; text-align: center;">
-          <span style="font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">ROYAL MAIL TRACK & TRACE</span>
-          <div style="font-size: 10px; font-weight: bold; color: #e0f2fe; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">Pouch Supply Order Confirmation Advice</div>
+        <div style="background-color: #0f172a; padding: 25px 20px; text-align: center;">
+          <span style="font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">ATELIER DISPATCH ADVICE</span>
+          <div style="font-size: 10px; font-weight: bold; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">Atelier Studio Order Confirmation Advice</div>
         </div>
         
         <div style="padding: 24px; text-align: left;">
           <p style="font-size: 14px; font-weight: bold; color: #0f172a; margin-top: 0;">Dear ${paymentDetails.customerName || 'Customer'},</p>
           <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
-            Thank you for shopping with <strong>Pouch Supply</strong>. Your order has been securely processed via <strong>Razorpay Secure Gateway</strong> and is preparing for immediate delivery partner handoff.
+            Thank you for shopping with <strong>Atelier Studio</strong>. Your garment order has been securely processed via <strong>Razorpay Secure Gateway</strong> and is preparing for immediate delivery partner handoff.
           </p>
 
           <!-- Royal Mail Tracking Box -->
-          <div style="background-color: #f0f9ff; border: 1px solid #e0f2fe; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #bae6fd; padding-bottom: 8px;">
-              <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #0284c7; letter-spacing: 0.5px;">Delivery Partner Integration</span>
-              <span style="font-size: 10px; font-weight: bold; color: #0369a1; background-color: #bae6fd; padding: 2px 8px; border-radius: 4px;">ROYAL MAIL TRACKED</span>
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+              <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #0f172a; letter-spacing: 0.5px;">Delivery Partner Integration</span>
+              <span style="font-size: 10px; font-weight: bold; color: #0f172a; background-color: #e2e8f0; padding: 2px 8px; border-radius: 4px;">ROYAL MAIL TRACKED</span>
             </div>
             
             <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
@@ -1134,7 +1116,7 @@ export default function App() {
               </tr>
               <tr>
                 <td style="color: #64748b; padding: 4px 0;">Tracking reference number:</td>
-                <td style="font-family: monospace; font-weight: 900; color: #0284c7; text-align: right; padding: 4px 0; font-size: 13px; letter-spacing: 0.5px;">${generatedTrackingId}</td>
+                <td style="font-family: monospace; font-weight: 900; color: #0f172a; text-align: right; padding: 4px 0; font-size: 13px; letter-spacing: 0.5px;">${generatedTrackingId}</td>
               </tr>
               <tr>
                 <td style="color: #64748b; padding: 4px 0;">Parcel Status:</td>
@@ -1143,7 +1125,7 @@ export default function App() {
             </table>
 
             <div style="margin-top: 15px; text-align: center;">
-              <span style="display: inline-block; background-color: #0284c7; color: #ffffff; font-size: 11px; font-weight: bold; text-transform: uppercase; padding: 10px 20px; border-radius: 8px; letter-spacing: 1px;">
+              <span style="display: inline-block; background-color: #0f172a; color: #ffffff; font-size: 11px; font-weight: bold; text-transform: uppercase; padding: 10px 20px; border-radius: 8px; letter-spacing: 1px;">
                 Royal Mail Tracked 24
               </span>
             </div>
@@ -1169,27 +1151,27 @@ export default function App() {
           </div>
 
           <p style="font-size: 11.5px; color: #64748b; line-height: 1.5; margin-bottom: 0;">
-            If you have any questions, please contact our helpline or reach us directly at <a href="mailto:scott@pouch-supply.com" style="color: #dc2626; font-weight: bold; text-decoration: none;">scott@pouch-supply.com</a>.
+            If you have any questions, please contact our helpline or reach us directly at <a href="mailto:concierge@atelier-studio.com" style="color: #0f172a; font-weight: bold; text-decoration: none;">concierge@atelier-studio.com</a>.
           </p>
         </div>
         
         <div style="background-color: #f8fafc; padding: 15px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8;">
-          Thank you for choosing Pouch Supply UK Ltd.
+          Thank you for choosing Atelier Studio London Ltd.
         </div>
       </div>
     `;
 
     const customerEmailObj = {
       to: paymentDetails.customerEmail,
-      subject: `Your Pouch Supply Order Despatch Advice [Royal Mail: ${generatedTrackingId}]`,
+      subject: `Your Atelier Studio Order Despatch Advice [Royal Mail: ${generatedTrackingId}]`,
       preview: `Your order #${paymentDetails.orderId} is being prepared. Royal Mail tracking reference: ${generatedTrackingId}.`,
       body: emailHtml,
       date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     const adminEmailObj = {
-      to: 'scott@pouch-supply.com',
-      subject: `[Copy] Pouch Supply Order Dispatch Reference #${paymentDetails.orderId} [Royal Mail: ${generatedTrackingId}]`,
+      to: 'concierge@atelier-studio.com',
+      subject: `[Copy] Atelier Studio Order Dispatch Reference #${paymentDetails.orderId} [Royal Mail: ${generatedTrackingId}]`,
       preview: `Dispatched notification for customer ${paymentDetails.customerName} (${paymentDetails.customerEmail}) with RM ID: ${generatedTrackingId}.`,
       body: emailHtml,
       date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -1424,16 +1406,16 @@ export default function App() {
       <div className="min-h-screen bg-[#f6f6f7] flex flex-col items-center justify-center p-6" id="app-loading-state">
         <div className="space-y-4 max-w-md w-full text-center flex flex-col items-center">
           {/* Elegant spinning logo indicator */}
-          <div className="w-12 h-12 bg-gradient-to-tr from-[#008060] to-[#00a880] rounded-xl flex items-center justify-center shadow-md animate-bounce mb-2">
-            <div className="w-5 h-5 border-2 border-white rounded-md"></div>
+          <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-md animate-pulse mb-2">
+            <div className="w-5 h-5 border-2 border-white rounded-sm"></div>
           </div>
-          <h2 className="font-extrabold text-[#1a1c1d] tracking-tight text-lg leading-none">Pouch Supply</h2>
-          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest font-mono">Initializing Premium Catalog...</p>
+          <h2 className="font-extrabold text-slate-950 tracking-widest text-lg uppercase">ATELIER STUDIO</h2>
+          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest font-mono">Loading Wardrobe Catalog...</p>
           <div className="h-0.5 w-24 bg-slate-200 rounded-full overflow-hidden relative">
-            <div className="absolute top-0 left-0 bottom-0 bg-[#008060] rounded-full animate-[shimmer_1.5s_infinite]" style={{ width: '60%' }}></div>
+            <div className="absolute top-0 left-0 bottom-0 bg-slate-900 rounded-full animate-[shimmer_1.5s_infinite]" style={{ width: '60%' }}></div>
           </div>
           <p className="text-[10.5px] text-slate-500 font-medium leading-relaxed max-w-xs">
-            Preparing Swedish premium nicotine canister catalogs and live inventories...
+            Preparing curated contemporary collections, capsule lines, and atelier inventories...
           </p>
         </div>
       </div>
@@ -1609,60 +1591,64 @@ export default function App() {
                 <div className="space-y-6 pb-6">
                   
                   {/* Hero section */}
-                  <section className="bg-slate-900 text-white min-h-[40vh] flex items-center relative overflow-hidden px-6 lg:px-12 py-8">
+                  <section className="bg-slate-950 text-white min-h-[45vh] flex items-center relative overflow-hidden px-6 lg:px-12 py-12">
                     <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
                       <div className="space-y-6">
-                        <span className="text-xs bg-indigo-600 text-white font-extrabold py-1 px-3.5 rounded-full uppercase tracking-widest inline-flex items-center gap-1.5 animate-pulse">
-                          <Sparkles className="h-3 w-3" /> OFFICIAL IMPORT RESELLERS
+                        <span className="text-[10px] bg-white/10 text-slate-200 border border-white/15 font-black py-1 px-3.5 rounded-full uppercase tracking-widest inline-flex items-center gap-1.5">
+                          <Sparkles className="h-3 w-3" /> AUTUMN / WINTER CAPSULE
                         </span>
-                        <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none text-white">
-                          THE FINEST FLAVOR <br />POUCHES AT SCALE
+                        <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none text-white uppercase font-serif">
+                          ARCHITECTURAL <br />LUXURY & MINIMALISM
                         </h1>
                         <p className="text-sm text-slate-300 leading-relaxed max-w-md font-sans">
-                          Sourced globally from premium certified laboratories. Settle for nothing but the crispest breath freeze crystal cans delivered straight to your door step.
+                          Thoughtfully tailored essentials, heavy double-faced wool, and 450gsm organic cotton staples crafted in European artisanal workshops.
                         </p>
                         
                         <div className="pt-2 flex flex-wrap gap-4 text-xs font-bold leading-normal">
                           <button
                             onClick={() => navigateToTab('frontend-shop')}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 px-8 rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                            className="bg-white hover:bg-slate-100 text-slate-950 py-3.5 px-8 rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer uppercase font-black tracking-widest text-[10px]"
                           >
-                            Shop Now (All Brands) <ArrowRight className="h-4 w-4" />
+                            Shop Collection <ArrowRight className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => navigateToTab('frontend-subscribe')}
-                            className="bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 py-3.5 px-8 rounded-xl cursor-pointer"
+                            className="bg-white/10 text-white border border-white/20 hover:bg-white/20 py-3.5 px-8 rounded-xl cursor-pointer uppercase font-black tracking-widest text-[10px]"
                           >
-                            Subscription Box 📦
+                            Capsule Wardrobe
                           </button>
                         </div>
                       </div>
 
                       <div className="hidden md:flex justify-end relative">
-                        <div className="relative h-72 w-72 rounded-full bg-indigo-500/10 flex items-center justify-center p-6 border border-slate-800/80 shadow-2xl animate-spin-slow">
-                          <span className="text-6xl">📦</span>
-                          <div className="absolute inset-0 border-2 border-dashed border-indigo-500/20 rounded-full" />
+                        <div className="relative h-72 w-72 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+                          <img
+                            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80"
+                            alt="Atelier Capsule"
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
                         </div>
                       </div>
                     </div>
 
                     {/* Aesthetic Background design */}
-                    <div className="absolute inset-0 bg-radial-gradient from-indigo-950/20 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-radial-gradient from-slate-900/50 to-transparent pointer-events-none" />
                   </section>
 
                   {/* Popular Brands Row */}
                   <section className="max-w-7xl mx-auto px-6">
                     <div className="text-center mb-8">
-                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Our Premium Partner directory</h3>
+                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Our Artisanal Mills & Ateliers</h3>
                     </div>
                     <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-75">
-                      {['77', 'clew', 'cuba', 'maggie', 'nordic spirit', 'xqs', 'zyn', 'pablo', 'killa', 'fumi', 'velo', 'white fox', 'snu'].map((bLabel, index) => (
+                      {['Atelier Studio', 'Nordic Workshop', 'Porto Textile Mill', 'Heritage Knitwear', 'Florence Atelier'].map((bLabel, index) => (
                         <span 
                           key={index} 
                           onClick={() => {
                             navigateToTab('frontend-brands');
                           }}
-                          className="text-sm font-black tracking-widest text-slate-500 hover:text-indigo-600 cursor-pointer capitalize transition-colors border-b border-transparent hover:border-indigo-650 pb-1"
+                          className="text-xs font-black tracking-widest text-slate-600 hover:text-slate-950 cursor-pointer uppercase transition-colors border-b border-transparent hover:border-slate-950 pb-1"
                         >
                           {bLabel}
                         </span>
@@ -1673,36 +1659,36 @@ export default function App() {
                   {/* Welcome Highlights */}
                   <section className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                     <img
-                      src="/placeholder.png"
-                      alt="Canisters"
+                      src="https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80"
+                      alt="Garments"
                       className="rounded-2xl shadow-md border object-cover h-80 w-full"
                       referrerPolicy="no-referrer"
                     />
                     <div className="space-y-4">
-                      <span className="text-xs text-indigo-650 font-bold uppercase tracking-wider">High performance Can packaging</span>
-                      <h2 className="text-2xl font-black text-slate-900">Custom Subscription Box: Curate your customized flavor bundle saving 15%</h2>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Sustainable Luxury Production</span>
+                      <h2 className="text-2xl font-black text-slate-900 font-serif">Curated Capsule Subscription: Bespoke seasonal wardrobe deliveries</h2>
                       <p className="text-slate-500 leading-normal text-xs">
-                        No more constant ordering pipelines. Set up your bespoke recurring deliveries of 6 cans, tweak frequencies automatically, cancel or edit anything from your user account.
+                        Simplify getting dressed every morning with expertly coordinated modular capsule wardrobe drops delivered once per season.
                       </p>
                       <button
                         onClick={() => navigateToTab('frontend-subscribe')}
-                        className="text-xs text-indigo-600 hover:text-indigo-805 font-bold flex items-center gap-1 cursor-pointer pt-2"
+                        className="text-xs text-slate-950 hover:text-black font-bold flex items-center gap-1 cursor-pointer pt-2 uppercase tracking-wider"
                       >
-                        Configure LITE plan boxes <ArrowRight className="h-4 w-4" />
+                        Explore Capsule Plans <ArrowRight className="h-4 w-4" />
                       </button>
                     </div>
                   </section>
 
-                  {/* Top Seller canisters */}
+                  {/* Top Seller garments */}
                   <section className="max-w-7xl mx-auto px-6">
                     <div className="flex justify-between items-end mb-8">
                       <div>
-                        <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider">curated picks</h4>
-                        <h2 className="text-2xl font-black text-slate-900 mt-1">BEST SELLING CANISTERS TODAY</h2>
+                        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Curated Picks</h4>
+                        <h2 className="text-2xl font-black text-slate-900 mt-1 uppercase font-serif">Trending Studio Pieces</h2>
                       </div>
                       <button
                         onClick={() => navigateToTab('frontend-shop')}
-                        className="text-xs text-indigo-600 hover:text-indigo-800 font-extrabold cursor-pointer"
+                        className="text-xs text-slate-900 hover:text-black font-extrabold cursor-pointer uppercase tracking-wider"
                       >
                         Browse full catalog →
                       </button>
@@ -1717,13 +1703,13 @@ export default function App() {
                           }}
                           className="bg-white border hover:border-slate-350 p-4 rounded-xl space-y-3 cursor-pointer group hover:shadow-xs transition-shadow"
                         >
-                          <div className="h-44 rounded-lg bg-white overflow-hidden relative flex items-center justify-center p-2">
-                            <img src={prod.image} className="w-full h-full object-contain transition-transform group-hover:scale-105" alt="" referrerPolicy="no-referrer" />
+                          <div className="h-64 rounded-lg bg-slate-50 overflow-hidden relative flex items-center justify-center">
+                            <img src={prod.image} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="" referrerPolicy="no-referrer" />
                             <span className="absolute top-2.5 left-2.5 bg-slate-900 text-white text-[9px] font-bold uppercase py-0.5 px-2 rounded-full">
                               {prod.vendor}
                             </span>
                           </div>
-                          <div className="space-y-1 text-center">
+                          <div className="space-y-1 text-left">
                             <h4 className="text-xs font-bold text-slate-800 truncate">{prod.title}</h4>
                             <p className="text-slate-900 font-black text-xs">£{prod.price.toFixed(2)}</p>
                           </div>
@@ -1784,14 +1770,14 @@ export default function App() {
                       <span className="text-[10px] bg-red-100 text-red-700 font-extrabold py-1 px-3 rounded-full uppercase tracking-widest inline-block">
                         Error 404 - Product Not Found
                       </span>
-                      <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Canister Not Found</h1>
+                      <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Product Not Found</h1>
                     </div>
                     <p className="text-slate-500 max-w-sm mx-auto text-xs leading-relaxed">
-                      We couldn't locate the premium nicotine canister you requested. It might have been unlisted, archived, or deleted.
+                      We couldn't locate the garment or accessory you requested. It might have been unlisted, archived, or deleted.
                     </p>
                     <button
                       onClick={() => navigateToTab('frontend-shop')}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 px-8 rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-xs"
+                      className="bg-slate-950 hover:bg-black text-white font-black py-3 px-8 rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-xs"
                     >
                       Back to Catalog
                     </button>
@@ -2030,11 +2016,11 @@ export default function App() {
                     <div className="absolute inset-0 opacity-15 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-slate-200 via-slate-900 to-black pointer-events-none" />
                     <div className="max-w-6xl mx-auto space-y-4 relative z-10 text-center sm:text-left">
                       <span className="text-[10px] bg-slate-800 text-slate-300 font-extrabold uppercase tracking-widest py-1.5 px-3 rounded-full border border-slate-700">
-                        Editorial & Education
+                        Editorial & Notes
                       </span>
-                      <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight">The Pouch Science Journal</h1>
+                      <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight font-serif">The Atelier Journal</h1>
                       <p className="text-slate-400 max-w-lg text-xs sm:text-sm leading-relaxed">
-                        Fascinating breakdowns, organic chemistry, clinical guides, and strategic brand reviews compiled by industry clinicians.
+                        Style essays, seasonal capsule guides, fabric craftsmanship, and styling notes compiled by creative directors.
                       </p>
                     </div>
                   </div>
@@ -2121,7 +2107,7 @@ export default function App() {
                                 {featuredBlog.author ? featuredBlog.author.charAt(0) : 'A'}
                               </div>
                               <div>
-                                <h5 className="text-[11px] font-black text-slate-800">{featuredBlog.author || 'Pouch Science'}</h5>
+                                <h5 className="text-[11px] font-black text-slate-800">{featuredBlog.author || 'Atelier Editorial'}</h5>
                                 <p className="text-[9px] text-slate-400">{featuredBlog.readTime || '5 min read'}</p>
                               </div>
                             </div>
@@ -2154,7 +2140,7 @@ export default function App() {
                         <div className="bg-white border rounded-2xl py-8 px-4 text-center space-y-4">
                           <span className="text-5xl block">🗒️</span>
                           <h4 className="font-bold text-slate-800 text-sm">No Publications Match Filter Criteria</h4>
-                          <p className="text-slate-400 text-xs max-w-sm mx-auto">Try resetting categories or typing a different keyword to browse our research pouch index.</p>
+                          <p className="text-slate-400 text-xs max-w-sm mx-auto">Try resetting categories or typing a different keyword to browse our editorial articles.</p>
                           <button
                             onClick={() => {
                               setFrontendBlogQuery('');
@@ -2375,7 +2361,7 @@ export default function App() {
                     {otherArticles.length > 0 && (
                       <div className="mt-14 space-y-6">
                         <div className="border-b pb-3 flex justify-between items-center text-left">
-                          <h3 className="text-xs text-slate-500 font-black uppercase tracking-widest">More From Pouch Journal</h3>
+                          <h3 className="text-xs text-slate-500 font-black uppercase tracking-widest">More From Atelier Journal</h3>
                           <button onClick={() => navigateToTab('blogs')} className="text-[10px] text-slate-800 font-black uppercase hover:underline">View All</button>
                         </div>
 
@@ -2449,7 +2435,7 @@ export default function App() {
                     onClick={() => navigateToTab('frontend-shop')}
                     className="bg-white border hover:bg-slate-50 text-slate-700 font-extrabold py-3 px-6 rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer"
                   >
-                    Shop Canisters
+                    Explore Collection
                   </button>
                 </div>
               </div>

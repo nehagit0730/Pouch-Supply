@@ -22,16 +22,16 @@ export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'Image with text', label: 'Image with Text', desc: 'Beautifully-aligned structural image with side description', icon: 'Columns' },
   { type: 'Text column with image', label: 'Text Column with Image', desc: 'Three-column display grid showing core brand standards', icon: 'Grid' },
   { type: 'Featured collection', label: 'Featured Collection', desc: 'Interactive storefront product card grid with live data', icon: 'ShoppingBag' },
-  { type: 'Collection list', label: 'Collection List', desc: 'Display all available categorized nicotine canister series', icon: 'FolderHeart' },
+  { type: 'Collection list', label: 'Collection List', desc: 'Display all seasonal ready-to-wear collections and capsules', icon: 'FolderHeart' },
   { type: 'Slideshow', label: 'Slideshow', desc: 'Smooth horizontal multi-slide sliding carousel banner', icon: 'PlaySquare' },
-  { type: 'Video banner', label: 'Video Banner', desc: 'Cinematic YouTube player showcasing laboratory workflows', icon: 'Video' },
+  { type: 'Video banner', label: 'Video Banner', desc: 'Cinematic video player showcasing runway and tailoring craftsmanship', icon: 'Video' },
   { type: 'Rich text', label: 'Rich Text', desc: 'Focussed header with spacious text for brand newsletters', icon: 'FileText' },
   { type: 'Marquee text', label: 'Marquee Text', desc: 'Fast, animated horizontal news marquee with key notices', icon: 'Sparkles' },
-  { type: 'Marquee images', label: 'Marquee Images', desc: 'Dynamic ticker reel demonstrating recently stocked canisters', icon: 'Layers' },
-  { type: 'Logo list', label: 'Logo List', desc: 'Official partnered distributors and reseller banners', icon: 'Award' },
-  { type: 'Images gallery', label: 'Images Gallery', desc: 'Scenic four-column gallery of clean compounding rooms', icon: 'Layout' },
-  { type: 'FAQs', label: 'FAQs', desc: 'Collapsible answered support questions', icon: 'HelpCircle' },
-  { type: 'Blog post', label: 'Blog Post', desc: 'Display a beautiful list/grid of live Pouch Journal articles with columns control', icon: 'BookOpen' },
+  { type: 'Marquee images', label: 'Marquee Images', desc: 'Dynamic ticker reel highlighting recent arrivals and lookbooks', icon: 'Layers' },
+  { type: 'Logo list', label: 'Logo List', desc: 'Partnered design houses and textile suppliers', icon: 'Award' },
+  { type: 'Images gallery', label: 'Images Gallery', desc: 'Scenic gallery of tailoring ateliers and fabric archives', icon: 'Layout' },
+  { type: 'FAQs', label: 'FAQs', desc: 'Collapsible answered customer care questions', icon: 'HelpCircle' },
+  { type: 'Blog post', label: 'Blog Post', desc: 'Display a curated grid of fashion editorial and style journal articles with columns control', icon: 'BookOpen' },
   { type: 'Brand list', label: 'Brand List', desc: 'Scenic brand logo matrix with interactive links to collections', icon: 'LayoutGrid' },
   { type: 'Icon with text', label: 'Icon with Text', desc: 'Six-item feature display grid with customizable icons and colors', icon: 'Sparkles' },
   { type: 'Brands we offer', label: 'Brands we offer', desc: 'Infinite running marquee of brand logo images with live upload option', icon: 'Layers' },
@@ -353,11 +353,11 @@ function HowItWorksSectionAdmin({ sec }: HowItWorksSectionAdminProps) {
         <div className="w-full h-32 relative my-4 flex items-center justify-center">
           <div className="w-36 h-20 bg-[#0C1017] rounded-xl border border-slate-800 shadow-md relative overflow-hidden flex flex-col justify-between p-2 select-none">
             <div className="mt-1 space-y-0.5 text-left">
-              <span className="block text-[8px] font-black tracking-[0.12em] text-[#D4AF37] leading-none">POUCH</span>
-              <span className="block text-[8px] font-black tracking-[0.12em] text-[#D4AF37] leading-none">SUPPLY</span>
+              <span className="block text-[8px] font-black tracking-[0.12em] text-[#D4AF37] leading-none">ATELIER</span>
+              <span className="block text-[8px] font-black tracking-[0.12em] text-[#D4AF37] leading-none">STUDIO</span>
             </div>
             <div className="border-t border-slate-800/65 pt-1 flex items-center justify-between">
-              <span className="text-[3px] font-bold text-slate-450 uppercase tracking-[0.18em]">NICOTINE ON AUTOPILOT</span>
+              <span className="text-[3px] font-bold text-slate-450 uppercase tracking-[0.18em]">LUXURY READY-TO-WEAR</span>
             </div>
           </div>
         </div>
@@ -776,11 +776,11 @@ export default function AdminDashboard({
 
   const [localLayoutSettings, setLocalLayoutSettings] = useState<LayoutSettings>(() => {
     return layoutSettings || {
-      headerLogoText: 'Pouch Supply',
-      headerLogoSubtext: 'Premium Nicotine',
+      headerLogoText: 'Atelier Studio',
+      headerLogoSubtext: 'Ready-To-Wear',
       headerLogoImage: '',
-      footerLogoText: 'POUCH SUPPLY',
-      footerLogoDescription: 'Leading premium directory for tobacco-free nicotine slim white canisters. Sourced directly from partners across Sweden, Poland, and Germany.',
+      footerLogoText: 'ATELIER STUDIO',
+      footerLogoDescription: 'Contemporary fashion house dedicated to premium craftsmanship, bespoke tailoring, and timeless capsule wardrobes. Hand-finished garments delivered worldwide.',
       footerLogoImage: '',
       klaviyoPublicKey: '',
       menuItems: [
@@ -1421,7 +1421,7 @@ export default function AdminDashboard({
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(products, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `pouch_supply_products_backup_${Date.now()}.json`);
+      downloadAnchor.setAttribute("download", `atelier_studio_products_backup_${Date.now()}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -1484,7 +1484,7 @@ export default function AdminDashboard({
               const compareAtPrice = rowObj.compareatprice ? parseFloat(rowObj.compareatprice) : undefined;
               const inventory = parseInt(rowObj.inventory, 10) || 100;
               const sku = rowObj.sku || `SKU-${id.toUpperCase()}`;
-              const category = rowObj.category || "Nicotine Pouches";
+              const category = rowObj.category || "Clothing";
               const vendor = rowObj.vendor || "Premium Brand";
               const status = (rowObj.status && ['Active', 'Draft'].includes(rowObj.status)) ? rowObj.status : 'Active';
               const image = rowObj.image || "/placeholder.png";
@@ -1553,7 +1553,7 @@ export default function AdminDashboard({
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collections, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `pouch_supply_collections_backup_${Date.now()}.json`);
+      downloadAnchor.setAttribute("download", `atelier_studio_collections_backup_${Date.now()}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -1608,7 +1608,7 @@ export default function AdminDashboard({
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(customPages, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `pouch_supply_pages_backup_${Date.now()}.json`);
+      downloadAnchor.setAttribute("download", `atelier_studio_pages_backup_${Date.now()}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -1663,7 +1663,7 @@ export default function AdminDashboard({
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(orders, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `pouch_supply_orders_backup_${Date.now()}.json`);
+      downloadAnchor.setAttribute("download", `atelier_studio_orders_backup_${Date.now()}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -1718,7 +1718,7 @@ export default function AdminDashboard({
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(customers, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `pouch_supply_customers_backup_${Date.now()}.json`);
+      downloadAnchor.setAttribute("download", `atelier_studio_customers_backup_${Date.now()}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -1773,7 +1773,7 @@ export default function AdminDashboard({
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(discounts, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `pouch_supply_discounts_backup_${Date.now()}.json`);
+      downloadAnchor.setAttribute("download", `atelier_studio_discounts_backup_${Date.now()}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -1828,7 +1828,7 @@ export default function AdminDashboard({
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(blogs, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `pouch_supply_blogs_backup_${Date.now()}.json`);
+      downloadAnchor.setAttribute("download", `atelier_studio_blogs_backup_${Date.now()}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -1883,7 +1883,7 @@ export default function AdminDashboard({
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localFiles, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `pouch_supply_files_backup_${Date.now()}.json`);
+      downloadAnchor.setAttribute("download", `atelier_studio_files_backup_${Date.now()}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -5422,7 +5422,7 @@ export default function AdminDashboard({
                                     <div className="space-y-1.5 text-[9.5px]">
                                       {(sec.settings.faqItems || [
                                         { q: 'Is delivery fully tracked?', a: 'Yes, royal mail tracking lines generate instantly email alerts.' },
-                                        { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' }
+                                        { q: 'What materials are used?', a: 'Crafted exclusively from organic long-staple cotton, virgin wool, and sustainable fibers.' }
                                       ]).map((faq: any, fIdx: number) => {
                                         const isChosen = openPreviewFaqIndex === `${sec.id}-${fIdx}`;
                                         return (
@@ -5541,9 +5541,9 @@ export default function AdminDashboard({
                                       gridTemplateColumns: `repeat(${sec.settings.columnsDesktop || 3}, minmax(0, 1fr))`
                                     }}>
                                       {(blogs && blogs.length > 0 ? blogs.slice(0, sec.settings.columnsDesktop || 3) : [
-                                        { id: '1', title: 'Swedish Pouch Manufacturing Regulations', category: 'Standards', date: 'June 19, 2026', image: 'https://images.unsplash.com/photo-1543257580-7269da773bf5?auto=format&fit=crop&w=200&q=80' },
-                                        { id: '2', title: 'Why Sterile Medical Fiber is Better', category: 'Science', date: 'June 18, 2026', image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=200&q=80' },
-                                        { id: '3', title: 'Understanding Nicotine Salt Deliveries', category: 'Formulas', date: 'June 17, 2026', image: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=200&q=80' }
+                                        { id: '1', title: 'The Anatomy of 450GSM Organic Heavyweight Fleece', category: 'Materials', date: 'June 19, 2026', image: 'https://images.unsplash.com/photo-1543257580-7269da773bf5?auto=format&fit=crop&w=200&q=80' },
+                                        { id: '2', title: 'Why Hand-Cut Tailoring Outlasts Fast Trends', category: 'Craftsmanship', date: 'June 18, 2026', image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=200&q=80' },
+                                        { id: '3', title: 'Building an Enduring Capsule: 7 Core Silhouettes', category: 'Wardrobe', date: 'June 17, 2026', image: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?auto=format&fit=crop&w=200&q=80' }
                                       ].slice(0, sec.settings.columnsDesktop || 3)).map((item, bidx) => (
                                         <div key={item.id || bidx} className="bg-white border rounded-lg p-2 flex flex-col justify-between shadow-xs text-left">
                                           {item.image && (
@@ -5748,9 +5748,9 @@ export default function AdminDashboard({
                                     }
                                     if (normIcon.includes('package') || normTitle.includes('never run out') || normTitle.includes('auto')) {
                                       return {
-                                        title: 'NEVER RUN OUT',
-                                        desc: 'Auto-refill systems lock in your favorite pouches at sub-retail price thresholds.',
-                                        benefits: ['Auto-refill', 'Priority stock', 'Price lock-in'],
+                                        title: 'ALWAYS PREPARED',
+                                        desc: 'Seasonal capsule members receive guaranteed access to limited production runs and priority reserve slots.',
+                                        benefits: ['Guaranteed sizing', 'Priority allocations', 'Complimentary tailoring'],
                                         iconName: 'Package'
                                       };
                                     }
@@ -5766,7 +5766,7 @@ export default function AdminDashboard({
                                     <div className="py-6 px-2 space-y-5 font-sans text-center bg-slate-50/50 rounded-2xl border border-slate-100">
                                       <div>
                                         <h3 className="text-sm font-extrabold uppercase tracking-tight text-[#071529]" style={{ color: sec.settings.headingColor || '#1E293B' }}>
-                                          {sec.settings.title || 'Why subscribe to Pouch Supply?'}
+                                          {sec.settings.title || 'Why subscribe to Atelier?'}
                                         </h3>
                                         {sec.settings.description && (
                                           <p className="text-[10px] text-slate-400 mt-0.5 max-w-md mx-auto leading-relaxed">{sec.settings.description}</p>
@@ -6436,7 +6436,7 @@ export default function AdminDashboard({
                                 <label className="block text-slate-400 font-bold uppercase text-[7.5px] mb-0.5">Description Paragraph</label>
                                 <textarea
                                   rows={3}
-                                  placeholder="Witness the clinical sterile compounding process behind our sub-zero cooling pouches."
+                                  placeholder="Witness the bespoke pattern-making and tailoring process behind our seasonal capsules."
                                   value={currentlyEditingSection.settings.description || ''}
                                   onChange={(e) => handleUpdateSectionSettings('description', e.target.value)}
                                   className="w-full text-xs border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650 resize-none leading-relaxed"
@@ -7120,8 +7120,8 @@ export default function AdminDashboard({
                                 onClick={() => {
                                   const list = currentlyEditingSection.settings.faqItems || [
                                     { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon dispatch.' },
-                                    { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' },
-                                    { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific interval. Pause or cancel anytime for free.' }
+                                    { q: 'What materials are used?', a: 'Crafted exclusively from organic long-staple cotton, virgin wool, and sustainable fibers.' },
+                                    { q: 'How do size exchanges work?', a: 'We offer complimentary pre-paid return slips for fast exchanges on all orders within 30 days.' }
                                   ];
                                   const updated = [...list, { q: 'New Question?', a: 'Enter answer text.' }];
                                   handleUpdateSectionSettings('faqItems', updated);
@@ -7135,8 +7135,8 @@ export default function AdminDashboard({
                             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
                               {(currentlyEditingSection.settings.faqItems || [
                                 { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon dispatch.' },
-                                { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' },
-                                { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific interval. Pause or cancel anytime for free.' }
+                                { q: 'What materials are used?', a: 'Crafted exclusively from organic long-staple cotton, virgin wool, and sustainable fibers.' },
+                                { q: 'How do size exchanges work?', a: 'We offer complimentary pre-paid return slips for fast exchanges on all orders within 30 days.' }
                               ]).map((item: any, idx: number) => (
                                 <div key={idx} className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg space-y-2 relative">
                                   <button
@@ -7144,8 +7144,8 @@ export default function AdminDashboard({
                                     onClick={() => {
                                       const defaultList = currentlyEditingSection.settings.faqItems || [
                                         { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon dispatch.' },
-                                        { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' },
-                                        { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific interval. Pause or cancel anytime for free.' }
+                                        { q: 'What materials are used?', a: 'Crafted exclusively from organic long-staple cotton, virgin wool, and sustainable fibers.' },
+                                        { q: 'How do size exchanges work?', a: 'We offer complimentary pre-paid return slips for fast exchanges on all orders within 30 days.' }
                                       ];
                                       const list = [...defaultList];
                                       list.splice(idx, 1);
@@ -7167,8 +7167,8 @@ export default function AdminDashboard({
                                       onChange={(e) => {
                                         const defaultList = currentlyEditingSection.settings.faqItems || [
                                           { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon dispatch.' },
-                                          { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' },
-                                          { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific interval. Pause or cancel anytime for free.' }
+                                          { q: 'What materials are used?', a: 'Crafted exclusively from organic long-staple cotton, virgin wool, and sustainable fibers.' },
+                                          { q: 'How do size exchanges work?', a: 'We offer complimentary pre-paid return slips for fast exchanges on all orders within 30 days.' }
                                         ];
                                         const list = [...defaultList];
                                         list[idx] = { ...list[idx], q: e.target.value };
@@ -7187,8 +7187,8 @@ export default function AdminDashboard({
                                       onChange={(e) => {
                                         const defaultList = currentlyEditingSection.settings.faqItems || [
                                           { q: 'Is delivery fully tracked?', a: 'Yes, all orders over shipping thresholds generate functional, real-time Royal Mail / European carrier tracking codes emailed instantly upon dispatch.' },
-                                          { q: 'Are these pouches tobacco-free?', a: 'Formulated completely on plant fiber with medical pure crystalline extract.' },
-                                          { q: 'How long do subscriptions repeat?', a: 'Your tailored canister bundles renew automatically at your specific interval. Pause or cancel anytime for free.' }
+                                          { q: 'What materials are used?', a: 'Crafted exclusively from organic long-staple cotton, virgin wool, and sustainable fibers.' },
+                                          { q: 'How do size exchanges work?', a: 'We offer complimentary pre-paid return slips for fast exchanges on all orders within 30 days.' }
                                         ];
                                         const list = [...defaultList];
                                         list[idx] = { ...list[idx], a: e.target.value };
@@ -7704,7 +7704,7 @@ export default function AdminDashboard({
                         id="file-form-alt"
                         type="text"
                         required
-                        placeholder="e.g. CLEW 5mg Minty canisters on display banner"
+                        placeholder="e.g. Atelier Heavyweight Wool Overcoat banner"
                         value={newFileForm.altText}
                         onChange={(e) => setNewFileForm({ ...newFileForm, altText: e.target.value })}
                         className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
@@ -8734,7 +8734,7 @@ export default function AdminDashboard({
                         <label className="block text-slate-500 font-bold text-[9px] uppercase tracking-wider mb-1">Tags</label>
                         <input
                           type="text"
-                          placeholder="e.g. Science, Organic, Pouch"
+                          placeholder="e.g. Tailoring, Organic Cotton, Outerwear"
                           value={tagsValue}
                           onChange={(e) => setTagsValue(e.target.value)}
                           className="w-full text-xs font-semibold border border-slate-200 p-2 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
@@ -8842,7 +8842,7 @@ export default function AdminDashboard({
                     value={localLayoutSettings.headerLogoText}
                     onChange={(e) => setLocalLayoutSettings({ ...localLayoutSettings, headerLogoText: e.target.value })}
                     className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    placeholder="e.g. Pouch Supply"
+                    placeholder="e.g. Atelier Studio"
                   />
                 </div>
 
@@ -8853,7 +8853,7 @@ export default function AdminDashboard({
                     value={localLayoutSettings.headerLogoSubtext}
                     onChange={(e) => setLocalLayoutSettings({ ...localLayoutSettings, headerLogoSubtext: e.target.value })}
                     className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    placeholder="e.g. Premium Nicotine"
+                    placeholder="e.g. Luxury Ready-To-Wear"
                   />
                 </div>
               </div>
@@ -8924,7 +8924,7 @@ export default function AdminDashboard({
                     value={localLayoutSettings.footerLogoText}
                     onChange={(e) => setLocalLayoutSettings({ ...localLayoutSettings, footerLogoText: e.target.value })}
                     className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    placeholder="e.g. POUCH SUPPLY"
+                    placeholder="e.g. ATELIER STUDIO"
                   />
                 </div>
 
@@ -9081,7 +9081,7 @@ export default function AdminDashboard({
                       required
                       value={newMenuItemLabel}
                       onChange={(e) => setNewMenuItemLabel(e.target.value)}
-                      placeholder="e.g. Swedish Pouches"
+                      placeholder="e.g. Autumn Capsule"
                       className="w-full text-xs font-semibold border border-slate-250 p-2 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
@@ -9126,7 +9126,7 @@ export default function AdminDashboard({
                           <option value="frontend-shop">Shop Now grid</option>
                           <option value="frontend-brands">All Sweden Brands</option>
                           <option value="about">About us info</option>
-                          <option value="blogs">Pouch Journal / Blogs</option>
+                          <option value="blogs">Fashion Journal / Editorial</option>
                         </optgroup>
                         {localPages.length > 0 && (
                           <optgroup label="Custom Builder Pages">

@@ -90,7 +90,7 @@ export function klaviyoTrackViewedProduct(product: Product) {
     'Price': product.price,
     'CompareAtPrice': product.compareAtPrice || product.price,
     'Vendor': product.vendor,
-    'CanisterStrength': product.strength || '',
+    'Material': product.tags?.[0] || 'Apparel',
     'InStock': product.inventory > 0
   });
 }

@@ -58,12 +58,12 @@ export async function getDb(): Promise<any | null> {
 
 // Global resource controllers that fetch from Neon Postgres or fallback to memory
 export async function fetchResource(resource: string): Promise<any[]> {
+  const resKey = resource.toLowerCase();
   try {
     const neonData = await fetchResourceFromNeon(resource);
-    if (neonData && Array.isArray(neonData)) {
-      // Clean up legacy pouch / cans branding if present in custom pages
+    if (neonData && Array.isArray(neonData) && neonData.length > 0) {
       let cleanedData = neonData;
-      if (resource.toLowerCase() === 'custompages') {
+      if (resKey === 'custompages') {
         const jsonStr = JSON.stringify(neonData)
           .replace(/Pouch Supply Storefront/gi, 'Modern Storefront')
           .replace(/Pouch Supply/gi, 'StoreFront')
@@ -74,10 +74,57 @@ export async function fetchResource(resource: string): Promise<any[]> {
           .replace(/FOR ANY ADDITIONAL CAN/gi, 'FOR ANY ADDITIONAL ITEM')
           .replace(/certified compounding premium brands/gi, 'certified premium brands');
         cleanedData = JSON.parse(jsonStr);
+
+        // Ensure homepage has full aesthetic clothing sections requested by user
+        const hpIdx = cleanedData.findIndex((p: any) => p.isHomepage || p.id === 'homepage' || p.slug === '');
+        const defaultHp = DEFAULT_PAGES.find(p => p.isHomepage) || DEFAULT_PAGES[0];
+        
+        let needsSave = false;
+        if (hpIdx === -1) {
+          cleanedData.unshift(defaultHp);
+          needsSave = true;
+        } else {
+          const hp = cleanedData[hpIdx];
+          // If homepage has legacy single section or outdated placeholder, upgrade with default aesthetic clothing sections
+          if (!hp.sections || hp.sections.length <= 1 || hp.sections.some((s: any) => s.settings?.title?.toLowerCase().includes('pouch supply') || s.settings?.title?.toLowerCase().includes('modern storefront'))) {
+            cleanedData[hpIdx] = {
+              ...hp,
+              sections: [...defaultHp.sections]
+            };
+            needsSave = true;
+          }
+        }
+
+        if (needsSave) {
+          saveResourceToNeon(resource, cleanedData).catch(() => {});
+        }
       }
+
       // Sync memory cache
       memoryCache[resource] = [...cleanedData];
       return cleanedData;
+    } else {
+      // If neonData is empty, fallback to initial aesthetic data and seed Neon
+      if (resKey === 'products' && INITIAL_PRODUCTS.length > 0) {
+        saveResourceToNeon(resource, INITIAL_PRODUCTS).catch(() => {});
+        memoryCache[resource] = [...INITIAL_PRODUCTS];
+        return INITIAL_PRODUCTS;
+      }
+      if (resKey === 'collections' && INITIAL_COLLECTIONS.length > 0) {
+        saveResourceToNeon(resource, INITIAL_COLLECTIONS).catch(() => {});
+        memoryCache[resource] = [...INITIAL_COLLECTIONS];
+        return INITIAL_COLLECTIONS;
+      }
+      if (resKey === 'custompages' && DEFAULT_PAGES.length > 0) {
+        saveResourceToNeon(resource, DEFAULT_PAGES).catch(() => {});
+        memoryCache[resource] = [...DEFAULT_PAGES];
+        return DEFAULT_PAGES;
+      }
+      if (resKey === 'blogs' && INITIAL_BLOGS.length > 0) {
+        saveResourceToNeon(resource, INITIAL_BLOGS).catch(() => {});
+        memoryCache[resource] = [...INITIAL_BLOGS];
+        return INITIAL_BLOGS;
+      }
     }
   } catch (error: any) {
     console.error(`[fetchResource] Error fetching "${resource}" from Neon Postgres:`, error);

@@ -67,8 +67,8 @@ export default function ProductEditor({
   const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
 
   // Preset vendors/categories for smart search options
-  const defaultVendors = ['77', 'clew', 'cuba', 'maggie', 'nordic spirit', 'xqs', 'zyn', 'pablo', 'killa', 'fumi', 'velo', 'white fox', 'snu'];
-  const defaultCategories = ['Clothing', 'Jwellery', 'Nicotine Pouches', 'Protein', 'Food'];
+  const defaultVendors = ['Atelier Studio', 'Nordic Atelier', 'European Workshop', 'Heritage Atelier', 'Florence Atelier'];
+  const defaultCategories = ['Outerwear', 'Knitwear', 'Tops & Shirts', 'Tailoring & Trousers', 'Accessories'];
 
   // Helper to generate combination names from option dimensions
   const generateCombinations = (options: ProductVariant[]): string[] => {
@@ -100,8 +100,8 @@ export default function ProductEditor({
       setInventory(product.inventory || 0);
       setSku(product.sku || '');
       setBarcode(product.barcode || '');
-      setCategory(product.category || 'Nicotine Pouches');
-      setVendor(product.vendor || '77');
+      setCategory(product.category || 'Outerwear');
+      setVendor(product.vendor || 'Atelier Studio');
       setStatus(product.status || 'Active');
       setWeight(product.weight || 0);
       setWeightUnit(product.weightUnit || 'g');
@@ -110,7 +110,7 @@ export default function ProductEditor({
       setVariantsList(product.variants || []);
       setConcreteVariantsList(product.concreteVariants || []);
       setCustomSlug(product.slug || product.id || '');
-      setFlavour(product.flavour || 'Mint');
+      setFlavour(product.flavour || 'Natural');
       setSeoTitle(product.seoTitle || product.title || '');
       setSeoDescription(product.seoDescription || product.description.slice(0, 155) || '');
 
@@ -126,14 +126,14 @@ export default function ProductEditor({
       setPrice(0.00);
       setCompareAtPrice(0.00);
       setInventory(0);
-      setSku(`PCH-${100000 + Math.floor(Math.random() * 900000)}`);
+      setSku(`ATL-${100000 + Math.floor(Math.random() * 900000)}`);
       setBarcode('');
-      setCategory('Nicotine Pouches');
-      setVendor('77');
+      setCategory('Outerwear');
+      setVendor('Atelier Studio');
       setStatus('Active');
-      setWeight(24);
+      setWeight(450);
       setWeightUnit('g');
-      setTags(['fruit', 'extra-strong']);
+      setTags(['organic-cotton', 'autumn-winter', 'best-seller']);
       setMediaList([
         '/placeholder.png'
       ]);
@@ -427,8 +427,8 @@ export default function ProductEditor({
         inventory !== (product.inventory || 0) ||
         sku !== (product.sku || '') ||
         barcode !== (product.barcode || '') ||
-        category !== (product.category || 'Nicotine Pouches') ||
-        vendor !== (product.vendor || '77') ||
+        category !== (product.category || 'Outerwear') ||
+        vendor !== (product.vendor || 'Atelier Studio') ||
         status !== (product.status || 'Active') ||
         weight !== (product.weight || 0) ||
         weightUnit !== (product.weightUnit || 'g') ||
@@ -532,7 +532,7 @@ export default function ProductEditor({
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-slate-400 font-mono text-xs">📦 / products /</span>
             <h1 className="text-lg md:text-xl font-black text-slate-950 tracking-tight lowercase">
-              {title || 'untitled-canister'}
+              {title || 'untitled-garment'}
             </h1>
             
             <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${
@@ -708,7 +708,7 @@ export default function ProductEditor({
                 </div>
                 <textarea
                   id="prod-edit-desc"
-                  placeholder="Insert premium copy highlights. Formulate sensory properties, strength levels, pouch size, and flavor releases..."
+                  placeholder="Insert editorial product description. Detail garment silhouette, fabric composition, GSM weight, tailoring details, and wash care instructions..."
                   value={description}
                   onChange={handleDescriptionChange}
                   className="w-full text-xs font-semibold px-4 py-3 bg-white focus:outline-none h-44 resize-y leading-relaxed text-slate-750"
@@ -737,7 +737,7 @@ export default function ProductEditor({
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-extrabold text-slate-805 text-xs uppercase tracking-wide">
-                  Merchandise Media Cans
+                  Garment Media Gallery
                 </h3>
                 <p className="text-[10px] text-slate-400 mt-0.5">Primary image acts as storefront cover grid visual.</p>
               </div>
@@ -988,7 +988,7 @@ export default function ProductEditor({
                     {variantsList.length} Option Dimension(s)
                   </span>
                 </h3>
-                <p className="text-[10px] text-zinc-400 mt-0.5">Define variable properties such as canister bulk sizing, nicotine mg strengths, or specific flavor profiles.</p>
+                <p className="text-[10px] text-zinc-400 mt-0.5">Define variable properties such as garment sizing (S, M, L, XL), color palette, or fabric finishes.</p>
               </div>
 
               <button
@@ -1035,7 +1035,7 @@ export default function ProductEditor({
                         </label>
                         <input
                           type="text"
-                          placeholder="e.g. Size, Color, Taste, Nicotine Strength"
+                          placeholder="e.g. Size, Color, Material, Fit"
                           value={variant.name}
                           onChange={(e) => handleUpdateVariantOptionName(variant.id, e.target.value)}
                           className={`w-full text-xs font-semibold px-3 py-2 rounded-lg border bg-white focus:outline-none focus:ring-1 transition-all ${
@@ -1121,7 +1121,7 @@ export default function ProductEditor({
             ) : (
               <div className="py-7 border border-dashed border-slate-250 rounded-xl bg-slate-50/50 text-center space-y-1 p-4">
                 <Info className="h-5 w-5 mx-auto text-slate-400 mb-1" />
-                <p className="text-[10px] font-black text-slate-700 uppercase tracking-wider">This canister has zero discrete configurations</p>
+                <p className="text-[10px] font-black text-slate-700 uppercase tracking-wider">This garment has zero discrete configurations</p>
                 <p className="text-[9px] text-slate-450 leading-relaxed max-w-sm mx-auto">Products are saved with single standard pricing and weights by default. Add variants to allow dropdown menus on customer screens.</p>
               </div>
             )}
@@ -1256,14 +1256,14 @@ export default function ProductEditor({
 
             {/* Google Snippet display */}
             <div className="bg-slate-50 border border-slate-205 p-4 rounded-xl space-y-1 text-left font-serif leading-none select-none max-w-xl">
-              <span className="text-neutral-400 font-sans text-[10px] block truncate font-medium">https://pouchsupply.co.uk/products/{customSlug || slugify(title || 'untitled')}</span>
+              <span className="text-neutral-400 font-sans text-[10px] block truncate font-medium">https://atelier-store.com/products/{customSlug || slugify(title || 'untitled')}</span>
               <span className="text-[#1a0dab] font-sans text-xs sm:text-sm block hover:underline cursor-pointer font-extrabold leading-tight">
-                {seoTitle || title || 'Untitled Nicotine Pouch Can'}
+                {seoTitle || title || 'Untitled Garment'}
               </span>
               <p className="text-[#3c4043] font-sans text-[11px] leading-relaxed pt-1 select-all h-[40px] line-clamp-2">
-                {seoDescription || description || 'Discover the freshest European nicotine pouch canisters available. Ultra-fast UK shipping and wholesale options.'}
+                {seoDescription || description || 'Discover contemporary luxury apparel and tailored capsule wardrobe essentials crafted in European ateliers. Complimentary worldwide shipping.'}
               </p>
-              <span className="text-emerald-700 font-sans text-[10px] block pt-1 font-bold">🛒 Prices start from £{price ? price.toFixed(2) : '4.99'} GBP</span>
+              <span className="text-emerald-700 font-sans text-[10px] block pt-1 font-bold">🛒 Prices start from £{price ? price.toFixed(2) : '45.00'} GBP</span>
             </div>
 
             {showSeoFields && (
