@@ -319,5 +319,12 @@ export interface LayoutSettings {
   footerLogoImage: string; // Base64 or URL
   menuItems: MenuItem[];
   klaviyoPublicKey?: string;
+  currency?: string;
+  currencySymbol?: string;
+  country?: string;
+  timezone?: string;
+  storeName?: string;
+  address?: string;
+  phone?: string;
 }
 

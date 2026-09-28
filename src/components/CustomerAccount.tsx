@@ -51,7 +51,7 @@ export default function CustomerAccount({
   const [addrCity, setAddrCity] = useState('');
   const [addrState, setAddrState] = useState('');
   const [addrZip, setAddrZip] = useState('');
-  const [addrCountry, setAddrCountry] = useState('United Kingdom');
+  const [addrCountry, setAddrCountry] = useState('India');
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<Order | null>(null);
 
@@ -2711,7 +2711,7 @@ export default function CustomerAccount({
                 setAddrCity('');
                 setAddrState('');
                 setAddrZip('');
-                setAddrCountry('United Kingdom');
+                setAddrCountry('India');
                 setShowAddressModal(false);
               }} 
               className="space-y-4"
@@ -2721,7 +2721,7 @@ export default function CustomerAccount({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. 24 London Road"
+                  placeholder="e.g. Flat 402, Bandra West"
                   value={addrStreet}
                   onChange={(e) => setAddrStreet(e.target.value)}
                   className="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
@@ -2732,7 +2732,7 @@ export default function CustomerAccount({
                 <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">Apartment, suite, unit, etc. (optional)</label>
                 <input
                   type="text"
-                  placeholder="e.g. Flat 3B"
+                  placeholder="e.g. Building 4B"
                   value={addrApt}
                   onChange={(e) => setAddrApt(e.target.value)}
                   className="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
@@ -2745,7 +2745,7 @@ export default function CustomerAccount({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. London"
+                    placeholder="e.g. Mumbai"
                     value={addrCity}
                     onChange={(e) => setAddrCity(e.target.value)}
                     className="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
@@ -2755,7 +2755,7 @@ export default function CustomerAccount({
                   <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">State / Province</label>
                   <input
                     type="text"
-                    placeholder="e.g. Greater London"
+                    placeholder="e.g. Maharashtra"
                     value={addrState}
                     onChange={(e) => setAddrState(e.target.value)}
                     className="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
@@ -2765,11 +2765,11 @@ export default function CustomerAccount({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">ZIP / Postal Code *</label>
+                  <label className="block text-[9px] font-black uppercase text-slate-500 mb-1">PIN / Postal Code *</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. EC1A 1BB"
+                    placeholder="e.g. 400050"
                     value={addrZip}
                     onChange={(e) => setAddrZip(e.target.value)}
                     className="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"
@@ -2780,7 +2780,7 @@ export default function CustomerAccount({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. United Kingdom"
+                    placeholder="e.g. India"
                     value={addrCountry}
                     onChange={(e) => setAddrCountry(e.target.value)}
                     className="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#071d37]"

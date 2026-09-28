@@ -346,7 +346,7 @@ export const DEFAULT_PAGES: CustomPage[] = [
           backgroundColor: '#0F172A',
           headingColor: '#FFFFFF',
           textColor: '#E2E8F0',
-          title: 'COMPLIMENTARY EXPRESS WORLDWIDE SHIPPING ON ORDERS OVER £100  ·  30-DAY EFFORTLESS RETURNS  ·  SUSTAINABLY CRAFTED FROM ORGANIC TEXTILES  ·  HAND-FINISHED IN EUROPEAN ATELIERS  ·  NEW CURATED DROPS EVERY THURSDAY',
+          title: 'COMPLIMENTARY EXPRESS SHIPPING ACROSS INDIA ON ORDERS OVER ₹999  ·  30-DAY EFFORTLESS RETURNS  ·  SUSTAINABLY CRAFTED FROM ORGANIC TEXTILES  ·  HAND-FINISHED IN ATELIERS  ·  NEW CURATED DROPS EVERY THURSDAY',
           marqueeSpeed: 4
         }
       },
@@ -373,7 +373,7 @@ export const DEFAULT_PAGES: CustomPage[] = [
           backgroundColor: '#FFFFFF',
           trustBadges: [
             { iconType: 'badge', title: 'ETHICALLY CRAFTED', description: 'GOTS certified organic cotton & recycled wool.' },
-            { iconType: 'shield', title: 'EXPRESS TRACKED SHIPPING', description: 'Carbon-neutral delivery across UK & Worldwide.' },
+            { iconType: 'shield', title: 'EXPRESS TRACKED SHIPPING', description: 'Carbon-neutral delivery across India & Worldwide.' },
             { iconType: 'globe', title: 'COMPLIMENTARY RETURNS', description: '30-day effortless return and exchange policy.' },
             { iconType: 'tag', title: 'PREMIUM SUSTAINABILITY', description: 'Zero single-use plastics in all shipping packaging.' }
           ]

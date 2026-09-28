@@ -41,15 +41,15 @@ export default function AdminLogin({ onLoginSuccess, onCancel }: AdminLoginProps
       <div className="w-full max-w-md bg-white border border-slate-200 shadow-xl rounded-2xl overflow-hidden">
         
         {/* Top Banner Accent */}
-        <div className="h-2 bg-[#008060]" />
+        <div className="h-2 bg-[#05164e]" />
 
         <div className="p-8">
           {/* Header branding */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-[#e3f5e9] text-[#008060] rounded-xl border border-[#c8ebd3] mb-3">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-[#e8ecf8] text-[#05164e] rounded-xl border border-[#c5d0f1] mb-3">
               <ShieldCheck className="h-6 w-6" />
             </div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight">Admin Portal Access</h1>
+            <h1 className="text-xl font-black text-slate-900 tracking-tight">Admin Dashboard Access</h1>
             <p className="text-xs text-slate-500 mt-1">Authenticate secure merchant control privileges</p>
           </div>
 
@@ -75,7 +75,7 @@ export default function AdminLogin({ onLoginSuccess, onCancel }: AdminLoginProps
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   disabled={isLoading}
-                  className="w-full text-xs p-3 pl-10 border border-slate-250 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008060] focus:border-[#008060] bg-slate-50/50 disabled:opacity-50 transition-all text-slate-800 font-medium"
+                  className="w-full text-xs p-3 pl-10 border border-slate-250 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#05164e] focus:border-[#05164e] bg-slate-50/50 disabled:opacity-50 transition-all text-slate-800 font-medium"
                 />
                 <User className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
               </div>
@@ -93,7 +93,7 @@ export default function AdminLogin({ onLoginSuccess, onCancel }: AdminLoginProps
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
-                  className="w-full text-xs p-3 pl-10 pr-10 border border-slate-250 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008060] focus:border-[#008060] bg-slate-50/50 disabled:opacity-50 transition-all text-slate-800 font-medium"
+                  className="w-full text-xs p-3 pl-10 pr-10 border border-slate-250 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#05164e] focus:border-[#05164e] bg-slate-50/50 disabled:opacity-50 transition-all text-slate-800 font-medium"
                 />
                 <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                 <button
@@ -111,7 +111,7 @@ export default function AdminLogin({ onLoginSuccess, onCancel }: AdminLoginProps
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-[#008060] hover:bg-[#006e52] text-white rounded-xl text-xs font-black uppercase tracking-widest transition shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:hover:scale-100 disabled:pointer-events-none flex items-center justify-center gap-2 cursor-pointer mt-6"
+              className="w-full py-3 bg-[#05164e] hover:bg-[#092275] text-white rounded-xl text-xs font-black uppercase tracking-widest transition shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:hover:scale-100 disabled:pointer-events-none flex items-center justify-center gap-2 cursor-pointer mt-6"
             >
               {isLoading ? (
                 <>
@@ -119,14 +119,14 @@ export default function AdminLogin({ onLoginSuccess, onCancel }: AdminLoginProps
                   <span>Verifying Session...</span>
                 </>
               ) : (
-                <span>Access Dashboard</span>
+                <span>Access Admin Dashboard</span>
               )}
             </button>
           </form>
 
           {/* Sandbox Credentials Guide Banner */}
           <div className="mt-8 p-4 bg-slate-50 border border-slate-150 rounded-xl">
-            <span className="text-[9px] font-black uppercase text-[#008060] bg-[#e3f5e9] px-2 py-0.5 rounded-full border border-[#c8ebd3]">
+            <span className="text-[9px] font-black uppercase text-[#05164e] bg-[#e8ecf8] px-2 py-0.5 rounded-full border border-[#c5d0f1]">
               Sandbox Credentials
             </span>
             <div className="mt-2.5 text-xs text-slate-600 space-y-1">

@@ -310,8 +310,8 @@ export default function DiscountEditor({
 
         {/* Top Actions panel */}
         <div className="flex items-center gap-2.5">
-          <span className="text-xs text-slate-500 font-medium bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1 flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+          <span className="text-xs text-slate-500 font-medium bg-blue-50 border border-blue-200 rounded-lg px-2.5 py-1 flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#5674d5] animate-pulse"></span>
             Unsaved discount
           </span>
           <button 

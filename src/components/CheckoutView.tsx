@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import SubscriptionIcon from './SubscriptionIcon';
 import { calculateDiscountAmount } from '../utils';
+import { useStoreCurrency, formatPrice } from '../utils/currency';
 
 interface CheckoutViewProps {
   cartItems: CartItem[];
@@ -44,6 +45,7 @@ export default function CheckoutView({
   customers = [],
   onApplyDiscount
 }: CheckoutViewProps) {
+  const { currency, symbol, formatPrice: formatCurrencyPrice } = useStoreCurrency();
   const [applyStoreCredit, setApplyStoreCredit] = useState(false);
   const [currentDiscount, setCurrentDiscount] = useState<Discount | null>(discountApplied);
   const [promoCodeInput, setPromoCodeInput] = useState('');
@@ -53,15 +55,15 @@ export default function CheckoutView({
   useEffect(() => {
     setCurrentDiscount(discountApplied);
   }, [discountApplied]);
-  // Shipping info state
+  // Shipping info state (India defaults)
   const [fullName, setFullName] = useState(loggedInCustomer?.name || '');
   const [email, setEmail] = useState(loggedInCustomer?.email || '');
   const [addressLine, setAddressLine] = useState(
-    loggedInCustomer?.addresses && loggedInCustomer.addresses[0] ? loggedInCustomer.addresses[0] : ''
+    loggedInCustomer?.addresses && loggedInCustomer.addresses[0] ? loggedInCustomer.addresses[0] : 'Flat 402, Hill Road, Bandra West'
   );
-  const [city, setCity] = useState('London');
-  const [postcode, setPostcode] = useState('EC1A 1BB');
-  const [country, setCountry] = useState('United Kingdom');
+  const [city, setCity] = useState('Mumbai');
+  const [postcode, setPostcode] = useState('400050');
+  const [country, setCountry] = useState('India');
   const [deliverySpeed, setDeliverySpeed] = useState<'standard' | 'priority'>('priority');
 
   // Razorpay Card State
@@ -260,7 +262,7 @@ export default function CheckoutView({
       const requestPayload = {
         orderId: generatedOrderId,
         amount: finalTotalToPay.toFixed(2),
-        currency: 'GBP',
+        currency: currency.code,
         customerName: fullName,
         customerEmail: email,
         destination: `${addressLine}, ${city}, ${postcode}, ${country}`,
@@ -330,7 +332,7 @@ export default function CheckoutView({
       expiry: expiry,
       cvv: cvv,
       amount: finalTotalToPay.toFixed(2),
-      currency: 'GBP',
+      currency: currency.code,
       simulationMode: simulationMode
     };
 
@@ -417,7 +419,7 @@ export default function CheckoutView({
       expiry: expiry,
       cvv: cvv,
       amount: finalTotalToPay.toFixed(2),
-      currency: 'GBP',
+      currency: currency.code,
       simulationMode: 'SUCCESS', // Verify completes transaction
       threeDSecureOTP: threeDsOtp
     };
@@ -528,7 +530,7 @@ export default function CheckoutView({
             </div>
             <div className="flex justify-between pt-1 text-sm font-black">
               <span className="text-slate-800 uppercase">Amount Transacted:</span>
-              <span className="text-slate-950">£{paymentSuccessData.amount.toFixed(2)} GBP</span>
+              <span className="text-slate-950">{symbol}{paymentSuccessData.amount.toFixed(2)} {currency.code}</span>
             </div>
           </div>
 
@@ -684,24 +686,25 @@ export default function CheckoutView({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Country</label>
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Country / Region</label>
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
                   className="w-full text-xs p-3 border border-slate-250 bg-slate-50/30 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-600 font-bold text-slate-700 bg-white"
                 >
-                  <option value="United Kingdom">United Kingdom (UK)</option>
-                  <option value="Ireland">Ireland</option>
-                  <option value="Sweden">Sweden</option>
-                  <option value="Germany">Germany</option>
-                  <option value="France">France</option>
+                  <option value="India">India 🇮🇳 (Pan-India Dispatch)</option>
+                  <option value="United States">United States 🇺🇸</option>
+                  <option value="United Kingdom">United Kingdom 🇬🇧</option>
+                  <option value="United Arab Emirates">United Arab Emirates 🇦🇪</option>
+                  <option value="Germany">Germany 🇩🇪</option>
+                  <option value="Singapore">Singapore 🇸🇬</option>
                 </select>
               </div>
             </div>
 
             {/* Delivery Speeds */}
             <div className="pt-2">
-              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Delivery Method</label>
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Delivery Method (Pan-India)</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div 
                   onClick={() => setDeliverySpeed('standard')}
@@ -712,8 +715,8 @@ export default function CheckoutView({
                   }`}
                 >
                   <div className="text-left">
-                    <span className="font-extrabold text-xs block text-slate-800">Standard Atelier Courier</span>
-                    <span className="text-[10px] text-slate-400">Arrives in 3-5 business days</span>
+                    <span className="font-extrabold text-xs block text-slate-800">Standard Express Courier</span>
+                    <span className="text-[10px] text-slate-400">Bluedart / Delhivery / DTDC (3-5 days)</span>
                   </div>
                   <span className="font-black text-xs text-slate-800">FREE</span>
                 </div>
@@ -727,11 +730,11 @@ export default function CheckoutView({
                   }`}
                 >
                   <div className="text-left">
-                    <span className="font-extrabold text-xs block text-slate-800">Priority Tracked Shipping</span>
-                    <span className="text-[10px] text-slate-400">Guaranteed 24-48h dispatched</span>
+                    <span className="font-extrabold text-xs block text-slate-800">Priority Same-Day Dispatch</span>
+                    <span className="text-[10px] text-slate-400">Guaranteed 24-48h air cargo</span>
                   </div>
                   <span className="font-black text-xs text-indigo-600">
-                    {totalAmount >= 40 ? 'FREE' : '£4.99'}
+                    {totalAmount >= 999 ? 'FREE' : `${symbol}99`}
                   </span>
                 </div>
               </div>
@@ -963,10 +966,10 @@ export default function CheckoutView({
                     <Lock className="h-4 w-4 text-emerald-400" />
                     <span>
                       {finalTotalToPay === 0
-                        ? `Complete Order using Store Credit (£0.00 to Pay)`
+                        ? `Complete Order using Store Credit (${symbol}0.00 to Pay)`
                         : paymentMethod === 'hosted'
-                          ? `Redirect to Razorpay Checkout (£${finalTotalToPay.toFixed(2)})`
-                          : `Authorize Payment of £${finalTotalToPay.toFixed(2)} GBP`}
+                          ? `Redirect to Razorpay Checkout (${symbol}${finalTotalToPay.toFixed(2)})`
+                          : `Authorize Payment of ${symbol}${finalTotalToPay.toFixed(2)} ${currency.code}`}
                     </span>
                   </>
                 )}
@@ -1046,9 +1049,9 @@ export default function CheckoutView({
                   )}
                   <div className="flex-1 min-w-0">
                     <h4 className="font-extrabold text-slate-800 text-[11px]">{item.productTitle}</h4>
-                    <p className="text-slate-400 text-[10px] font-bold">Qty: {item.quantity} × £{item.price.toFixed(2)}</p>
+                    <p className="text-slate-400 text-[10px] font-bold">Qty: {item.quantity} × {symbol}{item.price.toFixed(2)}</p>
                   </div>
-                  <span className="font-black text-slate-800 text-[11px]">£{(item.price * item.quantity).toFixed(2)}</span>
+                  <span className="font-black text-slate-800 text-[11px]">{symbol}{(item.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -1066,13 +1069,13 @@ export default function CheckoutView({
                       className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 cursor-pointer"
                     />
                     <label htmlFor="apply-store-credit-checkout" className="font-extrabold text-[#071d37] cursor-pointer select-none">
-                      Apply Store Credit (£{loggedInCustomer.storeCredit.toFixed(2)} Available)
+                      Apply Store Credit ({symbol}{loggedInCustomer.storeCredit.toFixed(2)} Available)
                     </label>
                   </div>
                 </div>
                 {applyStoreCredit && (
                   <p className="text-[10.5px] text-emerald-700 mt-2 font-medium leading-relaxed">
-                    Applying £{Math.min(loggedInCustomer.storeCredit, finalTotal).toFixed(2)} Store Credit deduction to order total.
+                    Applying {symbol}{Math.min(loggedInCustomer.storeCredit, finalTotal).toFixed(2)} Store Credit deduction to order total.
                   </p>
                 )}
               </div>
@@ -1112,7 +1115,7 @@ export default function CheckoutView({
             <div className="space-y-2 border-t border-slate-100 pt-3 text-xs leading-normal font-semibold">
               <div className="flex justify-between text-slate-500">
                 <span>Subtotal items</span>
-                <span className="text-slate-800">£{rawSubtotal.toFixed(2)}</span>
+                <span className="text-slate-800">{symbol}{rawSubtotal.toFixed(2)}</span>
               </div>
 
               {currentDiscount && (
@@ -1120,25 +1123,25 @@ export default function CheckoutView({
                   <span className="flex items-center gap-1">
                     <Check className="h-3 w-3" /> Promo/Referral Applied ({currentDiscount.title})
                   </span>
-                  <span className="font-extrabold">-£{discountValue.toFixed(2)}</span>
+                  <span className="font-extrabold">-{symbol}{discountValue.toFixed(2)}</span>
                 </div>
               )}
 
               <div className="flex justify-between text-slate-500">
-                <span>Delivery postage ({deliverySpeed === 'priority' ? 'Priority Express' : 'Standard Mail'})</span>
-                <span>{deliveryCost === 0 ? 'FREE' : `£${deliveryCost.toFixed(2)}`}</span>
+                <span>Delivery postage ({deliverySpeed === 'priority' ? 'Priority Express' : 'Standard Express'})</span>
+                <span>{deliveryCost === 0 ? 'FREE' : `${symbol}${deliveryCost.toFixed(2)}`}</span>
               </div>
 
               {applyStoreCredit && storeCreditApplied > 0 && (
                 <div className="flex justify-between text-emerald-600">
                   <span>Store Credit Applied</span>
-                  <span>-£{storeCreditApplied.toFixed(2)}</span>
+                  <span>-{symbol}{storeCreditApplied.toFixed(2)}</span>
                 </div>
               )}
 
               <div className="flex justify-between text-slate-900 font-extrabold text-sm pt-2 border-t border-slate-150">
                 <span>Total amount to pay</span>
-                <span className="text-base text-indigo-700 font-black">£{finalTotalToPay.toFixed(2)}</span>
+                <span className="text-base text-indigo-700 font-black">{symbol}{finalTotalToPay.toFixed(2)}</span>
               </div>
             </div>
 
@@ -1186,7 +1189,7 @@ export default function CheckoutView({
               </div>
               <div className="flex justify-between">
                 <span>Total Charge:</span>
-                <span className="font-bold text-slate-800">£{finalTotal.toFixed(2)} GBP</span>
+                <span className="font-bold text-slate-800">{symbol}{finalTotal.toFixed(2)} {currency.code}</span>
               </div>
               <div className="flex justify-between">
                 <span>Secure Session ID:</span>

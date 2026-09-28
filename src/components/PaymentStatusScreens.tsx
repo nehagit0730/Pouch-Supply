@@ -4,6 +4,7 @@ import {
   CheckCircle, XCircle, ArrowLeft, Send, ShoppingBag, Truck, Smartphone, Building2
 } from 'lucide-react';
 import { Order } from '../types';
+import { useStoreCurrency } from '../utils/currency';
 
 // ==========================================
 // 1. RAZORPAY SECURE GATEWAY SIMULATOR
@@ -13,6 +14,7 @@ interface RazorpayGatewaySimulatorProps {
 }
 
 export function RazorpayGatewaySimulator({ onReturnToShop }: RazorpayGatewaySimulatorProps) {
+  const { currency, symbol } = useStoreCurrency();
   const [orderId, setOrderId] = useState('');
   const [amount, setAmount] = useState('0.00');
   const [razorpayOrderId, setRazorpayOrderId] = useState('');
@@ -148,7 +150,7 @@ export function RazorpayGatewaySimulator({ onReturnToShop }: RazorpayGatewaySimu
         <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:justify-between gap-3 text-xs">
           <div className="space-y-1">
             <span className="text-slate-500 text-[10px] block uppercase tracking-wider font-extrabold">MERCHANT NAME</span>
-            <span className="font-extrabold text-slate-200">Pouch Supply UK Ltd</span>
+            <span className="font-extrabold text-slate-200">Atelier Studio India Pvt Ltd</span>
           </div>
           <div className="space-y-1">
             <span className="text-slate-500 text-[10px] block uppercase tracking-wider font-extrabold">ORDER REFERENCE</span>
@@ -156,7 +158,7 @@ export function RazorpayGatewaySimulator({ onReturnToShop }: RazorpayGatewaySimu
           </div>
           <div className="space-y-1 sm:text-right">
             <span className="text-slate-500 text-[10px] block uppercase tracking-wider font-extrabold">AMOUNT DUE</span>
-            <span className="font-black text-sky-400 text-sm">£{amount} GBP</span>
+            <span className="font-black text-sky-400 text-sm">{symbol}{amount} {currency.code}</span>
           </div>
         </div>
 
@@ -349,7 +351,7 @@ export function RazorpayGatewaySimulator({ onReturnToShop }: RazorpayGatewaySimu
                 </>
               ) : (
                 <>
-                  <Lock className="h-4 w-4" /> Pay £{amount} GBP Securely
+                  <Lock className="h-4 w-4" /> Pay {symbol}{amount} {currency.code} Securely
                 </>
               )}
             </button>
@@ -374,6 +376,7 @@ interface PaymentSuccessScreenProps {
 }
 
 export function PaymentSuccessScreen({ onReturnToShop }: PaymentSuccessScreenProps) {
+  const { symbol } = useStoreCurrency();
   const [orderId, setOrderId] = useState('');
   const [amount, setAmount] = useState('0.00');
   const [paymentId, setPaymentId] = useState('');

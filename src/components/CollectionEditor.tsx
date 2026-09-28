@@ -266,7 +266,7 @@ export default function CollectionEditor({
 
           <button
             onClick={() => handleSaveSubmit()}
-            className="py-2.5 px-5 bg-[#008060] hover:bg-[#006e52] text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:shadow"
+            className="py-2.5 px-5 bg-[#05164e] hover:bg-[#092275] text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:shadow"
           >
             <Save className="h-4 w-4" />
             <span>Save Collection</span>
@@ -293,7 +293,7 @@ export default function CollectionEditor({
                 required
                 value={title}
                 onChange={handleTitleChange}
-                className="w-full text-xs font-semibold px-4 py-3 rounded-xl border border-slate-250 bg-white focus:outline-none focus:ring-2 focus:ring-[#008060]/20 focus:border-[#008060] transition-all"
+                className="w-full text-xs font-semibold px-4 py-3 rounded-xl border border-slate-250 bg-white focus:outline-none focus:ring-2 focus:ring-[#05164e]/20 focus:border-[#05164e] transition-all"
               />
             </div>
 
@@ -303,7 +303,7 @@ export default function CollectionEditor({
               </label>
               
               {/* Rich-Text mock toolbar layout to perfectly resemble Shopify's administrative editor interface */}
-              <div className="border border-slate-250 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#008060]/20 focus-within:border-[#008060] transition-all bg-white">
+              <div className="border border-slate-250 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#05164e]/20 focus-within:border-[#05164e] transition-all bg-white">
                 <div className="bg-slate-50 border-b border-slate-200 p-2 flex flex-wrap gap-1 px-3.5 select-none text-slate-500">
                   <span className="text-[10px] hover:bg-slate-200 px-1.5 py-0.5 rounded font-black cursor-pointer font-sans" title="Formatting presets">Paragraph ▾</span>
                   <div className="h-4.5 w-[1px] bg-slate-300 mx-1 align-middle self-center" />
@@ -531,12 +531,12 @@ export default function CollectionEditor({
               {seoPreviewMode === 'Google' ? (
                 /* Search Engine Result Snippet simulation */
                 <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-1 text-left font-serif leading-none select-none max-w-xl">
-                  <span className="text-neutral-400 font-sans text-[10.5px] block truncate font-medium">https://pouchsupply.co.uk/collections/{customSlug || slugify(title || 'untitled')}</span>
+                  <span className="text-neutral-400 font-sans text-[10.5px] block truncate font-medium">https://store.in/collections/{customSlug || slugify(title || 'untitled')}</span>
                   <span className="text-[#1a0dab] font-sans text-sm block hover:underline cursor-pointer font-extrabold leading-tight">
-                    {seoTitle || title || 'Untitled Custom Pouch Collection'}
+                    {seoTitle || title || 'Untitled Custom Collection'}
                   </span>
                   <p className="text-[#3c4043] font-sans text-[11.5px] leading-relaxed pt-1 select-all h-[40px] line-clamp-2">
-                    {seoDescription || description || 'Explore our vacuum-fresh nicotine pouch lines. Choose from various strengths, formats, and premium tastes formulated in Europe.'}
+                    {seoDescription || description || 'Explore our curated collections of premium contemporary fashion, architectural tailoring, and sustainably crafted pieces.'}
                   </p>
                 </div>
               ) : (
@@ -556,12 +556,12 @@ export default function CollectionEditor({
                     </div>
                   </div>
                   <div className="p-3 bg-[#f2f3f5] space-y-1">
-                    <span className="text-[9px] text-slate-450 uppercase tracking-widest block font-bold font-mono">POUCHSUPPLY.CO.UK</span>
+                    <span className="text-[9px] text-slate-450 uppercase tracking-widest block font-bold font-mono">STORE.IN</span>
                     <h4 className="font-extrabold text-[12px] text-slate-800 line-clamp-1 uppercase tracking-tight">
-                      {seoTitle || title || 'Untitled Custom Pouch Collection'}
+                      {seoTitle || title || 'Untitled Custom Collection'}
                     </h4>
                     <p className="text-[10.5px] text-slate-500 line-clamp-2 font-medium leading-relaxed">
-                      {seoDescription || description || 'Explore our vacuum-fresh nicotine pouch lines. Choose from various strengths, formats, and premium tastes formulated in Europe.'}
+                      {seoDescription || description || 'Explore our curated collections of premium contemporary fashion, architectural tailoring, and sustainably crafted pieces.'}
                     </p>
                   </div>
                 </div>
@@ -590,8 +590,8 @@ export default function CollectionEditor({
                     maxLength={75}
                     value={seoTitle}
                     onChange={(e) => setSeoTitle(e.target.value)}
-                    placeholder="e.g. Paint Collections | Fine Art Pouch Cans"
-                    className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-250 bg-white focus:outline-none focus:ring-2 focus:ring-[#008060]/20 focus:border-[#008060] transition-all"
+                    placeholder="e.g. Autumn / Winter Capsule | Curated Collection"
+                    className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-250 bg-white focus:outline-none focus:ring-2 focus:ring-[#05164e]/20 focus:border-[#05164e] transition-all"
                   />
                   <p className="text-[9px] text-slate-400 leading-normal mt-1">Recommended title length is between 30 and 60 characters for optimal results in desktop search results.</p>
                 </div>
@@ -613,7 +613,7 @@ export default function CollectionEditor({
                     onChange={(e) => setSeoDescription(e.target.value)}
                     maxLength={320}
                     placeholder="Enter meta description that summarizes the collection products..."
-                    className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-250 bg-white focus:outline-none focus:ring-2 focus:ring-[#008060]/20 focus:border-[#008060] transition-all h-24 leading-normal resize-y"
+                    className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-250 bg-white focus:outline-none focus:ring-2 focus:ring-[#05164e]/20 focus:border-[#05164e] transition-all h-24 leading-normal resize-y"
                   />
                   <p className="text-[9px] text-slate-400 leading-normal mt-1">Provide helpful search summaries. Ideal volume ranges between 120 and 160 characters to avoid snippet truncation.</p>
                 </div>
@@ -625,7 +625,7 @@ export default function CollectionEditor({
                   <label htmlFor="seo-field-slug" className="block text-slate-700 font-extrabold uppercase tracking-wider text-[9.5px] mb-1.5">
                     URL Handle (Slug)
                   </label>
-                  <div className="flex items-center rounded-xl overflow-hidden bg-slate-50 border border-slate-250 focus-within:ring-2 focus-within:ring-[#008060]/20 focus-within:border-[#008060] transition-all">
+                  <div className="flex items-center rounded-xl overflow-hidden bg-slate-50 border border-slate-250 focus-within:ring-2 focus-within:ring-[#05164e]/20 focus-within:border-[#05164e] transition-all">
                     <span className="bg-slate-100 px-3 py-2.5 text-slate-450 border-r border-slate-250 font-mono text-[9.5px]/none flex items-center h-full select-none">/collections/</span>
                     <input
                       id="seo-field-slug"
@@ -657,7 +657,7 @@ export default function CollectionEditor({
                           triggerToast('Please upload or set a collection cover image first.');
                         }
                       }}
-                      className="text-[9px] bg-[#008060]/10 hover:bg-[#008060]/25 text-[#008060] border border-[#008060]/20 rounded px-2 py-0.5 font-bold transition-all cursor-pointer inline-flex items-center gap-0.5"
+                      className="text-[9px] bg-[#05164e]/10 hover:bg-[#05164e]/25 text-[#05164e] border border-[#05164e]/20 rounded px-2 py-0.5 font-bold transition-all cursor-pointer inline-flex items-center gap-0.5"
                     >
                       <span>⚡ Sync Collection Cover</span>
                     </button>
@@ -816,7 +816,7 @@ export default function CollectionEditor({
 
         <button
           onClick={() => handleSaveSubmit()}
-          className="py-2.5 px-6 bg-[#008060] hover:bg-[#006e52] text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-700/5 hover:shadow-lg"
+          className="py-2.5 px-6 bg-[#05164e] hover:bg-[#092275] text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-blue-900/10 hover:shadow-lg"
         >
           <Save className="h-4 w-4" />
           <span>Save Changes</span>
@@ -832,7 +832,7 @@ export default function CollectionEditor({
             <div className="p-4 px-5 border-b border-slate-150 flex items-center justify-between bg-slate-50">
               <div className="space-y-0.5">
                 <h3 className="font-black text-slate-850 text-xs sm:text-xs uppercase tracking-wide">
-                  Select Pouch Merchandise Cans
+                  Select Merchandise Items
                 </h3>
                 <p className="text-[10px] text-zinc-400 font-medium">Check which canisters belongs to {title || 'this collection'}.</p>
               </div>

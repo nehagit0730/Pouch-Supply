@@ -269,7 +269,7 @@ export default function ProductDetailView({
                 {product.vendor}
               </span>
               {((activeVariant ? activeVariant.inventory : product.inventory) < 10 && (activeVariant ? activeVariant.inventory : product.inventory) > 0) && (
-                <span className="absolute top-4 right-4 bg-amber-500 text-slate-950 text-[9px] font-black uppercase py-1 px-3 rounded-full">
+                <span className="absolute top-4 right-4 bg-[#5674d5] text-white text-[9px] font-black uppercase py-1 px-3 rounded-full">
                   Only {activeVariant ? activeVariant.inventory : product.inventory} Left
                 </span>
               )}

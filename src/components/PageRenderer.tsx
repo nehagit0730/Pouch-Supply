@@ -1018,7 +1018,7 @@ function FeaturedCollectionSection({
       return { text: 'NEW IN', bg: 'bg-emerald-600 text-white font-bold' };
     }
     if (tags.includes('trending')) {
-      return { text: 'TRENDING', bg: 'bg-amber-500 text-slate-950 font-bold' };
+      return { text: 'TRENDING', bg: 'bg-[#5674d5] text-white font-bold' };
     }
     if (p.compareAtPrice > p.price) {
       return { text: 'SALE', bg: 'bg-rose-600 text-white font-bold' };

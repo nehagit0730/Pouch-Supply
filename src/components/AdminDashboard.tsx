@@ -16,6 +16,7 @@ import BlogContentEditor from './BlogContentEditor';
 import DiscountEditor from './DiscountEditor';
 import PlansCanOverlay from './PlansCanOverlay';
 import { Crown, Flame } from 'lucide-react';
+import { SUPPORTED_CURRENCIES, getActiveCurrency, setActiveCurrency, formatPrice } from '../utils/currency';
 
 export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'Image banner', label: 'Image Banner', desc: 'Hero banner with centered headline overlay & CTA buttons', icon: 'ImageIcon' },
@@ -554,7 +555,7 @@ function HowItWorksSectionAdmin({ sec }: HowItWorksSectionAdminProps) {
   );
 }
 
-type SidebarTab = 'analytics' | 'orders' | 'collections' | 'products' | 'pages' | 'blogs' | 'files' | 'customers' | 'discounts' | 'layout';
+type SidebarTab = 'analytics' | 'orders' | 'collections' | 'products' | 'pages' | 'blogs' | 'files' | 'customers' | 'discounts' | 'layout' | 'settings';
 
 export default function AdminDashboard({
   products: parentProducts,
@@ -783,6 +784,13 @@ export default function AdminDashboard({
       footerLogoDescription: 'Contemporary fashion house dedicated to premium craftsmanship, bespoke tailoring, and timeless capsule wardrobes. Hand-finished garments delivered worldwide.',
       footerLogoImage: '',
       klaviyoPublicKey: '',
+      currency: 'INR',
+      currencySymbol: '₹',
+      country: 'India',
+      timezone: 'Asia/Kolkata (IST)',
+      storeName: 'Atelier Studio India',
+      address: 'Atelier Studio, Bandra West, Mumbai, Maharashtra 400050, India',
+      phone: '+91 98200 12345',
       menuItems: [
         { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
         { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
@@ -793,9 +801,26 @@ export default function AdminDashboard({
     };
   });
 
+  const currentCurrency = useMemo(() => {
+    const code = localLayoutSettings.currency || getActiveCurrency().code;
+    return SUPPORTED_CURRENCIES.find(c => c.code === code) || SUPPORTED_CURRENCIES[0];
+  }, [localLayoutSettings.currency]);
+
+  const [settingsCurrency, setSettingsCurrency] = useState<string>(() => localLayoutSettings.currency || getActiveCurrency().code);
+  const [settingsCountry, setSettingsCountry] = useState<string>(() => localLayoutSettings.country || 'India');
+  const [settingsTimezone, setSettingsTimezone] = useState<string>(() => localLayoutSettings.timezone || 'Asia/Kolkata (IST)');
+  const [settingsStoreName, setSettingsStoreName] = useState<string>(() => localLayoutSettings.storeName || 'Atelier Studio India');
+  const [settingsAddress, setSettingsAddress] = useState<string>(() => localLayoutSettings.address || 'Atelier Studio, Bandra West, Mumbai 400050, India');
+  const [settingsPhone, setSettingsPhone] = useState<string>(() => localLayoutSettings.phone || '+91 98200 12345');
+  const [settingsShippingThreshold, setSettingsShippingThreshold] = useState<number>(999);
+  const [settingsSavedToast, setSettingsSavedToast] = useState(false);
+
   useEffect(() => {
     if (layoutSettings) {
       setLocalLayoutSettings(layoutSettings);
+      if (layoutSettings.currency) {
+        setSettingsCurrency(layoutSettings.currency);
+      }
     }
   }, [layoutSettings]);
 
@@ -1166,7 +1191,7 @@ export default function AdminDashboard({
   const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
   const [isDiscountEditorOpen, setIsDiscountEditorOpen] = useState(false);
 
-  // Calculate high-fidelity partner portal metrics
+  // Calculate high-fidelity admin dashboard metrics
   const stats = useMemo(() => {
     const totalSales = orders.reduce((sum, o) => sum + o.total, 0);
     const completedOrders = orders.length;
@@ -1187,7 +1212,9 @@ export default function AdminDashboard({
     locationsToCount.forEach(loc => {
       if (!loc) return;
       const cleanLoc = loc.toLowerCase();
-      if (cleanLoc.includes('uk') || cleanLoc.includes('united kingdom') || cleanLoc.includes('britain') || cleanLoc.includes('england') || cleanLoc.includes('london')) {
+      if (cleanLoc.includes('india') || cleanLoc.includes('mumbai') || cleanLoc.includes('delhi') || cleanLoc.includes('bangalore') || cleanLoc.includes('bengaluru')) {
+        geoCounts['India 🇮🇳'] = (geoCounts['India 🇮🇳'] || 0) + 1;
+      } else if (cleanLoc.includes('uk') || cleanLoc.includes('united kingdom') || cleanLoc.includes('britain') || cleanLoc.includes('england') || cleanLoc.includes('london')) {
         geoCounts['United Kingdom 🇬🇧'] = (geoCounts['United Kingdom 🇬🇧'] || 0) + 1;
       } else if (cleanLoc.includes('us') || cleanLoc.includes('united states') || cleanLoc.includes('america') || cleanLoc.includes('usa')) {
         geoCounts['United States 🇺🇸'] = (geoCounts['United States 🇺🇸'] || 0) + 1;
@@ -1210,10 +1237,10 @@ export default function AdminDashboard({
 
     if (finalGeos.length === 0) {
       finalGeos = [
-        { country: 'United Kingdom 🇬🇧', percentage: 74, sessionCount: 154 },
-        { country: 'United States 🇺🇸', percentage: 15, sessionCount: 31 },
-        { country: 'Germany 🇩🇪', percentage: 7, sessionCount: 14 },
-        { country: 'Poland 🇵🇱', percentage: 4, sessionCount: 8 }
+        { country: 'India 🇮🇳', percentage: 78, sessionCount: 380 },
+        { country: 'United States 🇺🇸', percentage: 12, sessionCount: 60 },
+        { country: 'United Arab Emirates 🇦🇪', percentage: 6, sessionCount: 30 },
+        { country: 'United Kingdom 🇬🇧', percentage: 4, sessionCount: 18 }
       ];
     } else {
       finalGeos.sort((a, b) => b.sessionCount - a.sessionCount);
@@ -2410,10 +2437,10 @@ export default function AdminDashboard({
       name: newCustomerForm.name,
       email: newCustomerForm.email,
       subscriptionStatus: newCustomerForm.subscriptionStatus,
-      location: newCustomerForm.location || 'United Kingdom',
+      location: newCustomerForm.location || 'India',
       ordersCount: 0,
       amountSpent: 0.00,
-      addresses: [newCustomerForm.location || 'United Kingdom'],
+      addresses: [newCustomerForm.location || 'India'],
       wishlist: []
     };
 
@@ -2587,7 +2614,7 @@ export default function AdminDashboard({
   }, [blogs, blogQuery, blogStatusFilter]);
 
   return (
-    <div id="partner-admin-scaffold" className="flex flex-col lg:flex-row min-h-screen bg-[#f6f6f7] text-slate-800 font-sans">
+    <div id="admin-dashboard-scaffold" className="flex flex-col lg:flex-row min-h-screen bg-[#f6f6f7] text-slate-800 font-sans">
       
       {/* Left sidebar Navigation */}
       {!selectedBuilderPageId && (
@@ -2596,12 +2623,12 @@ export default function AdminDashboard({
             
             {/* Dashboard Head */}
             <div className="flex items-center gap-3 pb-4 border-b border-[#e1e3e5]">
-              <div className="w-8 h-8 bg-[#008060] rounded flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#05164e] rounded flex items-center justify-center shadow-xs">
                 <div className="w-4 h-4 border-2 border-white rounded-sm"></div>
               </div>
               <div>
-                <h2 className="text-sm font-bold text-[#1a1c1d]">Atelier Studio</h2>
-                <span className="bg-gray-100 text-[9px] px-1.5 py-0.5 rounded border border-gray-200 text-gray-500 uppercase font-bold tracking-tighter">Admin</span>
+                <h2 className="text-sm font-bold text-[#1a1c1d]">Admin Dashboard</h2>
+                <span className="bg-gray-100 text-[9px] px-1.5 py-0.5 rounded border border-gray-200 text-gray-500 uppercase font-bold tracking-tighter">India Edition</span>
               </div>
             </div>
 
@@ -2617,7 +2644,8 @@ export default function AdminDashboard({
                 { id: 'files', label: 'Files Manager', icon: HardDrive },
                 { id: 'customers', label: 'Customers', icon: Users },
                 { id: 'discounts', label: 'Discounts', icon: Percent },
-                { id: 'layout', label: 'Header & Footer', icon: Settings },
+                { id: 'layout', label: 'Header & Footer', icon: LayoutGrid },
+                { id: 'settings', label: 'Settings', icon: Settings },
               ].map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -2635,11 +2663,11 @@ export default function AdminDashboard({
                     }`}
                   >
                     <div className="flex items-center gap-2.5 rounded select-none">
-                      <Icon className={`h-4 w-4 ${isActive ? 'text-[#1a1c1d]' : 'text-slate-500'}`} />
+                      <Icon className={`h-4 w-4 ${isActive ? 'text-[#05164e]' : 'text-slate-500'}`} />
                       <span>{item.label}</span>
                     </div>
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className="bg-[#e3f5e9] text-[#008060] font-bold text-[10px] py-0.5 px-2 rounded-full border border-[#c8ebd3]">
+                      <span className="bg-[#e8ecf8] text-[#05164e] font-bold text-[10px] py-0.5 px-2 rounded-full border border-[#c5d0f1]">
                         {item.badge}
                       </span>
                     )}
@@ -2671,7 +2699,7 @@ export default function AdminDashboard({
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 w-full flex items-center justify-center gap-2 bg-[#008060] hover:bg-[#006e52] px-3.5 py-2.5 rounded-xl text-white font-black text-[11px] uppercase tracking-wider shadow-sm transition-colors cursor-pointer select-none text-center"
+              className="mt-4 w-full flex items-center justify-center gap-2 bg-[#05164e] hover:bg-[#092275] px-3.5 py-2.5 rounded-xl text-white font-black text-[11px] uppercase tracking-wider shadow-sm transition-colors cursor-pointer select-none text-center"
             >
               <Globe className="h-4 w-4 shrink-0" />
               <span>View Online Store</span>
@@ -2704,7 +2732,7 @@ export default function AdminDashboard({
         {!selectedBuilderPageId && (
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-250">
             <div>
-              <span className="text-[10px] text-indigo-600 bg-indigo-50 font-black uppercase py-1 px-3 rounded-full border border-indigo-100">Atelier Studio Management</span>
+              <span className="text-[10px] text-[#05164e] bg-[#e8ecf8] font-black uppercase py-1 px-3 rounded-full border border-[#c5d0f1]">Admin Dashboard</span>
               <h1 className="text-2xl font-black text-slate-900 mt-2 capitalize flex items-center gap-2">
                 {activeTab} Management Panel
               </h1>
@@ -2714,7 +2742,7 @@ export default function AdminDashboard({
             <div className="flex flex-wrap items-center gap-3 text-xs">
               {/* Draft Status Indicator */}
               <div className="flex items-center gap-2 bg-white border border-slate-250 px-4 py-2.5 rounded-xl shadow-xs">
-                <span className={`h-2.5 w-2.5 rounded-full ${hasUnsavedChanges ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+                <span className={`h-2.5 w-2.5 rounded-full ${hasUnsavedChanges ? 'bg-[#5674d5] animate-pulse' : 'bg-emerald-500'}`} />
                 <span className="font-extrabold text-[10px] text-slate-700 uppercase tracking-widest whitespace-nowrap">
                   {hasUnsavedChanges ? 'Unsaved Edits Present' : 'All Changes Saved'}
                 </span>
@@ -2728,7 +2756,7 @@ export default function AdminDashboard({
                   isSaving
                     ? 'bg-slate-700 text-white border-slate-700 cursor-wait'
                     : hasUnsavedChanges
-                    ? 'bg-[#008060] hover:bg-[#006e52] text-white border-[#008060] cursor-pointer ring-4 ring-emerald-400/30 animate-pulse font-extrabold shadow-md shadow-emerald-100'
+                    ? 'bg-[#05164e] hover:bg-[#092275] text-white border-[#05164e] cursor-pointer ring-4 ring-blue-400/30 animate-pulse font-extrabold shadow-md shadow-indigo-100'
                     : 'bg-slate-100 text-slate-350 border-slate-200 cursor-not-allowed select-none'
                 }`}
               >
@@ -2760,20 +2788,20 @@ export default function AdminDashboard({
                 href="/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="py-2.5 px-4 bg-white hover:bg-slate-150 text-[#008060] border border-slate-250 hover:border-slate-350 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all shadow-xs cursor-pointer select-none"
+                className="py-2.5 px-4 bg-white hover:bg-slate-150 text-[#05164e] border border-slate-250 hover:border-slate-350 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all shadow-xs cursor-pointer select-none"
                 title="Open Customer Online Store in new tab"
               >
-                <Globe className="h-4 w-4 shrink-0 text-[#008060]" />
+                <Globe className="h-4 w-4 shrink-0 text-[#05164e]" />
                 <span>View Online Store</span>
               </a>
 
               <div className="bg-white border border-slate-250 px-4 py-2.5 rounded-xl shadow-xs">
                 <span className="text-slate-400 block text-[9px] font-bold uppercase tracking-wider">Gross Sales</span>
-                <span className="font-extrabold text-slate-950 text-sm">£{stats.totalSales.toFixed(2)}</span>
+                <span className="font-extrabold text-slate-950 text-sm">{currentCurrency.symbol}{stats.totalSales.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="bg-white border border-slate-250 px-4 py-2.5 rounded-xl shadow-xs">
                 <span className="text-slate-400 block text-[9px] font-bold uppercase tracking-wider">Unfulfilled</span>
-                <span className="font-extrabold text-amber-500 text-sm">{orders.filter(o => o.fulfillmentStatus === 'Unfulfilled').length} Orders</span>
+                <span className="font-extrabold text-[#5674d5] text-sm">{orders.filter(o => o.fulfillmentStatus === 'Unfulfilled').length} Orders</span>
               </div>
             </div>
           </div>
@@ -2862,8 +2890,8 @@ export default function AdminDashboard({
                 {/* Clean, compact, non-intrusive status alert */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-3xs">
                   <div className="flex items-center gap-3">
-                    <div className="h-6 w-6 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
-                      <AlertTriangle className="h-3.5 w-3.5 text-amber-650" />
+                    <div className="h-6 w-6 rounded-full bg-[#5674d5]/15 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="h-3.5 w-3.5 text-[#5674d5]" />
                     </div>
                     <div>
                       <p className="text-[11px] font-bold text-slate-800">
@@ -3202,11 +3230,6 @@ export default function AdminDashboard({
                         <tr key={order.id} className="hover:bg-slate-50/50">
                           <td className="p-4 font-extrabold text-slate-900">
                             <div>{order.id}</div>
-                            {Array.isArray(order.tags) && order.tags.includes('Withdrawal Requested') && (
-                              <span className="inline-block text-[8.5px] bg-rose-50 text-rose-700 border border-rose-150 uppercase font-black px-1.5 py-0.5 rounded mt-1 animate-pulse select-none">
-                                Withdrawal Pending
-                              </span>
-                            )}
                           </td>
                           <td className="p-4 text-slate-500">{order.date}</td>
                           <td className="p-4">
@@ -3222,7 +3245,7 @@ export default function AdminDashboard({
                               {order.fulfillmentStatus}
                             </span>
                           </td>
-                          <td className="p-4 text-right font-extrabold text-slate-900">£{order.total.toFixed(2)}</td>
+                          <td className="p-4 text-right font-extrabold text-slate-900">{currentCurrency.symbol}{order.total.toFixed(2)}</td>
                           <td className="p-4 text-center">
                             <button
                               onClick={() => setSelectedOrder(order)}
@@ -3339,173 +3362,6 @@ export default function AdminDashboard({
                   
                   {/* Left Column (Fulfillments, Payments, Timeline) */}
                   <div className="lg:col-span-2 space-y-6">
-
-                    {/* WITHDRAWAL ACTION BANNER FOR ADMINS */}
-                    {Array.isArray(selectedOrder.tags) && selectedOrder.tags.includes('Withdrawal Requested') && (
-                      <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl space-y-3.5 text-left shadow-2xs">
-                        <div className="flex items-center gap-2 text-rose-800">
-                          <AlertTriangle className="h-4.5 w-4.5 text-rose-600 shrink-0 animate-pulse" />
-                          <span className="font-extrabold text-xs uppercase tracking-wide">Customer Order Withdrawal Requested</span>
-                        </div>
-                        <p className="text-[11px] text-rose-700/90 leading-relaxed">
-                          The customer has formally requested to withdraw items from this transaction. The transaction payment state has been provisionally flagged, and is awaiting physical approval or rejection by a store supervisor.
-                        </p>
-                        
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              // APPROVE WITHDRAWAL
-                              const updatedTags = selectedOrder.tags.filter(t => t !== 'Withdrawal Requested' && !t.startsWith('Withdraw:'));
-                              updatedTags.push('Withdrawal Approved');
-                              
-                              const updatedOrders = parentOrders.map(o => {
-                                if (o.id === selectedOrder.id) {
-                                  return {
-                                    ...o,
-                                    tags: updatedTags,
-                                    paymentStatus: 'Refunded' as const
-                                  };
-                                }
-                                return o;
-                              });
-
-                              // Draft Approved email copy
-                              const emailHtml = `
-                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #334155;">
-                                  <div style="background-color: #10b981; padding: 25px 20px; text-align: center;">
-                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">ATELIER STUDIO</span>
-                                    <div style="font-size: 9px; font-weight: bold; color: #ecfdf5; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">WITHDRAWAL APPROVED</div>
-                                  </div>
-                                  
-                                  <div style="padding: 24px; text-align: left;">
-                                    <p style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 0;">Dear ${selectedOrder.customerName || 'Value Member'},</p>
-                                    <p style="font-size: 12.5px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
-                                      We are pleased to inform you that your withdrawal request for Order <strong>#${selectedOrder.id}</strong> has been <strong>approved</strong> by our store administrator.
-                                    </p>
-
-                                    <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 11.5px; line-height: 1.5; color: #065f46;">
-                                      <strong>Refund Processed Successfully:</strong><br/>
-                                      The refund value has been processed back to your original payment card. It will typically clear into your account balance in 2-3 business banking days depending on your issuer.
-                                    </div>
-
-                                    <p style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
-                                      If you require further assistance, please do not hesitate to reach out!
-                                    </p>
-                                  </div>
-                                  
-                                  <div style="background-color: #f8fafc; padding: 15px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8;">
-                                    Thank you for choosing Atelier Studio.
-                                  </div>
-                                </div>
-                              `;
-
-                              const newEmail = {
-                                to: selectedOrder.customerEmail,
-                                subject: `Withdrawal APPROVED - Order #${selectedOrder.id}`,
-                                preview: `Your withdrawal request for Order #${selectedOrder.id} has been approved. Refund processed.`,
-                                body: emailHtml,
-                                date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                              };
-
-                              try {
-                                const stored = localStorage.getItem('ps_simulated_emails');
-                                const emails = stored ? JSON.parse(stored) : [];
-                                localStorage.setItem('ps_simulated_emails', JSON.stringify([newEmail, ...emails]));
-                                window.dispatchEvent(new CustomEvent('ps-emails-updated'));
-                              } catch (e) {
-                                console.error(e);
-                              }
-
-                              parentOnUpdateOrders(updatedOrders);
-                              setSelectedOrder({
-                                ...selectedOrder,
-                                tags: updatedTags,
-                                paymentStatus: 'Refunded' as const
-                              });
-                            }}
-                            className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[9.5px] tracking-wider rounded-lg text-center transition-colors cursor-pointer select-none border border-emerald-700"
-                          >
-                            Approve & Refund
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              // DECLINE WITHDRAWAL
-                              const updatedTags = selectedOrder.tags.filter(t => t !== 'Withdrawal Requested' && !t.startsWith('Withdraw:'));
-                              updatedTags.push('Withdrawal Declined');
-                              
-                              const updatedOrders = parentOrders.map(o => {
-                                if (o.id === selectedOrder.id) {
-                                  return {
-                                    ...o,
-                                    tags: updatedTags,
-                                    paymentStatus: 'Paid' as const
-                                  };
-                                }
-                                return o;
-                              });
-
-                              // Draft Declined email copy
-                              const emailHtml = `
-                                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #334155;">
-                                  <div style="background-color: #ef4444; padding: 25px 20px; text-align: center;">
-                                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px;">ATELIER STUDIO</span>
-                                    <div style="font-size: 9px; font-weight: bold; color: #fee2e2; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">WITHDRAWAL DECLINED</div>
-                                  </div>
-                                  
-                                  <div style="padding: 24px; text-align: left;">
-                                    <p style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 0;">Hi ${selectedOrder.customerName || 'Value Member'},</p>
-                                    <p style="font-size: 12.5px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
-                                      We are writing to update you regarding your withdrawal request for Order <strong>#${selectedOrder.id}</strong>.
-                                    </p>
-
-                                    <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 11.5px; line-height: 1.5; color: #991b1b;">
-                                      <strong>Request Status: Declined</strong><br/>
-                                      Unfortunately, we were unable to complete your withdrawal request because the package containing your items has already been securely packed, labeled, and transferred to our postal partner for delivery. 
-                                    </div>
-
-                                    <p style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
-                                      Once you receive the package, you are welcome to utilize our hassle-free returns policy to send any unwanted items back for a full refund.
-                                    </p>
-                                  </div>
-                                  
-                                  <div style="background-color: #f8fafc; padding: 15px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8;">
-                                    Thank you for your understanding.
-                                  </div>
-                                </div>
-                              `;
-
-                              const newEmail = {
-                                to: selectedOrder.customerEmail,
-                                subject: `Withdrawal Request Declined - Order #${selectedOrder.id}`,
-                                preview: `Your withdrawal request for Order #${selectedOrder.id} was declined as the shipment has dispatched.`,
-                                body: emailHtml,
-                                date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                              };
-
-                              try {
-                                const stored = localStorage.getItem('ps_simulated_emails');
-                                const emails = stored ? JSON.parse(stored) : [];
-                                localStorage.setItem('ps_simulated_emails', JSON.stringify([newEmail, ...emails]));
-                                window.dispatchEvent(new CustomEvent('ps-emails-updated'));
-                              } catch (e) {
-                                console.error(e);
-                              }
-
-                              parentOnUpdateOrders(updatedOrders);
-                              setSelectedOrder({
-                                ...selectedOrder,
-                                tags: updatedTags,
-                                paymentStatus: 'Paid' as const
-                              });
-                            }}
-                            className="flex-1 py-2 bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[9.5px] tracking-wider rounded-lg text-center transition-colors cursor-pointer select-none border border-slate-750"
-                          >
-                            Decline Request
-                          </button>
-                        </div>
-                      </div>
-                    )}
 
                     {/* FULFILLMENT CARD (Identical to Shopify #1001-F1) */}
                     <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
@@ -3784,7 +3640,7 @@ export default function AdminDashboard({
 
                       <div className="space-y-4 text-xs">
                         <div>
-                          <span className="font-extrabold text-[#006e52] hover:underline cursor-pointer block text-[13px]">
+                          <span className="font-extrabold text-[#05164e] hover:underline cursor-pointer block text-[13px]">
                             {selectedOrder.customerName || 'Rahul Dhiman'}
                           </span>
                           <span className="text-slate-500 font-bold mt-0.5 block hover:underline cursor-pointer">
@@ -3826,7 +3682,7 @@ export default function AdminDashboard({
                       <p className="text-xs text-slate-500 font-medium leading-relaxed pt-1">
                         There aren't any conversion details available for this order.
                       </p>
-                      <span className="text-xs text-[#006e52] font-black hover:underline cursor-pointer flex items-center gap-0.5 select-none">
+                      <span className="text-xs text-[#05164e] font-black hover:underline cursor-pointer flex items-center gap-0.5 select-none">
                         Learn more
                       </span>
                     </div>
@@ -3891,17 +3747,17 @@ export default function AdminDashboard({
                               onChange={(e) => setCarrierInput(e.target.value)}
                               className="w-full p-2.5 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none rounded-lg bg-slate-50 font-bold text-slate-705 cursor-pointer"
                             >
-                              <option value="Royal Mail">Royal Mail</option>
-                              <option value="Evri">Evri</option>
-                              <option value="DHL">DHL</option>
-                              <option value="FedEx">FedEx</option>
-                              <option value="UPS">UPS</option>
-                              <option value="USPS">USPS</option>
+                              <option value="BlueDart Express">BlueDart Express (India)</option>
+                              <option value="Delhivery">Delhivery (Pan-India)</option>
+                              <option value="DTDC Express">DTDC Express</option>
+                              <option value="India Post">India Post Speed Post</option>
+                              <option value="FedEx India">FedEx India</option>
+                              <option value="DHL Express">DHL Express</option>
                             </select>
                           </div>
                         </div>
 
-                        <button className="text-[#008060] hover:text-[#006e52] font-black text-xs flex items-center gap-1 hover:underline cursor-pointer py-1 mt-1 select-none">
+                        <button className="text-[#05164e] hover:text-[#092275] font-black text-xs flex items-center gap-1 hover:underline cursor-pointer py-1 mt-1 select-none">
                           <span className="text-sm">+</span>
                           <span>Add another tracking number</span>
                         </button>
@@ -4587,7 +4443,7 @@ export default function AdminDashboard({
                             {page.visibility}
                           </span>
                           {page.isHomepage && (
-                            <span className="text-[8px] py-0.5 px-1.5 font-black uppercase tracking-widest rounded bg-amber-500 text-white flex items-center gap-1">
+                            <span className="text-[8px] py-0.5 px-1.5 font-black uppercase tracking-widest rounded bg-[#5674d5] text-white flex items-center gap-1">
                               🏠 Active Homepage
                             </span>
                           )}
@@ -4774,7 +4630,7 @@ export default function AdminDashboard({
                         isSaving
                           ? 'bg-slate-700 text-slate-300 border-slate-700 cursor-wait'
                           : hasUnsavedChanges
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 cursor-pointer ring-4 ring-emerald-400/40 animate-pulse shadow-md shadow-emerald-900/30 font-black'
+                          ? 'bg-[#05164e] hover:bg-[#092275] text-white border-[#05164e] cursor-pointer ring-4 ring-blue-400/40 animate-pulse shadow-md shadow-blue-900/30 font-black'
                           : 'bg-slate-800 text-slate-400 border-slate-700 cursor-not-allowed select-none'
                       }`}
                     >
@@ -9264,6 +9120,389 @@ export default function AdminDashboard({
           </div>
         </div>
 
+      </div>
+    )}
+
+    {/* SETTINGS VIEW */}
+    {activeTab === 'settings' && (
+      <div className="space-y-6 text-left animate-fadeIn">
+        {/* Settings Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-2 bg-[#e8ecf8] text-[#05164e] rounded-xl border border-[#c5d0f1]">
+                <Settings className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-xl font-black text-slate-900">Store Settings & Localization</h2>
+                <p className="text-xs text-slate-500 font-medium">Configure active currency for all products, regional defaults, and store profile</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {settingsSavedToast && (
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5 animate-fadeIn">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Settings Saved!</span>
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                const currInfo = setActiveCurrency(settingsCurrency);
+                const updated: LayoutSettings = {
+                  ...localLayoutSettings,
+                  currency: currInfo.code,
+                  currencySymbol: currInfo.symbol,
+                  country: settingsCountry,
+                  timezone: settingsTimezone,
+                  storeName: settingsStoreName,
+                  address: settingsAddress,
+                  phone: settingsPhone
+                };
+                setLocalLayoutSettings(updated);
+                if (parentOnUpdateLayoutSettings) {
+                  parentOnUpdateLayoutSettings(updated);
+                }
+                try {
+                  localStorage.setItem('ps_store_settings', JSON.stringify({
+                    currency: currInfo.code,
+                    currencySymbol: currInfo.symbol,
+                    country: settingsCountry,
+                    timezone: settingsTimezone,
+                    storeName: settingsStoreName,
+                    address: settingsAddress,
+                    phone: settingsPhone,
+                    shippingThreshold: settingsShippingThreshold
+                  }));
+                } catch (e) {}
+                setSettingsSavedToast(true);
+                setTimeout(() => setSettingsSavedToast(false), 3000);
+              }}
+              className="px-5 py-2.5 bg-[#05164e] hover:bg-[#092275] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+            >
+              <Save className="h-4 w-4" />
+              <span>Save Settings</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main 2 Cols: Currency & Regional Configuration */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Card 1: Product Currency Selection */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+              <div className="border-b border-slate-100 pb-3 flex justify-between items-center">
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    <span>Currency for Website Products</span>
+                    <span className="text-[10px] bg-[#e8ecf8] text-[#05164e] font-bold px-2 py-0.5 rounded-full border border-[#c5d0f1]">
+                      Live Store Currency
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Select the currency used to display and calculate prices across your entire store and admin dashboard.</p>
+                </div>
+              </div>
+
+              {/* Currency Selector Grid of Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {SUPPORTED_CURRENCIES.map(curr => {
+                  const isSelected = settingsCurrency === curr.code;
+                  return (
+                    <button
+                      key={curr.code}
+                      type="button"
+                      onClick={() => {
+                        setSettingsCurrency(curr.code);
+                        setActiveCurrency(curr.code);
+                        const updated: LayoutSettings = {
+                          ...localLayoutSettings,
+                          currency: curr.code,
+                          currencySymbol: curr.symbol
+                        };
+                        setLocalLayoutSettings(updated);
+                        if (parentOnUpdateLayoutSettings) {
+                          parentOnUpdateLayoutSettings(updated);
+                        }
+                      }}
+                      className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
+                        isSelected 
+                          ? 'border-[#05164e] bg-[#e8ecf8]/60 ring-2 ring-[#05164e]/30 shadow-xs' 
+                          : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xl">{curr.flag}</span>
+                        <span className={`text-xs font-black font-mono px-2 py-0.5 rounded-md ${
+                          isSelected ? 'bg-[#05164e] text-white' : 'bg-slate-100 text-slate-700'
+                        }`}>
+                          {curr.symbol} {curr.code}
+                        </span>
+                      </div>
+                      <div className="mt-2">
+                        <div className="text-xs font-bold text-slate-900">{curr.name}</div>
+                        <div className="text-[10px] text-slate-500 font-medium">
+                          {curr.code === 'INR' ? 'Primary India Currency' : `Symbol: ${curr.symbol}`}
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <div className="absolute top-2 right-2">
+                          <CheckCircle2 className="h-4 w-4 text-[#05164e]" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Live Preview Box */}
+              <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">Live Price Preview on Storefront</span>
+                  <p className="text-xs text-slate-600 font-medium mt-0.5">How product prices are formatted for customers:</p>
+                </div>
+                <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-3xs">
+                  <div className="text-right">
+                    <span className="text-sm font-black text-slate-900 font-mono">
+                      {formatPrice(1499.00, settingsCurrency)}
+                    </span>
+                    <span className="text-[10px] text-slate-400 line-through font-mono block">
+                      {formatPrice(1999.00, settingsCurrency)}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">
+                    Active
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Regional Country & Timezone (India Defaults) */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+              <div className="border-b border-slate-100 pb-3">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+                  Regional Operations (India Operations)
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">Primary headquarters, shipping jurisdiction and tax compliance region.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                    Store Country / Region
+                  </label>
+                  <select
+                    value={settingsCountry}
+                    onChange={(e) => setSettingsCountry(e.target.value)}
+                    className="w-full text-xs font-semibold p-2.5 border border-slate-250 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#05164e] text-slate-800"
+                  >
+                    <option value="India">🇮🇳 India (Primary Operations)</option>
+                    <option value="United Kingdom">🇬🇧 United Kingdom</option>
+                    <option value="United States">🇺🇸 United States</option>
+                    <option value="United Arab Emirates">🇦🇪 United Arab Emirates</option>
+                    <option value="Germany">🇩🇪 Germany</option>
+                    <option value="Singapore">🇸🇬 Singapore</option>
+                    <option value="Australia">🇦🇺 Australia</option>
+                    <option value="Canada">🇨🇦 Canada</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                    Store Timezone
+                  </label>
+                  <select
+                    value={settingsTimezone}
+                    onChange={(e) => setSettingsTimezone(e.target.value)}
+                    className="w-full text-xs font-semibold p-2.5 border border-slate-250 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#05164e] text-slate-800"
+                  >
+                    <option value="Asia/Kolkata (IST)">Asia/Kolkata (IST +05:30) - Indian Standard Time</option>
+                    <option value="Europe/London (GMT)">Europe/London (GMT +00:00)</option>
+                    <option value="America/New_York (EST)">America/New_York (EST -05:00)</option>
+                    <option value="Asia/Dubai (GST)">Asia/Dubai (GST +04:00)</option>
+                    <option value="Asia/Singapore (SGT)">Asia/Singapore (SGT +08:00)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                    Free Pan-India Shipping Threshold
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={settingsShippingThreshold}
+                      onChange={(e) => setSettingsShippingThreshold(Number(e.target.value) || 0)}
+                      className="w-full text-xs font-bold p-2.5 pl-8 border border-slate-250 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#05164e] text-slate-800"
+                    />
+                    <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400 font-mono">
+                      {SUPPORTED_CURRENCIES.find(c => c.code === settingsCurrency)?.symbol || '₹'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 mt-1 block">Free delivery applied when cart exceeds this amount.</span>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                    Customer Care Contact Phone
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsPhone}
+                    onChange={(e) => setSettingsPhone(e.target.value)}
+                    placeholder="+91 98200 12345"
+                    className="w-full text-xs font-bold p-2.5 border border-slate-250 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#05164e] text-slate-800"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">Official support line displayed in footer and invoices.</span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Card 3: Business Information & Atelier Headquarters */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+              <div className="border-b border-slate-100 pb-3">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+                  Store Business Details (India)
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">Details printed on customer invoices, packing slips, and GST receipts.</p>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                    Legal Business Entity
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsStoreName}
+                    onChange={(e) => setSettingsStoreName(e.target.value)}
+                    placeholder="Atelier Studio India Pvt Ltd"
+                    className="w-full text-xs font-bold p-2.5 border border-slate-250 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#05164e] text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                    Dispatch Atelier & Warehouse Address
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={settingsAddress}
+                    onChange={(e) => setSettingsAddress(e.target.value)}
+                    placeholder="Atelier Studio, Bandra West, Mumbai, Maharashtra 400050, India"
+                    className="w-full text-xs font-medium p-2.5 border border-slate-250 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#05164e] text-slate-800"
+                  />
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Right Col: Payment Gateways & Summary */}
+          <div className="space-y-6">
+            
+            {/* Card: Payment Gateways in India */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+              <div className="border-b border-slate-100 pb-3">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+                  Payment Channels (India)
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">Available customer checkout payment options.</p>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#05164e] text-white flex items-center justify-center font-black text-xs">
+                      RZP
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900">Razorpay Secure</div>
+                      <div className="text-[10px] text-slate-400">UPI (GPay, PhonePe, Paytm), RuPay, Cards</div>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-black uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">
+                    Active
+                  </span>
+                </div>
+
+                <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-800 text-white flex items-center justify-center font-black text-xs">
+                      COD
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900">Cash on Delivery</div>
+                      <div className="text-[10px] text-slate-400">Pan-India 19,000+ Pin codes</div>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-black uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">
+                    Active
+                  </span>
+                </div>
+
+                <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-700 text-white flex items-center justify-center font-black text-xs">
+                      SC
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900">Store Credit Balance</div>
+                      <div className="text-[10px] text-slate-400">Instant checkout redemption</div>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-black uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">
+                    Active
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card: Quick Actions */}
+            <div className="bg-[#05164e] text-white p-6 rounded-2xl shadow-md space-y-4">
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className="h-6 w-6 text-[#5674d5]" />
+                <h4 className="font-black text-sm uppercase tracking-wider">India Store Active</h4>
+              </div>
+              <p className="text-xs text-slate-250 leading-relaxed font-medium">
+                Your store is configured with Indian Rupees (₹) as the primary currency, Razorpay UPI/Card gateway, and pan-India express fulfillment.
+              </p>
+              <div className="pt-2 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currInfo = setActiveCurrency('INR');
+                    setSettingsCurrency('INR');
+                    setSettingsCountry('India');
+                    setSettingsTimezone('Asia/Kolkata (IST)');
+                    const updated: LayoutSettings = {
+                      ...localLayoutSettings,
+                      currency: 'INR',
+                      currencySymbol: '₹',
+                      country: 'India',
+                      timezone: 'Asia/Kolkata (IST)'
+                    };
+                    setLocalLayoutSettings(updated);
+                    if (parentOnUpdateLayoutSettings) {
+                      parentOnUpdateLayoutSettings(updated);
+                    }
+                    setSettingsSavedToast(true);
+                    setTimeout(() => setSettingsSavedToast(false), 3000);
+                  }}
+                  className="w-full py-2 bg-white/10 hover:bg-white/20 text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer"
+                >
+                  Reset to India (₹ INR) Defaults
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
     )}
 

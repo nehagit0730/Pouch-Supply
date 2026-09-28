@@ -510,11 +510,6 @@ export default function CustomerDrawer({
                                         }`}>
                                           {order.fulfillmentStatus}
                                         </span>
-                                        {Array.isArray(order.tags) && order.tags.includes('Withdrawal Requested') && (
-                                          <span className="text-[8.5px] font-black uppercase py-0.5 px-2 rounded-full leading-none shrink-0 bg-rose-50 text-rose-700 border border-rose-200 animate-pulse">
-                                            Withdrawal Requested
-                                          </span>
-                                        )}
                                       </div>
                                       <p className="text-[9.5px] text-slate-400 font-mono">{order.date}</p>
                                     </div>
@@ -599,7 +594,7 @@ export default function CustomerDrawer({
                                                       step.completed
                                                         ? 'bg-indigo-600 border-indigo-600'
                                                         : step.active
-                                                        ? 'bg-amber-500 border-amber-500 animate-pulse'
+                                                        ? 'bg-[#5674d5] border-[#5674d5] animate-pulse'
                                                         : 'bg-white border-slate-300'
                                                     }`} />
                                                     <div className="leading-tight">
@@ -680,7 +675,7 @@ export default function CustomerDrawer({
                               <h4 className="text-[9.5px] font-black uppercase tracking-widest text-[#1e293b]">Enter Shipping Address</h4>
                               <input
                                 type="text"
-                                placeholder="e.g. 52 Wardour St, London, W1D 4JD, United Kingdom"
+                                placeholder="e.g. Flat 402, Bandra West, Mumbai, Maharashtra 400050, India"
                                 value={newStreetAddress}
                                 onChange={(e) => setNewStreetAddress(e.target.value)}
                                 className="w-full text-xs font-semibold border border-slate-200 p-2.5 rounded-xl bg-white focus:ring-1 focus:ring-indigo-650"
@@ -814,7 +809,7 @@ export default function CustomerDrawer({
                               <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">
                                 <Mail className="h-8 w-8 text-neutral-300 mx-auto mb-2" />
                                 <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Inbox Empty</p>
-                                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed max-w-[200px] mx-auto">Dispatched transaction and withdrawal emails will show up here as live copies.</p>
+                                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed max-w-[200px] mx-auto">Dispatched transaction and order confirmation emails will show up here as live copies.</p>
                               </div>
                             ) : (
                               <div className="space-y-2.5">

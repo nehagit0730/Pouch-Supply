@@ -657,7 +657,7 @@ export default function CollectionDetailView({
                       {/* Badge Tag indicator top-left (Best Seller / New / Brand) */}
                       <div className="absolute top-4 left-4 z-20 flex flex-col gap-1.5">
                         {prod.tags.includes('best-seller') || prod.price < 4.50 ? (
-                          <span className="bg-amber-500 text-white font-black text-[8px] uppercase tracking-widest py-1 px-2 rounded-md shadow-xs leading-none">
+                          <span className="bg-[#5674d5] text-white font-black text-[8px] uppercase tracking-widest py-1 px-2 rounded-md shadow-xs leading-none">
                             BEST SELLER
                           </span>
                         ) : prod.tags.includes('new') ? (
@@ -767,7 +767,7 @@ export default function CollectionDetailView({
                                   key={dot}
                                   className={`h-1.5 w-1.5 rounded-full ${
                                     dot <= strengthInfo.score 
-                                      ? 'bg-amber-500 border border-amber-500' 
+                                      ? 'bg-[#5674d5] border border-[#5674d5]' 
                                       : 'bg-slate-100 border border-slate-200'
                                   }`}
                                 />

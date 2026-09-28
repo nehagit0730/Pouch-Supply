@@ -4,8 +4,8 @@ import {
   ArrowLeft, Search, Plus, X, Image as ImageIcon, Save, Check, Globe, HelpCircle, 
   Sparkles, SlidersHorizontal, Trash2, ArrowUpDown, GripVertical, ChevronDown, 
   CheckSquare, Square, Eye, Copy, HardDrive, Info, AlertCircle, Play, Sparkle
-} from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
+import { getActiveCurrency } from '../utils/currency';
 
 interface ProductEditorProps {
   product: Product | null; // null if creating a new one
@@ -22,6 +22,8 @@ export default function ProductEditor({
   onCancel,
   onDelete
 }: ProductEditorProps) {
+  const activeCurrency = getActiveCurrency();
+
   // Product state fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -584,7 +586,7 @@ export default function ProductEditor({
 
           <button
             onClick={executeFormSubmit}
-            className="py-2.5 px-5.5 bg-[#008060] hover:bg-[#006e52] text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+            className="py-2.5 px-5.5 bg-[#05164e] hover:bg-[#092275] text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
           >
             <Save className="h-4 w-4" />
             <span>Save Product</span>
@@ -607,11 +609,11 @@ export default function ProductEditor({
               <input
                 id="prod-edit-title"
                 type="text"
-                placeholder="e.g. CUBA Double Fresh Mint 20mg"
+                placeholder="e.g. Architectural Melton Wool Overcoat"
                 required
                 value={title}
                 onChange={handleTitleChange}
-                className="w-full text-xs font-semibold px-4 py-3 rounded-xl border border-slate-250 bg-white focus:outline-none focus:ring-2 focus:ring-[#008060]/20 focus:border-[#008060] transition-all"
+                className="w-full text-xs font-semibold px-4 py-3 rounded-xl border border-slate-250 bg-white focus:outline-none focus:ring-2 focus:ring-[#05164e]/20 focus:border-[#05164e] transition-all"
               />
             </div>
 
@@ -621,7 +623,7 @@ export default function ProductEditor({
               </label>
               
               {/* Fully Working Shopify-style Rich-Text Toolbar connected with formatting states */}
-              <div className="border border-slate-250 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#008060]/20 focus-within:border-[#008060] transition-all bg-white mb-3">
+              <div className="border border-slate-250 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#05164e]/20 focus-within:border-[#05164e] transition-all bg-white mb-3">
                 <div className="bg-slate-50 border-b border-slate-200 p-2 flex flex-wrap gap-1 px-3.5 select-none text-slate-500 items-center">
                   <button 
                     type="button" 
@@ -745,7 +747,7 @@ export default function ProductEditor({
               <button
                 type="button"
                 onClick={() => setShowMediaInputPanel(!showMediaInputPanel)}
-                className="text-[#008060] hover:text-[#006e52] font-black text-[10px] uppercase tracking-wider hover:underline"
+                className="text-[#05164e] hover:text-[#092275] font-black text-[10px] uppercase tracking-wider hover:underline"
               >
                 {showMediaInputPanel ? 'Hide URL field' : 'Add media URL'}
               </button>
@@ -829,14 +831,14 @@ export default function ProductEditor({
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-550 font-bold uppercase tracking-wider text-[9px] mb-1.5">Price (Retail GBP)</label>
-                <div className="relative rounded-xl overflow-hidden border border-slate-250 focus-within:ring-2 focus-within:ring-[#008060]/20 focus-within:border-[#008060] transition-all">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-450 font-bold font-mono text-xs">£</span>
+                <label className="block text-slate-550 font-bold uppercase tracking-wider text-[9px] mb-1.5">Price ({activeCurrency.code})</label>
+                <div className="relative rounded-xl overflow-hidden border border-slate-250 focus-within:ring-2 focus-within:ring-[#05164e]/20 focus-within:border-[#05164e] transition-all">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-450 font-bold font-mono text-xs">{activeCurrency.symbol}</span>
                   <input
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="4.99"
+                    placeholder="999.00"
                     value={price || ''}
                     onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
                     className="w-full text-xs font-mono font-bold pl-8 pr-4 py-2.5 bg-white focus:outline-none"
@@ -846,13 +848,13 @@ export default function ProductEditor({
 
               <div>
                 <label className="block text-slate-550 font-bold uppercase tracking-wider text-[9px] mb-1.5">Compare-at Price (original MSRP)</label>
-                <div className="relative rounded-xl overflow-hidden border border-slate-250 focus-within:ring-2 focus-within:ring-[#008060]/20 focus-within:border-[#008060] transition-all">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-450 font-bold font-mono text-xs">£</span>
+                <div className="relative rounded-xl overflow-hidden border border-slate-250 focus-within:ring-2 focus-within:ring-[#05164e]/20 focus-within:border-[#05164e] transition-all">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-450 font-bold font-mono text-xs">{activeCurrency.symbol}</span>
                   <input
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="6.50"
+                    placeholder="1499.00"
                     value={compareAtPrice || ''}
                     onChange={(e) => setCompareAtPrice(parseFloat(e.target.value) || 0)}
                     className="w-full text-xs font-mono font-bold pl-8 pr-4 py-2.5 bg-white focus:outline-none"
@@ -938,7 +940,7 @@ export default function ProductEditor({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fadeIn">
                 <div>
                   <label className="block text-slate-550 font-bold uppercase tracking-wider text-[9px] mb-1.5">Product Weight</label>
-                  <div className="flex rounded-xl overflow-hidden border border-slate-250 focus-within:ring-2 focus-within:ring-[#008060]/20 focus-within:border-[#008060] transition-all">
+                  <div className="flex rounded-xl overflow-hidden border border-slate-250 focus-within:ring-2 focus-within:ring-[#05164e]/20 focus-within:border-[#05164e] transition-all">
                     <input
                       type="number"
                       min="0"
@@ -965,13 +967,13 @@ export default function ProductEditor({
                   <label className="block text-slate-550 font-bold uppercase tracking-wider text-[9px] mb-1.5">Country of origin</label>
                   <select
                     className="w-full text-xs font-bold px-4 py-2.5 border border-slate-250 bg-white rounded-xl focus:outline-none cursor-pointer appearance-none"
-                    defaultValue="GB"
+                    defaultValue="IN"
                   >
+                    <option value="IN">India 🇮🇳 (Domestic Production)</option>
                     <option value="GB">United Kingdom (UK)</option>
                     <option value="SE">Sweden (Europe)</option>
-                    <option value="HR">Croatia (Olival HQ)</option>
-                    <option value="DK">Denmark</option>
-                    <option value="DE">Germany</option>
+                    <option value="PT">Portugal (Atelier Milling)</option>
+                    <option value="IT">Italy</option>
                   </select>
                 </div>
               </div>
@@ -984,7 +986,7 @@ export default function ProductEditor({
               <div>
                 <h3 className="font-extrabold text-slate-900 text-xs sm:text-[13px] uppercase tracking-wide flex items-center gap-1">
                   <span>Custom Variants Options Catalog</span>
-                  <span className="text-[10px] lowercase text-[#008060] bg-[#008060]/5 border border-[#008060]/15 font-black px-2 py-0.5 rounded-full font-mono">
+                  <span className="text-[10px] lowercase text-[#05164e] bg-[#05164e]/5 border border-[#05164e]/15 font-black px-2 py-0.5 rounded-full font-mono">
                     {variantsList.length} Option Dimension(s)
                   </span>
                 </h3>
@@ -1041,7 +1043,7 @@ export default function ProductEditor({
                           className={`w-full text-xs font-semibold px-3 py-2 rounded-lg border bg-white focus:outline-none focus:ring-1 transition-all ${
                             checkNameMissing 
                               ? 'border-amber-400 focus:ring-amber-300 ring-2 ring-amber-400/10' 
-                              : 'border-slate-300 focus:ring-emerald-500'
+                              : 'border-slate-300 focus:ring-blue-900'
                           }`}
                         />
                         {checkNameMissing && (
@@ -1098,7 +1100,7 @@ export default function ProductEditor({
                           <button
                             type="button"
                             onClick={() => handleAddOptionValue(variant.id)}
-                            className="bg-slate-900 hover:bg-[#008060] text-white font-extrabold text-[9.5px] uppercase tracking-widest px-3 py-1.5.5 rounded-lg cursor-pointer transition-colors"
+                            className="bg-slate-900 hover:bg-[#05164e] text-white font-extrabold text-[9.5px] uppercase tracking-widest px-3 py-1.5.5 rounded-lg cursor-pointer transition-colors"
                           >
                             Done
                           </button>
@@ -1132,9 +1134,9 @@ export default function ProductEditor({
             <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xs text-left">
               <div>
                 <h3 className="font-extrabold text-slate-900 text-xs sm:text-[13px] uppercase tracking-wide flex items-center gap-1.5">
-                  <SlidersHorizontal className="h-4 w-4 text-emerald-650" />
+                  <SlidersHorizontal className="h-4 w-4 text-[#05164e]" />
                   <span>Physical Variants Configurations</span>
-                  <span className="text-[10px] lowercase text-[#008060] bg-[#008060]/5 border border-[#008060]/15 font-black px-2 py-0.5 rounded-full font-mono">
+                  <span className="text-[10px] lowercase text-[#05164e] bg-[#05164e]/5 border border-[#05164e]/15 font-black px-2 py-0.5 rounded-full font-mono">
                     {concreteVariantsList.length} Variant(s)
                   </span>
                 </h3>
@@ -1248,7 +1250,7 @@ export default function ProductEditor({
               <button
                 type="button"
                 onClick={() => setShowSeoFields(!showSeoFields)}
-                className="text-[#008060] hover:text-[#006e52] font-black text-[10px] uppercase tracking-wider hover:underline"
+                className="text-[#05164e] hover:text-[#092275] font-black text-[10px] uppercase tracking-wider hover:underline"
               >
                 {showSeoFields ? 'Collapse Layout' : 'Modify Web SEO'}
               </button>
@@ -1505,7 +1507,7 @@ export default function ProductEditor({
 
         <button
           onClick={executeFormSubmit}
-          className="py-2.5 px-6 bg-[#008060] hover:bg-[#006e52] text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-700/5 hover:shadow-lg"
+          className="py-2.5 px-6 bg-[#05164e] hover:bg-[#092275] text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-blue-900/10 hover:shadow-lg"
         >
           <Save className="h-4 w-4" />
           <span>Save Product</span>
