@@ -593,6 +593,7 @@ export default function AdminDashboard({
     customers: 'customers',
     discounts: 'discounts',
     layout: 'layout',
+    settings: 'settings',
   };
 
   const pathToTabMap: Record<string, SidebarTab> = {
@@ -606,6 +607,7 @@ export default function AdminDashboard({
     customers: 'customers',
     discounts: 'discounts',
     layout: 'layout',
+    settings: 'settings',
   };
 
   const getInitialTab = (): SidebarTab => {
@@ -9162,8 +9164,8 @@ export default function AdminDashboard({
                   phone: settingsPhone
                 };
                 setLocalLayoutSettings(updated);
-                if (parentOnUpdateLayoutSettings) {
-                  parentOnUpdateLayoutSettings(updated);
+                if (onUpdateLayoutSettings) {
+                  onUpdateLayoutSettings(updated);
                 }
                 try {
                   localStorage.setItem('ps_store_settings', JSON.stringify({
@@ -9223,8 +9225,8 @@ export default function AdminDashboard({
                           currencySymbol: curr.symbol
                         };
                         setLocalLayoutSettings(updated);
-                        if (parentOnUpdateLayoutSettings) {
-                          parentOnUpdateLayoutSettings(updated);
+                        if (onUpdateLayoutSettings) {
+                          onUpdateLayoutSettings(updated);
                         }
                       }}
                       className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
@@ -9488,8 +9490,8 @@ export default function AdminDashboard({
                       timezone: 'Asia/Kolkata (IST)'
                     };
                     setLocalLayoutSettings(updated);
-                    if (parentOnUpdateLayoutSettings) {
-                      parentOnUpdateLayoutSettings(updated);
+                    if (onUpdateLayoutSettings) {
+                      onUpdateLayoutSettings(updated);
                     }
                     setSettingsSavedToast(true);
                     setTimeout(() => setSettingsSavedToast(false), 3000);

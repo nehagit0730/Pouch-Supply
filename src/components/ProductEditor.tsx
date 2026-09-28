@@ -4,6 +4,7 @@ import {
   ArrowLeft, Search, Plus, X, Image as ImageIcon, Save, Check, Globe, HelpCircle, 
   Sparkles, SlidersHorizontal, Trash2, ArrowUpDown, GripVertical, ChevronDown, 
   CheckSquare, Square, Eye, Copy, HardDrive, Info, AlertCircle, Play, Sparkle
+} from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 import { getActiveCurrency } from '../utils/currency';
 
