@@ -1,8 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  --font-editorial: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+
+  /* Luxury Camel / Gold Palette from Design */
+  --color-gold-50: #fbf8f2;
+  --color-gold-100: #f5eedf;
+  --color-gold-200: #ebd9bd;
+  --color-gold-300: #dec196;
+  --color-gold-400: #caa26c;
+  --color-gold-500: #b58d59;
+  --color-gold-600: #a17849;
+  --color-gold-700: #865f3a;
+  --color-gold-800: #6f4e32;
+  --color-gold-900: #5c412b;
   
   /* Primary #05164e color palette */
   --color-indigo-50: #e8ecf8;
@@ -26,22 +40,32 @@
   --color-emerald-100: #e8ecf8;
   
   /* Redefine slate/neutral palette for clean professional merchant look */
-  --color-slate-50: #f6f6f7;
-  --color-slate-100: #f1f2f4;
-  --color-slate-150: #ebebeb;
-  --color-slate-200: #e1e3e5;
-  --color-slate-250: #d6dadc;
-  --color-slate-300: #b5babd;
-  --color-slate-450: #4a4d50;
-  --color-slate-700: #4a4d50;
-  --color-slate-800: #2d3032;
-  --color-slate-900: #1a1c1d;
-  --color-slate-950: #101112;
+  --color-slate-50: #fbfbfb;
+  --color-slate-100: #f4f4f5;
+  --color-slate-150: #eaeaec;
+  --color-slate-200: #e0e0e3;
+  --color-slate-250: #d4d4d8;
+  --color-slate-300: #b5b5ba;
+  --color-slate-450: #52525b;
+  --color-slate-700: #3f3f46;
+  --color-slate-800: #27272a;
+  --color-slate-900: #18181b;
+  --color-slate-950: #0e0e10;
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: #f6f6f7;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #fdfcfb;
+  color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-editorial-italic {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  color: #b58d59;
 }
 
 /* Custom styled utility classes matching Professional Polish exactly */

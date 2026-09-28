@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { Mail, ShieldCheck, Truck, RefreshCw, Sparkles, HelpCircle, ArrowRight } from 'lucide-react';
+import { 
+  Phone, Mail, MapPin, Instagram, Twitter, Facebook, 
+  ArrowUp, Check, ChevronUp 
+} from 'lucide-react';
 import { LayoutSettings } from '../types';
 import { klaviyoTrackNewsletterSubscribe } from '../utils/klaviyo';
 
@@ -13,215 +16,236 @@ export default function Footer({ onNavigate, layoutSettings }: FooterProps) {
   const [subscribed, setSubscribed] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubscribe = () => {
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
     setErrorMsg('');
     if (!email || !email.includes('@')) {
-      setErrorMsg('Please enter a valid email.');
+      setErrorMsg('Please enter a valid email address.');
       return;
     }
     klaviyoTrackNewsletterSubscribe(email);
     setSubscribed(true);
     setEmail('');
+    setTimeout(() => setSubscribed(false), 5000);
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    } else if (onNavigate) {
+      onNavigate('frontend-home');
+      setTimeout(() => {
+        const target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
   };
 
   return (
-    <>
-      {/* 60-Second Subscription CTA Transition Banner into Footer */}
-      <div className="w-full bg-linear-to-b from-slate-50 to-white py-16 px-6 border-t border-slate-200 text-center relative overflow-hidden">
-        {/* Subtle background decoration */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-slate-200/40 rounded-full blur-3xl -z-10" />
-        
-        <div className="max-w-3xl mx-auto space-y-6">
-          <div className="space-y-2 animate-fade-in">
-            <span className="text-[10px] bg-slate-100 border border-slate-200 text-slate-700 font-extrabold uppercase py-1 px-3.5 rounded-full inline-block tracking-widest">
-              BESPOKE WARDROBE CAPSULE
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-tight leading-none">
-              Curate your seasonal wardrobe in under 60 seconds.
-            </h2>
-            <p className="text-xs text-slate-500 font-medium max-w-lg mx-auto">
-              Get timeless tailored outerwear and organic essentials delivered on your schedule. Save 20%, enjoy complimentary exchanges, and cancel anytime.
-            </p>
-          </div>
-
-          {/* Three checklist checkmarks */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-xs font-bold text-slate-700">
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-[10px] font-black shrink-0">✔</span>
-              <span>Save 20% on capsule bundles</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-[10px] font-black shrink-0">✔</span>
-              <span>Swap sizes & styles anytime</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-[10px] font-black shrink-0">✔</span>
-              <span>Skip drops or cancel whenever</span>
-            </div>
-          </div>
-
-          <div className="pt-2">
-            <button
-              onClick={() => onNavigate?.('frontend-subscribe')}
-              className="bg-slate-950 hover:bg-slate-800 hover:scale-[1.02] active:scale-95 text-white font-black text-xs sm:text-sm py-3.5 px-8 rounded-2xl transition-all shadow-md cursor-pointer uppercase tracking-widest flex items-center gap-2 mx-auto"
-            >
-              <span>Build Your Capsule</span>
-              <ArrowRight className="h-4 w-4 stroke-[2.5]" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <footer id="global-footer" className="bg-slate-900 text-white border-t border-slate-800">
+    <footer id="global-footer" className="bg-[#0e0e10] text-[#a0a0a5] border-t border-white/5 font-sans">
       
-      {/* Brand value propositions row */}
-      <div className="bg-slate-950 border-b border-slate-800/80 py-8 px-6">
-        <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 text-xs text-slate-300">
-          <div className="flex gap-3 items-center">
-            <div className="p-2.5 bg-slate-900 rounded-xl text-slate-300 border border-slate-800 shrink-0">
-              <Truck className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-white text-xs uppercase tracking-wide">Next-Day Shipping</h4>
-              <p className="text-slate-400 text-[11px] mt-0.5">Reliable express courier dispatching</p>
-            </div>
-          </div>
+      {/* Main Footer Grid */}
+      <div className="max-w-[1340px] mx-auto px-6 sm:px-10 py-16 sm:py-20">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 sm:gap-16">
+          
+          {/* Column 1: Contact */}
+          <div className="md:col-span-5 space-y-5">
+            <h4 className="font-serif text-xl font-normal text-white tracking-wide">
+              Contact
+            </h4>
 
-          <div className="flex gap-3 items-center">
-            <div className="p-2.5 bg-slate-900 rounded-xl text-slate-300 border border-slate-800 shrink-0">
-              <RefreshCw className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-white text-xs uppercase tracking-wide">Flexible Schedules</h4>
-              <p className="text-slate-400 text-[11px] mt-0.5">Pause, swap, or skip drops anytime</p>
-            </div>
-          </div>
+            <div className="space-y-3 text-xs text-[#8f8f94] font-light leading-relaxed">
+              <p className="max-w-xs">
+                {layoutSettings?.address || '0665 Broadway NY, New York 10001 United States of America'}
+              </p>
 
-          <div className="flex gap-3 items-center">
-            <div className="p-2.5 bg-slate-900 rounded-xl text-slate-300 border border-slate-800 shrink-0">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-white text-xs uppercase tracking-wide">Secured Checkout</h4>
-              <p className="text-slate-400 text-[11px] mt-0.5">Bank-grade 256-bit SSL encryption</p>
-            </div>
-          </div>
-
-          <div className="flex gap-3 items-center">
-            <div className="p-2.5 bg-slate-900 rounded-xl text-slate-300 border border-slate-800 shrink-0">
-              <HelpCircle className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-white text-xs uppercase tracking-wide">Atelier Concierge</h4>
-              <p className="text-slate-400 text-[11px] mt-0.5">Dedicated style and sizing advisers</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main categories navigation columns */}
-      <div className="max-w-[1440px] mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
-        
-        {/* Brand identity column */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            {layoutSettings?.footerLogoImage ? (
-              <img 
-                src={layoutSettings.footerLogoImage} 
-                className="max-h-10 max-w-[150px] object-contain rounded" 
-                alt="Footer Logo" 
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <>
-                <div className="h-8 w-8 rounded-full bg-white text-slate-950 flex items-center justify-center font-black tracking-tighter shadow">
-                  {(layoutSettings?.footerLogoText || 'A').charAt(0).toUpperCase()}
+              <div className="pt-2 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#b58d59] shrink-0">
+                  <Phone className="h-3.5 w-3.5" />
                 </div>
-                <span className="font-black tracking-widest text-white uppercase text-xs">
-                  {layoutSettings?.footerLogoText || 'ATELIER'}
-                </span>
-              </>
-            )}
-          </div>
-          <p className="text-slate-400 leading-relaxed text-[11px]">
-            {layoutSettings?.footerLogoDescription || 'Contemporary luxury fashion house and wardrobe capsules crafted from organic textiles and sustainable materials in European ateliers.'}
-          </p>
-          <p className="text-[10px] text-slate-500">
-            © 2026 {layoutSettings?.headerLogoText || 'ATELIER'} Studio. All rights reserved.
-          </p>
-        </div>
+                <a 
+                  href="tel:8001234444" 
+                  className="font-serif text-lg font-normal text-white hover:text-[#b58d59] transition-colors"
+                >
+                  {layoutSettings?.phone || '800 123 4444'}
+                </a>
+              </div>
 
-        {/* Info links */}
-        <div>
-          <h4 className="font-black text-slate-200 uppercase tracking-widest mb-4">Info</h4>
-          <ul className="space-y-2.5 text-slate-400 font-medium">
-            <li onClick={() => onNavigate?.('strength-guide')} className="hover:text-white transition-colors cursor-pointer">Sizing & Fit Guide</li>
-            <li onClick={() => onNavigate?.('faqs')} className="hover:text-white transition-colors cursor-pointer">Faq's</li>
-            <li onClick={() => onNavigate?.('about')} className="hover:text-white transition-colors cursor-pointer">About Atelier</li>
-            <li onClick={() => onNavigate?.('contact')} className="hover:text-white transition-colors cursor-pointer">Contact</li>
-            <li onClick={() => onNavigate?.('blogs')} className="hover:text-white transition-colors cursor-pointer">Editorial Journal</li>
-          </ul>
-        </div>
-
-        {/* Policies */}
-        <div>
-          <h4 className="font-black text-slate-200 uppercase tracking-widest mb-4">Policies</h4>
-          <ul className="space-y-2.5 text-slate-400 font-medium">
-            <li onClick={() => onNavigate?.('privacy-policy')} className="hover:text-white transition-colors cursor-pointer">Privacy Policy</li>
-            <li onClick={() => onNavigate?.('shipping-policy')} className="hover:text-white transition-colors cursor-pointer">Shipping Policy</li>
-            <li onClick={() => onNavigate?.('refund-policy')} className="hover:text-white transition-colors cursor-pointer">Refund Policy</li>
-            <li onClick={() => onNavigate?.('terms-conditions')} className="hover:text-white transition-colors cursor-pointer">Terms & Conditions</li>
-          </ul>
-        </div>
-
-        {/* Email dispatcher */}
-        <div className="space-y-4">
-          <h4 className="font-black text-slate-200 uppercase tracking-widest mb-2 flex items-center gap-1">
-            <Mail className="h-4 w-4 text-slate-300" /> Newsletter
-          </h4>
-          <p className="text-slate-400 leading-normal text-[11px]">
-            Subscribe to receive editorial lookbooks, seasonal drops, and private capsule access.
-          </p>
-          {subscribed ? (
-            <div className="bg-slate-800 border border-slate-700 text-slate-200 text-xs p-3 rounded-lg text-center font-bold">
-              🎉 Joined successfully! Welcome aboard.
+              <div className="flex items-center gap-2 text-xs text-[#8f8f94]">
+                <Mail className="h-3.5 w-3.5 text-[#b58d59]" />
+                <a 
+                  href={`mailto:${layoutSettings?.email || 'jade@tailorand.com'}`}
+                  className="hover:text-white transition-colors"
+                >
+                  {layoutSettings?.email || 'jade@tailorand.com'}
+                </a>
+              </div>
             </div>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex gap-2.5">
+
+            {/* Social Icons matching design.png */}
+            <div className="pt-3 flex items-center gap-3">
+              <a 
+                href="https://instagram.com" 
+                target="_blank" 
+                rel="noreferrer"
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:border-[#b58d59] hover:bg-[#b58d59] hover:text-white text-white/70 flex items-center justify-center transition-all cursor-pointer"
+                aria-label="Instagram"
+              >
+                <Instagram className="h-3.5 w-3.5" />
+              </a>
+              <a 
+                href="https://twitter.com" 
+                target="_blank" 
+                rel="noreferrer"
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:border-[#b58d59] hover:bg-[#b58d59] hover:text-white text-white/70 flex items-center justify-center transition-all cursor-pointer"
+                aria-label="Twitter"
+              >
+                <Twitter className="h-3.5 w-3.5" />
+              </a>
+              <a 
+                href="https://facebook.com" 
+                target="_blank" 
+                rel="noreferrer"
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:border-[#b58d59] hover:bg-[#b58d59] hover:text-white text-white/70 flex items-center justify-center transition-all cursor-pointer"
+                aria-label="Facebook"
+              >
+                <Facebook className="h-3.5 w-3.5" />
+              </a>
+              <a 
+                href="https://pinterest.com" 
+                target="_blank" 
+                rel="noreferrer"
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:border-[#b58d59] hover:bg-[#b58d59] hover:text-white text-white/70 flex items-center justify-center transition-all cursor-pointer text-xs font-serif font-bold"
+                aria-label="Pinterest"
+              >
+                P
+              </a>
+            </div>
+          </div>
+
+          {/* Column 2: My Services */}
+          <div className="md:col-span-3 space-y-5">
+            <h4 className="font-serif text-xl font-normal text-white tracking-wide">
+              My Services
+            </h4>
+
+            <ul className="space-y-2.5 text-xs text-[#8f8f94] font-light">
+              <li>
+                <button 
+                  onClick={() => scrollToSection('services-section')}
+                  className="hover:text-white hover:translate-x-1 transition-all cursor-pointer text-left"
+                >
+                  Personal Styling
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => scrollToSection('services-section')}
+                  className="hover:text-white hover:translate-x-1 transition-all cursor-pointer text-left"
+                >
+                  Wardrobe Styling
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => scrollToSection('services-section')}
+                  className="hover:text-white hover:translate-x-1 transition-all cursor-pointer text-left"
+                >
+                  Individual Consultation
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => scrollToSection('pricing-section')}
+                  className="hover:text-white hover:translate-x-1 transition-all cursor-pointer text-left"
+                >
+                  Personal Shopping
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => scrollToSection('services-section')}
+                  className="hover:text-white hover:translate-x-1 transition-all cursor-pointer text-left"
+                >
+                  Styling for Men
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => scrollToSection('appointment-section')}
+                  className="hover:text-white hover:translate-x-1 transition-all cursor-pointer text-left"
+                >
+                  Special Occasions
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: Subscribe */}
+          <div className="md:col-span-4 space-y-5">
+            <h4 className="font-serif text-xl font-normal text-white tracking-wide">
+              Subscribe
+            </h4>
+
+            <p className="text-xs text-[#8f8f94] font-light leading-relaxed">
+              Subscribe to take advantage of our campaigns and gift certificates.
+            </p>
+
+            <form onSubmit={handleSubscribe} className="space-y-2">
+              <div className="flex items-center gap-0">
                 <input
                   type="email"
+                  placeholder="Your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSubscribe();
-                  }}
-                  placeholder="Your email address"
-                  className="bg-slate-800 border border-slate-700/80 p-2 text-xs rounded-lg text-white w-full pr-8 focus:outline-none focus:ring-1 focus:ring-white placeholder:text-slate-500 font-medium"
+                  className="w-full px-4 py-3 bg-[#18181b] border border-white/10 text-white placeholder-[#666666] text-xs focus:outline-none focus:border-[#b58d59] rounded-l-xs transition"
                 />
                 <button
-                  onClick={handleSubscribe}
-                  className="bg-white hover:bg-slate-200 font-bold p-2 px-3 rounded-lg text-slate-900 cursor-pointer transition-colors text-[10px] uppercase tracking-wider shrink-0"
+                  type="submit"
+                  className="px-6 py-3 bg-[#b58d59] hover:bg-[#a17849] active:scale-95 text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-r-xs shadow transition-all cursor-pointer shrink-0"
                 >
-                  Join
+                  SUBSCRIBE
                 </button>
               </div>
-              {errorMsg && (
-                <p className="text-red-400 text-[10px] font-bold leading-none">{errorMsg}</p>
-              )}
-            </div>
-          )}
-        </div>
 
+              {subscribed && (
+                <div className="flex items-center gap-1.5 text-xs text-[#b58d59] pt-1">
+                  <Check className="h-3.5 w-3.5" />
+                  <span>Thank you for subscribing!</span>
+                </div>
+              )}
+
+              {errorMsg && (
+                <p className="text-xs text-rose-400 pt-1">{errorMsg}</p>
+              )}
+            </form>
+          </div>
+
+        </div>
       </div>
 
-      {/* Disclaimers micro block */}
-      <div className="bg-slate-950 border-t border-slate-800 py-6 px-4 text-center text-[10px] text-slate-500 leading-relaxed max-w-[1440px] mx-auto">
-        <span className="font-bold text-slate-400 uppercase tracking-wider block mb-1">ETHICAL CRAFTSMANSHIP & SUSTAINABILITY GUARANTEE</span>
-        <span>All garments are patterned, cut, and assembled by skilled artisans under certified European fair-labor agreements. We strictly use 100% GOTS-certified organic cotton, mulesing-free virgin wool, and sustainable recycled fibers.</span>
+      {/* Bottom Bar: Copyright & Scroll to Top */}
+      <div className="border-t border-white/5 py-6 px-6 sm:px-10">
+        <div className="max-w-[1340px] mx-auto flex items-center justify-between text-xs text-[#66666a]">
+          <p className="text-[11px] font-light">
+            © All Rights Reserved <span className="text-[#888888]">Jade Tailor</span>
+          </p>
+
+          <button
+            onClick={scrollToTop}
+            className="w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:border-[#b58d59] hover:bg-[#b58d59] text-white flex items-center justify-center transition-all cursor-pointer group shadow-sm"
+            aria-label="Scroll to top"
+          >
+            <ChevronUp className="h-4 w-4 transition-transform group-hover:-translate-y-0.5" />
+          </button>
+        </div>
       </div>
 
     </footer>
-    </>
   );
 }

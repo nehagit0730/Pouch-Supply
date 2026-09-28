@@ -239,36 +239,45 @@ export const INITIAL_DISCOUNTS: Discount[] = [];
 export const INITIAL_BLOGS: BlogPost[] = [
   {
     id: 'blog-1',
-    title: 'The Autumn/Winter Lookbook: Volume & Neutral Palettes',
-    category: 'Style Editorial',
-    date: 'September 2026',
+    title: 'How To Elevate Your Whimsical Wardrobe',
+    slug: 'how-to-elevate-your-whimsical-wardrobe',
+    category: 'Fashion Style',
     image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
-    excerpt: 'An in-depth exploration of architectural layering, heavy melton wool overcoats, and monochromatic minimalism.',
-    author: 'Elena Laurent',
+    excerpt: 'An in-depth exploration of architectural layering, romantic textures, and how to balance whimsical silhouettes with understated sophistication.',
+    author: 'Jade Tailor',
     status: 'Active',
-    content: 'Full editorial breakdown on styling contemporary relaxed proportions for the autumn and winter season.'
+    publishedAt: 'Dec 29, 2026',
+    readTime: '4 min read',
+    tags: ['Fashion Style', 'Whimsical', 'Capsule Wardrobe'],
+    content: 'Whimsical fashion is not about costume; it is about intentional delight. In this editorial guide, Jade Tailor breaks down how to weave playful textures, voluminous skirts, and vintage-inspired collars into everyday luxury tailoring.'
   },
   {
     id: 'blog-2',
-    title: 'Behind The Seams: Sustainable Portuguese Milling',
-    category: 'Craftsmanship',
-    date: 'September 2026',
-    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80',
-    excerpt: 'How our family-owned textile partner in Porto spins GOTS-certified organic cotton with closed-loop water filtration.',
-    author: 'Marcus Hayes',
+    title: "Women's Business Formal Attire To Promote Your Style",
+    slug: 'womens-business-formal-attire-to-promote-your-style',
+    category: 'Business Style',
+    image: 'https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?auto=format&fit=crop&w=800&q=80',
+    excerpt: 'Redefining corporate elegance with structured blazers, high-waisted cigarette trousers, and refined neutral palettes that project authority and poise.',
+    author: 'Jade Tailor',
     status: 'Active',
-    content: 'Discover the artisanal spinning and dye processes ensuring our heavy hoodies and t-shirts endure for a decade.'
+    publishedAt: 'Dec 27, 2026',
+    readTime: '5 min read',
+    tags: ['Business Style', 'Executive', 'Tailoring'],
+    content: 'Executive styling is the ultimate power move. Discover how tailored double-breasted suits, premium Italian silk camisoles, and minimalist leather accessories elevate your presence in boardrooms and beyond.'
   },
   {
     id: 'blog-3',
     title: 'The Essential Capsule: 7 Pieces for 30 Outfits',
+    slug: 'the-essential-capsule-7-pieces-for-30-outfits',
     category: 'Wardrobe Guide',
-    date: 'September 2026',
     image: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80',
     excerpt: 'Mastering understated versatility with timeless tailoring, neutral knitwear, and classic raw selvedge denim.',
-    author: 'Sophia Vance',
+    author: 'Jade Tailor',
     status: 'Active',
-    content: 'A comprehensive styling blueprint for building an intentional, cohesive wardrobe that simplifies daily dressing.'
+    publishedAt: 'Dec 15, 2026',
+    readTime: '3 min read',
+    tags: ['Capsule', 'Minimalism', 'Personal Styling'],
+    content: 'A comprehensive styling blueprint for building an intentional, cohesive wardrobe that eliminates decision fatigue and transforms getting dressed into pure effortless confidence.'
   }
 ];
 

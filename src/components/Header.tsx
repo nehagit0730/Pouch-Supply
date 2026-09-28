@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { Customer, CartItem, Product, Collection, LayoutSettings } from '../types';
-import { ShoppingCart, Heart, User, Sparkles, LayoutDashboard, Menu, Store, Phone, HelpCircle, Search, X, ChevronRight, Home, ShoppingBag, Award, Info } from 'lucide-react';
+import { 
+  ShoppingCart, Heart, User, Sparkles, LayoutDashboard, Menu, 
+  Phone, HelpCircle, Search, X, ChevronRight, ChevronDown, 
+  Home, ShoppingBag, Award, Info, MapPin, Clock 
+} from 'lucide-react';
 
 interface HeaderProps {
   currentTab: string;
@@ -39,17 +43,7 @@ export default function Header({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const getMenuItemTab = (item: any): string => {
-    if (item.tab) return item.tab;
-    if (item.path) {
-      if (item.path === 'collection-all') return 'frontend-shop';
-      if (item.path === 'brands') return 'frontend-brands';
-      if (item.path === 'blog-all') return 'blogs';
-      return item.path;
-    }
-    return 'frontend-home';
-  };
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   const filteredProducts = searchQuery.trim() === '' ? [] : allProducts.filter(p => 
     p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -61,35 +55,71 @@ export default function Header({
     c.title.toLowerCase().includes(searchQuery.toLowerCase())
   ).slice(0, 3);
 
+  const scrollToSection = (id: string) => {
+    if (currentTab !== 'frontend-home') {
+      onTabChange('frontend-home');
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03),0_4px_6px_-2px_rgba(0,0,0,0.01)] transition-all duration-300">
+    <header className="sticky top-0 z-40 bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] border-b border-[#f0ece5] transition-all">
       
-      {/* Top micro promo bar */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white text-[10px] text-center py-2 px-4 uppercase tracking-widest font-extrabold flex items-center justify-center gap-1.5 shadow-inner">
-        <Sparkles className="h-3 w-3 text-amber-400 animate-pulse" />
-        <span className="tracking-widest">Free Priority Courier Shipping on all bulk orders over £40! Delivery within 2-4 working days</span>
+      {/* 1. TOP MICRO BAR (DARK LUXURY) */}
+      <div className="bg-[#111111] text-[#cccccc] text-[11px] py-2 px-4 sm:px-8 border-b border-white/5">
+        <div className="max-w-[1340px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          
+          {/* Left: Address & Phone */}
+          <div className="flex items-center gap-4 sm:gap-6 text-[10.5px] font-sans tracking-wider">
+            <div className="flex items-center gap-1.5 text-white/80">
+              <MapPin className="h-3 w-3 text-[#b58d59]" />
+              <span>{layoutSettings?.address || '0665 Broadway, NYC'}</span>
+            </div>
+            <div className="hidden sm:block text-white/30">•</div>
+            <a 
+              href="tel:8001234444" 
+              className="flex items-center gap-1.5 text-white/90 hover:text-[#b58d59] transition-colors"
+            >
+              <Phone className="h-3 w-3 text-[#b58d59]" />
+              <span>{layoutSettings?.phone || '800 123 4444'}</span>
+            </a>
+          </div>
+
+          {/* Right: Opening Hours */}
+          <div className="flex items-center gap-1.5 text-[10.5px] font-sans tracking-wider text-white/80">
+            <Clock className="h-3 w-3 text-[#b58d59]" />
+            <span>Opening: Mon-Fri 10.00 - 20.00</span>
+          </div>
+
+        </div>
       </div>
 
       {/* Slide-down Search Overlay */}
       {isSearchOpen && (
-        <div className="absolute inset-x-0 top-full bg-white border-b border-slate-200 z-50 shadow-xl animate-fade-in font-sans">
+        <div className="absolute inset-x-0 top-full bg-white border-b border-[#ece7de] z-50 shadow-2xl animate-fade-in font-sans">
           <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
-            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-2xl">
-              <Search className="h-5 w-5 text-slate-400" />
+            <div className="flex items-center gap-3 bg-[#fdfcfb] border border-[#e5dfd5] p-3 rounded-lg">
+              <Search className="h-5 w-5 text-[#999999]" />
               <input
                 type="text"
-                placeholder="Search garments, outerwear, knitwear, tailoring, collections..."
+                placeholder="Search styling services, lookbooks, dresses, outerwear, tailoring..."
                 value={searchQuery}
                 autoFocus
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full text-sm font-semibold bg-transparent focus:outline-none placeholder-slate-405 text-slate-800"
+                className="w-full text-sm bg-transparent focus:outline-none placeholder-[#999999] text-[#1a1a1a]"
               />
               <button
                 onClick={() => {
                   setIsSearchOpen(false);
                   setSearchQuery('');
                 }}
-                className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="p-1 text-[#999999] hover:text-[#1a1a1a] cursor-pointer"
                 title="Close Search"
               >
                 <X className="h-5 w-5" />
@@ -99,10 +129,10 @@ export default function Header({
             {/* Results pane */}
             {searchQuery.trim() !== '' && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                
-                {/* Product results */}
                 <div className="md:col-span-2 space-y-3">
-                  <h4 className="text-[10px] font-black uppercase text-indigo-650 tracking-wider">Matching Products ({filteredProducts.length})</h4>
+                  <h4 className="text-[10px] font-bold uppercase text-[#b58d59] tracking-widest">
+                    Matching Products ({filteredProducts.length})
+                  </h4>
                   <div className="space-y-2">
                     {filteredProducts.map((p) => (
                       <div
@@ -112,32 +142,32 @@ export default function Header({
                           setIsSearchOpen(false);
                           setSearchQuery('');
                         }}
-                        className="flex items-center gap-3 p-2 bg-slate-50 hover:bg-slate-100 rounded-xl cursor-pointer border border-transparent hover:border-slate-200 transition-all"
+                        className="flex items-center gap-3 p-2 bg-[#fdfcfb] hover:bg-[#f6f2ea] rounded-lg cursor-pointer border border-transparent hover:border-[#ebd9bd] transition-all"
                       >
                         {p.image ? (
-                          <img src={p.image} className="w-10 h-10 rounded-lg object-cover border shrink-0" alt="" referrerPolicy="no-referrer" />
+                          <img src={p.image} className="w-10 h-10 rounded object-cover border shrink-0" alt="" referrerPolicy="no-referrer" />
                         ) : (
-                          <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center shrink-0 text-slate-400 font-bold text-xs font-mono">P</div>
+                          <div className="w-10 h-10 rounded bg-slate-200 flex items-center justify-center shrink-0 text-slate-400 font-bold text-xs">P</div>
                         )}
                         <div className="truncate flex-1">
-                          <span className="block text-[10px] font-extrabold uppercase text-slate-400 leading-none mb-0.5">{p.vendor}</span>
-                          <span className="block text-xs font-black text-slate-800 truncate">{p.title}</span>
+                          <span className="block text-[9px] font-bold uppercase text-[#888888] leading-none mb-0.5">{p.vendor}</span>
+                          <span className="block text-xs font-semibold text-[#1a1a1a] truncate">{p.title}</span>
                         </div>
                         <div className="text-right shrink-0">
-                          <span className="text-[11px] font-extrabold text-indigo-750 bg-indigo-50 px-2 py-0.5 rounded-md">£{p.price.toFixed(2)}</span>
-                          <span className="block text-[8px] font-semibold text-slate-400 mt-0.5">{p.category}</span>
+                          <span className="text-[11px] font-bold text-[#b58d59]">£{p.price.toFixed(2)}</span>
                         </div>
                       </div>
                     ))}
                     {filteredProducts.length === 0 && (
-                      <p className="text-xs text-slate-400 italic py-2">No products match your search query.</p>
+                      <p className="text-xs text-[#888888] italic py-2">No matching products found.</p>
                     )}
                   </div>
                 </div>
 
-                {/* Collection results */}
-                <div className="space-y-3 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6">
-                  <h4 className="text-[10px] font-black uppercase text-indigo-650 tracking-wider">Collections ({filteredCollections.length})</h4>
+                <div className="space-y-3 border-t md:border-t-0 md:border-l border-[#ece7de] pt-4 md:pt-0 md:pl-6">
+                  <h4 className="text-[10px] font-bold uppercase text-[#b58d59] tracking-widest">
+                    Collections ({filteredCollections.length})
+                  </h4>
                   <div className="space-y-2">
                     {filteredCollections.map((c) => (
                       <div
@@ -147,383 +177,411 @@ export default function Header({
                           setIsSearchOpen(false);
                           setSearchQuery('');
                         }}
-                        className="p-2.5 bg-slate-50 hover:bg-indigo-50/50 rounded-xl cursor-pointer border border-transparent hover:border-indigo-100 transition-all font-sans"
+                        className="p-2.5 bg-[#fdfcfb] hover:bg-[#f6f2ea] rounded-lg cursor-pointer border border-transparent hover:border-[#ebd9bd] transition-all"
                       >
-                        <span className="block text-xs font-black text-slate-800 truncate">{c.title}</span>
-                        <span className="block text-[9px] text-slate-400 line-clamp-1 mt-0.5">{c.description || 'Explore curated wardrobe collections.'}</span>
+                        <span className="block text-xs font-bold text-[#1a1a1a] truncate">{c.title}</span>
                       </div>
                     ))}
                     {filteredCollections.length === 0 && (
-                      <p className="text-xs text-slate-400 italic py-2">No categories found.</p>
+                      <p className="text-xs text-[#888888] italic py-2">No categories found.</p>
                     )}
                   </div>
                 </div>
-
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Main navigation menu */}
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
+      {/* 2. MAIN HEADER NAVIGATION BAR */}
+      <div className="max-w-[1340px] mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-4">
         
-        {/* Left: Brand logo */}
+        {/* Left: Brand Logo (Serif Luxury Branding) */}
         <div 
-          onClick={() => {
-            onTabChange('frontend-home');
-          }}
-          className="flex items-center gap-2.5 cursor-pointer group shrink-0 animate-fade-in"
+          onClick={() => onTabChange('frontend-home')}
+          className="flex items-center gap-3 cursor-pointer group shrink-0"
         >
           {layoutSettings?.headerLogoImage ? (
             <img 
               src={layoutSettings.headerLogoImage} 
-              className="max-h-11 max-w-[150px] object-contain rounded-md transition-transform group-hover:scale-102" 
-              alt={layoutSettings?.headerLogoText || 'ATELIER'} 
+              className="max-h-12 max-w-[160px] object-contain transition-transform group-hover:scale-102" 
+              alt={layoutSettings?.headerLogoText || 'JADE TAILOR'} 
               referrerPolicy="no-referrer"
             />
           ) : (
-            <>
-              <div className="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-all duration-300">
-                <div className="w-4 h-4 border-2 border-white rounded-xs"></div>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-extrabold text-slate-900 tracking-tight text-base sm:text-lg leading-none transition-colors group-hover:text-black uppercase">
-                  {layoutSettings?.headerLogoText || 'ATELIER'}
-                </span>
-                <span className="text-[8px] sm:text-[9px] text-[#707579] font-extrabold uppercase tracking-widest mt-1">
-                  {layoutSettings?.headerLogoSubtext || 'STUDIO & ESSENTIALS'}
-                </span>
-              </div>
-            </>
+            <div className="flex flex-col text-left">
+              <span className="font-serif text-xl sm:text-2xl font-bold tracking-[0.22em] text-[#1a1a1a] uppercase leading-tight transition-colors group-hover:text-[#b58d59]">
+                {layoutSettings?.headerLogoText || 'JADE TAILOR'}
+              </span>
+              <span className="text-[8px] sm:text-[9px] font-sans font-semibold tracking-[0.38em] text-[#b58d59] uppercase -mt-0.5">
+                {layoutSettings?.headerLogoSubtext || 'PERSONAL STYLIST'}
+              </span>
+            </div>
           )}
         </div>
 
-        {/* Center: Navigation options (Desktop/Large screens only) */}
-        <nav className="hidden lg:flex items-center gap-2">
-          {(layoutSettings?.menuItems || [
-            { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
-            { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
-            { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
-            { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
-            { id: '5', label: 'About', tab: 'about', type: 'tab' }
-          ]).map((item) => {
-            const itemTab = getMenuItemTab(item);
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (item.type === 'external' && item.url) {
-                    window.open(item.url, '_blank');
-                  } else {
-                    onTabChange(itemTab);
-                  }
-                }}
-                className={`text-[11px] font-extrabold uppercase tracking-widest py-2 px-4 rounded-xl transition-all duration-250 cursor-pointer ${
-                  currentTab === itemTab && !isAdminActive 
-                    ? 'bg-slate-900 text-white shadow-xs' 
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-                }`}
-              >
-                {item.label}
-              </button>
-            );
-          })}
+        {/* Center: Desktop Navigation Links (matching design.png) */}
+        <nav className="hidden lg:flex items-center gap-6 xl:gap-8 font-sans">
+          
+          {/* HOME */}
+          <button
+            onClick={() => onTabChange('frontend-home')}
+            className={`text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 cursor-pointer border-b-2 ${
+              currentTab === 'frontend-home' && !isAdminActive
+                ? 'border-[#b58d59] text-[#1a1a1a]'
+                : 'border-transparent text-[#444444] hover:text-[#b58d59]'
+            }`}
+          >
+            HOME
+          </button>
+
+          {/* WORK WITH ME */}
+          <button
+            onClick={() => scrollToSection('appointment-section')}
+            className="text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 border-b-2 border-transparent text-[#444444] hover:text-[#b58d59] cursor-pointer"
+          >
+            WORK WITH ME
+          </button>
+
+          {/* MY SERVICES */}
+          <button
+            onClick={() => scrollToSection('services-section')}
+            className="text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 border-b-2 border-transparent text-[#444444] hover:text-[#b58d59] cursor-pointer"
+          >
+            MY SERVICES
+          </button>
+
+          {/* PAGES Dropdown */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setActiveDropdown('pages')}
+            onMouseLeave={() => setActiveDropdown(null)}
+          >
+            <button
+              onClick={() => setActiveDropdown(activeDropdown === 'pages' ? null : 'pages')}
+              className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 border-b-2 border-transparent text-[#444444] hover:text-[#b58d59] cursor-pointer"
+            >
+              <span>PAGES</span>
+              <ChevronDown className="h-3 w-3" />
+            </button>
+
+            {activeDropdown === 'pages' && (
+              <div className="absolute top-full left-0 w-52 bg-white shadow-xl rounded-xs border border-[#eee9df] py-2 z-50 animate-fade-in font-sans">
+                <button
+                  onClick={() => {
+                    scrollToSection('pricing-section');
+                    setActiveDropdown(null);
+                  }}
+                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
+                >
+                  Styling Packages
+                </button>
+                <button
+                  onClick={() => {
+                    scrollToSection('reviews-section');
+                    setActiveDropdown(null);
+                  }}
+                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
+                >
+                  Clients Reviews
+                </button>
+                <button
+                  onClick={() => {
+                    scrollToSection('portfolio-section');
+                    setActiveDropdown(null);
+                  }}
+                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
+                >
+                  My Portfolio
+                </button>
+                <button
+                  onClick={() => {
+                    scrollToSection('about-section');
+                    setActiveDropdown(null);
+                  }}
+                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
+                >
+                  About Jade Tailor
+                </button>
+                <div className="border-t border-[#f0ece5] my-1" />
+                <button
+                  onClick={() => {
+                    onTabChange('frontend-shop');
+                    setActiveDropdown(null);
+                  }}
+                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer font-bold"
+                >
+                  Shop Curated Wardrobe
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* BLOG Dropdown */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setActiveDropdown('blog')}
+            onMouseLeave={() => setActiveDropdown(null)}
+          >
+            <button
+              onClick={() => onTabChange('blogs')}
+              className={`flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 border-b-2 cursor-pointer ${
+                currentTab === 'blogs'
+                  ? 'border-[#b58d59] text-[#1a1a1a]'
+                  : 'border-transparent text-[#444444] hover:text-[#b58d59]'
+              }`}
+            >
+              <span>BLOG</span>
+              <ChevronDown className="h-3 w-3" />
+            </button>
+
+            {activeDropdown === 'blog' && (
+              <div className="absolute top-full left-0 w-56 bg-white shadow-xl rounded-xs border border-[#eee9df] py-2 z-50 animate-fade-in font-sans">
+                <button
+                  onClick={() => {
+                    onTabChange('blogs');
+                    setActiveDropdown(null);
+                  }}
+                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
+                >
+                  All Style Journal Articles
+                </button>
+                <button
+                  onClick={() => {
+                    scrollToSection('blog-section');
+                    setActiveDropdown(null);
+                  }}
+                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
+                >
+                  Whimsical Wardrobe Editorial
+                </button>
+                <button
+                  onClick={() => {
+                    scrollToSection('blog-section');
+                    setActiveDropdown(null);
+                  }}
+                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
+                >
+                  Business Formal Attire
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* CONTACT */}
+          <button
+            onClick={() => scrollToSection('appointment-section')}
+            className="text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 border-b-2 border-transparent text-[#444444] hover:text-[#b58d59] cursor-pointer"
+          >
+            CONTACT
+          </button>
+
         </nav>
 
-        {/* Right: Actions block (Dashboard controller, customer logins, basket drawers) */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-
-          {/* Search Trigger Button */}
+        {/* Right: Actions Block (Search, Wishlist, Account, Cart, Admin toggle, Mobile Menu) */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          
+          {/* Search Trigger */}
           <button
             onClick={() => setIsSearchOpen(!isSearchOpen)}
-            className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
-              isSearchOpen 
-                ? 'bg-indigo-50 border-indigo-200 text-indigo-650 shadow-inner' 
-                : 'bg-white border-slate-200 hover:border-slate-300 text-slate-550 hover:bg-slate-50 shadow-2xs'
-            }`}
+            className="p-2 text-[#444444] hover:text-[#b58d59] transition cursor-pointer"
             title="Search Website"
           >
             <Search className="h-4.5 w-4.5" />
           </button>
 
-          {/* Wishlist Link bubble - Desktop/Tablet only */}
+          {/* Wishlist Link */}
           <button
             onClick={onOpenWishlist}
-            className="relative p-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-600 cursor-pointer transition-all duration-200 shadow-2xs hidden md:block"
+            className="relative p-2 text-[#444444] hover:text-[#b58d59] transition cursor-pointer hidden md:block"
             title="View Wishlist"
           >
-            <Heart className={`h-4.5 w-4.5 transition-colors ${wishlistCount > 0 ? 'text-rose-500 fill-rose-500' : 'text-slate-500'}`} />
+            <Heart className={`h-4.5 w-4.5 ${wishlistCount > 0 ? 'text-[#b58d59] fill-[#b58d59]' : ''}`} />
             {wishlistCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 h-4.5 min-w-4.5 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1 shadow-md">
+              <span className="absolute 0 top-0.5 right-0.5 h-4 min-w-4 bg-[#b58d59] text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1">
                 {wishlistCount}
               </span>
             )}
           </button>
 
-          {/* Customer accounts entry - PLACED DIRECTLY NEXT TO THE CART ICON - Desktop/Tablet only */}
+          {/* Customer Account Button */}
           <button
             onClick={onOpenCustomer}
-            className="hidden md:flex items-center gap-2 py-2 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 shadow-2xs cursor-pointer max-w-[130px] sm:max-w-[150px]"
-            title="Customer Account Dashboard"
+            className="hidden md:flex items-center gap-1.5 p-2 text-[#444444] hover:text-[#b58d59] transition cursor-pointer"
+            title="Customer Account"
           >
-            <User className="h-4 w-4 text-slate-500 shrink-0" />
-            <span className="text-[10px] sm:text-[11px] font-extrabold text-slate-700 truncate uppercase tracking-wider">
-              {loggedInCustomer && loggedInCustomer.name ? loggedInCustomer.name.split(' ')[0] : 'Log In'}
+            <User className="h-4.5 w-4.5" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#333333]">
+              {loggedInCustomer?.name ? loggedInCustomer.name.split(' ')[0] : 'Log In'}
             </span>
           </button>
 
-          {/* Yoti global status badge in header */}
-          {sessionStorage.getItem('yoti_verified') === 'true' && (
-            <div className="hidden lg:flex items-center gap-1.5 py-2 px-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider shadow-2xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Yoti 18+ Verified</span>
-            </div>
-          )}
-
-          {/* Cart Drawer triggers */}
+          {/* Cart Bag Button (Editorial aesthetic) */}
           <button
             onClick={onOpenCart}
-            className="relative p-2 sm:p-2.5 rounded-xl bg-slate-900 border border-slate-950 text-white hover:bg-slate-800 hover:scale-105 transition-all duration-250 cursor-pointer shadow-md flex items-center justify-center"
-            title="Shopping Cart Drawer"
+            className="relative p-2 sm:px-3 sm:py-2 bg-[#111111] hover:bg-[#222222] text-white rounded-xs shadow transition-all duration-200 cursor-pointer flex items-center gap-2"
+            title="Shopping Bag"
           >
-            <ShoppingCart className="h-4.5 w-4.5" />
+            <ShoppingCart className="h-4 w-4" />
+            <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline">Bag</span>
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 h-5 min-w-5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[9px] font-black rounded-full flex items-center justify-center px-1 shadow-lg border border-white">
+              <span className="h-4 min-w-4 bg-[#b58d59] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
                 {cartCount}
               </span>
             )}
           </button>
 
-          {/* Hamburger Menu Icon for Mobile & Tablet (visible below lg) */}
+          {/* Admin Dashboard Entry Button */}
+          <button
+            onClick={onOpenAdmin}
+            className="p-2 text-[#666666] hover:text-[#111111] transition cursor-pointer rounded-xs hover:bg-[#f4efe6]"
+            title="Admin Dashboard Portal"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+          </button>
+
+          {/* Mobile Menu Hamburger */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="p-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 cursor-pointer transition-all duration-200 shadow-2xs lg:hidden"
+            className="p-2 text-[#222222] hover:text-[#b58d59] transition cursor-pointer lg:hidden"
             title="Open Mobile Navigation"
           >
-            <Menu className="h-4.5 w-4.5" />
+            <Menu className="h-5 w-5" />
           </button>
 
         </div>
 
       </div>
 
-      {/* Slide-out Mobile Menu Drawer Overlay */}
+      {/* Slide-out Mobile Menu Drawer */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden font-sans">
-          {/* Backdrop with blurring effect */}
           <div 
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300"
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
-          {/* Slide-out Panel */}
           <div className="fixed inset-y-0 right-0 w-full max-w-xs bg-white shadow-2xl flex flex-col z-10 animate-slide-in-right">
-            {/* Header */}
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <div className="flex items-center gap-2">
-                {layoutSettings?.headerLogoImage ? (
-                  <img 
-                    src={layoutSettings.headerLogoImage} 
-                    className="max-h-8 max-w-[100px] object-contain rounded" 
-                    alt="Logo" 
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <>
-                    <div className="w-7 h-7 bg-slate-900 rounded flex items-center justify-center">
-                      <div className="w-3.5 h-3.5 border-2 border-white rounded-xs"></div>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-slate-800 text-xs leading-none uppercase">
-                        {layoutSettings?.headerLogoText || 'ATELIER'}
-                      </span>
-                      <span className="text-[7px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-                        {layoutSettings?.headerLogoSubtext || 'STUDIO & ESSENTIALS'}
-                      </span>
-                    </div>
-                  </>
-                )}
+            <div className="p-5 border-b border-[#eee9df] flex items-center justify-between bg-[#fbf9f6]">
+              <div className="flex flex-col text-left">
+                <span className="font-serif text-lg font-bold tracking-[0.2em] text-[#1a1a1a] uppercase leading-tight">
+                  {layoutSettings?.headerLogoText || 'JADE TAILOR'}
+                </span>
+                <span className="text-[8px] font-sans font-semibold tracking-[0.35em] text-[#b58d59] uppercase">
+                  {layoutSettings?.headerLogoSubtext || 'PERSONAL STYLIST'}
+                </span>
               </div>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 cursor-pointer rounded-lg hover:bg-slate-100"
+                className="p-1 text-[#777777] hover:text-[#111111] cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Menu Links & Accounts (Ultra compact, unified, scroll-free layout) */}
-            <div className="flex-1 flex flex-col justify-between bg-white px-4 py-4 space-y-4">
-              
-              {/* Main Quick Navigation Grid (2 Columns to fit easily in view) */}
-              <div className="space-y-2">
-                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">Quick Navigation</span>
-                <div className="grid grid-cols-2 gap-2">
-                  {(layoutSettings?.menuItems || [
-                    { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
-                    { id: '2', label: 'Shop Collection', tab: 'frontend-shop', type: 'tab' },
-                    { id: '3', label: 'Capsule Wardrobe', tab: 'frontend-subscribe', type: 'tab' },
-                    { id: '4', label: 'Ateliers', tab: 'frontend-brands', type: 'tab' },
-                    { id: '5', label: 'Journal', tab: 'blogs', type: 'tab' }
-                  ]).map((item) => {
-                    const itemTab = getMenuItemTab(item);
-                    const isActive = currentTab === itemTab && !isAdminActive;
-                    
-                    // Inline helper to map icons
-                    const labelLower = item.label.toLowerCase();
-                    let iconEl = <Info className="h-4 w-4 shrink-0" />;
-                    if (labelLower.includes('home')) iconEl = <Home className="h-4 w-4 shrink-0" />;
-                    else if (labelLower.includes('subscribe') || labelLower.includes('plan') || labelLower.includes('capsule')) iconEl = <Sparkles className="h-4 w-4 shrink-0 text-amber-500 fill-amber-400/20" />;
-                    else if (labelLower.includes('shop') || labelLower.includes('collection') || labelLower.includes('clothing')) iconEl = <ShoppingBag className="h-4 w-4 shrink-0" />;
-                    else if (labelLower.includes('brand') || labelLower.includes('atelier')) iconEl = <Award className="h-4 w-4 shrink-0 text-slate-900" />;
-
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          if (item.type === 'external' && item.url) {
-                            window.open(item.url, '_blank');
-                          } else {
-                            onTabChange(itemTab);
-                          }
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all duration-200 cursor-pointer ${
-                          isActive
-                            ? 'bg-slate-900 border-slate-900 text-white shadow-xs'
-                            : 'bg-slate-50/50 border-slate-100 text-slate-700 hover:bg-slate-50 hover:border-slate-200'
-                        }`}
-                      >
-                        <div className={`p-1.5 rounded-lg ${isActive ? 'bg-white/10 text-white' : 'bg-white border border-slate-100 text-slate-500 shadow-3xs'}`}>
-                          {iconEl}
-                        </div>
-                        <span className="font-extrabold uppercase tracking-wider text-[9.5px] leading-tight truncate">
-                          {item.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+            <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+              <div className="space-y-1">
+                <button
+                  onClick={() => {
+                    onTabChange('frontend-home');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
+                >
+                  Home
+                </button>
+                <button
+                  onClick={() => {
+                    scrollToSection('appointment-section');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
+                >
+                  Work With Me
+                </button>
+                <button
+                  onClick={() => {
+                    scrollToSection('services-section');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
+                >
+                  My Services
+                </button>
+                <button
+                  onClick={() => {
+                    scrollToSection('pricing-section');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
+                >
+                  Styling Packages
+                </button>
+                <button
+                  onClick={() => {
+                    scrollToSection('reviews-section');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
+                >
+                  Clients Reviews
+                </button>
+                <button
+                  onClick={() => {
+                    scrollToSection('portfolio-section');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
+                >
+                  My Portfolio
+                </button>
+                <button
+                  onClick={() => {
+                    onTabChange('blogs');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
+                >
+                  Blog & News
+                </button>
+                <button
+                  onClick={() => {
+                    onTabChange('frontend-shop');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
+                >
+                  Shop Collection
+                </button>
               </div>
 
-              {/* Accounts & My Wishlist Mini Rows */}
-              <div className="space-y-2">
-                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">My Personal Hub</span>
-                <div className="space-y-1.5">
-                  {/* Customer login trigger */}
-                  <button
-                    onClick={() => {
-                      onOpenCustomer();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="w-full flex items-center justify-between p-2 px-3 rounded-xl bg-slate-50/50 border border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all cursor-pointer text-left text-slate-700"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-1.5 rounded-lg bg-white border border-slate-100 text-slate-500 shadow-3xs">
-                        <User className="h-4 w-4 shrink-0" />
-                      </div>
-                      <span className="font-extrabold uppercase tracking-wider text-[9.5px]">
-                        {loggedInCustomer && loggedInCustomer.name ? `Account: ${loggedInCustomer.name.split(' ')[0]}` : 'Log In / Register'}
-                      </span>
-                    </div>
-                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
-                  </button>
+              <div className="pt-4 border-t border-[#eee9df] space-y-2">
+                <button
+                  onClick={() => {
+                    onOpenCustomer();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between p-3 bg-[#fbf9f6] rounded text-xs text-[#222222] font-semibold"
+                >
+                  <span>{loggedInCustomer?.name ? `Account: ${loggedInCustomer.name}` : 'Log In / Register'}</span>
+                  <User className="h-4 w-4 text-[#888888]" />
+                </button>
 
-                  {/* Wishlist trigger */}
-                  <button
-                    onClick={() => {
-                      onOpenWishlist();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="w-full flex items-center justify-between p-2 px-3 rounded-xl bg-slate-50/50 border border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all cursor-pointer text-left text-slate-700"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-1.5 rounded-lg bg-white border border-slate-100 text-slate-500 shadow-3xs">
-                        <Heart className={`h-4 w-4 shrink-0 ${wishlistCount > 0 ? 'text-rose-500 fill-rose-500' : 'text-slate-500'}`} />
-                      </div>
-                      <span className="font-extrabold uppercase tracking-wider text-[9.5px]">My Wishlist</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {wishlistCount > 0 && (
-                        <span className="bg-rose-500 text-white text-[8px] font-black rounded-full h-4.5 min-w-4.5 flex items-center justify-center px-1.5 shadow-3xs">
-                          {wishlistCount}
-                        </span>
-                      )}
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Store perks & Guarantees */}
-              <div className="p-3 bg-slate-50/70 border border-slate-100 rounded-2xl space-y-1.5">
-                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 block">Our Guarantee</span>
-                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[8.5px] font-extrabold text-slate-500 uppercase tracking-wide">
-                  <div className="flex items-center gap-1">
-                    <span className="text-emerald-500">✔</span> Official Supplier
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-emerald-500">✔</span> Tracked Express
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-emerald-500">✔</span> Age Verified
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-emerald-500">✔</span> Tax Compliant
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Micro details Footer (Compact fixed footer) */}
-            <div className="p-4 bg-slate-50/90 border-t border-slate-100 flex flex-col gap-1.5 shrink-0">
-              <div className="flex items-center justify-between text-[9px] text-slate-500 font-extrabold tracking-wider">
-                <div className="flex items-center gap-1">
-                  <Store className="h-3 w-3 text-slate-900" />
-                  <span>ATELIER LONDON & EU</span>
-                </div>
-                <span>• UK Tracked •</span>
-              </div>
-              <div className="text-[9.5px] text-slate-500 font-semibold truncate flex items-center gap-1">
-                <span>✉️ Concierge:</span>
-                <a href="mailto:concierge@atelier-studio.com" className="font-bold text-slate-700 hover:text-slate-950 select-all underline">
-                  concierge@atelier-studio.com
-                </a>
+                <button
+                  onClick={() => {
+                    onOpenWishlist();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between p-3 bg-[#fbf9f6] rounded text-xs text-[#222222] font-semibold"
+                >
+                  <span>My Wishlist ({wishlistCount})</span>
+                  <Heart className="h-4 w-4 text-[#888888]" />
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Info bar (Sub menu micro links for customer convenience - Desktop & Tablet only) */}
-      <div className="hidden sm:flex bg-slate-50/70 border-t border-slate-100/90 h-11 text-[10px] text-slate-500 font-extrabold px-4 tracking-wider shadow-2xs items-center">
-        <div className="max-w-[1440px] mx-auto w-full flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <span className="text-slate-600 flex items-center gap-1.5">
-              <Store className="h-3.5 w-3.5 text-slate-900" /> 
-              <span>Artisanal European Ateliers</span>
-            </span>
-            <span className="h-3 w-px bg-slate-200 hidden md:block" />
-            <span className="hidden md:inline-flex items-center gap-1.5 text-slate-500">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-900 animate-pulse" />
-              <span>Complimentary Courier Shipping on orders over £100</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-5">
-            <span className="hover:text-slate-800 transition-colors cursor-pointer flex items-center gap-1">
-              <HelpCircle className="h-3.5 w-3.5 text-slate-600" /> 
-              <span>Client Concierge & Care</span>
-            </span>
-            <span className="h-3 w-px bg-slate-200" />
-            <span className="text-slate-600 flex items-center gap-1 select-all">
-              <span>✉️</span> 
-              <span>Desk: <strong className="text-slate-700">concierge@atelier-studio.com</strong></span>
-            </span>
-          </div>
-        </div>
-      </div>
 
     </header>
   );

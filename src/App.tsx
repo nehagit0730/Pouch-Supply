@@ -17,6 +17,7 @@ import CustomerDrawer from './components/CustomerDrawer';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLogin from './components/AdminLogin';
 import PageRenderer from './components/PageRenderer';
+import StylistEditorialHome from './components/StylistEditorialHome';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import ShippingPolicy from './components/ShippingPolicy';
 import RefundPolicy from './components/RefundPolicy';
@@ -166,19 +167,22 @@ export default function App() {
 
   const [layoutSettings, setLayoutSettings] = useState<LayoutSettings>(() => {
     return safeLoadFromLocalStorage<LayoutSettings>('ps_layout_settings', {
-      headerLogoText: 'ATELIER',
-      headerLogoSubtext: 'STUDIO & ESSENTIALS',
+      headerLogoText: 'JADE TAILOR',
+      headerLogoSubtext: 'PERSONAL STYLIST',
       headerLogoImage: '',
-      footerLogoText: 'ATELIER',
-      footerLogoDescription: 'Contemporary luxury fashion house and wardrobe capsules crafted from organic textiles and sustainable materials in European ateliers.',
+      footerLogoText: 'JADE TAILOR',
+      footerLogoDescription: 'Luxury personal styling, bespoke capsule curations, and private boutique shopping tours designed to elevate your effortless style.',
       footerLogoImage: '',
       klaviyoPublicKey: '',
+      phone: '800 123 4444',
+      address: '0665 Broadway NY, New York 10001 United States of America',
+      email: 'jade@tailorand.com',
       menuItems: [
         { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
-        { id: '2', label: 'Shop Collection', tab: 'frontend-shop', type: 'tab' },
-        { id: '3', label: 'Curated Capsule', tab: 'frontend-subscribe', type: 'tab' },
-        { id: '4', label: 'Ateliers', tab: 'frontend-brands', type: 'tab' },
-        { id: '5', label: 'Editorial Journal', tab: 'blogs', type: 'tab' },
+        { id: '2', label: 'Work With Me', tab: 'frontend-subscribe', type: 'tab' },
+        { id: '3', label: 'My Services', tab: 'frontend-home', type: 'tab' },
+        { id: '4', label: 'Shop Curated Wardrobe', tab: 'frontend-shop', type: 'tab' },
+        { id: '5', label: 'Style Journal', tab: 'blogs', type: 'tab' },
       ]
     });
   });
@@ -1441,176 +1445,35 @@ export default function App() {
           
           /* VIEW 2: FRONTEND VIEW NAVIGATION */
           <>
-            {/* FRONTEND VIEW - HOME */}
-            {currentTab === 'frontend-home' && (() => {
-              const hp = customPages.find(p => p.isHomepage);
-              if (hp) {
-                return (
-                  <PageRenderer 
-                    page={hp} 
-                    allProducts={products}
-                    allCollections={collections}
-                    loggedInCustomer={loggedInCustomer}
-                    onAddToCart={handleAddToCart} 
-                    onToggleWishlist={handleToggleWishlist}
-                    allBlogs={blogs}
-                    onNavigate={(target, arg) => {
-                      if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
-                        if (target === 'frontend-shop' && arg) {
-                          navigateToTab('collection-detail', undefined, arg);
-                        } else {
-                          navigateToTab(target);
-                        }
-                      } else if (target.startsWith('/pages/') || target.startsWith('page-')) {
-                        const slug = target.replace('/pages/', '').replace('page-', '');
-                        navigateToTab(slug);
-                      } else if (target.startsWith('/collections/') || target.startsWith('collection-')) {
-                        const colId = target.replace('/collections/', '').replace('collection-', '');
-                        navigateToTab('collection-detail', undefined, colId);
-                      } else if (target.startsWith('/products/') || target.startsWith('product-')) {
-                        const prodId = target.replace('/products/', '').replace('product-', '');
-                        navigateToTab('product-detail', prodId);
-                      } else {
-                        navigateToTab(target);
-                      }
-                    }} 
-                  />
-                );
-              }
-              return (
-                <div className="space-y-6 pb-6">
-                  
-                  {/* Hero section */}
-                  <section className="bg-slate-950 text-white min-h-[45vh] flex items-center relative overflow-hidden px-6 lg:px-12 py-12">
-                    <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
-                      <div className="space-y-6">
-                        <span className="text-[10px] bg-white/10 text-slate-200 border border-white/15 font-black py-1 px-3.5 rounded-full uppercase tracking-widest inline-flex items-center gap-1.5">
-                          <Sparkles className="h-3 w-3" /> AUTUMN / WINTER CAPSULE
-                        </span>
-                        <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none text-white uppercase font-serif">
-                          ARCHITECTURAL <br />LUXURY & MINIMALISM
-                        </h1>
-                        <p className="text-sm text-slate-300 leading-relaxed max-w-md font-sans">
-                          Thoughtfully tailored essentials, heavy double-faced wool, and 450gsm organic cotton staples crafted in European artisanal workshops.
-                        </p>
-                        
-                        <div className="pt-2 flex flex-wrap gap-4 text-xs font-bold leading-normal">
-                          <button
-                            onClick={() => navigateToTab('frontend-shop')}
-                            className="bg-white hover:bg-slate-100 text-slate-950 py-3.5 px-8 rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer uppercase font-black tracking-widest text-[10px]"
-                          >
-                            Shop Collection <ArrowRight className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => navigateToTab('frontend-subscribe')}
-                            className="bg-white/10 text-white border border-white/20 hover:bg-white/20 py-3.5 px-8 rounded-xl cursor-pointer uppercase font-black tracking-widest text-[10px]"
-                          >
-                            Capsule Wardrobe
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="hidden md:flex justify-end relative">
-                        <div className="relative h-72 w-72 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-                          <img
-                            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80"
-                            alt="Atelier Capsule"
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Aesthetic Background design */}
-                    <div className="absolute inset-0 bg-radial-gradient from-slate-900/50 to-transparent pointer-events-none" />
-                  </section>
-
-                  {/* Popular Brands Row */}
-                  <section className="max-w-7xl mx-auto px-6">
-                    <div className="text-center mb-8">
-                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Our Artisanal Mills & Ateliers</h3>
-                    </div>
-                    <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-75">
-                      {['Atelier Studio', 'Nordic Workshop', 'Porto Textile Mill', 'Heritage Knitwear', 'Florence Atelier'].map((bLabel, index) => (
-                        <span 
-                          key={index} 
-                          onClick={() => {
-                            navigateToTab('frontend-brands');
-                          }}
-                          className="text-xs font-black tracking-widest text-slate-600 hover:text-slate-950 cursor-pointer uppercase transition-colors border-b border-transparent hover:border-slate-950 pb-1"
-                        >
-                          {bLabel}
-                        </span>
-                      ))}
-                    </div>
-                  </section>
-
-                  {/* Welcome Highlights */}
-                  <section className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                    <img
-                      src="https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80"
-                      alt="Garments"
-                      className="rounded-2xl shadow-md border object-cover h-80 w-full"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="space-y-4">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Sustainable Luxury Production</span>
-                      <h2 className="text-2xl font-black text-slate-900 font-serif">Curated Capsule Subscription: Bespoke seasonal wardrobe deliveries</h2>
-                      <p className="text-slate-500 leading-normal text-xs">
-                        Simplify getting dressed every morning with expertly coordinated modular capsule wardrobe drops delivered once per season.
-                      </p>
-                      <button
-                        onClick={() => navigateToTab('frontend-subscribe')}
-                        className="text-xs text-slate-950 hover:text-black font-bold flex items-center gap-1 cursor-pointer pt-2 uppercase tracking-wider"
-                      >
-                        Explore Capsule Plans <ArrowRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </section>
-
-                  {/* Top Seller garments */}
-                  <section className="max-w-7xl mx-auto px-6">
-                    <div className="flex justify-between items-end mb-8">
-                      <div>
-                        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Curated Picks</h4>
-                        <h2 className="text-2xl font-black text-slate-900 mt-1 uppercase font-serif">Trending Studio Pieces</h2>
-                      </div>
-                      <button
-                        onClick={() => navigateToTab('frontend-shop')}
-                        className="text-xs text-slate-900 hover:text-black font-extrabold cursor-pointer uppercase tracking-wider"
-                      >
-                        Browse full catalog →
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                      {products.slice(0, 4).map(prod => (
-                        <div 
-                          key={prod.id} 
-                          onClick={() => {
-                            navigateToTab('frontend-shop');
-                          }}
-                          className="bg-white border hover:border-slate-350 p-4 rounded-xl space-y-3 cursor-pointer group hover:shadow-xs transition-shadow"
-                        >
-                          <div className="h-64 rounded-lg bg-slate-50 overflow-hidden relative flex items-center justify-center">
-                            <img src={prod.image} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="" referrerPolicy="no-referrer" />
-                            <span className="absolute top-2.5 left-2.5 bg-slate-900 text-white text-[9px] font-bold uppercase py-0.5 px-2 rounded-full">
-                              {prod.vendor}
-                            </span>
-                          </div>
-                          <div className="space-y-1 text-left">
-                            <h4 className="text-xs font-bold text-slate-800 truncate">{prod.title}</h4>
-                            <p className="text-slate-900 font-black text-xs">£{prod.price.toFixed(2)}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-
-                </div>
-              );
-            })()}
+            {/* FRONTEND VIEW - HOME (Aesthetic Jade Tailor Stylist Design) */}
+            {currentTab === 'frontend-home' && (
+              <StylistEditorialHome 
+                onNavigate={(target, arg) => {
+                  if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
+                    if (target === 'frontend-shop' && arg) {
+                      navigateToTab('collection-detail', undefined, arg);
+                    } else {
+                      navigateToTab(target);
+                    }
+                  } else if (target.startsWith('/pages/') || target.startsWith('page-')) {
+                    const slug = target.replace('/pages/', '').replace('page-', '');
+                    navigateToTab(slug);
+                  } else if (target.startsWith('/collections/') || target.startsWith('collection-')) {
+                    const colId = target.replace('/collections/', '').replace('collection-', '');
+                    navigateToTab('collection-detail', undefined, colId);
+                  } else if (target.startsWith('/products/') || target.startsWith('product-')) {
+                    const prodId = target.replace('/products/', '').replace('product-', '');
+                    navigateToTab('product-detail', prodId);
+                  } else {
+                    navigateToTab(target);
+                  }
+                }}
+                onAddToCart={handleAddToCart}
+                allProducts={products}
+                allCollections={collections}
+                allBlogs={blogs}
+              />
+            )}
 
             {/* FRONTEND VIEW - CUSTOMIZABLE BUILDER SUBPAGES */}
             {customPages.some(p => p.slug === currentTab && !p.isHomepage) && (() => {
