@@ -291,114 +291,209 @@ export const DEFAULT_PAGES: CustomPage[] = [
     isHomepage: true,
     sections: [
       {
-        id: 'h-sec-slideshow',
-        type: 'Slideshow',
+        id: 'sec-hero-banner',
+        type: 'Hero banner',
         settings: {
           fullWidth: true,
-          backgroundColor: '#0F172A',
+          backgroundColor: '#111111',
           headingColor: '#FFFFFF',
-          textColor: '#E2E8F0',
-          slides: [
+          textColor: '#E5E5E5',
+          subtitle: 'JADE TAILOR • PERSONAL STYLIST',
+          title: 'Elevate Your Style',
+          description: 'Bespoke silhouettes, signature color palettes, and effortless everyday elegance.',
+          buttonText: 'WORK WITH JADE',
+          buttonLink: '#appointment-section',
+          imageUrl: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=1920&q=85'
+        }
+      },
+      {
+        id: 'sec-about-jade',
+        type: 'About Jade Tailor',
+        settings: {
+          fullWidth: false,
+          backgroundColor: '#FFFFFF',
+          headingColor: '#1A1A1A',
+          textColor: '#555555',
+          badge: 'ABOUT JADE TAILOR',
+          title: 'Find Your Style',
+          italicTitle: 'With Me',
+          description: 'Style sit amet risus ac dui auctor posuere sit amet eget libero. Ut lacinia lectus non risus facilisis, semper consequat sem fringilla. Etiam et tincidunt felis. Quisque at maximus nulla dictum vestibulum sed interdum neque dictum.',
+          description2: 'Your style laboris sollicitudin purus vel posuere. Maecenas auctor, turpis quis mattis tristique, ligula dolor vestibulum risus, nec ullamcorper justo dolor soda lorem. Sed interdum arcu ac metus mollis venenatis.',
+          stats: ['7+ years of work', '150+ free consultations', '90+ happy clients'],
+          imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80',
+          image2Url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80'
+        }
+      },
+      {
+        id: 'sec-my-services',
+        type: 'My Services',
+        settings: {
+          fullWidth: false,
+          backgroundColor: '#F9F7F4',
+          headingColor: '#1A1A1A',
+          textColor: '#666666',
+          badge: 'WHAT I DO',
+          title: 'My',
+          italicTitle: 'Services',
+          cardTitle: 'Individual Consultation',
+          cardDescription: 'A comprehensive one-on-one deep dive into your personal aesthetic, body architecture, and lifestyle requirements. We assess your color typology, define your signature silhouette, and formulate a seasonal style blueprint tailored specifically for you.',
+          cardButtonText: 'LEARN MORE',
+          imageUrl: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=1000&q=80'
+        }
+      },
+      {
+        id: 'sec-service-pillars',
+        type: 'Service Pillars',
+        settings: {
+          fullWidth: false,
+          backgroundColor: '#F9F7F4',
+          headingColor: '#1A1A1A',
+          textColor: '#666666',
+          accentColor: '#B58D59',
+          pillars: [
+            { num: '01', title: 'Wardrobe Styling', desc: 'Lorem ipsum nisl quam nestibulum drana odio elementum scesue the monte.' },
+            { num: '02', title: 'Closet Cleanse', desc: 'Lorem ipsum nisl quam nestibulum drana odio elementum monte.' },
+            { num: '03', title: 'Shopping Tour', desc: 'Lorem ipsum nisl quam nestibulum drana odio elementum scesue the can.' }
+          ]
+        }
+      },
+      {
+        id: 'sec-video-tips',
+        type: 'Video banner',
+        settings: {
+          fullWidth: true,
+          backgroundColor: '#111111',
+          headingColor: '#FFFFFF',
+          textColor: '#E5E5E5',
+          title: 'Discover My Video Tips And Hints',
+          italicWord: 'Discover',
+          videoUrl: 'dQw4w9WgXcQ',
+          imageUrl: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=1800&q=85'
+        }
+      },
+      {
+        id: 'sec-styling-packages',
+        type: 'Styling Packages',
+        settings: {
+          fullWidth: false,
+          backgroundColor: '#FFFFFF',
+          headingColor: '#1A1A1A',
+          textColor: '#666666',
+          badge: 'PRICING PLAN',
+          title: 'Styling',
+          italicTitle: 'Packages',
+          packages: [
             {
-              title: 'THE AUTUMN / WINTER ATELIER',
-              description: 'Architectural tailoring, luxurious double-faced wool, and modern silhouettes crafted for enduring versatility.',
-              imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1800&q=85',
-              buttonText: 'SHOP NEW ARRIVALS',
-              buttonLink: 'frontend-shop'
+              title: 'In-Home Styling',
+              price: '$300',
+              imageUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=600&q=80',
+              features: [
+                { text: 'Complete closet audit & organization', included: true },
+                { text: 'Color analysis & silhouette mapping', included: true },
+                { text: 'Personalized digital lookbook (20 outfits)', included: false }
+              ],
+              isFeatured: false,
+              btnText: 'WORK WITH ME'
             },
             {
-              title: 'MINIMALIST STREETWEAR',
-              description: 'Heavyweight 450gsm organic cotton, dropped shoulder proportions, and relaxed monochrome palettes engineered for everyday comfort.',
-              imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1800&q=85',
-              buttonText: 'EXPLORE THE DROP',
-              buttonLink: 'frontend-shop'
+              title: 'Half Day Shopping',
+              price: '$450',
+              imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80',
+              features: [
+                { text: '4 hours private curated shopping tour', included: true },
+                { text: 'Pre-selected garments ready in VIP suites', included: true },
+                { text: 'Seasonal capsule wardrobe integration', included: false }
+              ],
+              isFeatured: true,
+              btnText: 'WORK WITH ME'
             },
             {
-              title: 'TIMELESS CONTEMPORARY TAILORING',
-              description: 'Unstructured blazers, relaxed pleated trousers, and breathable linen-blend overshirts designed for effortless layering.',
-              imageUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1800&q=85',
-              buttonText: 'DISCOVER LOOKBOOK',
-              buttonLink: 'frontend-shop'
+              title: 'Full Day Shopping',
+              price: '$600',
+              imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80',
+              features: [
+                { text: 'Full 8 hours complete wardrobe overhaul', included: true },
+                { text: 'Luxury boutique access & stylist discounts', included: true },
+                { text: 'Comprehensive seasonal digital lookbook', included: true }
+              ],
+              isFeatured: false,
+              btnText: 'WORK WITH ME'
             }
           ]
         }
       },
       {
-        id: 'h-sec-collections',
-        type: 'Collection list',
+        id: 'sec-client-reviews',
+        type: 'Client Reviews',
         settings: {
           fullWidth: false,
-          headingColor: '#0F172A',
-          textColor: '#64748B',
-          title: 'CURATED COLLECTIONS',
-          description: 'Explore contemporary menswear and womenswear across tailored outerwear, fine knitwear, and streetwear essentials.',
-          itemsCount: 4
+          backgroundColor: '#FBF9F6',
+          headingColor: '#1A1A1A',
+          textColor: '#555555',
+          badge: 'CLIENTS REVIEWS',
+          title: 'What Clients Say',
+          italicTitle: 'About Me',
+          quote: 'Highly recommend, thank you again!',
+          content: 'Jade is so lovely and did such a great job with my wedding dress along with bridal party and mother of the bride outfits... She understood exactly what flattered my shape while keeping me entirely comfortable. Highly recommend, thank you again!',
+          author: 'Emily Brown',
+          role: 'Customer Review',
+          avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
+          imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80'
         }
       },
       {
-        id: 'h-sec-products',
-        type: 'Featured collection',
-        settings: {
-          fullWidth: false,
-          headingColor: '#0F172A',
-          textColor: '#64748B',
-          title: 'TRENDING THIS WEEK',
-          description: 'Our most coveted garments, tailored with architectural precision and crafted from sustainable luxury textiles.',
-          itemsCount: 8
-        }
-      },
-      {
-        id: 'h-sec-marquee',
-        type: 'Marquee text',
-        settings: {
-          fullWidth: true,
-          backgroundColor: '#0F172A',
-          headingColor: '#FFFFFF',
-          textColor: '#E2E8F0',
-          title: 'COMPLIMENTARY EXPRESS SHIPPING ACROSS INDIA ON ORDERS OVER ₹999  ·  30-DAY EFFORTLESS RETURNS  ·  SUSTAINABLY CRAFTED FROM ORGANIC TEXTILES  ·  HAND-FINISHED IN ATELIERS  ·  NEW CURATED DROPS EVERY THURSDAY',
-          marqueeSpeed: 4
-        }
-      },
-      {
-        id: 'h-sec-editorial',
-        type: 'Image with text',
-        settings: {
-          fullWidth: false,
-          backgroundColor: '#F8FAFC',
-          headingColor: '#0F172A',
-          textColor: '#475569',
-          title: 'THE ART OF UNDERSTATED LUXURY',
-          description: 'We believe in wardrobe longevity over disposable fast-fashion cycles. Every silhouette in our studio is cut with clean architectural lines, woven from GOTS-certified organic cotton and European virgin wool, and finished with meticulous double-needle craftsmanship designed to endure for decades.',
-          buttonText: 'EXPLORE OUR ATELIER',
-          buttonLink: 'frontend-shop',
-          imageUrl: 'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1200&q=80'
-        }
-      },
-      {
-        id: 'h-sec-trust',
-        type: 'Trust badges',
+        id: 'sec-my-portfolio',
+        type: 'My Portfolio',
         settings: {
           fullWidth: false,
           backgroundColor: '#FFFFFF',
-          trustBadges: [
-            { iconType: 'badge', title: 'ETHICALLY CRAFTED', description: 'GOTS certified organic cotton & recycled wool.' },
-            { iconType: 'shield', title: 'EXPRESS TRACKED SHIPPING', description: 'Carbon-neutral delivery across India & Worldwide.' },
-            { iconType: 'globe', title: 'COMPLIMENTARY RETURNS', description: '30-day effortless return and exchange policy.' },
-            { iconType: 'tag', title: 'PREMIUM SUSTAINABILITY', description: 'Zero single-use plastics in all shipping packaging.' }
+          headingColor: '#1A1A1A',
+          badge: 'MY PORTFOLIO',
+          title: 'Find Your Ideal Style and Look?',
+          items: [
+            { image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80', title: 'Architectural Tailoring & Cream Trench', category: 'Editorial Streetwear' },
+            { image: 'https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=800&q=80', title: 'Effortless Summer Linen Ensemble', category: 'Casual Resort' },
+            { image: 'https://images.unsplash.com/photo-1516762689617-e1cffcef479d?auto=format&fit=crop&w=800&q=80', title: 'Bohemian Sunhat & Warm Earth Tones', category: 'Seasonal Lookbook' },
+            { image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80', title: 'Modern Sport-Luxe & Monochrome', category: 'Contemporary Casual' },
+            { image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80', title: 'Pastel Blazer & Checked Silk Separates', category: 'Executive Style' },
+            { image: 'https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?auto=format&fit=crop&w=800&q=80', title: 'Evening Velvet & Statement Eyewear', category: 'Gala & Red Carpet' }
           ]
         }
       },
       {
-        id: 'h-sec-blog',
-        type: 'Blog post',
+        id: 'sec-news-blog',
+        type: 'News & Blog',
+        settings: {
+          fullWidth: true,
+          backgroundColor: '#0F0F10',
+          headingColor: '#FFFFFF',
+          textColor: '#CCCCCC',
+          badge: 'LATEST NEWS',
+          title: 'News',
+          italicTitle: '& Blog'
+        }
+      },
+      {
+        id: 'sec-make-appointment',
+        type: 'Make An Appointment',
+        settings: {
+          fullWidth: true,
+          backgroundColor: '#111111',
+          headingColor: '#FFFFFF',
+          promptText: 'To submit an enquiry or to arrange an appointment please call me or alternatively please complete the form.',
+          phone: '800 123 4444',
+          formTitle: 'Make An Appointment',
+          buttonText: 'MAKE APPOINTMENT',
+          imageUrl: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=1600&q=80'
+        }
+      },
+      {
+        id: 'sec-brand-logos',
+        type: 'Brand Logos',
         settings: {
           fullWidth: false,
-          headingColor: '#0F172A',
-          textColor: '#64748B',
-          title: 'THE STYLE JOURNAL',
-          description: 'Editorials, seasonal styling blueprints, and craftsmanship stories direct from our European ateliers.',
-          columnsDesktop: 3,
-          columnsMobile: 1
+          backgroundColor: '#FFFFFF',
+          logos: ["CHIPPY'S", "FASTLANE", "SWEETY.", "MIGHTY FURNITURES", "CARA INDOORS", "GOLDEN NET 109", "avant garde"]
         }
       }
     ]

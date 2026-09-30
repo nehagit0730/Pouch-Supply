@@ -20,13 +20,15 @@ export interface Product {
   description: string;
   price: number;
   compareAtPrice: number;
-  inventory: number;
+  costPerItem?: number;
+  inventory?: number;
+  inventoryQuantity?: number;
   sku: string;
   category: string;
   vendor: string; // Brand name (e.g. 77, CUBA, CLEW, etc.)
   status: 'Active' | 'Draft' | 'Archived' | 'Unlisted';
   image: string;
-  weight: number;
+  weight?: number | string;
   tags: string[];
   media?: string[]; // Multiple media URLs
   variants?: ProductVariant[]; // Option list matching Shopify-style variants
@@ -40,6 +42,7 @@ export interface Product {
   updatedAt?: string;
   strength?: string;
   flavour?: string;
+  format?: string;
   isVariantCard?: boolean;
   concreteVariantId?: string;
   parentSlug?: string;
@@ -50,7 +53,7 @@ export interface Collection {
   id: string;
   title: string;
   description: string;
-  type: 'Manual' | 'Smart';
+  type?: 'Manual' | 'Smart';
   image: string;
   productIds: string[];
   productConditions?: string; // string explaining the conditions
@@ -199,13 +202,13 @@ export interface Discount {
 
 export interface PageSection {
   id: string;
-  type: 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list' | 'Icon with text' | 'Brands we offer' | 'How it works' | 'Trust badges' | 'Plans' | 'Clearance Sale';
+  type: 'Hero banner' | 'About Jade Tailor' | 'My Services' | 'Service Pillars' | 'Styling Packages' | 'Client Reviews' | 'My Portfolio' | 'News & Blog' | 'Make An Appointment' | 'Brand Logos' | 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list' | 'Icon with text' | 'Brands we offer' | 'How it works' | 'Trust badges' | 'Plans' | 'Clearance Sale';
   settings: {
     [key: string]: any;
-    fullWidth: boolean;
-    backgroundColor: string; // hex
-    headingColor: string; // hex
-    textColor: string; // hex
+    fullWidth?: boolean;
+    backgroundColor?: string; // hex
+    headingColor?: string; // hex
+    textColor?: string; // hex
     iconColor?: string; // hex
     alertBadgeText?: string;
     promoBannerText?: string;
@@ -326,5 +329,6 @@ export interface LayoutSettings {
   storeName?: string;
   address?: string;
   phone?: string;
+  email?: string;
 }
 

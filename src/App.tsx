@@ -211,11 +211,46 @@ export default function App() {
     const loaded = safeLoadFromLocalStorage<CustomPage[]>('ps_custom_pages', DEFAULT_PAGES);
     const list = Array.isArray(loaded) ? loaded : DEFAULT_PAGES;
     let finalPages = [...list].filter(Boolean);
-    // Guaranteed presence check for Homepage in Pages list
-    if (!finalPages.some((p: any) => p && p.isHomepage)) {
-      const defaultHome = DEFAULT_PAGES.find((p: any) => p.isHomepage);
+    const defaultHome = DEFAULT_PAGES.find((p: any) => p && p.isHomepage);
+
+    const liveSectionTypes = [
+      'Hero banner',
+      'About Jade Tailor',
+      'My Services',
+      'Service Pillars',
+      'Video banner',
+      'Styling Packages',
+      'Client Reviews',
+      'My Portfolio',
+      'News & Blog',
+      'Make An Appointment',
+      'Brand Logos'
+    ];
+
+    // Guaranteed presence check & full 11-section sync for Homepage in Pages list
+    const existingHomeIdx = finalPages.findIndex((p: any) => p && p.isHomepage);
+    if (existingHomeIdx === -1) {
       if (defaultHome) {
         finalPages = [defaultHome, ...finalPages];
+      }
+    } else if (defaultHome) {
+      const currentHome = finalPages[existingHomeIdx];
+      const hasAllLiveSections = currentHome.sections &&
+        currentHome.sections.length === 11 &&
+        liveSectionTypes.every(t => currentHome.sections.some((s: any) => s.type === t));
+      if (!hasAllLiveSections) {
+        // Automatically sync homepage to have the exact 11 sections matching live storefront design
+        finalPages[existingHomeIdx] = {
+          ...currentHome,
+          title: 'Home Page',
+          slug: '',
+          isHomepage: true,
+          visibility: 'Visible',
+          sections: JSON.parse(JSON.stringify(defaultHome.sections))
+        };
+        try {
+          localStorage.setItem('ps_custom_pages', JSON.stringify(finalPages));
+        } catch (e) {}
       }
     }
     // Guaranteed presence check for Subscribe page
@@ -356,7 +391,45 @@ export default function App() {
           loadedDiscountsSuccess.current = true;
         }
         if (Array.isArray(pagesRes)) {
-          setCustomPages(pagesRes);
+          const defaultHome = DEFAULT_PAGES.find((p: any) => p && p.isHomepage);
+          const liveSectionTypes = [
+            'Hero banner',
+            'About Jade Tailor',
+            'My Services',
+            'Service Pillars',
+            'Video banner',
+            'Styling Packages',
+            'Client Reviews',
+            'My Portfolio',
+            'News & Blog',
+            'Make An Appointment',
+            'Brand Logos'
+          ];
+          let sanitizedPages = [...pagesRes];
+          const homeIdx = sanitizedPages.findIndex((p: any) => p && p.isHomepage);
+          if (homeIdx === -1 && defaultHome) {
+            sanitizedPages = [defaultHome, ...sanitizedPages];
+          } else if (defaultHome) {
+            const currentHome = sanitizedPages[homeIdx];
+            const hasAllLiveSections = currentHome.sections &&
+              currentHome.sections.length === 11 &&
+              liveSectionTypes.every(t => currentHome.sections.some((s: any) => s.type === t));
+            if (!hasAllLiveSections) {
+              sanitizedPages[homeIdx] = {
+                ...currentHome,
+                title: 'Home Page',
+                slug: '',
+                isHomepage: true,
+                visibility: 'Visible',
+                sections: JSON.parse(JSON.stringify(defaultHome.sections))
+              };
+              syncToApi('custompages', sanitizedPages);
+              try {
+                localStorage.setItem('ps_custom_pages', JSON.stringify(sanitizedPages));
+              } catch (e) {}
+            }
+          }
+          setCustomPages(sanitizedPages);
           loadedPagesSuccess.current = true;
         }
         if (Array.isArray(blogsRes)) {
@@ -1448,6 +1521,7 @@ export default function App() {
             {/* FRONTEND VIEW - HOME (Aesthetic Jade Tailor Stylist Design) */}
             {currentTab === 'frontend-home' && (
               <StylistEditorialHome 
+                sections={customPages.find(p => p.isHomepage)?.sections}
                 onNavigate={(target, arg) => {
                   if (target === 'frontend-shop' || target === 'frontend-subscribe' || target === 'frontend-brands') {
                     if (target === 'frontend-shop' && arg) {

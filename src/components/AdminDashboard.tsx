@@ -7,7 +7,8 @@ import {
   X, MoveUp, MoveDown, Layout, Globe, Mail, DollarSign, ShoppingBag, EyeOff, RefreshCw, AlertTriangle, GripVertical,
   Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass, ShieldCheck, ChevronLeft,
   ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server, Lock, Gift, Check, Clock, Truck, ArrowRight, Zap, Shield,
-  Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit, LogOut, Download, Upload
+  Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit, LogOut, Download, Upload,
+  User, MessageSquare, Phone
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 import CollectionEditor from './CollectionEditor';
@@ -17,8 +18,21 @@ import DiscountEditor from './DiscountEditor';
 import PlansCanOverlay from './PlansCanOverlay';
 import { Crown, Flame } from 'lucide-react';
 import { SUPPORTED_CURRENCIES, getActiveCurrency, setActiveCurrency, formatPrice } from '../utils/currency';
+import { DEFAULT_PAGES } from '../initialData';
 
 export const AVAILABLE_SECTION_TEMPLATES = [
+  // 10 Live Homepage Stylist Editorial Sections
+  { type: 'Hero banner', label: 'Hero Banner', desc: 'Luxury editorial hero banner with title, subtitle, CTA & background', icon: 'Sparkles' },
+  { type: 'About Jade Tailor', label: 'About Jade Tailor', desc: 'Profile story with double images, signature stats & biography', icon: 'User' },
+  { type: 'My Services', label: 'My Services', desc: 'Featured service showcase card with detailed description & CTA', icon: 'Layers' },
+  { type: 'Service Pillars', label: 'Service Pillars', desc: 'Three numbered service pillars (Wardrobe, Cleanse, Shopping)', icon: 'Columns' },
+  { type: 'Styling Packages', label: 'Styling Packages', desc: 'Three-tier pricing and service packages with feature checklists', icon: 'Award' },
+  { type: 'Client Reviews', label: 'Client Reviews', desc: 'Editorial client testimonial showcase with photography & quote', icon: 'MessageSquare' },
+  { type: 'My Portfolio', label: 'My Portfolio', desc: 'Curated 6-item editorial fashion lookbook & style portfolio grid', icon: 'LayoutGrid' },
+  { type: 'News & Blog', label: 'News & Blog', desc: 'Dark luxury style journal & latest fashion articles carousel/grid', icon: 'BookOpen' },
+  { type: 'Make An Appointment', label: 'Make An Appointment', desc: 'Interactive booking consultation form with direct phone CTA', icon: 'Calendar' },
+  { type: 'Brand Logos', label: 'Brand Logos', desc: 'Minimalist luxury partner brand logo banner', icon: 'Award' },
+  // Standard Store Templates
   { type: 'Image banner', label: 'Image Banner', desc: 'Hero banner with centered headline overlay & CTA buttons', icon: 'ImageIcon' },
   { type: 'Image with text', label: 'Image with Text', desc: 'Beautifully-aligned structural image with side description', icon: 'Columns' },
   { type: 'Text column with image', label: 'Text Column with Image', desc: 'Three-column display grid showing core brand standards', icon: 'Grid' },
@@ -49,6 +63,16 @@ export const getSectionLabel = (type: string): string => {
 
 export const getSectionIcon = (type: string) => {
   switch (type) {
+    case 'Hero banner': return <Sparkles className="h-4 w-4 text-[#b58d59]" />;
+    case 'About Jade Tailor': return <User className="h-4 w-4 text-emerald-600" />;
+    case 'My Services': return <Layers className="h-4 w-4 text-amber-600" />;
+    case 'Service Pillars': return <Columns className="h-4 w-4 text-blue-600" />;
+    case 'Styling Packages': return <Award className="h-4 w-4 text-purple-600" />;
+    case 'Client Reviews': return <MessageSquare className="h-4 w-4 text-rose-500" />;
+    case 'My Portfolio': return <LayoutGrid className="h-4 w-4 text-indigo-600" />;
+    case 'News & Blog': return <BookOpen className="h-4 w-4 text-amber-600" />;
+    case 'Make An Appointment': return <Calendar className="h-4 w-4 text-teal-600" />;
+    case 'Brand Logos': return <Award className="h-4 w-4 text-slate-700" />;
     case 'Image banner': return <ImageIcon className="h-4 w-4 text-teal-600" />;
     case 'Image with text': return <Columns className="h-4 w-4 text-emerald-500" />;
     case 'Text column with image': return <Grid className="h-4 w-4 text-sky-500" />;
@@ -1050,6 +1074,44 @@ export default function AdminDashboard({
       setLocalBlogs(parentBlogs);
     }
   }, [parentProducts, parentCollections, parentCustomPages, parentDiscounts, parentOrders, parentCustomers, parentBlogs, hasUnsavedChanges]);
+
+  // Ensure the localPages homepage always has all 11 live sections matching live storefront
+  React.useEffect(() => {
+    const defaultHome = DEFAULT_PAGES.find(p => p.isHomepage);
+    if (!defaultHome) return;
+    const home = localPages.find(p => p.isHomepage);
+    const liveTypes = [
+      'Hero banner',
+      'About Jade Tailor',
+      'My Services',
+      'Service Pillars',
+      'Video banner',
+      'Styling Packages',
+      'Client Reviews',
+      'My Portfolio',
+      'News & Blog',
+      'Make An Appointment',
+      'Brand Logos'
+    ];
+    const isComplete = home && home.sections &&
+      home.sections.length === 11 &&
+      liveTypes.every(t => home.sections.some(s => s.type === t));
+    
+    if (!isComplete) {
+      const updated = localPages.map(p => p.isHomepage ? {
+        ...p,
+        title: 'Home Page',
+        slug: '',
+        visibility: 'Visible' as const,
+        sections: JSON.parse(JSON.stringify(defaultHome.sections))
+      } : p);
+      if (!home) {
+        updated.unshift(JSON.parse(JSON.stringify(defaultHome)));
+      }
+      setLocalPages(updated);
+      parentOnUpdateCustomPages(updated);
+    }
+  }, []);
 
   // Listen to external modal command requests (from App.tsx confirm triggers)
   React.useEffect(() => {
@@ -2102,6 +2164,30 @@ export default function AdminDashboard({
   const handleAddSectionToPage = (sectionType: PageSection['type']) => {
     if (!selectedBuilderPageId) return;
     
+    // Check if there is a live homepage template for this sectionType
+    const liveTemplateSec = DEFAULT_PAGES[0]?.sections.find(s => s.type === sectionType);
+    if (liveTemplateSec) {
+      const newSection: PageSection = {
+        id: `sec-${Date.now()}`,
+        type: sectionType,
+        settings: JSON.parse(JSON.stringify(liveTemplateSec.settings))
+      };
+      const updated = localPages.map(page => {
+        if (page.id === selectedBuilderPageId) {
+          return {
+            ...page,
+            sections: [...page.sections, newSection]
+          };
+        }
+        return page;
+      });
+      setLocalPages(updated);
+      setSelectedBuilderSectionId(newSection.id);
+      setHasUnsavedChanges(true);
+      if (onDirtyChange) onDirtyChange(true);
+      return;
+    }
+
     // Banner, Slideshow and Marquee text should be full width by default!
     const isFullWidthByDefault = sectionType === 'Image banner' || sectionType === 'Slideshow' || sectionType === 'Marquee text' || sectionType === 'Video banner';
     
@@ -4445,17 +4531,53 @@ export default function AdminDashboard({
                             {page.visibility}
                           </span>
                           {page.isHomepage && (
-                            <span className="text-[8px] py-0.5 px-1.5 font-black uppercase tracking-widest rounded bg-[#5674d5] text-white flex items-center gap-1">
-                              🏠 Active Homepage
+                            <span className="text-[8px] py-0.5 px-2 font-black uppercase tracking-widest rounded bg-[#5674d5] text-white flex items-center gap-1 shadow-2xs">
+                              🏠 Active Homepage ({page.sections?.length || 11} Sections)
                             </span>
                           )}
                         </div>
                         <p className="text-[10px] text-slate-400 mt-1">
-                          Route URL: <span className="font-mono bg-slate-100 px-1 rounded">{page.isHomepage ? '/' : `/pages/${page.slug}`}</span> • Last updated {page.updatedAt || 'Just Now'}
+                          Route URL: <span className="font-mono bg-slate-100 px-1 rounded">{page.isHomepage ? '/' : `/pages/${page.slug}`}</span> • Last updated {page.updatedAt || 'Just Now'} • <span className="font-semibold text-slate-600">{page.sections?.length || 0} Layout Modules</span>
                         </p>
+                        {page.isHomepage && (
+                          <div className="flex flex-wrap gap-1 mt-1.5 max-w-xl">
+                            {(page.sections || []).map((sec, sIdx) => (
+                              <span key={sec.id || sIdx} className="text-[8px] bg-slate-100 text-slate-700 font-medium px-1.5 py-0.5 rounded border border-slate-200/60 flex items-center gap-1">
+                                <span className="font-mono text-slate-400 text-[7px]">{sIdx + 1}</span> {sec.type}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                        {page.isHomepage && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const defaultHome = DEFAULT_PAGES.find(p => p.isHomepage);
+                              if (defaultHome) {
+                                const updated = localPages.map(p => p.id === page.id ? {
+                                  ...p,
+                                  title: 'Home Page',
+                                  sections: JSON.parse(JSON.stringify(defaultHome.sections))
+                                } : p);
+                                setLocalPages(updated);
+                                onUpdateCustomPages(updated);
+                                setHasUnsavedChanges(true);
+                                if (onDirtyChange) onDirtyChange(true);
+                                try {
+                                  localStorage.setItem('ps_custom_pages', JSON.stringify(updated));
+                                } catch (e) {}
+                              }
+                            }}
+                            className="bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold py-1.5 px-2.5 rounded-lg border border-amber-200 flex items-center gap-1 cursor-pointer transition text-[10px] shadow-2xs"
+                            title="Reset homepage sections to match the exact 11 live sections"
+                          >
+                            <RefreshCw className="h-3 w-3 text-amber-600" />
+                            Sync Live Sections ({DEFAULT_PAGES[0]?.sections.length || 11})
+                          </button>
+                        )}
                         {!page.isHomepage && (
                           <button
                             onClick={() => handleSetPageAsHomepage(page.id)}
@@ -4612,6 +4734,33 @@ export default function AdminDashboard({
                     </div>
                   </div>
                   <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    {currentlyEditingPage?.isHomepage && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const defaultHome = DEFAULT_PAGES.find(p => p.isHomepage);
+                          if (defaultHome) {
+                            const updated = localPages.map(p => p.id === currentlyEditingPage.id ? {
+                              ...p,
+                              title: 'Home Page',
+                              sections: JSON.parse(JSON.stringify(defaultHome.sections))
+                            } : p);
+                            setLocalPages(updated);
+                            onUpdateCustomPages(updated);
+                            setHasUnsavedChanges(true);
+                            if (onDirtyChange) onDirtyChange(true);
+                            try {
+                              localStorage.setItem('ps_custom_pages', JSON.stringify(updated));
+                            } catch (e) {}
+                          }
+                        }}
+                        className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-[10px] py-1.5 px-3 rounded-lg border border-amber-400/40 cursor-pointer transition flex items-center gap-1.5 shadow-xs"
+                        title="Sync sections to the 11 live homepage sections"
+                      >
+                        <RefreshCw className="h-3 w-3 text-amber-300" />
+                        Sync Live Sections (11)
+                      </button>
+                    )}
                     {hasUnsavedChanges && (
                       <button
                         onClick={() => {
@@ -4654,7 +4803,14 @@ export default function AdminDashboard({
                   <div className="lg:col-span-1 space-y-4">
                     <div className="bg-white border rounded-xl p-4 shadow-xs space-y-4">
                       <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                        <h4 className="font-black text-slate-700 uppercase tracking-wide text-xs">Page Sections</h4>
+                        <div>
+                          <h4 className="font-black text-slate-700 uppercase tracking-wide text-xs">Page Sections</h4>
+                          {currentlyEditingPage?.isHomepage && (
+                            <span className="text-[8.5px] font-bold text-[#b58d59] block mt-0.5">
+                              Live Homepage ({currentlyEditingPage.sections.length} Sections)
+                            </span>
+                          )}
+                        </div>
                         <button
                           onClick={() => {
                             if (hasUnsavedChanges && !confirm("You have unsaved adjustments! Exit anyway and discard modifications?")) {
@@ -4670,8 +4826,33 @@ export default function AdminDashboard({
                         </button>
                       </div>
 
+                      {currentlyEditingPage?.isHomepage && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const defaultHome = DEFAULT_PAGES.find(p => p.isHomepage);
+                            if (defaultHome) {
+                              const updated = localPages.map(p => p.id === currentlyEditingPage.id ? {
+                                ...p,
+                                title: 'Home Page',
+                                sections: JSON.parse(JSON.stringify(defaultHome.sections))
+                              } : p);
+                              setLocalPages(updated);
+                              onUpdateCustomPages(updated);
+                              setHasUnsavedChanges(true);
+                              if (onDirtyChange) onDirtyChange(true);
+                            }
+                          }}
+                          className="w-full text-center py-1.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[10px] font-bold rounded-lg border border-amber-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition"
+                          title="Ensure sections match the 11 live homepage sections"
+                        >
+                          <RefreshCw className="h-3 w-3 text-amber-600" />
+                          Sync 11 Live Sections
+                        </button>
+                      )}
+
                     {/* Section stacking list */}
-                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                    <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
                       {currentlyEditingPage?.sections.map((sec, idx) => (
                         <div 
                           key={sec.id}
@@ -4935,6 +5116,242 @@ export default function AdminDashboard({
                               {/* Different visual layouts */}
                               <div className="pt-3">
                                 
+                                {/* 0A. HERO BANNER (LIVE JADE TAILOR) */}
+                                {sec.type === 'Hero banner' && (
+                                  <div className="relative rounded-xl overflow-hidden py-8 px-4 text-center bg-[#111111] text-white">
+                                    {sec.settings.imageUrl && (
+                                      <div 
+                                        className="absolute inset-0 bg-cover bg-center opacity-30" 
+                                        style={{ backgroundImage: `url(${sec.settings.imageUrl})` }}
+                                      />
+                                    )}
+                                    <div className="relative z-10 space-y-2 max-w-md mx-auto">
+                                      <span className="text-[7.5px] uppercase tracking-[0.25em] text-[#b58d59] font-bold block">
+                                        {sec.settings.subtitle || 'JADE TAILOR • PERSONAL STYLIST'}
+                                      </span>
+                                      <h3 className="font-serif text-lg font-normal text-white">
+                                        {sec.settings.title || 'Elevate Your Style'}
+                                      </h3>
+                                      <p className="text-[9px] text-white/80 line-clamp-2 font-light">
+                                        {sec.settings.description || 'Bespoke silhouettes, signature color palettes, and effortless everyday elegance.'}
+                                      </p>
+                                      {sec.settings.buttonText && (
+                                        <span className="inline-block mt-2 px-3 py-1 bg-[#b58d59] text-white text-[8px] font-bold uppercase tracking-wider rounded">
+                                          {sec.settings.buttonText}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 0B. ABOUT JADE TAILOR */}
+                                {sec.type === 'About Jade Tailor' && (
+                                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-3 text-left">
+                                    <div className="md:col-span-7 space-y-1.5">
+                                      <span className="text-[7.5px] uppercase tracking-[0.2em] font-bold text-slate-400 block">
+                                        {sec.settings.badge || 'ABOUT JADE TAILOR'}
+                                      </span>
+                                      <h4 className="font-serif text-sm font-normal text-[#1a1a1a]">
+                                        {sec.settings.title || 'Find Your Style'} <span className="italic text-[#b58d59]">{sec.settings.italicTitle || 'With Me'}</span>
+                                      </h4>
+                                      <p className="text-[8.5px] text-slate-500 leading-relaxed line-clamp-2">
+                                        {sec.settings.description}
+                                      </p>
+                                      <div className="flex flex-wrap gap-2 pt-1">
+                                        {(sec.settings.stats || ['7+ years of work', '150+ consultations', '90+ clients']).map((st: string, idx: number) => (
+                                          <span key={idx} className="text-[7.5px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-medium flex items-center gap-1">
+                                            <Check className="h-2 w-2 text-[#b58d59]" /> {st}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div className="md:col-span-5 flex justify-center gap-2">
+                                      <div className="w-16 h-20 rounded bg-slate-200 overflow-hidden shadow">
+                                        <img src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80'} alt="" className="w-full h-full object-cover" />
+                                      </div>
+                                      <div className="w-14 h-18 rounded bg-slate-200 overflow-hidden shadow mt-3">
+                                        <img src={sec.settings.image2Url || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80'} alt="" className="w-full h-full object-cover" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 0C. MY SERVICES */}
+                                {sec.type === 'My Services' && (
+                                  <div className="p-3 text-center space-y-2 bg-[#f9f7f4] rounded-xl border border-[#ece7de]">
+                                    <span className="text-[7.5px] uppercase tracking-[0.2em] font-bold text-slate-400 block">
+                                      {sec.settings.badge || 'WHAT I DO'}
+                                    </span>
+                                    <h4 className="font-serif text-sm font-normal text-[#1a1a1a]">
+                                      {sec.settings.title || 'My'} <span className="italic text-[#b58d59]">{sec.settings.italicTitle || 'Services'}</span>
+                                    </h4>
+                                    <div className="bg-white rounded-lg p-2.5 flex items-center gap-3 max-w-sm mx-auto shadow-xs text-left">
+                                      <div className="w-16 h-16 rounded overflow-hidden bg-slate-100 shrink-0">
+                                        <img src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=400&q=80'} alt="" className="w-full h-full object-cover" />
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <h5 className="font-serif text-xs font-semibold text-slate-800">{sec.settings.cardTitle || 'Individual Consultation'}</h5>
+                                        <p className="text-[8px] text-slate-500 line-clamp-2 mt-0.5">{sec.settings.cardDescription}</p>
+                                        <span className="inline-block mt-1 text-[7px] font-bold text-[#b58d59] uppercase tracking-wider">{sec.settings.cardButtonText || 'LEARN MORE'} →</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 0D. SERVICE PILLARS */}
+                                {sec.type === 'Service Pillars' && (
+                                  <div className="p-3 bg-[#f9f7f4] rounded-xl border border-[#ece7de]">
+                                    <div className="grid grid-cols-3 gap-2 text-left">
+                                      {(sec.settings.pillars || [
+                                        { num: '01', title: 'Wardrobe Styling', desc: 'Personalized closet audit & aesthetic mapping.' },
+                                        { num: '02', title: 'Closet Cleanse', desc: 'Purge & reorganize existing capsule items.' },
+                                        { num: '03', title: 'Shopping Tour', desc: 'Pre-pulled boutique curated VIP sessions.' }
+                                      ]).map((pil: any, idx: number) => (
+                                        <div key={idx} className="bg-white p-2 rounded-lg border border-slate-200/60 shadow-2xs">
+                                          <span className="font-serif text-sm font-light text-[#b58d59] block">{pil.num || `0${idx + 1}`}</span>
+                                          <h5 className="font-serif text-[10px] font-bold text-slate-800 mt-0.5 truncate">{pil.title}</h5>
+                                          <p className="text-[7.5px] text-slate-500 line-clamp-2 mt-0.5">{pil.desc}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 0E. STYLING PACKAGES */}
+                                {sec.type === 'Styling Packages' && (
+                                  <div className="p-3 text-center space-y-2">
+                                    <span className="text-[7.5px] uppercase tracking-[0.2em] font-bold text-slate-400 block">
+                                      {sec.settings.badge || 'PRICING PLAN'}
+                                    </span>
+                                    <h4 className="font-serif text-sm font-normal text-[#1a1a1a]">
+                                      {sec.settings.title || 'Styling'} <span className="italic text-[#b58d59]">{sec.settings.italicTitle || 'Packages'}</span>
+                                    </h4>
+                                    <div className="grid grid-cols-3 gap-2 pt-1 text-left">
+                                      {(sec.settings.packages || [
+                                        { title: 'In-Home Styling', price: '$300', isFeatured: false, btnText: 'WORK WITH ME' },
+                                        { title: 'Half Day Shopping', price: '$450', isFeatured: true, btnText: 'WORK WITH ME' },
+                                        { title: 'Full Day Overhaul', price: '$600', isFeatured: false, btnText: 'WORK WITH ME' }
+                                      ]).map((pkg: any, idx: number) => (
+                                        <div key={idx} className={`p-2 rounded-lg border text-center ${pkg.isFeatured ? 'border-[#b58d59] bg-[#b58d59]/5' : 'border-slate-200 bg-white'}`}>
+                                          <h5 className="font-serif text-[10px] font-bold text-slate-800 truncate">{pkg.title}</h5>
+                                          <span className="font-serif text-xs font-semibold text-[#b58d59] block mt-0.5">{pkg.price}</span>
+                                          <span className="inline-block mt-1 text-[7px] px-1.5 py-0.5 bg-slate-900 text-white rounded font-bold uppercase">{pkg.btnText || 'WORK WITH ME'}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 0F. CLIENT REVIEWS */}
+                                {sec.type === 'Client Reviews' && (
+                                  <div className="p-3 bg-[#fbf9f6] rounded-xl border border-[#ece7de] text-center space-y-2">
+                                    <span className="text-[7.5px] uppercase tracking-[0.2em] font-bold text-slate-400 block">
+                                      {sec.settings.badge || 'CLIENTS REVIEWS'}
+                                    </span>
+                                    <h4 className="font-serif text-sm font-normal text-[#1a1a1a]">
+                                      {sec.settings.title || 'What Clients Say'} <span className="italic text-[#b58d59]">{sec.settings.italicTitle || 'About Me'}</span>
+                                    </h4>
+                                    <div className="bg-white p-3 rounded-lg border border-[#eee9df] max-w-sm mx-auto shadow-xs text-left flex gap-3 items-center">
+                                      <div className="w-12 h-14 rounded overflow-hidden bg-slate-100 shrink-0">
+                                        <img src={sec.settings.imageUrl || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=400&q=80'} alt="" className="w-full h-full object-cover" />
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="font-serif text-[9.5px] text-slate-700 italic line-clamp-2">"{sec.settings.quote || 'Highly recommend, thank you again!'}"</p>
+                                        <div className="flex items-center gap-1.5 mt-1.5">
+                                          <span className="text-[8px] font-bold text-slate-800">{sec.settings.author || 'Emily Brown'}</span>
+                                          <span className="text-[7.5px] text-slate-400">• {sec.settings.role || 'Customer Review'}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 0G. MY PORTFOLIO */}
+                                {sec.type === 'My Portfolio' && (
+                                  <div className="p-3 text-center space-y-2">
+                                    <span className="text-[7.5px] uppercase tracking-[0.2em] font-bold text-slate-400 block">
+                                      {sec.settings.badge || 'MY PORTFOLIO'}
+                                    </span>
+                                    <h4 className="font-serif text-sm font-normal text-[#1a1a1a]">
+                                      {sec.settings.title || 'Find Your Ideal Style and Look?'}
+                                    </h4>
+                                    <div className="grid grid-cols-6 gap-1 pt-1">
+                                      {(sec.settings.items || [
+                                        { image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=300&q=80' },
+                                        { image: 'https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=300&q=80' },
+                                        { image: 'https://images.unsplash.com/photo-1516762689617-e1cffcef479d?auto=format&fit=crop&w=300&q=80' },
+                                        { image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=300&q=80' },
+                                        { image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=300&q=80' },
+                                        { image: 'https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?auto=format&fit=crop&w=300&q=80' }
+                                      ]).map((it: any, idx: number) => (
+                                        <div key={idx} className="aspect-[3/4] rounded bg-slate-100 overflow-hidden shadow-2xs">
+                                          <img src={it.image} alt="" className="w-full h-full object-cover" />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 0H. NEWS & BLOG */}
+                                {sec.type === 'News & Blog' && (
+                                  <div className="p-3 bg-[#0F0F10] text-white rounded-xl text-center space-y-2">
+                                    <span className="text-[7.5px] uppercase tracking-[0.2em] font-bold text-slate-400 block">
+                                      {sec.settings.badge || 'LATEST NEWS'}
+                                    </span>
+                                    <h4 className="font-serif text-sm font-normal text-white">
+                                      {sec.settings.title || 'News'} <span className="italic text-[#caa26c]">{sec.settings.italicTitle || '& Blog'}</span>
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-2 pt-1 text-left">
+                                      <div className="bg-[#18181a] p-2 rounded border border-white/10 space-y-1">
+                                        <span className="text-[7px] text-[#caa26c] font-bold uppercase tracking-wider">FASHION STYLE</span>
+                                        <h5 className="font-serif text-[9px] text-white truncate">How To Elevate Your Whimsical Wardrobe</h5>
+                                      </div>
+                                      <div className="bg-[#18181a] p-2 rounded border border-white/10 space-y-1">
+                                        <span className="text-[7px] text-[#caa26c] font-bold uppercase tracking-wider">BUSINESS STYLE</span>
+                                        <h5 className="font-serif text-[9px] text-white truncate">Women's Business Formal Attire</h5>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 0I. MAKE AN APPOINTMENT */}
+                                {sec.type === 'Make An Appointment' && (
+                                  <div className="p-4 bg-[#111111] text-white rounded-xl grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                                    <div className="space-y-1 text-left">
+                                      <p className="font-serif italic text-xs text-white/90 line-clamp-2">
+                                        {sec.settings.promptText || 'To submit an enquiry or arrange an appointment please call me.'}
+                                      </p>
+                                      <div className="flex items-center gap-2 pt-1">
+                                        <div className="w-6 h-6 rounded-full bg-[#b58d59] flex items-center justify-center text-white shrink-0">
+                                          <Phone className="h-3 w-3" />
+                                        </div>
+                                        <span className="font-serif text-xs text-white font-medium">{sec.settings.phone || '800 123 4444'}</span>
+                                      </div>
+                                    </div>
+                                    <div className="bg-white text-slate-900 p-2.5 rounded-lg shadow-sm space-y-1.5 text-center">
+                                      <h5 className="font-serif text-[10px] font-bold text-slate-800">{sec.settings.formTitle || 'Make An Appointment'}</h5>
+                                      <div className="grid grid-cols-2 gap-1 text-[8px]">
+                                        <div className="bg-slate-100 p-1 rounded text-slate-400 text-left">Name</div>
+                                        <div className="bg-slate-100 p-1 rounded text-slate-400 text-left">Phone</div>
+                                      </div>
+                                      <span className="block w-full py-1 bg-[#b58d59] text-white text-[7.5px] font-bold uppercase rounded tracking-wider">
+                                        {sec.settings.buttonText || 'MAKE APPOINTMENT'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 0J. BRAND LOGOS */}
+                                {sec.type === 'Brand Logos' && (
+                                  <div className="p-2.5 bg-white rounded-xl border border-slate-200">
+                                    <div className="flex flex-wrap items-center justify-around gap-2 text-[8px] font-serif tracking-wider text-slate-500 uppercase font-bold opacity-80">
+                                      {(sec.settings.logos || ["CHIPPY'S", "FASTLANE", "SWEETY.", "MIGHTY FURNITURES", "CARA INDOORS", "GOLDEN NET 109", "avant garde"]).map((logo: string, idx: number) => (
+                                        <span key={idx} className="hover:text-slate-900 transition-colors">{logo}</span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
                                 {/* 1. IMAGE BANNER */}
                                 {sec.type === 'Image banner' && (
                                   <div className="text-center space-y-3 py-4">
@@ -6085,6 +6502,419 @@ export default function AdminDashboard({
                               value={currentlyEditingSection.settings.buttonLink}
                               onChange={(e) => handleUpdateSectionSettings('buttonLink', e.target.value)}
                               className="w-full text-xs border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1"
+                            />
+                          </div>
+                        )}
+
+                        {/* Subtitle / Top Tagline */}
+                        {currentlyEditingSection.settings.subtitle !== undefined && currentlyEditingSection.type !== 'Slideshow' && (
+                          <div>
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">Subtitle / Top Tagline</label>
+                            <input
+                              type="text"
+                              value={currentlyEditingSection.settings.subtitle}
+                              onChange={(e) => handleUpdateSectionSettings('subtitle', e.target.value)}
+                              className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
+                            />
+                          </div>
+                        )}
+
+                        {/* Badge Tagline */}
+                        {currentlyEditingSection.settings.badge !== undefined && (
+                          <div>
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">Badge Tagline</label>
+                            <input
+                              type="text"
+                              value={currentlyEditingSection.settings.badge}
+                              onChange={(e) => handleUpdateSectionSettings('badge', e.target.value)}
+                              className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
+                            />
+                          </div>
+                        )}
+
+                        {/* Italic Accent Title */}
+                        {currentlyEditingSection.settings.italicTitle !== undefined && (
+                          <div>
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">Italic Accent Title Word(s)</label>
+                            <input
+                              type="text"
+                              value={currentlyEditingSection.settings.italicTitle}
+                              onChange={(e) => handleUpdateSectionSettings('italicTitle', e.target.value)}
+                              className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
+                            />
+                          </div>
+                        )}
+
+                        {/* Secondary Paragraph */}
+                        {currentlyEditingSection.settings.description2 !== undefined && (
+                          <div>
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px] mb-1">Secondary Paragraph Text</label>
+                            <textarea
+                              rows={3}
+                              value={currentlyEditingSection.settings.description2}
+                              onChange={(e) => handleUpdateSectionSettings('description2', e.target.value)}
+                              className="w-full text-xs border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650 resize-none leading-relaxed"
+                            />
+                          </div>
+                        )}
+
+                        {/* Card Title & Description (My Services) */}
+                        {currentlyEditingSection.settings.cardTitle !== undefined && (
+                          <div className="space-y-2 pt-1 border-t border-slate-100">
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Featured Service Card</label>
+                            <div>
+                              <label className="text-[8px] text-slate-400 block uppercase mb-0.5">Card Title</label>
+                              <input
+                                type="text"
+                                value={currentlyEditingSection.settings.cardTitle}
+                                onChange={(e) => handleUpdateSectionSettings('cardTitle', e.target.value)}
+                                className="w-full text-xs font-semibold border p-1.5 rounded bg-slate-50"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[8px] text-slate-400 block uppercase mb-0.5">Card Description</label>
+                              <textarea
+                                rows={2}
+                                value={currentlyEditingSection.settings.cardDescription || ''}
+                                onChange={(e) => handleUpdateSectionSettings('cardDescription', e.target.value)}
+                                className="w-full text-xs border p-1.5 rounded bg-slate-50 resize-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[8px] text-slate-400 block uppercase mb-0.5">Card Button Text</label>
+                              <input
+                                type="text"
+                                value={currentlyEditingSection.settings.cardButtonText || ''}
+                                onChange={(e) => handleUpdateSectionSettings('cardButtonText', e.target.value)}
+                                className="w-full text-xs border p-1.5 rounded bg-slate-50"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Testimonial Quote & Author (Client Reviews) */}
+                        {currentlyEditingSection.settings.quote !== undefined && (
+                          <div className="space-y-2 pt-1 border-t border-slate-100">
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Client Testimonial Details</label>
+                            <div>
+                              <label className="text-[8px] text-slate-400 block uppercase mb-0.5">Quote Headline</label>
+                              <input
+                                type="text"
+                                value={currentlyEditingSection.settings.quote}
+                                onChange={(e) => handleUpdateSectionSettings('quote', e.target.value)}
+                                className="w-full text-xs font-semibold border p-1.5 rounded bg-slate-50"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[8px] text-slate-400 block uppercase mb-0.5">Full Review Content</label>
+                              <textarea
+                                rows={3}
+                                value={currentlyEditingSection.settings.content || ''}
+                                onChange={(e) => handleUpdateSectionSettings('content', e.target.value)}
+                                className="w-full text-xs border p-1.5 rounded bg-slate-50 resize-none"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="text-[8px] text-slate-400 block uppercase mb-0.5">Author Name</label>
+                                <input
+                                  type="text"
+                                  value={currentlyEditingSection.settings.author || ''}
+                                  onChange={(e) => handleUpdateSectionSettings('author', e.target.value)}
+                                  className="w-full text-xs border p-1.5 rounded bg-slate-50"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[8px] text-slate-400 block uppercase mb-0.5">Author Role</label>
+                                <input
+                                  type="text"
+                                  value={currentlyEditingSection.settings.role || ''}
+                                  onChange={(e) => handleUpdateSectionSettings('role', e.target.value)}
+                                  className="w-full text-xs border p-1.5 rounded bg-slate-50"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Appointment Phone & Prompt */}
+                        {currentlyEditingSection.settings.phone !== undefined && (
+                          <div className="space-y-2 pt-1 border-t border-slate-100">
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Appointment Call & Form Settings</label>
+                            <div>
+                              <label className="text-[8px] text-slate-400 block uppercase mb-0.5">Call Prompt Description</label>
+                              <textarea
+                                rows={2}
+                                value={currentlyEditingSection.settings.promptText || ''}
+                                onChange={(e) => handleUpdateSectionSettings('promptText', e.target.value)}
+                                className="w-full text-xs border p-1.5 rounded bg-slate-50 resize-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[8px] text-slate-400 block uppercase mb-0.5">Direct Phone Number</label>
+                              <input
+                                type="text"
+                                value={currentlyEditingSection.settings.phone || ''}
+                                onChange={(e) => handleUpdateSectionSettings('phone', e.target.value)}
+                                className="w-full text-xs border p-1.5 rounded bg-slate-50 font-mono"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[8px] text-slate-400 block uppercase mb-0.5">Form Title</label>
+                              <input
+                                type="text"
+                                value={currentlyEditingSection.settings.formTitle || ''}
+                                onChange={(e) => handleUpdateSectionSettings('formTitle', e.target.value)}
+                                className="w-full text-xs border p-1.5 rounded bg-slate-50"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Image Upload for sections with imageUrl */}
+                        {currentlyEditingSection.settings.imageUrl !== undefined && currentlyEditingSection.type !== 'Slideshow' && (
+                          <div className="pt-2 border-t border-slate-100">
+                            <ImageUploadInput
+                              label="Section Main Image"
+                              value={currentlyEditingSection.settings.imageUrl || ''}
+                              onChange={(val) => handleUpdateSectionSettings('imageUrl', val)}
+                            />
+                          </div>
+                        )}
+
+                        {/* Image 2 Upload for About Jade Tailor */}
+                        {currentlyEditingSection.settings.image2Url !== undefined && (
+                          <div className="pt-2 border-t border-slate-100">
+                            <ImageUploadInput
+                              label="Section Secondary Image"
+                              value={currentlyEditingSection.settings.image2Url || ''}
+                              onChange={(val) => handleUpdateSectionSettings('image2Url', val)}
+                            />
+                          </div>
+                        )}
+
+                        {/* Video Banner specific controls */}
+                        {currentlyEditingSection.type === 'Video banner' && (
+                          <div className="space-y-2 pt-2 border-t border-slate-100">
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Video Banner Settings</label>
+                            <div>
+                              <label className="text-[8px] text-slate-400 block uppercase mb-0.5">Italic Highlight Word</label>
+                              <input
+                                type="text"
+                                value={currentlyEditingSection.settings.italicWord || ''}
+                                onChange={(e) => handleUpdateSectionSettings('italicWord', e.target.value)}
+                                className="w-full text-xs border p-1.5 rounded bg-slate-50 font-serif italic"
+                                placeholder="Discover"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[8px] text-slate-400 block uppercase mb-0.5">YouTube Video ID / Embed Key</label>
+                              <input
+                                type="text"
+                                value={currentlyEditingSection.settings.videoUrl || ''}
+                                onChange={(e) => handleUpdateSectionSettings('videoUrl', e.target.value)}
+                                className="w-full text-xs border p-1.5 rounded bg-slate-50 font-mono"
+                                placeholder="dQw4w9WgXcQ"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* About Jade Tailor stats editor */}
+                        {currentlyEditingSection.type === 'About Jade Tailor' && (
+                          <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Bio Stat Callouts</label>
+                            <p className="text-[8px] text-slate-400">Comma-separated credentials shown with checkmarks</p>
+                            <input
+                              type="text"
+                              value={Array.isArray(currentlyEditingSection.settings.stats) ? currentlyEditingSection.settings.stats.join(', ') : (currentlyEditingSection.settings.stats || '')}
+                              onChange={(e) => {
+                                const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                                handleUpdateSectionSettings('stats', arr);
+                              }}
+                              className="w-full text-xs border p-1.5 rounded bg-slate-50 font-medium"
+                              placeholder="7+ years of work, 150+ free consultations, 90+ happy clients"
+                            />
+                          </div>
+                        )}
+
+                        {/* Service Pillars editor */}
+                        {currentlyEditingSection.type === 'Service Pillars' && (
+                          <div className="space-y-3 pt-2 border-t border-slate-100">
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Service Pillars (3 Steps)</label>
+                            {(currentlyEditingSection.settings.pillars || [
+                              { num: '01', title: 'Wardrobe Styling', desc: 'Lorem ipsum nisl quam nestibulum drana odio elementum scesue the monte.' },
+                              { num: '02', title: 'Closet Cleanse', desc: 'Lorem ipsum nisl quam nestibulum drana odio elementum monte.' },
+                              { num: '03', title: 'Shopping Tour', desc: 'Lorem ipsum nisl quam nestibulum drana odio elementum scesue the can.' }
+                            ]).map((pil: any, pIdx: number) => (
+                              <div key={pIdx} className="bg-slate-50 p-2.5 rounded-lg border border-slate-200/70 space-y-1.5">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[8.5px] font-bold text-slate-600 uppercase">Pillar {pIdx + 1} ({pil.num})</span>
+                                </div>
+                                <div className="grid grid-cols-4 gap-1.5">
+                                  <input
+                                    type="text"
+                                    placeholder="Num"
+                                    value={pil.num || ''}
+                                    onChange={(e) => {
+                                      const list = [...(currentlyEditingSection.settings.pillars || [])];
+                                      list[pIdx] = { ...list[pIdx], num: e.target.value };
+                                      handleUpdateSectionSettings('pillars', list);
+                                    }}
+                                    className="col-span-1 text-xs font-mono border p-1 rounded bg-white"
+                                  />
+                                  <input
+                                    type="text"
+                                    placeholder="Title"
+                                    value={pil.title || ''}
+                                    onChange={(e) => {
+                                      const list = [...(currentlyEditingSection.settings.pillars || [])];
+                                      list[pIdx] = { ...list[pIdx], title: e.target.value };
+                                      handleUpdateSectionSettings('pillars', list);
+                                    }}
+                                    className="col-span-3 text-xs font-semibold border p-1 rounded bg-white"
+                                  />
+                                </div>
+                                <textarea
+                                  rows={2}
+                                  placeholder="Description..."
+                                  value={pil.desc || ''}
+                                  onChange={(e) => {
+                                    const list = [...(currentlyEditingSection.settings.pillars || [])];
+                                    list[pIdx] = { ...list[pIdx], desc: e.target.value };
+                                    handleUpdateSectionSettings('pillars', list);
+                                  }}
+                                  className="w-full text-xs border p-1 rounded bg-white resize-none"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Styling Packages editor */}
+                        {currentlyEditingSection.type === 'Styling Packages' && (
+                          <div className="space-y-3 pt-2 border-t border-slate-100">
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Styling Packages (3 Tiers)</label>
+                            {(currentlyEditingSection.settings.packages || [
+                              { title: 'In-Home Styling', price: '$300', isFeatured: false, btnText: 'WORK WITH ME' },
+                              { title: 'Half Day Shopping', price: '$450', isFeatured: true, btnText: 'WORK WITH ME' },
+                              { title: 'Full Day Shopping', price: '$600', isFeatured: false, btnText: 'WORK WITH ME' }
+                            ]).map((pkg: any, kIdx: number) => (
+                              <div key={kIdx} className="bg-slate-50 p-2.5 rounded-lg border border-slate-200/70 space-y-1.5">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[8.5px] font-bold text-slate-600 uppercase">Package {kIdx + 1}</span>
+                                  <label className="flex items-center gap-1 text-[8px] text-slate-500 font-bold cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={Boolean(pkg.isFeatured)}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.packages || [])];
+                                        list[kIdx] = { ...list[kIdx], isFeatured: e.target.checked };
+                                        handleUpdateSectionSettings('packages', list);
+                                      }}
+                                      className="rounded h-3 w-3"
+                                    />
+                                    Featured Badge
+                                  </label>
+                                </div>
+                                <div className="grid grid-cols-2 gap-1.5">
+                                  <div>
+                                    <label className="text-[7.5px] text-slate-400 block uppercase">Title</label>
+                                    <input
+                                      type="text"
+                                      value={pkg.title || ''}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.packages || [])];
+                                        list[kIdx] = { ...list[kIdx], title: e.target.value };
+                                        handleUpdateSectionSettings('packages', list);
+                                      }}
+                                      className="w-full text-xs font-semibold border p-1 rounded bg-white"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-[7.5px] text-slate-400 block uppercase">Price</label>
+                                    <input
+                                      type="text"
+                                      value={pkg.price || ''}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.packages || [])];
+                                        list[kIdx] = { ...list[kIdx], price: e.target.value };
+                                        handleUpdateSectionSettings('packages', list);
+                                      }}
+                                      className="w-full text-xs font-semibold border p-1 rounded bg-white"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="text-[7.5px] text-slate-400 block uppercase">Button Text</label>
+                                  <input
+                                    type="text"
+                                    value={pkg.btnText || ''}
+                                    onChange={(e) => {
+                                      const list = [...(currentlyEditingSection.settings.packages || [])];
+                                      list[kIdx] = { ...list[kIdx], btnText: e.target.value };
+                                      handleUpdateSectionSettings('packages', list);
+                                    }}
+                                    className="w-full text-xs border p-1 rounded bg-white"
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* My Portfolio lookbook photo list */}
+                        {currentlyEditingSection.type === 'My Portfolio' && (
+                          <div className="space-y-2 pt-2 border-t border-slate-100">
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Lookbook Portfolio ({(currentlyEditingSection.settings.items || []).length} Photos)</label>
+                            <div className="max-h-[160px] overflow-y-auto space-y-1.5 scrollbar-thin border border-slate-200 p-2 rounded-lg bg-slate-50">
+                              {(currentlyEditingSection.settings.items || []).map((it: any, iIdx: number) => (
+                                <div key={iIdx} className="bg-white p-1.5 rounded border border-slate-200 flex items-center gap-2">
+                                  <img src={it.image} alt="" className="w-8 h-8 rounded object-cover shrink-0 border" />
+                                  <div className="min-w-0 flex-1">
+                                    <input
+                                      type="text"
+                                      value={it.title || ''}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.items || [])];
+                                        list[iIdx] = { ...list[iIdx], title: e.target.value };
+                                        handleUpdateSectionSettings('items', list);
+                                      }}
+                                      className="w-full text-[10px] font-semibold border-b pb-0.5"
+                                      placeholder="Outfit title"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={it.category || ''}
+                                      onChange={(e) => {
+                                        const list = [...(currentlyEditingSection.settings.items || [])];
+                                        list[iIdx] = { ...list[iIdx], category: e.target.value };
+                                        handleUpdateSectionSettings('items', list);
+                                      }}
+                                      className="w-full text-[9px] text-slate-500 mt-0.5"
+                                      placeholder="Category"
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Brand Logos editor */}
+                        {currentlyEditingSection.type === 'Brand Logos' && (
+                          <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                            <label className="block text-slate-650 font-bold uppercase tracking-wider text-[9px]">Brand Partner Names</label>
+                            <p className="text-[8px] text-slate-400">Comma-separated luxury brand labels</p>
+                            <textarea
+                              rows={3}
+                              value={Array.isArray(currentlyEditingSection.settings.logos) ? currentlyEditingSection.settings.logos.join(', ') : (currentlyEditingSection.settings.logos || '')}
+                              onChange={(e) => {
+                                const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                                handleUpdateSectionSettings('logos', arr);
+                              }}
+                              className="w-full text-xs border p-1.5 rounded bg-slate-50 font-medium resize-none"
+                              placeholder="CHIPPY'S, FASTLANE, SWEETY., MIGHTY FURNITURES, CARA INDOORS, GOLDEN NET 109, avant garde"
                             />
                           </div>
                         )}
