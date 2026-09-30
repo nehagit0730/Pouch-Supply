@@ -280,12 +280,34 @@ export default function StylistEditorialHome({
             {caption}
           </p>
 
-          <button
-            onClick={() => scrollToSection('appointment-section')}
-            className="px-8 py-3.5 bg-[#b58d59] hover:bg-[#a17849] active:scale-95 text-white text-[11px] font-sans font-bold uppercase tracking-[0.25em] rounded-xs shadow-lg transition-all duration-300 cursor-pointer"
-          >
-            {ctaText}
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-3.5">
+            <button
+              onClick={() => {
+                const link = sec?.settings.buttonLink || '';
+                if (link === 'frontend-shop' || link === '/collections/all' || link.includes('shop') || link.includes('collection')) {
+                  onNavigate?.('frontend-shop');
+                } else if (link.startsWith('#')) {
+                  scrollToSection(link.replace('#', ''));
+                } else {
+                  scrollToSection('appointment-section');
+                }
+              }}
+              className="px-8 py-3.5 bg-[#b58d59] hover:bg-[#a17849] active:scale-95 text-white text-[11px] font-sans font-bold uppercase tracking-[0.25em] rounded-xs shadow-lg transition-all duration-300 cursor-pointer"
+            >
+              {ctaText}
+            </button>
+            <a
+              href="/collections/all"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate?.('frontend-shop');
+              }}
+              className="px-7 py-3.5 bg-white/10 hover:bg-white/25 active:scale-95 text-white border border-white/40 hover:border-white text-[11px] font-sans font-bold uppercase tracking-[0.25em] rounded-xs backdrop-blur-xs transition-all duration-300 cursor-pointer flex items-center gap-2 group"
+            >
+              <ShoppingBag className="h-3.5 w-3.5 text-[#b58d59] transition-transform group-hover:scale-110" />
+              <span>SHOP COLLECTION</span>
+            </a>
+          </div>
         </div>
 
         <button
@@ -416,13 +438,31 @@ export default function StylistEditorialHome({
                 <p className="text-xs text-[#666666] font-sans leading-relaxed mb-6">
                   {defaultServices[serviceSlide]?.description}
                 </p>
-                <div>
+                <div className="flex items-center gap-3">
                   <button
-                    onClick={() => scrollToSection('appointment-section')}
+                    onClick={() => {
+                      if (defaultServices[serviceSlide]?.title.toLowerCase().includes('shopping')) {
+                        onNavigate?.('frontend-shop');
+                      } else {
+                        scrollToSection('appointment-section');
+                      }
+                    }}
                     className="px-6 py-2.5 bg-[#b58d59] hover:bg-[#a17849] active:scale-95 text-white text-[10px] font-sans font-bold uppercase tracking-[0.2em] rounded-xs shadow transition-all cursor-pointer"
                   >
                     {defaultServices[serviceSlide]?.action || 'LEARN MORE'}
                   </button>
+                  {defaultServices[serviceSlide]?.title.toLowerCase().includes('shopping') && (
+                    <a
+                      href="/collections/all"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onNavigate?.('frontend-shop');
+                      }}
+                      className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#1a1a1a] hover:text-[#b58d59] underline underline-offset-4 cursor-pointer"
+                    >
+                      Shop Catalog (/collections/all)
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
@@ -461,6 +501,19 @@ export default function StylistEditorialHome({
                   <p className="text-xs text-[#666666] font-sans leading-relaxed">
                     {p.desc}
                   </p>
+                  {(p.title.toLowerCase().includes('shopping') || idx === 2) && (
+                    <a
+                      href="/collections/all"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onNavigate?.('frontend-shop');
+                      }}
+                      className="inline-flex items-center gap-1.5 text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#b58d59] hover:text-[#1a1a1a] transition-colors cursor-pointer mt-1"
+                    >
+                      <span>Shop Curated Pieces (/collections/all)</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </a>
+                  )}
                 </div>
               </div>
             ))}
@@ -581,6 +634,25 @@ export default function StylistEditorialHome({
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Ready-to-wear direct link to shop */}
+        <div className="mt-12 p-6 bg-[#fbf9f6] border border-[#e8e4dc] rounded-xs flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div className="space-y-1">
+            <h4 className="font-serif text-base font-semibold text-[#1a1a1a]">Prefer to explore garments directly?</h4>
+            <p className="text-xs text-[#666666] font-sans">Browse Jade's full curated storefront collections and ready-to-wear pieces online.</p>
+          </div>
+          <a
+            href="/collections/all"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate?.('frontend-shop');
+            }}
+            className="px-6 py-2.5 bg-[#111111] hover:bg-[#b58d59] text-white text-[10px] font-sans font-bold uppercase tracking-[0.2em] rounded-xs transition-all duration-300 cursor-pointer shrink-0 flex items-center gap-2 group shadow-sm"
+          >
+            <ShoppingBag className="h-3.5 w-3.5 text-[#b58d59] group-hover:text-white transition-colors" />
+            <span>Go to Shop Page (/collections/all)</span>
+          </a>
         </div>
       </section>
     );
@@ -703,6 +775,45 @@ export default function StylistEditorialHome({
               </div>
             </div>
           ))}
+        </div>
+      </section>
+    );
+  };
+
+  const renderEditorialShopBanner = (sec?: PageSection) => {
+    const title = sec?.settings.title || "Shop Jade's Curated Collection";
+    const subtitle = sec?.settings.badge || "CURATED WARDROBE • READY-TO-WEAR";
+    const desc = sec?.settings.description || "Explore hand-selected luxury tailoring, elevated silk separates, and signature wardrobe capsules curated by Jade Tailor.";
+    const btnText = sec?.settings.buttonText || "SHOP NOW (/collections/all)";
+
+    return (
+      <section key={sec?.id || 'sec-shop-editorial-banner'} id="shop-banner-section" className="py-16 md:py-20 bg-gradient-to-r from-[#141416] via-[#1c1c1f] to-[#141416] text-white border-y border-[#b58d59]/30 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(#b58d59_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+        <div className="relative max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+          <div className="space-y-3 max-w-xl">
+            <span className="text-[10px] tracking-[0.35em] font-sans font-bold uppercase text-[#b58d59] block">
+              {subtitle}
+            </span>
+            <h3 className="font-serif text-3xl sm:text-4xl font-normal text-white leading-tight">
+              {title}
+            </h3>
+            <p className="text-xs sm:text-sm text-[#cccccc] font-sans font-light leading-relaxed">
+              {desc}
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+            <a
+              href="/collections/all"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate?.('frontend-shop');
+              }}
+              className="px-8 py-3.5 bg-[#b58d59] hover:bg-[#a17849] active:scale-95 text-white text-[11px] font-sans font-bold uppercase tracking-[0.25em] rounded-xs shadow-xl transition-all duration-300 cursor-pointer flex items-center gap-2 group"
+            >
+              <ShoppingBag className="h-4 w-4 transition-transform group-hover:scale-110" />
+              <span>{btnText}</span>
+            </a>
+          </div>
         </div>
       </section>
     );
@@ -990,6 +1101,12 @@ export default function StylistEditorialHome({
       case 'Brand list':
       case 'Brands we offer':
         return renderBrandLogos(sec);
+      case 'Shop Banner':
+      case 'Editorial Shop Banner':
+      case 'Featured collection':
+      case 'Collection list':
+      case 'Clearance Sale':
+        return renderEditorialShopBanner(sec);
       default:
         return null;
     }
@@ -1067,6 +1184,7 @@ export default function StylistEditorialHome({
           {renderStylingPackages(packagesSec)}
           {renderClientReviews(reviewsSec)}
           {renderPortfolio(portfolioSec)}
+          {renderEditorialShopBanner()}
           {renderNewsBlog(newsSec)}
           {renderMakeAppointment(appointmentSec)}
           {renderBrandLogos(logosSec)}

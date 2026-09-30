@@ -231,37 +231,65 @@ export async function getUploadedImage(rawId: string): Promise<{ base64Data: str
 export async function fetchLayoutSettings(): Promise<any> {
   const defaultSettings = {
     id: "layout_settings",
-    headerLogoText: 'STOREFRONT',
-    headerLogoSubtext: 'Premium Essentials',
+    headerLogoText: 'JADE TAILOR',
+    headerLogoSubtext: 'PERSONAL STYLIST',
     headerLogoImage: '',
-    footerLogoText: 'STOREFRONT',
-    footerLogoDescription: 'Curated premium eCommerce store delivering high-quality essentials directly to your door. Seamless online shopping, flexible subscriptions, and express tracked shipping.',
+    footerLogoText: 'JADE TAILOR',
+    footerLogoDescription: 'Luxury personal styling, bespoke capsule curations, and private boutique shopping tours designed to elevate your effortless style.',
     footerLogoImage: '',
     klaviyoPublicKey: '',
+    phone: '800 123 4444',
+    address: '0665 Broadway NY, New York 10001 United States of America',
+    email: 'jade@tailorand.com',
     menuItems: [
-      { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
-      { id: '2', label: 'Subscribe', tab: 'frontend-subscribe', type: 'tab' },
-      { id: '3', label: 'Shop Now', tab: 'frontend-shop', type: 'tab' },
-      { id: '4', label: 'All Brands', tab: 'frontend-brands', type: 'tab' },
-      { id: '5', label: 'About', tab: 'about', type: 'tab' }
+      { id: '1', label: 'HOME', tab: 'frontend-home', type: 'tab' },
+      { id: '2', label: 'SHOP', tab: 'frontend-shop', type: 'tab' },
+      { id: '3', label: 'WORK WITH ME', tab: '#appointment-section', type: 'tab' },
+      { id: '4', label: 'MY SERVICES', tab: '#services-section', type: 'tab' },
+      { id: '5', label: 'STYLING PACKAGES', tab: '#pricing-section', type: 'tab' },
+      { id: '6', label: 'STYLE JOURNAL', tab: 'blogs', type: 'tab' }
     ]
   };
 
   const sanitizeSettings = (raw: any) => {
     if (!raw) return defaultSettings;
     const cleaned = { ...raw };
-    if (!cleaned.headerLogoText || /pouch supply/i.test(cleaned.headerLogoText)) {
-      cleaned.headerLogoText = 'STOREFRONT';
+    if (!cleaned.headerLogoText || /pouch supply|storefront/i.test(cleaned.headerLogoText)) {
+      cleaned.headerLogoText = 'JADE TAILOR';
     }
-    if (!cleaned.headerLogoSubtext || /premium nicotine/i.test(cleaned.headerLogoSubtext)) {
-      cleaned.headerLogoSubtext = 'Premium Essentials';
+    if (!cleaned.headerLogoSubtext || /premium nicotine|premium essentials/i.test(cleaned.headerLogoSubtext)) {
+      cleaned.headerLogoSubtext = 'PERSONAL STYLIST';
     }
-    if (!cleaned.footerLogoText || /pouch supply/i.test(cleaned.footerLogoText)) {
-      cleaned.footerLogoText = 'STOREFRONT';
+    if (!cleaned.footerLogoText || /pouch supply|storefront/i.test(cleaned.footerLogoText)) {
+      cleaned.footerLogoText = 'JADE TAILOR';
     }
-    if (!cleaned.footerLogoDescription || /nicotine|canisters|pouch supply/i.test(cleaned.footerLogoDescription)) {
-      cleaned.footerLogoDescription = 'Curated premium eCommerce store delivering high-quality essentials directly to your door. Seamless online shopping, flexible subscriptions, and express tracked shipping.';
+    if (!cleaned.footerLogoDescription || /nicotine|canisters|pouch supply|curated premium ecommerce/i.test(cleaned.footerLogoDescription)) {
+      cleaned.footerLogoDescription = 'Luxury personal styling, bespoke capsule curations, and private boutique shopping tours designed to elevate your effortless style.';
     }
+    if (!cleaned.phone) cleaned.phone = '800 123 4444';
+    if (!cleaned.address) cleaned.address = '0665 Broadway NY, New York 10001 United States of America';
+    if (!cleaned.email) cleaned.email = 'jade@tailorand.com';
+
+    // Filter out obsolete/fake placeholder links like 'frontend-brands', 'about', etc.
+    if (Array.isArray(cleaned.menuItems)) {
+      const sanitizedItems = cleaned.menuItems
+        .filter((item: any) => item && item.tab !== 'about' && item.tab !== 'frontend-brands' && item.label !== 'All Brands' && item.label !== 'About')
+        .map((item: any) => {
+          if (item.tab === 'frontend-subscribe') {
+            return { ...item, label: item.label === 'Subscribe' ? 'WORK WITH ME' : item.label, tab: '#appointment-section' };
+          }
+          return item;
+        });
+
+      if (sanitizedItems.length > 0) {
+        cleaned.menuItems = sanitizedItems;
+      } else {
+        cleaned.menuItems = defaultSettings.menuItems;
+      }
+    } else {
+      cleaned.menuItems = defaultSettings.menuItems;
+    }
+
     return cleaned;
   };
 

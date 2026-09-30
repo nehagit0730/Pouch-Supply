@@ -32,6 +32,7 @@ export const AVAILABLE_SECTION_TEMPLATES = [
   { type: 'News & Blog', label: 'News & Blog', desc: 'Dark luxury style journal & latest fashion articles carousel/grid', icon: 'BookOpen' },
   { type: 'Make An Appointment', label: 'Make An Appointment', desc: 'Interactive booking consultation form with direct phone CTA', icon: 'Calendar' },
   { type: 'Brand Logos', label: 'Brand Logos', desc: 'Minimalist luxury partner brand logo banner', icon: 'Award' },
+  { type: 'Editorial Shop Banner', label: 'Editorial Shop Banner', desc: 'Luxury dark callout banner with direct link to Shop Page (/collections/all)', icon: 'ShoppingBag' },
   // Standard Store Templates
   { type: 'Image banner', label: 'Image Banner', desc: 'Hero banner with centered headline overlay & CTA buttons', icon: 'ImageIcon' },
   { type: 'Image with text', label: 'Image with Text', desc: 'Beautifully-aligned structural image with side description', icon: 'Columns' },
@@ -73,6 +74,7 @@ export const getSectionIcon = (type: string) => {
     case 'News & Blog': return <BookOpen className="h-4 w-4 text-amber-600" />;
     case 'Make An Appointment': return <Calendar className="h-4 w-4 text-teal-600" />;
     case 'Brand Logos': return <Award className="h-4 w-4 text-slate-700" />;
+    case 'Editorial Shop Banner': return <ShoppingBag className="h-4 w-4 text-[#b58d59]" />;
     case 'Image banner': return <ImageIcon className="h-4 w-4 text-teal-600" />;
     case 'Image with text': return <Columns className="h-4 w-4 text-emerald-500" />;
     case 'Text column with image': return <Grid className="h-4 w-4 text-sky-500" />;
@@ -868,7 +870,9 @@ export default function AdminDashboard({
       items[index] = items[index + 1];
       items[index + 1] = temp;
     }
-    setLocalLayoutSettings({ ...localLayoutSettings, menuItems: items });
+    const updated = { ...localLayoutSettings, menuItems: items };
+    setLocalLayoutSettings(updated);
+    if (onUpdateLayoutSettings) onUpdateLayoutSettings(updated);
   };
 
   const addMenuItem = () => {
@@ -880,10 +884,12 @@ export default function AdminDashboard({
       type: newMenuItemType,
       url: newMenuItemType === 'external' ? newMenuItemUrl : undefined
     };
-    setLocalLayoutSettings({
+    const updated = {
       ...localLayoutSettings,
       menuItems: [...localLayoutSettings.menuItems, newItem]
-    });
+    };
+    setLocalLayoutSettings(updated);
+    if (onUpdateLayoutSettings) onUpdateLayoutSettings(updated);
     setNewMenuItemLabel('');
     setNewMenuItemUrl('');
     setIsAddingMenuItem(false);
@@ -891,28 +897,36 @@ export default function AdminDashboard({
 
   const removeMenuItem = (id: string) => {
     const items = localLayoutSettings.menuItems.filter(item => item.id !== id);
-    setLocalLayoutSettings({ ...localLayoutSettings, menuItems: items });
+    const updated = { ...localLayoutSettings, menuItems: items };
+    setLocalLayoutSettings(updated);
+    if (onUpdateLayoutSettings) onUpdateLayoutSettings(updated);
   };
 
   const editMenuItemLabel = (id: string, newLabel: string) => {
     const items = localLayoutSettings.menuItems.map(item => 
       item.id === id ? { ...item, label: newLabel } : item
     );
-    setLocalLayoutSettings({ ...localLayoutSettings, menuItems: items });
+    const updated = { ...localLayoutSettings, menuItems: items };
+    setLocalLayoutSettings(updated);
+    if (onUpdateLayoutSettings) onUpdateLayoutSettings(updated);
   };
 
   const editMenuItemTarget = (id: string, newTarget: string) => {
     const items = localLayoutSettings.menuItems.map(item => 
       item.id === id ? { ...item, tab: newTarget, url: undefined, type: 'tab' as const } : item
     );
-    setLocalLayoutSettings({ ...localLayoutSettings, menuItems: items });
+    const updated = { ...localLayoutSettings, menuItems: items };
+    setLocalLayoutSettings(updated);
+    if (onUpdateLayoutSettings) onUpdateLayoutSettings(updated);
   };
 
   const editMenuItemUrl = (id: string, newUrl: string) => {
     const items = localLayoutSettings.menuItems.map(item => 
       item.id === id ? { ...item, tab: '', url: newUrl, type: 'external' as const } : item
     );
-    setLocalLayoutSettings({ ...localLayoutSettings, menuItems: items });
+    const updated = { ...localLayoutSettings, menuItems: items };
+    setLocalLayoutSettings(updated);
+    if (onUpdateLayoutSettings) onUpdateLayoutSettings(updated);
   };
 
   const handleLogoUpload = (file: File, target: 'header' | 'footer') => {
@@ -9730,7 +9744,13 @@ export default function AdminDashboard({
                   <div className="p-1.5 bg-indigo-50 text-indigo-650 rounded-lg">
                     <Globe className="h-4 w-4" />
                   </div>
-                  <span className="font-extrabold text-slate-900 uppercase tracking-wider text-xs">Header Menu</span>
+                  <div>
+                    <span className="font-extrabold text-slate-900 uppercase tracking-wider text-xs block">Header Menu</span>
+                    <span className="text-[9px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
+                      <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                      Live on Storefront Header
+                    </span>
+                  </div>
                 </div>
                 
                 {!isAddingMenuItem && (
@@ -9739,7 +9759,7 @@ export default function AdminDashboard({
                       setNewMenuItemLabel('');
                       setNewMenuItemUrl('');
                       setNewMenuItemType('tab');
-                      setNewMenuItemTarget('frontend-home');
+                      setNewMenuItemTarget('frontend-shop');
                       setIsAddingMenuItem(true);
                     }}
                     className="px-2.5 py-1 text-indigo-600 hover:text-indigo-700 font-extrabold text-[10px] uppercase tracking-wider border border-indigo-200 bg-indigo-50 hover:bg-indigo-100/75 rounded-lg flex items-center gap-1 transition-all cursor-pointer"
@@ -9748,6 +9768,74 @@ export default function AdminDashboard({
                     <span>Add link</span>
                   </button>
                 )}
+              </div>
+
+              {/* Quick Preset Menu Selector */}
+              <div className="bg-slate-50/70 border border-slate-200 p-3 rounded-xl flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-slate-700 font-extrabold text-[10px] uppercase tracking-wider">
+                    Select Header Menu Preset
+                  </label>
+                  <span className="text-[9px] text-indigo-600 font-bold">Quick Switch</span>
+                </div>
+                <select
+                  defaultValue=""
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    let newItems: MenuItem[] = [];
+                    if (val === 'main') {
+                      newItems = [
+                        { id: '1', label: 'HOME', tab: 'frontend-home', type: 'tab' },
+                        { id: '2', label: 'SHOP', tab: 'frontend-shop', type: 'tab' },
+                        { id: '3', label: 'WORK WITH ME', tab: '#appointment-section', type: 'tab' },
+                        { id: '4', label: 'MY SERVICES', tab: '#services-section', type: 'tab' },
+                        { id: '5', label: 'STYLING PACKAGES', tab: '#pricing-section', type: 'tab' },
+                        { id: '6', label: 'STYLE JOURNAL', tab: 'blogs', type: 'tab' },
+                      ];
+                    } else if (val === 'editorial') {
+                      newItems = [
+                        { id: '1', label: 'HOME', tab: 'frontend-home', type: 'tab' },
+                        { id: '2', label: 'WORK WITH ME', tab: '#appointment-section', type: 'tab' },
+                        { id: '3', label: 'MY SERVICES', tab: '#services-section', type: 'tab' },
+                        { id: '4', label: 'PACKAGES', tab: '#pricing-section', type: 'tab' },
+                        { id: '5', label: 'REVIEWS', tab: '#reviews-section', type: 'tab' },
+                        { id: '6', label: 'PORTFOLIO', tab: '#portfolio-section', type: 'tab' },
+                        { id: '7', label: 'SHOP', tab: 'frontend-shop', type: 'tab' },
+                        { id: '8', label: 'BLOG', tab: 'blogs', type: 'tab' },
+                      ];
+                    } else if (val === 'shop-focus') {
+                      newItems = [
+                        { id: '1', label: 'HOME', tab: 'frontend-home', type: 'tab' },
+                        { id: '2', label: 'SHOP ALL', tab: 'frontend-shop', type: 'tab' },
+                        ...collections.slice(0, 3).map((c, i) => ({
+                          id: `col-${c.id}`,
+                          label: c.title.toUpperCase(),
+                          tab: `/collections/${c.slug || c.id}`,
+                          type: 'tab' as const
+                        })),
+                        { id: '5', label: 'STYLE JOURNAL', tab: 'blogs', type: 'tab' },
+                      ];
+                    } else if (val === 'minimal') {
+                      newItems = [
+                        { id: '1', label: 'HOME', tab: 'frontend-home', type: 'tab' },
+                        { id: '2', label: 'SHOP (/collections/all)', tab: 'frontend-shop', type: 'tab' },
+                        { id: '3', label: 'STYLE JOURNAL', tab: 'blogs', type: 'tab' },
+                      ];
+                    }
+                    if (newItems.length > 0) {
+                      const updated = { ...localLayoutSettings, menuItems: newItems };
+                      setLocalLayoutSettings(updated);
+                      if (onUpdateLayoutSettings) onUpdateLayoutSettings(updated);
+                    }
+                  }}
+                  className="w-full text-xs font-bold border border-slate-250 p-2 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                >
+                  <option value="">Apply Menu Preset Structure...</option>
+                  <option value="main">Main Store Menu (Home, Shop, Work With Me, Services, Packages, Journal)</option>
+                  <option value="editorial">Stylist Editorial Full Navigation</option>
+                  <option value="shop-focus">Shop & Collections Focused Menu</option>
+                  <option value="minimal">Minimal Luxury Menu (Home, Shop, Journal)</option>
+                </select>
               </div>
 
               {/* Add link panel */}
@@ -9762,7 +9850,7 @@ export default function AdminDashboard({
                       required
                       value={newMenuItemLabel}
                       onChange={(e) => setNewMenuItemLabel(e.target.value)}
-                      placeholder="e.g. Autumn Capsule"
+                      placeholder="e.g. Shop Jade's Edit, Work With Me, etc."
                       className="w-full text-xs font-semibold border border-slate-250 p-2 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
@@ -9778,7 +9866,7 @@ export default function AdminDashboard({
                           onChange={() => setNewMenuItemType('tab')}
                           className="accent-indigo-650"
                         />
-                        <span>Internal Tab</span>
+                        <span>Internal Destination</span>
                       </label>
                       <label className="flex items-center gap-1.5 font-semibold text-slate-700 cursor-pointer">
                         <input
@@ -9788,7 +9876,7 @@ export default function AdminDashboard({
                           onChange={() => setNewMenuItemType('external')}
                           className="accent-indigo-650"
                         />
-                        <span>External URL</span>
+                        <span>External Link</span>
                       </label>
                     </div>
                   </div>
@@ -9801,19 +9889,35 @@ export default function AdminDashboard({
                         onChange={(e) => setNewMenuItemTarget(e.target.value)}
                         className="w-full text-xs font-semibold border border-slate-250 p-2 rounded-lg bg-white focus:outline-none cursor-pointer text-slate-750"
                       >
-                        <optgroup label="Core Store Tabs">
-                          <option value="frontend-home">Storefront Home</option>
-                          <option value="frontend-subscribe">Subscribe Builder</option>
-                          <option value="frontend-shop">Shop Now grid</option>
-                          <option value="frontend-brands">All Sweden Brands</option>
-                          <option value="about">About us info</option>
-                          <option value="blogs">Fashion Journal / Editorial</option>
+                        <optgroup label="Storefront Pages">
+                          <option value="frontend-home">Storefront Home (/)</option>
+                          <option value="frontend-shop">Shop Page (/collections/all)</option>
+                          <option value="blogs">Style Journal / Blog (/blogs)</option>
                         </optgroup>
-                        {localPages.length > 0 && (
+                        <optgroup label="Homepage Sections (Smooth Scroll)">
+                          <option value="#appointment-section">Work With Me / Booking Consultation</option>
+                          <option value="#services-section">My Services</option>
+                          <option value="#pricing-section">Styling Packages / Pricing</option>
+                          <option value="#reviews-section">Clients Reviews</option>
+                          <option value="#portfolio-section">My Portfolio Lookbook</option>
+                          <option value="#about-section">About Jade Tailor</option>
+                          <option value="#blog-section">Style Journal Section</option>
+                        </optgroup>
+                        {collections && collections.length > 0 && (
+                          <optgroup label="Product Collections">
+                            <option value="frontend-shop">All Collections (/collections/all)</option>
+                            {collections.map(col => (
+                              <option key={col.id} value={`/collections/${col.slug || col.id}`}>
+                                Collection: {col.title} (/collections/{col.slug || col.id})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {localPages.filter(p => !p.isHomepage).length > 0 && (
                           <optgroup label="Custom Builder Pages">
-                            {localPages.map(page => (
+                            {localPages.filter(p => !p.isHomepage).map(page => (
                               <option key={page.id} value={`page-${page.slug}`}>
-                                Page: {page.title} ({page.slug})
+                                Page: {page.title} (/pages/{page.slug})
                               </option>
                             ))}
                           </optgroup>
@@ -9897,13 +10001,19 @@ export default function AdminDashboard({
                                   onChange={(e) => editMenuItemTarget(item.id, e.target.value)}
                                   className="text-[10px] text-slate-400 font-semibold bg-transparent hover:bg-slate-100 p-0.5 rounded border-none cursor-pointer max-w-[150px]"
                                 >
-                                  <option value="frontend-home">Home</option>
-                                  <option value="frontend-subscribe">Subscribe</option>
-                                  <option value="frontend-shop">Shop grid</option>
-                                  <option value="frontend-brands">Sweden Brands</option>
-                                  <option value="about">About info</option>
-                                  <option value="blogs">Blogs</option>
-                                  {localPages.map(p => (
+                                  <option value="frontend-home">Home (/)</option>
+                                  <option value="frontend-shop">Shop (/collections/all)</option>
+                                  <option value="blogs">Style Journal (/blogs)</option>
+                                  <option value="#appointment-section">Work With Me / Booking</option>
+                                  <option value="#services-section">My Services</option>
+                                  <option value="#pricing-section">Styling Packages</option>
+                                  <option value="#reviews-section">Clients Reviews</option>
+                                  <option value="#portfolio-section">My Portfolio</option>
+                                  <option value="#about-section">About Jade Tailor</option>
+                                  {collections && collections.map(c => (
+                                    <option key={c.id} value={`/collections/${c.slug || c.id}`}>Collection: {c.title}</option>
+                                  ))}
+                                  {localPages.filter(p => !p.isHomepage).map(p => (
                                     <option key={p.id} value={`page-${p.slug}`}>Page: {p.title}</option>
                                   ))}
                                 </select>

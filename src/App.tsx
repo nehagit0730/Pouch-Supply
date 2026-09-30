@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, CartItem, BlogPost, LayoutSettings
+  Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, CartItem, BlogPost, LayoutSettings, MenuItem
 } from './types';
 import { 
   INITIAL_PRODUCTS, INITIAL_COLLECTIONS, INITIAL_ORDERS, INITIAL_FILES, INITIAL_CUSTOMERS, INITIAL_DISCOUNTS, DEFAULT_PAGES, INITIAL_BLOGS 
@@ -166,7 +166,16 @@ export default function App() {
   });
 
   const [layoutSettings, setLayoutSettings] = useState<LayoutSettings>(() => {
-    return safeLoadFromLocalStorage<LayoutSettings>('ps_layout_settings', {
+    const fallbackDefaultMenu: MenuItem[] = [
+      { id: '1', label: 'HOME', tab: 'frontend-home', type: 'tab' },
+      { id: '2', label: 'SHOP', tab: 'frontend-shop', type: 'tab' },
+      { id: '3', label: 'WORK WITH ME', tab: '#appointment-section', type: 'tab' },
+      { id: '4', label: 'MY SERVICES', tab: '#services-section', type: 'tab' },
+      { id: '5', label: 'STYLING PACKAGES', tab: '#pricing-section', type: 'tab' },
+      { id: '6', label: 'STYLE JOURNAL', tab: 'blogs', type: 'tab' },
+    ];
+
+    const loaded = safeLoadFromLocalStorage<LayoutSettings>('ps_layout_settings', {
       headerLogoText: 'JADE TAILOR',
       headerLogoSubtext: 'PERSONAL STYLIST',
       headerLogoImage: '',
@@ -177,14 +186,30 @@ export default function App() {
       phone: '800 123 4444',
       address: '0665 Broadway NY, New York 10001 United States of America',
       email: 'jade@tailorand.com',
-      menuItems: [
-        { id: '1', label: 'Home', tab: 'frontend-home', type: 'tab' },
-        { id: '2', label: 'Work With Me', tab: 'frontend-subscribe', type: 'tab' },
-        { id: '3', label: 'My Services', tab: 'frontend-home', type: 'tab' },
-        { id: '4', label: 'Shop Curated Wardrobe', tab: 'frontend-shop', type: 'tab' },
-        { id: '5', label: 'Style Journal', tab: 'blogs', type: 'tab' },
-      ]
+      menuItems: fallbackDefaultMenu
     });
+
+    // Sanitize any stale fake items from earlier sessions (e.g. 'frontend-brands', 'about')
+    let currentItems = Array.isArray(loaded.menuItems) && loaded.menuItems.length > 0 ? loaded.menuItems : fallbackDefaultMenu;
+    const hasFakeOrStale = currentItems.some(i => i.tab === 'about' || i.tab === 'frontend-brands' || i.tab === 'frontend-subscribe');
+    const hasShopLink = currentItems.some(i => i.tab === 'frontend-shop' || i.url === '/collections/all' || i.label.toLowerCase() === 'shop');
+    
+    if (hasFakeOrStale || !hasShopLink) {
+      currentItems = currentItems
+        .filter(i => i.tab !== 'about' && i.tab !== 'frontend-brands')
+        .map(i => {
+          if (i.tab === 'frontend-subscribe') return { ...i, tab: '#appointment-section' };
+          return i;
+        });
+      if (!currentItems.some(i => i.tab === 'frontend-shop' || i.url === '/collections/all')) {
+        currentItems.splice(1, 0, { id: 'shop-all', label: 'SHOP', tab: 'frontend-shop', type: 'tab' });
+      }
+    }
+
+    return {
+      ...loaded,
+      menuItems: currentItems
+    };
   });
 
   const handleUpdateLayoutSettings = (newSettings: LayoutSettings | ((prev: LayoutSettings) => LayoutSettings)) => {
@@ -443,11 +468,24 @@ export default function App() {
         
         if (layoutRes) {
           const rawLayout = layoutRes.data || layoutRes;
-          setLayoutSettings({
+          const cleanedItems = (Array.isArray(rawLayout.menuItems) && rawLayout.menuItems.length > 0)
+            ? rawLayout.menuItems
+                .filter((item: any) => item && item.tab !== 'about' && item.tab !== 'frontend-brands' && item.label !== 'All Brands' && item.label !== 'About')
+                .map((item: any) => {
+                  if (item.tab === 'frontend-subscribe') {
+                    return { ...item, label: item.label === 'Subscribe' ? 'WORK WITH ME' : item.label, tab: '#appointment-section' };
+                  }
+                  return item;
+                })
+            : [];
+
+          setLayoutSettings(prev => ({
+            ...prev,
             ...rawLayout,
             headerLogoImage: normalizeUrl(rawLayout.headerLogoImage),
-            footerLogoImage: normalizeUrl(rawLayout.footerLogoImage)
-          });
+            footerLogoImage: normalizeUrl(rawLayout.footerLogoImage),
+            menuItems: cleanedItems.length > 0 ? cleanedItems : prev.menuItems
+          }));
         }
       } catch (err) {
         console.error("[State Loader] Failed to connect to backend Neon Postgres API. Using local backup state.", err);
@@ -482,10 +520,33 @@ export default function App() {
   // Unified SPA navigation helper mapping state shifts to matching browser URLs
   const navigateToTab = (tab: string, productId?: string, collectionId?: string) => {
     let url = '/';
-    if (tab === 'frontend-home') {
+    if (tab === 'frontend-home' || tab === '/' || tab === '') {
       url = '/';
-    } else if (tab === 'frontend-shop') {
+      tab = 'frontend-home';
+    } else if (tab === 'frontend-shop' || tab === '/collections/all' || tab === 'collections/all' || tab === 'shop') {
       url = '/collections/all';
+      tab = 'frontend-shop';
+      setActiveCollectionId('all');
+    } else if (tab.startsWith('/collections/')) {
+      const colId = tab.replace('/collections/', '');
+      if (colId === 'all') {
+        url = '/collections/all';
+        tab = 'frontend-shop';
+        setActiveCollectionId('all');
+      } else {
+        tab = 'collection-detail';
+        collectionId = colId;
+      }
+    } else if (tab.startsWith('collection-')) {
+      const colId = tab.replace('collection-', '');
+      if (colId === 'all') {
+        url = '/collections/all';
+        tab = 'frontend-shop';
+        setActiveCollectionId('all');
+      } else {
+        tab = 'collection-detail';
+        collectionId = colId;
+      }
     } else if (tab === 'frontend-brands') {
       url = '/pages/brands';
     } else if (tab === 'frontend-subscribe') {
@@ -623,22 +684,31 @@ export default function App() {
         } else {
           setCurrentTab(slug);
         }
+      } else if (path === '/shop' || path === '/shop/' || path === '/collections' || path === '/collections/') {
+        try { window.history.replaceState({}, '', '/collections/all'); } catch (e) {}
+        setActiveCollectionId('all');
+        setCurrentTab('frontend-shop');
       } else if (path.startsWith('/collections/')) {
         const colId = path.replace('/collections/', '');
-        const matchedCol = collections.find(c => 
-          c.id === colId || 
-          (c.slug && c.slug === colId) || 
-          slugify(c.title) === colId || 
-          c.id.toLowerCase() === colId.toLowerCase() ||
-          (c.slug && c.slug.toLowerCase() === colId.toLowerCase()) ||
-          slugify(c.id) === colId.toLowerCase()
-        );
-        if (matchedCol) {
-          setActiveCollectionId(matchedCol.id);
-          setCurrentTab('collection-detail');
-        } else {
+        if (colId === 'all' || colId === '') {
           setActiveCollectionId('all');
           setCurrentTab('frontend-shop');
+        } else {
+          const matchedCol = collections.find(c => 
+            c.id === colId || 
+            (c.slug && c.slug === colId) || 
+            slugify(c.title) === colId || 
+            c.id.toLowerCase() === colId.toLowerCase() ||
+            (c.slug && c.slug.toLowerCase() === colId.toLowerCase()) ||
+            slugify(c.id) === colId.toLowerCase()
+          );
+          if (matchedCol) {
+            setActiveCollectionId(matchedCol.id);
+            setCurrentTab('collection-detail');
+          } else {
+            setActiveCollectionId('all');
+            setCurrentTab('frontend-shop');
+          }
         }
       } else if (path.startsWith('/products/')) {
         const prodId = path.replace('/products/', '');

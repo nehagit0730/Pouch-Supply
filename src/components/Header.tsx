@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Customer, CartItem, Product, Collection, LayoutSettings } from '../types';
+import { Customer, CartItem, Product, Collection, LayoutSettings, MenuItem } from '../types';
 import { 
   ShoppingCart, Heart, User, Sparkles, LayoutDashboard, Menu, 
   Phone, HelpCircle, Search, X, ChevronRight, ChevronDown, 
@@ -66,6 +66,103 @@ export default function Header({
       const el = document.getElementById(id);
       if (el) el.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const dynamicMenuItems: MenuItem[] = (layoutSettings?.menuItems && layoutSettings.menuItems.length > 0)
+    ? layoutSettings.menuItems
+    : [
+        { id: '1', label: 'HOME', tab: 'frontend-home', type: 'tab' as const },
+        { id: '2', label: 'SHOP', tab: 'frontend-shop', type: 'tab' as const },
+        { id: '3', label: 'WORK WITH ME', tab: '#appointment-section', type: 'tab' as const },
+        { id: '4', label: 'MY SERVICES', tab: '#services-section', type: 'tab' as const },
+        { id: '5', label: 'STYLING PACKAGES', tab: '#pricing-section', type: 'tab' as const },
+        { id: '6', label: 'STYLE JOURNAL', tab: 'blogs', type: 'tab' as const },
+      ];
+
+  const handleNavClick = (item: MenuItem) => {
+    if (item.type === 'external' && item.url) {
+      if (item.url.startsWith('/')) {
+        if (item.url === '/collections/all' || item.url === '/shop' || item.url.startsWith('/collections/')) {
+          onTabChange('frontend-shop');
+        } else if (item.url.startsWith('/pages/')) {
+          onTabChange(item.url.replace('/pages/', ''));
+        } else if (item.url.startsWith('#')) {
+          scrollToSection(item.url.replace('#', ''));
+        } else {
+          window.location.href = item.url;
+        }
+      } else {
+        window.open(item.url, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
+
+    const tab = item.tab || '';
+    if (tab === 'frontend-shop' || tab === '/collections/all' || tab === 'shop' || tab.toLowerCase().includes('collection')) {
+      onTabChange('frontend-shop');
+    } else if (tab.startsWith('#')) {
+      scrollToSection(tab.replace('#', ''));
+    } else if (tab.startsWith('/collections/')) {
+      const colId = tab.replace('/collections/', '');
+      if (colId === 'all') {
+        onTabChange('frontend-shop');
+      } else if (onNavigateDetail) {
+        onNavigateDetail('collection-detail', undefined, colId);
+      } else {
+        onTabChange(tab);
+      }
+    } else if (tab.startsWith('collection-')) {
+      const colId = tab.replace('collection-', '');
+      if (colId === 'all') {
+        onTabChange('frontend-shop');
+      } else if (onNavigateDetail) {
+        onNavigateDetail('collection-detail', undefined, colId);
+      } else {
+        onTabChange(tab);
+      }
+    } else if (tab.startsWith('/pages/')) {
+      const slug = tab.replace('/pages/', '');
+      onTabChange(`page-${slug}`);
+    } else if (tab.startsWith('page-')) {
+      onTabChange(tab);
+    } else {
+      onTabChange(tab);
+    }
+  };
+
+  const isNavActive = (item: MenuItem) => {
+    if (isAdminActive) return false;
+    if (item.type === 'tab') {
+      if (item.tab === 'frontend-home' && currentTab === 'frontend-home') return true;
+      if ((item.tab === 'frontend-shop' || item.tab === '/collections/all') && currentTab === 'frontend-shop') return true;
+      if (item.tab === currentTab) return true;
+      if (item.tab.startsWith('page-') && currentTab === item.tab.replace('page-', '')) return true;
+    }
+    return false;
+  };
+
+  const getHref = (item: MenuItem): string => {
+    if (item.type === 'external' && item.url) return item.url;
+    const tab = item.tab || '';
+    if (tab === 'frontend-shop' || tab === '/collections/all' || tab === 'shop' || item.label.toUpperCase() === 'SHOP') {
+      return '/collections/all';
+    }
+    if (tab === 'frontend-home' || tab === '/' || tab === '') {
+      return '/';
+    }
+    if (tab.startsWith('#')) {
+      return tab;
+    }
+    if (tab.startsWith('/collections/')) {
+      return tab;
+    }
+    if (tab === 'blogs') {
+      return '/blogs';
+    }
+    if (tab.startsWith('page-')) {
+      return `/pages/${tab.replace('page-', '')}`;
+    }
+    return `/${tab}`;
   };
 
   return (
@@ -220,162 +317,29 @@ export default function Header({
           )}
         </div>
 
-        {/* Center: Desktop Navigation Links (matching design.png) */}
+        {/* Center: Desktop Navigation Links (dynamic from Header & Footer Settings) */}
         <nav className="hidden lg:flex items-center gap-6 xl:gap-8 font-sans">
-          
-          {/* HOME */}
-          <button
-            onClick={() => onTabChange('frontend-home')}
-            className={`text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 cursor-pointer border-b-2 ${
-              currentTab === 'frontend-home' && !isAdminActive
-                ? 'border-[#b58d59] text-[#1a1a1a]'
-                : 'border-transparent text-[#444444] hover:text-[#b58d59]'
-            }`}
-          >
-            HOME
-          </button>
-
-          {/* WORK WITH ME */}
-          <button
-            onClick={() => scrollToSection('appointment-section')}
-            className="text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 border-b-2 border-transparent text-[#444444] hover:text-[#b58d59] cursor-pointer"
-          >
-            WORK WITH ME
-          </button>
-
-          {/* MY SERVICES */}
-          <button
-            onClick={() => scrollToSection('services-section')}
-            className="text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 border-b-2 border-transparent text-[#444444] hover:text-[#b58d59] cursor-pointer"
-          >
-            MY SERVICES
-          </button>
-
-          {/* PAGES Dropdown */}
-          <div 
-            className="relative"
-            onMouseEnter={() => setActiveDropdown('pages')}
-            onMouseLeave={() => setActiveDropdown(null)}
-          >
-            <button
-              onClick={() => setActiveDropdown(activeDropdown === 'pages' ? null : 'pages')}
-              className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 border-b-2 border-transparent text-[#444444] hover:text-[#b58d59] cursor-pointer"
-            >
-              <span>PAGES</span>
-              <ChevronDown className="h-3 w-3" />
-            </button>
-
-            {activeDropdown === 'pages' && (
-              <div className="absolute top-full left-0 w-52 bg-white shadow-xl rounded-xs border border-[#eee9df] py-2 z-50 animate-fade-in font-sans">
-                <button
-                  onClick={() => {
-                    scrollToSection('pricing-section');
-                    setActiveDropdown(null);
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
-                >
-                  Styling Packages
-                </button>
-                <button
-                  onClick={() => {
-                    scrollToSection('reviews-section');
-                    setActiveDropdown(null);
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
-                >
-                  Clients Reviews
-                </button>
-                <button
-                  onClick={() => {
-                    scrollToSection('portfolio-section');
-                    setActiveDropdown(null);
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
-                >
-                  My Portfolio
-                </button>
-                <button
-                  onClick={() => {
-                    scrollToSection('about-section');
-                    setActiveDropdown(null);
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
-                >
-                  About Jade Tailor
-                </button>
-                <div className="border-t border-[#f0ece5] my-1" />
-                <button
-                  onClick={() => {
-                    onTabChange('frontend-shop');
-                    setActiveDropdown(null);
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer font-bold"
-                >
-                  Shop Curated Wardrobe
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* BLOG Dropdown */}
-          <div 
-            className="relative"
-            onMouseEnter={() => setActiveDropdown('blog')}
-            onMouseLeave={() => setActiveDropdown(null)}
-          >
-            <button
-              onClick={() => onTabChange('blogs')}
-              className={`flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 border-b-2 cursor-pointer ${
-                currentTab === 'blogs'
-                  ? 'border-[#b58d59] text-[#1a1a1a]'
-                  : 'border-transparent text-[#444444] hover:text-[#b58d59]'
-              }`}
-            >
-              <span>BLOG</span>
-              <ChevronDown className="h-3 w-3" />
-            </button>
-
-            {activeDropdown === 'blog' && (
-              <div className="absolute top-full left-0 w-56 bg-white shadow-xl rounded-xs border border-[#eee9df] py-2 z-50 animate-fade-in font-sans">
-                <button
-                  onClick={() => {
-                    onTabChange('blogs');
-                    setActiveDropdown(null);
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
-                >
-                  All Style Journal Articles
-                </button>
-                <button
-                  onClick={() => {
-                    scrollToSection('blog-section');
-                    setActiveDropdown(null);
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
-                >
-                  Whimsical Wardrobe Editorial
-                </button>
-                <button
-                  onClick={() => {
-                    scrollToSection('blog-section');
-                    setActiveDropdown(null);
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs text-[#333333] hover:text-[#b58d59] hover:bg-[#fbf9f6] transition cursor-pointer"
-                >
-                  Business Formal Attire
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* CONTACT */}
-          <button
-            onClick={() => scrollToSection('appointment-section')}
-            className="text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 border-b-2 border-transparent text-[#444444] hover:text-[#b58d59] cursor-pointer"
-          >
-            CONTACT
-          </button>
-
+          {dynamicMenuItems.map((item) => {
+            const active = isNavActive(item);
+            const href = getHref(item);
+            return (
+              <a
+                key={item.id}
+                href={href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick(item);
+                }}
+                className={`text-[11px] font-bold uppercase tracking-[0.2em] transition-all py-1 cursor-pointer border-b-2 ${
+                  active
+                    ? 'border-[#b58d59] text-[#1a1a1a]'
+                    : 'border-transparent text-[#444444] hover:text-[#b58d59]'
+                }`}
+              >
+                {item.label}
+              </a>
+            );
+          })}
         </nav>
 
         {/* Right: Actions Block (Search, Wishlist, Account, Cart, Admin toggle, Mobile Menu) */}
@@ -481,78 +445,29 @@ export default function Header({
 
             <div className="flex-1 p-6 space-y-4 overflow-y-auto">
               <div className="space-y-1">
-                <button
-                  onClick={() => {
-                    onTabChange('frontend-home');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
-                >
-                  Home
-                </button>
-                <button
-                  onClick={() => {
-                    scrollToSection('appointment-section');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
-                >
-                  Work With Me
-                </button>
-                <button
-                  onClick={() => {
-                    scrollToSection('services-section');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
-                >
-                  My Services
-                </button>
-                <button
-                  onClick={() => {
-                    scrollToSection('pricing-section');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
-                >
-                  Styling Packages
-                </button>
-                <button
-                  onClick={() => {
-                    scrollToSection('reviews-section');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
-                >
-                  Clients Reviews
-                </button>
-                <button
-                  onClick={() => {
-                    scrollToSection('portfolio-section');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
-                >
-                  My Portfolio
-                </button>
-                <button
-                  onClick={() => {
-                    onTabChange('blogs');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
-                >
-                  Blog & News
-                </button>
-                <button
-                  onClick={() => {
-                    onTabChange('frontend-shop');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest text-[#b58d59] hover:bg-[#fbf9f6] rounded transition"
-                >
-                  Shop Collection
-                </button>
+                {dynamicMenuItems.map((item) => {
+                  const active = isNavActive(item);
+                  const href = getHref(item);
+                  return (
+                    <a
+                      key={item.id}
+                      href={href}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavClick(item);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`w-full text-left py-2.5 px-3 text-xs font-bold uppercase tracking-widest rounded transition cursor-pointer flex items-center justify-between ${
+                        active
+                          ? 'bg-[#fbf9f6] text-[#b58d59] font-black'
+                          : 'text-[#222222] hover:text-[#b58d59] hover:bg-[#fbf9f6]'
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      <ChevronRight className="h-3 w-3 opacity-40" />
+                    </a>
+                  );
+                })}
               </div>
 
               <div className="pt-4 border-t border-[#eee9df] space-y-2">

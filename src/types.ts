@@ -202,7 +202,7 @@ export interface Discount {
 
 export interface PageSection {
   id: string;
-  type: 'Hero banner' | 'About Jade Tailor' | 'My Services' | 'Service Pillars' | 'Styling Packages' | 'Client Reviews' | 'My Portfolio' | 'News & Blog' | 'Make An Appointment' | 'Brand Logos' | 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list' | 'Icon with text' | 'Brands we offer' | 'How it works' | 'Trust badges' | 'Plans' | 'Clearance Sale';
+  type: 'Hero banner' | 'About Jade Tailor' | 'My Services' | 'Service Pillars' | 'Styling Packages' | 'Client Reviews' | 'My Portfolio' | 'News & Blog' | 'Make An Appointment' | 'Brand Logos' | 'Image banner' | 'Video banner' | 'Image with text' | 'Text column with image' | 'Rich text' | 'Marquee text' | 'Marquee images' | 'Logo list' | 'Collection list' | 'Featured collection' | 'Images gallery' | 'FAQs' | 'Slideshow' | 'Blog post' | 'Brand list' | 'Icon with text' | 'Brands we offer' | 'How it works' | 'Trust badges' | 'Plans' | 'Clearance Sale' | 'Shop Banner' | 'Editorial Shop Banner';
   settings: {
     [key: string]: any;
     fullWidth?: boolean;
