@@ -15,6 +15,7 @@ import {
   fetchResourceFromNeon, saveResourceToNeon,
   saveImageToNeon, getImageFromNeon,
   fetchLayoutSettingsFromNeon, saveLayoutSettingsToNeon,
+  fetchRecycleBinFromNeon, saveRecycleBinItemToNeon, deleteFromRecycleBinInNeon, clearRecycleBinInNeon,
   DbStatus
 } from './neonDb';
 
@@ -32,6 +33,7 @@ const memoryCache: Record<string, any[]> = {
   customPages: [...DEFAULT_PAGES],
   custompages: [...DEFAULT_PAGES],
   blogs: [...INITIAL_BLOGS],
+  recycle_bin: [],
 };
 
 export function getConnectionStatus(): DbStatus {
@@ -343,3 +345,176 @@ export async function saveLayoutSettings(settings: any): Promise<any> {
 
   return payload;
 }
+
+// ----------------------------------------------------
+// RECYCLE BIN CONTROLLERS (Neon DB + Local fallback)
+// ----------------------------------------------------
+const RECYCLE_BIN_FILE = path.join(process.cwd(), "recycle_bin.json");
+
+function loadRecycleBinFromFile(): any[] {
+  try {
+    if (fs.existsSync(RECYCLE_BIN_FILE)) {
+      const data = fs.readFileSync(RECYCLE_BIN_FILE, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.warn("[serverDb] Failed loading recycle_bin.json fallback:", e);
+  }
+  return [];
+}
+
+function persistRecycleBinToFile(items: any[]) {
+  try {
+    fs.writeFileSync(RECYCLE_BIN_FILE, JSON.stringify(items, null, 2), 'utf-8');
+  } catch (e) {
+    console.warn("[serverDb] Failed saving recycle_bin.json fallback:", e);
+  }
+}
+
+export async function fetchRecycleBin(): Promise<any[]> {
+  try {
+    const neonItems = await fetchRecycleBinFromNeon();
+    if (neonItems !== null) {
+      memoryCache['recycle_bin'] = neonItems;
+      persistRecycleBinToFile(neonItems);
+      return neonItems;
+    }
+  } catch (err) {
+    console.error("[serverDb] Failed to fetch recycle bin from Neon DB:", err);
+  }
+
+  // Fallback to disk / memory cache
+  if (memoryCache['recycle_bin'].length === 0) {
+    memoryCache['recycle_bin'] = loadRecycleBinFromFile();
+  }
+  return memoryCache['recycle_bin'];
+}
+
+export async function addToRecycleBin(items: Array<{
+  id?: string;
+  type: string;
+  originalId: string;
+  title: string;
+  data: any;
+  deletedAt?: string;
+}>): Promise<any[]> {
+  const current = await fetchRecycleBin();
+  const formattedItems = items.map(item => ({
+    id: item.id || `rb_${item.type}_${item.originalId}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    type: item.type,
+    originalId: item.originalId,
+    title: item.title || 'Untitled Item',
+    deletedAt: item.deletedAt || new Date().toISOString(),
+    data: item.data
+  }));
+
+  // Update in-memory & file
+  const updated = [...formattedItems, ...current];
+  memoryCache['recycle_bin'] = updated;
+  persistRecycleBinToFile(updated);
+
+  // Sync each item to Neon DB
+  try {
+    for (const item of formattedItems) {
+      await saveRecycleBinItemToNeon(item);
+    }
+    console.log(`[Neon DB Recycle Bin] Persisted ${formattedItems.length} items to recycle_bin table.`);
+  } catch (err) {
+    console.error("[Neon DB Recycle Bin] Error syncing to DB:", err);
+  }
+
+  return updated;
+}
+
+export async function deleteFromRecycleBin(ids: string[]): Promise<any[]> {
+  const current = await fetchRecycleBin();
+  const remaining = current.filter(item => !ids.includes(item.id));
+  memoryCache['recycle_bin'] = remaining;
+  persistRecycleBinToFile(remaining);
+
+  try {
+    await deleteFromRecycleBinInNeon(ids);
+    console.log(`[Neon DB Recycle Bin] Permanently deleted ${ids.length} items from recycle_bin table.`);
+  } catch (err) {
+    console.error("[Neon DB Recycle Bin] Error deleting from DB:", err);
+  }
+
+  return remaining;
+}
+
+export async function clearRecycleBin(): Promise<boolean> {
+  memoryCache['recycle_bin'] = [];
+  persistRecycleBinToFile([]);
+
+  try {
+    await clearRecycleBinInNeon();
+    console.log("[Neon DB Recycle Bin] Cleared all items from recycle_bin table.");
+    return true;
+  } catch (err) {
+    console.error("[Neon DB Recycle Bin] Error clearing DB table:", err);
+    return false;
+  }
+}
+
+export async function restoreFromRecycleBin(ids: string[]): Promise<{ restored: any[]; remaining: any[] }> {
+  const current = await fetchRecycleBin();
+  const toRestore = current.filter(item => ids.includes(item.id));
+  const remaining = current.filter(item => !ids.includes(item.id));
+
+  // Remove from recycle bin
+  memoryCache['recycle_bin'] = remaining;
+  persistRecycleBinToFile(remaining);
+
+  try {
+    await deleteFromRecycleBinInNeon(ids);
+  } catch (err) {
+    console.error("[Neon DB Recycle Bin] Error removing restored items from DB recycle bin:", err);
+  }
+
+  // Restore each item to its respective resource table
+  for (const item of toRestore) {
+    try {
+      const type = item.type;
+      if (type === 'product') {
+        const prods = await fetchResource('products');
+        if (!prods.some(p => p.id === item.originalId)) {
+          await saveResource('products', [item.data, ...prods]);
+        }
+      } else if (type === 'collection') {
+        const colls = await fetchResource('collections');
+        if (!colls.some(c => c.id === item.originalId)) {
+          await saveResource('collections', [item.data, ...colls]);
+        }
+      } else if (type === 'page') {
+        const pages = await fetchResource('custompages');
+        if (!pages.some(p => p.id === item.originalId)) {
+          await saveResource('custompages', [item.data, ...pages]);
+        }
+      } else if (type === 'blog') {
+        const blogs = await fetchResource('blogs');
+        if (!blogs.some(b => b.id === item.originalId)) {
+          await saveResource('blogs', [item.data, ...blogs]);
+        }
+      } else if (type === 'discount') {
+        const discounts = await fetchResource('discounts');
+        if (!discounts.some(d => d.id === item.originalId)) {
+          await saveResource('discounts', [item.data, ...discounts]);
+        }
+      } else if (type === 'header_footer') {
+        const settings = await fetchLayoutSettings();
+        const currentItems = Array.isArray(settings.menuItems) ? settings.menuItems : [];
+        if (!currentItems.some((m: any) => m.id === item.originalId)) {
+          await saveLayoutSettings({
+            ...settings,
+            menuItems: [...currentItems, item.data]
+          });
+        }
+      }
+    } catch (restoreErr) {
+      console.error(`[Recycle Bin] Failed restoring item ${item.id} to resource:`, restoreErr);
+    }
+  }
+
+  return { restored: toRestore, remaining };
+}
+

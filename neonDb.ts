@@ -69,6 +69,8 @@ export function getTableName(resource: string): string | null {
     case 'custompages':
     case 'custom_pages': return 'custom_pages';
     case 'blogs': return 'blogs';
+    case 'recycle_bin':
+    case 'recyclebin': return 'recycle_bin';
     default: return null;
   }
 }
@@ -89,7 +91,8 @@ export async function initTables(): Promise<boolean> {
       sql`CREATE TABLE IF NOT EXISTS custom_pages (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`,
       sql`CREATE TABLE IF NOT EXISTS blogs (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`,
       sql`CREATE TABLE IF NOT EXISTS uploaded_images (id TEXT PRIMARY KEY, base64_data TEXT NOT NULL, mime_type TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW());`,
-      sql`CREATE TABLE IF NOT EXISTS layout_settings (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`
+      sql`CREATE TABLE IF NOT EXISTS layout_settings (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`,
+      sql`CREATE TABLE IF NOT EXISTS recycle_bin (id TEXT PRIMARY KEY, type TEXT NOT NULL, original_id TEXT NOT NULL, title TEXT NOT NULL, data JSONB NOT NULL, deleted_at TIMESTAMPTZ DEFAULT NOW());`
     ]);
 
     tablesInitialized = true;
@@ -241,7 +244,7 @@ export async function getNeonDetails(): Promise<any> {
       await seedIfEmpty();
     }
 
-    const tableNames = ['products', 'collections', 'orders', 'files', 'customers', 'discounts', 'custom_pages', 'blogs', 'uploaded_images', 'layout_settings'];
+    const tableNames = ['products', 'collections', 'orders', 'files', 'customers', 'discounts', 'custom_pages', 'blogs', 'uploaded_images', 'layout_settings', 'recycle_bin'];
     const tablesInfo: { name: string; count: number }[] = [];
 
     for (const t of tableNames) {
@@ -487,3 +490,103 @@ export async function saveLayoutSettingsToNeon(settings: any): Promise<boolean> 
     return false;
   }
 }
+
+// Recycle Bin DB operations
+export async function fetchRecycleBinFromNeon(): Promise<any[] | null> {
+  const sql = getSqlClient();
+  if (!sql) return null;
+
+  try {
+    if (!tablesInitialized) {
+      await initTables();
+    }
+    const rows = await sql.query(`SELECT id, type, original_id, title, data, deleted_at FROM recycle_bin ORDER BY deleted_at DESC`);
+    if (rows && Array.isArray(rows)) {
+      return rows.map((r: any) => {
+        const parsedData = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
+        return {
+          id: r.id,
+          type: r.type,
+          originalId: r.original_id,
+          title: r.title,
+          deletedAt: r.deleted_at,
+          data: parsedData
+        };
+      });
+    }
+    return [];
+  } catch (err) {
+    console.error('[Neon Postgres] Error fetching recycle bin:', err);
+    return null;
+  }
+}
+
+export async function saveRecycleBinItemToNeon(item: { id: string; type: string; originalId: string; title: string; data: any; deletedAt?: string }): Promise<boolean> {
+  const sql = getSqlClient();
+  if (!sql) return false;
+
+  try {
+    if (!tablesInitialized) {
+      await initTables();
+    }
+    await sql.query(
+      `INSERT INTO recycle_bin (id, type, original_id, title, data, deleted_at)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (id) DO UPDATE SET
+         type = EXCLUDED.type,
+         original_id = EXCLUDED.original_id,
+         title = EXCLUDED.title,
+         data = EXCLUDED.data,
+         deleted_at = EXCLUDED.deleted_at`,
+      [
+        item.id,
+        item.type,
+        item.originalId,
+        item.title,
+        JSON.stringify(item.data),
+        item.deletedAt ? new Date(item.deletedAt) : new Date()
+      ]
+    );
+    return true;
+  } catch (err) {
+    console.error(`[Neon Postgres] Error saving item ${item.id} to recycle bin:`, err);
+    return false;
+  }
+}
+
+export async function deleteFromRecycleBinInNeon(ids: string[]): Promise<boolean> {
+  const sql = getSqlClient();
+  if (!sql) return false;
+
+  try {
+    if (!tablesInitialized) {
+      await initTables();
+    }
+    if (ids.length === 0) return true;
+    await sql.query(
+      `DELETE FROM recycle_bin WHERE id = ANY($1::text[])`,
+      [ids]
+    );
+    return true;
+  } catch (err) {
+    console.error('[Neon Postgres] Error deleting from recycle bin:', err);
+    return false;
+  }
+}
+
+export async function clearRecycleBinInNeon(): Promise<boolean> {
+  const sql = getSqlClient();
+  if (!sql) return false;
+
+  try {
+    if (!tablesInitialized) {
+      await initTables();
+    }
+    await sql.query(`DELETE FROM recycle_bin`);
+    return true;
+  } catch (err) {
+    console.error('[Neon Postgres] Error clearing recycle bin:', err);
+    return false;
+  }
+}
+

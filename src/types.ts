@@ -332,3 +332,13 @@ export interface LayoutSettings {
   email?: string;
 }
 
+export interface RecycleBinItem {
+  id: string;
+  originalId: string;
+  type: 'product' | 'collection' | 'page' | 'blog' | 'discount' | 'header_footer' | 'file';
+  title: string;
+  subtitle?: string;
+  deletedAt: string;
+  data: any;
+}
+

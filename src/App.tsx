@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, CartItem, BlogPost, LayoutSettings, MenuItem
+  Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, CartItem, BlogPost, LayoutSettings, MenuItem, RecycleBinItem
 } from './types';
 import { 
   INITIAL_PRODUCTS, INITIAL_COLLECTIONS, INITIAL_ORDERS, INITIAL_FILES, INITIAL_CUSTOMERS, INITIAL_DISCOUNTS, DEFAULT_PAGES, INITIAL_BLOGS 
@@ -293,6 +293,10 @@ export default function App() {
     return safeLoadFromLocalStorage<CartItem[]>('ps_cart', []);
   });
 
+  const [recycleBin, setRecycleBin] = useState<RecycleBinItem[]>(() => {
+    return safeLoadFromLocalStorage<RecycleBinItem[]>('ps_recycle_bin', []);
+  });
+
   const [loggedInCustomer, setLoggedInCustomer] = useState<Customer | null>(() => {
     try {
       const saved = localStorage.getItem('ps_logged_in_customer');
@@ -345,7 +349,7 @@ export default function App() {
         // Fetch store data
         const [
           prodsRes, collsRes, ordersRes, filesRes,
-          custsRes, discsRes, pagesRes, blogsRes, layoutRes
+          custsRes, discsRes, pagesRes, blogsRes, layoutRes, recycleRes
         ] = await Promise.all([
           fetch('/api/products').then(r => r.ok ? r.json() : null),
           fetch('/api/collections').then(r => r.ok ? r.json() : null),
@@ -356,6 +360,7 @@ export default function App() {
           fetch('/api/custompages').then(r => r.ok ? r.json() : null),
           fetch('/api/blogs').then(r => r.ok ? r.json() : null),
           fetch('/api/layoutsettings').then(r => r.ok ? r.json() : null),
+          fetch('/api/recyclebin').then(r => r.ok ? r.json() : null),
         ]);
 
         const normalizeUrl = (url?: string): string => {
@@ -487,6 +492,13 @@ export default function App() {
             menuItems: cleanedItems.length > 0 ? cleanedItems : prev.menuItems
           }));
         }
+
+        if (Array.isArray(recycleRes)) {
+          setRecycleBin(recycleRes);
+          try {
+            localStorage.setItem('ps_recycle_bin', JSON.stringify(recycleRes));
+          } catch (_) {}
+        }
       } catch (err) {
         console.error("[State Loader] Failed to connect to backend Neon Postgres API. Using local backup state.", err);
       } finally {
@@ -495,6 +507,127 @@ export default function App() {
     }
     loadDataFromDb();
   }, []);
+
+  const handleMoveToRecycleBin = async (items: Array<{ type: RecycleBinItem['type']; originalId: string; title: string; subtitle?: string; data: any }>) => {
+    try {
+      const res = await fetch('/api/recyclebin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items)
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        if (Array.isArray(updated)) {
+          setRecycleBin(updated);
+          try { localStorage.setItem('ps_recycle_bin', JSON.stringify(updated)); } catch (_) {}
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to move to recycle bin via API:", e);
+    }
+
+    // Fallback local update
+    const formatted: RecycleBinItem[] = items.map(it => ({
+      id: `rb_${it.type}_${it.originalId}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      type: it.type,
+      originalId: it.originalId,
+      title: it.title,
+      subtitle: it.subtitle,
+      deletedAt: new Date().toISOString(),
+      data: it.data
+    }));
+    setRecycleBin(prev => {
+      const next = [...formatted, ...prev];
+      try { localStorage.setItem('ps_recycle_bin', JSON.stringify(next)); } catch (_) {}
+      return next;
+    });
+  };
+
+  const handleRestoreFromRecycleBin = async (ids: string[]) => {
+    try {
+      const toRestore = recycleBin.filter(item => ids.includes(item.id));
+      for (const item of toRestore) {
+        if (item.type === 'product') {
+          setProducts(prev => prev.some(p => p.id === item.originalId) ? prev : [item.data, ...prev]);
+        } else if (item.type === 'collection') {
+          setCollections(prev => prev.some(c => c.id === item.originalId) ? prev : [item.data, ...prev]);
+        } else if (item.type === 'page') {
+          setCustomPages(prev => prev.some(p => p.id === item.originalId) ? prev : [item.data, ...prev]);
+        } else if (item.type === 'blog') {
+          setBlogs(prev => prev.some(b => b.id === item.originalId) ? prev : [item.data, ...prev]);
+        } else if (item.type === 'discount') {
+          setDiscounts(prev => prev.some(d => d.id === item.originalId) ? prev : [item.data, ...prev]);
+        } else if (item.type === 'header_footer') {
+          setLayoutSettings(prev => {
+            const curItems = Array.isArray(prev.menuItems) ? prev.menuItems : [];
+            if (curItems.some((m: any) => m.id === item.originalId)) return prev;
+            const updatedLayout = { ...prev, menuItems: [...curItems, item.data] };
+            handleUpdateLayoutSettings(updatedLayout);
+            return updatedLayout;
+          });
+        }
+      }
+
+      const res = await fetch('/api/recyclebin/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.remaining)) {
+          setRecycleBin(data.remaining);
+          try { localStorage.setItem('ps_recycle_bin', JSON.stringify(data.remaining)); } catch (_) {}
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to restore from recycle bin:", e);
+    }
+
+    setRecycleBin(prev => {
+      const next = prev.filter(item => !ids.includes(item.id));
+      try { localStorage.setItem('ps_recycle_bin', JSON.stringify(next)); } catch (_) {}
+      return next;
+    });
+  };
+
+  const handleDeleteFromRecycleBin = async (ids: string[]) => {
+    try {
+      const res = await fetch('/api/recyclebin/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.remaining)) {
+          setRecycleBin(data.remaining);
+          try { localStorage.setItem('ps_recycle_bin', JSON.stringify(data.remaining)); } catch (_) {}
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to delete from recycle bin:", e);
+    }
+
+    setRecycleBin(prev => {
+      const next = prev.filter(item => !ids.includes(item.id));
+      try { localStorage.setItem('ps_recycle_bin', JSON.stringify(next)); } catch (_) {}
+      return next;
+    });
+  };
+
+  const handleClearRecycleBin = async () => {
+    try {
+      await fetch('/api/recyclebin/clear', { method: 'POST' });
+    } catch (e) {
+      console.error("Failed to clear recycle bin via API:", e);
+    }
+    setRecycleBin([]);
+    try { localStorage.setItem('ps_recycle_bin', JSON.stringify([])); } catch (_) {}
+  };
 
   // App Routing Navigation
   const [currentTab, setCurrentTab] = useState<string>('frontend-home');
@@ -1552,6 +1685,11 @@ export default function App() {
               onUpdateBlogs={setBlogs}
               layoutSettings={layoutSettings}
               onUpdateLayoutSettings={handleUpdateLayoutSettings}
+              recycleBin={recycleBin}
+              onMoveToRecycleBin={handleMoveToRecycleBin}
+              onRestoreFromRecycleBin={handleRestoreFromRecycleBin}
+              onDeleteFromRecycleBin={handleDeleteFromRecycleBin}
+              onClearRecycleBin={handleClearRecycleBin}
               onDirtyChange={setIsAdminDirty}
               adminActionTrigger={adminActionTrigger}
               onAdminActionComplete={(actionHandled) => {

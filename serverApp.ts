@@ -13,6 +13,7 @@ import discountsRouter from "./backend/routes/discounts";
 import customPagesRouter from "./backend/routes/customPages";
 import blogsRouter from "./backend/routes/blogs";
 import razorpayRouter from "./backend/routes/razorpay";
+import recycleBinRouter from "./backend/routes/recycleBin";
 
 export async function createExpressApp() {
   const app = express();
@@ -231,6 +232,7 @@ export async function createExpressApp() {
   app.use("/api/custompages", customPagesRouter);
   app.use("/api/blogs", blogsRouter);
   app.use("/api/razorpay", razorpayRouter);
+  app.use("/api/recyclebin", recycleBinRouter);
 
   // Serve placeholder.png directly from root workspace to handle all environments smoothly
   app.get("/placeholder.png", (req, res) => {
