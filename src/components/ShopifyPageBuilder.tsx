@@ -75,6 +75,20 @@ export default function ShopifyPageBuilder({
   const [draggedSectionIndex, setDraggedSectionIndex] = useState<number | null>(null);
   const [dragOverSectionIndex, setDragOverSectionIndex] = useState<number | null>(null);
 
+  // References for middle canvas scrolling and section element anchors
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Automatically scroll middle canvas to selected section when selected
+  useEffect(() => {
+    if (selectedSectionId && sectionRefs.current[selectedSectionId]) {
+      sectionRefs.current[selectedSectionId]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }
+  }, [selectedSectionId]);
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -428,7 +442,7 @@ export default function ShopifyPageBuilder({
       {/* ========================================================================= */}
       {/* MAIN 3-PANEL LAYOUT CONTAINER (LEFT SIDEBAR | MIDDLE OUTPUT | RIGHT SETTINGS) */}
       {/* ========================================================================= */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex min-h-0 w-full overflow-hidden">
         
         {/* ===================================================================== */}
         {/* PANEL 1: LEFT SIDEBAR (SECTIONS & BLOCKS TREE)                       */}
@@ -455,7 +469,13 @@ export default function ShopifyPageBuilder({
               </span>
 
               {/* Announcement Bar item */}
-              <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-xs text-slate-700 font-medium group transition-colors cursor-pointer">
+              <div 
+                onClick={() => {
+                  canvasContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-xs text-slate-700 font-medium group transition-colors cursor-pointer"
+                title="Scroll to Announcement bar"
+              >
                 <div className="flex items-center gap-2 truncate">
                   <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
                   <Bell className="h-3.5 w-3.5 text-slate-500" />
@@ -465,7 +485,13 @@ export default function ShopifyPageBuilder({
               </div>
 
               {/* Header item */}
-              <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-xs text-slate-700 font-medium group transition-colors cursor-pointer">
+              <div 
+                onClick={() => {
+                  canvasContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-xs text-slate-700 font-medium group transition-colors cursor-pointer"
+                title="Scroll to Header"
+              >
                 <div className="flex items-center gap-2 truncate">
                   <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
                   <Layers className="h-3.5 w-3.5 text-slate-500" />
@@ -722,7 +748,18 @@ export default function ShopifyPageBuilder({
               </button>
 
               {/* Footer item */}
-              <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-xs text-slate-700 font-medium group transition-colors cursor-pointer">
+              <div 
+                onClick={() => {
+                  if (canvasContainerRef.current) {
+                    canvasContainerRef.current.scrollTo({ 
+                      top: canvasContainerRef.current.scrollHeight, 
+                      behavior: 'smooth' 
+                    });
+                  }
+                }}
+                className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-xs text-slate-700 font-medium group transition-colors cursor-pointer"
+                title="Scroll to Footer"
+              >
                 <div className="flex items-center gap-2 truncate">
                   <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
                   <LayoutGrid className="h-3.5 w-3.5 text-slate-500" />
@@ -738,16 +775,51 @@ export default function ShopifyPageBuilder({
         {/* ===================================================================== */}
         {/* PANEL 2: MIDDLE CANVAS (LIVE INTERACTIVE SECTION OUTPUT)              */}
         {/* ===================================================================== */}
-        <main className="flex-1 bg-[#f1f2f4] overflow-y-auto flex flex-col items-center p-4 sm:p-6 scrollbar-thin">
+        <main 
+          ref={canvasContainerRef}
+          className="flex-1 h-full min-h-0 overflow-y-auto overflow-x-hidden bg-[#f1f2f4] p-4 sm:p-6 select-auto relative scroll-smooth focus:outline-none"
+          tabIndex={0}
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#94a3b8 #e2e8f0',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          {/* Quick scroll controls floating inside canvas */}
+          <div className="fixed bottom-6 right-90 z-40 hidden md:flex flex-col gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={() => canvasContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="p-2 bg-white text-slate-700 hover:text-black hover:bg-slate-50 rounded-full shadow-lg border border-slate-200 transition-all hover:scale-105 cursor-pointer"
+              title="Scroll to top of canvas"
+            >
+              <ChevronUp className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (canvasContainerRef.current) {
+                  canvasContainerRef.current.scrollTo({ 
+                    top: canvasContainerRef.current.scrollHeight, 
+                    behavior: 'smooth' 
+                  });
+                }
+              }}
+              className="p-2 bg-white text-slate-700 hover:text-black hover:bg-slate-50 rounded-full shadow-lg border border-slate-200 transition-all hover:scale-105 cursor-pointer"
+              title="Scroll to bottom of canvas"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </button>
+          </div>
           
           {/* Viewport frame wrapper */}
-          <div className={`transition-all duration-300 w-full ${
+          <div className={`transition-all duration-300 w-full mx-auto ${
             viewportMode === 'mobile' 
-              ? 'max-w-[390px] my-4 bg-white rounded-[40px] shadow-2xl border-[10px] border-slate-900 overflow-hidden ring-1 ring-slate-800' 
+              ? 'max-w-[390px] my-4 bg-white rounded-[40px] shadow-2xl border-[10px] border-slate-900 ring-1 ring-slate-800' 
               : viewportMode === 'fullscreen'
               ? 'max-w-none'
-              : 'max-w-5xl shadow-sm rounded-xl overflow-hidden'
-          } bg-white min-h-[85vh]`}>
+              : 'max-w-5xl shadow-sm rounded-xl'
+          } bg-white min-h-[85vh] mb-24`}>
 
             {/* Browser frame mock for desktop */}
             {viewportMode === 'desktop' && (
@@ -831,6 +903,8 @@ export default function ShopifyPageBuilder({
                   return (
                     <div
                       key={sec.id}
+                      ref={(el) => { sectionRefs.current[sec.id] = el; }}
+                      id={`canvas-section-${sec.id}`}
                       onClick={() => {
                         setSelectedSectionId(sec.id);
                         setSelectedBlockId(null);
