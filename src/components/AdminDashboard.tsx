@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, PageSection, BlogPost, LayoutSettings, MenuItem } from '../types';
+import { Product, Collection, Order, FileEntry, Customer, Discount, CustomPage, PageSection, BlogPost, LayoutSettings, MenuItem, RecycleBinItem } from '../types';
 import { 
   TrendingUp, BarChart3, Package, Users, Tag, FileCode, HardDrive, Percent, 
   Search, Plus, Eye, CheckCircle2, Clipboard, ArrowUpDown, ChevronRight, 
@@ -8,13 +8,14 @@ import {
   Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass, ShieldCheck, ChevronLeft,
   ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server, Lock, Gift, Check, Clock, Truck, ArrowRight, Zap, Shield,
   Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit, LogOut, Download, Upload,
-  User, MessageSquare, Phone
+  User, MessageSquare, Phone, RotateCcw, Undo2
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 import CollectionEditor from './CollectionEditor';
 import ProductEditor from './ProductEditor';
 import BlogContentEditor from './BlogContentEditor';
 import DiscountEditor from './DiscountEditor';
+import ShopifyPageBuilder from './ShopifyPageBuilder';
 import PlansCanOverlay from './PlansCanOverlay';
 import { Crown, Flame } from 'lucide-react';
 import { SUPPORTED_CURRENCIES, getActiveCurrency, setActiveCurrency, formatPrice } from '../utils/currency';
@@ -119,6 +120,11 @@ interface AdminDashboardProps {
   onUpdateBlogs: (newBlogs: BlogPost[]) => void;
   layoutSettings?: LayoutSettings;
   onUpdateLayoutSettings?: (newSettings: LayoutSettings | ((prev: LayoutSettings) => LayoutSettings)) => void;
+  recycleBin?: RecycleBinItem[];
+  onMoveToRecycleBin?: (items: Array<{ type: RecycleBinItem['type']; originalId: string; title: string; subtitle?: string; data: any }>) => void;
+  onRestoreFromRecycleBin?: (ids: string[]) => void;
+  onDeleteFromRecycleBin?: (ids: string[]) => void;
+  onClearRecycleBin?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
   adminActionTrigger?: { action: 'save' | 'discard'; timestamp: number } | null;
   onAdminActionComplete?: (action: 'save' | 'discard') => void;
@@ -581,7 +587,7 @@ function HowItWorksSectionAdmin({ sec }: HowItWorksSectionAdminProps) {
   );
 }
 
-type SidebarTab = 'analytics' | 'orders' | 'collections' | 'products' | 'pages' | 'blogs' | 'files' | 'customers' | 'discounts' | 'layout' | 'settings';
+type SidebarTab = 'analytics' | 'orders' | 'collections' | 'products' | 'pages' | 'blogs' | 'files' | 'customers' | 'discounts' | 'layout' | 'settings' | 'recyclebin';
 
 export default function AdminDashboard({
   products: parentProducts,
@@ -602,6 +608,11 @@ export default function AdminDashboard({
   onUpdateBlogs: parentOnUpdateBlogs,
   layoutSettings,
   onUpdateLayoutSettings,
+  recycleBin = [],
+  onMoveToRecycleBin,
+  onRestoreFromRecycleBin,
+  onDeleteFromRecycleBin,
+  onClearRecycleBin,
   onDirtyChange,
   adminActionTrigger,
   onAdminActionComplete,
@@ -620,6 +631,7 @@ export default function AdminDashboard({
     discounts: 'discounts',
     layout: 'layout',
     settings: 'settings',
+    recyclebin: 'recycle-bin',
   };
 
   const pathToTabMap: Record<string, SidebarTab> = {
@@ -634,6 +646,8 @@ export default function AdminDashboard({
     discounts: 'discounts',
     layout: 'layout',
     settings: 'settings',
+    'recycle-bin': 'recyclebin',
+    'recyclebin': 'recyclebin',
   };
 
   const getInitialTab = (): SidebarTab => {
@@ -896,6 +910,16 @@ export default function AdminDashboard({
   };
 
   const removeMenuItem = (id: string) => {
+    const itemToDelete = localLayoutSettings.menuItems.find(item => item.id === id);
+    if (itemToDelete) {
+      onMoveToRecycleBin?.([{
+        type: 'header_footer',
+        originalId: itemToDelete.id,
+        title: `Header Link: ${itemToDelete.label}`,
+        subtitle: itemToDelete.tab || itemToDelete.url || 'Navigation Target',
+        data: itemToDelete
+      }]);
+    }
     const items = localLayoutSettings.menuItems.filter(item => item.id !== id);
     const updated = { ...localLayoutSettings, menuItems: items };
     setLocalLayoutSettings(updated);
@@ -1459,7 +1483,17 @@ export default function AdminDashboard({
   };
 
   const handleDeleteProduct = (pId: string) => {
-    triggerConfirm("Are you sure you want to delete this product?", () => {
+    triggerConfirm("Move this product to the Recycle Bin?", () => {
+      const prod = products.find(p => p.id === pId);
+      if (prod) {
+        onMoveToRecycleBin?.([{
+          type: 'product',
+          originalId: prod.id,
+          title: prod.title,
+          subtitle: `£${prod.price?.toFixed(2) || '0.00'}`,
+          data: prod
+        }]);
+      }
       const updated = products.filter(p => p.id !== pId);
       onUpdateProducts(updated);
 
@@ -1497,7 +1531,17 @@ export default function AdminDashboard({
 
   const handleBulkDeleteProducts = () => {
     if (selectedProductIds.length === 0) return;
-    triggerConfirm(`Are you sure you want to bulk delete the ${selectedProductIds.length} selected products?`, () => {
+    triggerConfirm(`Move the ${selectedProductIds.length} selected products to the Recycle Bin?`, () => {
+      const toMove = products.filter(p => selectedProductIds.includes(p.id));
+      if (toMove.length > 0) {
+        onMoveToRecycleBin?.(toMove.map(p => ({
+          type: 'product',
+          originalId: p.id,
+          title: p.title,
+          subtitle: `£${p.price?.toFixed(2) || '0.00'}`,
+          data: p
+        })));
+      }
       const updated = products.filter(p => !selectedProductIds.includes(p.id));
       onUpdateProducts(updated);
 
@@ -2102,7 +2146,17 @@ export default function AdminDashboard({
   };
 
   const handleDeleteCollection = (id: string) => {
-    triggerConfirm("Are you sure you want to delete this collection?", () => {
+    triggerConfirm("Move this collection to the Recycle Bin?", () => {
+      const col = collections.find(c => c.id === id);
+      if (col) {
+        onMoveToRecycleBin?.([{
+          type: 'collection',
+          originalId: col.id,
+          title: col.title,
+          subtitle: `${col.productIds?.length || 0} products`,
+          data: col
+        }]);
+      }
       onUpdateCollections(collections.filter(c => c.id !== id));
       setSelectedCollectionIds(prev => prev.filter(item => item !== id));
     }, "Delete Collection");
@@ -2130,7 +2184,17 @@ export default function AdminDashboard({
 
   const handleBulkDeleteCollections = () => {
     if (selectedCollectionIds.length === 0) return;
-    triggerConfirm(`Are you sure you want to bulk delete the ${selectedCollectionIds.length} selected collections?`, () => {
+    triggerConfirm(`Move the ${selectedCollectionIds.length} selected collections to the Recycle Bin?`, () => {
+      const toMove = collections.filter(c => selectedCollectionIds.includes(c.id));
+      if (toMove.length > 0) {
+        onMoveToRecycleBin?.(toMove.map(c => ({
+          type: 'collection',
+          originalId: c.id,
+          title: c.title,
+          subtitle: `${c.productIds?.length || 0} products`,
+          data: c
+        })));
+      }
       onUpdateCollections(collections.filter(c => !selectedCollectionIds.includes(c.id)));
       setSelectedCollectionIds([]);
     }, "Bulk Delete Collections");
@@ -2583,7 +2647,17 @@ export default function AdminDashboard({
   };
 
   const handleDeleteDiscount = (id: string) => {
-    triggerConfirm("Are you sure you want to delete this promotional code?", () => {
+    triggerConfirm("Move this promotional code to the Recycle Bin?", () => {
+      const disc = discounts.find(d => d.id === id);
+      if (disc) {
+        onMoveToRecycleBin?.([{
+          type: 'discount',
+          originalId: disc.id,
+          title: `Code: ${disc.title}`,
+          subtitle: disc.details || 'Discount',
+          data: disc
+        }]);
+      }
       onUpdateDiscounts(discounts.filter(d => d.id !== id));
     }, "Delete Discount");
   };
@@ -2649,7 +2723,17 @@ export default function AdminDashboard({
   };
 
   const handleDeleteBlog = (blogId: string) => {
-    triggerConfirm("Are you sure you want to delete this blog post? This action cannot be undone.", () => {
+    triggerConfirm("Move this blog post to the Recycle Bin?", () => {
+      const b = blogs.find(item => item.id === blogId);
+      if (b) {
+        onMoveToRecycleBin?.([{
+          type: 'blog',
+          originalId: b.id,
+          title: b.title,
+          subtitle: b.author || 'Author',
+          data: b
+        }]);
+      }
       onUpdateBlogs(blogs.filter(b => b.id !== blogId));
     }, "Delete Blog Post");
   };
@@ -2715,6 +2799,88 @@ export default function AdminDashboard({
     });
   }, [blogs, blogQuery, blogStatusFilter]);
 
+  // Recycle Bin states & filtered items
+  const [recycleBinFilter, setRecycleBinFilter] = useState<'all' | 'product' | 'collection' | 'page' | 'blog' | 'discount' | 'header_footer'>('all');
+  const [recycleBinSearch, setRecycleBinSearch] = useState('');
+  const [selectedRbIds, setSelectedRbIds] = useState<string[]>([]);
+
+  const filteredRbItems = useMemo(() => {
+    return (recycleBin || []).filter(item => {
+      const matchType = recycleBinFilter === 'all' || item.type === recycleBinFilter;
+      const matchSearch = !recycleBinSearch.trim() || 
+        item.title.toLowerCase().includes(recycleBinSearch.toLowerCase()) ||
+        item.originalId.toLowerCase().includes(recycleBinSearch.toLowerCase()) ||
+        (item.subtitle && item.subtitle.toLowerCase().includes(recycleBinSearch.toLowerCase()));
+      return matchType && matchSearch;
+    });
+  }, [recycleBin, recycleBinFilter, recycleBinSearch]);
+
+  const handleRestoreRbItem = (item: RecycleBinItem) => {
+    onRestoreFromRecycleBin?.([item.id]);
+  };
+
+  const handleDeleteRbItem = (id: string) => {
+    triggerConfirm("Permanently remove this item from the database? This cannot be undone.", () => {
+      onDeleteFromRecycleBin?.([id]);
+      setSelectedRbIds(prev => prev.filter(i => i !== id));
+    }, "Delete Permanently");
+  };
+
+  const handleBulkRestoreRb = () => {
+    if (selectedRbIds.length === 0) return;
+    onRestoreFromRecycleBin?.(selectedRbIds);
+    setSelectedRbIds([]);
+  };
+
+  const handleBulkDeleteRb = () => {
+    if (selectedRbIds.length === 0) return;
+    triggerConfirm(`Permanently delete ${selectedRbIds.length} items from the database? This cannot be undone.`, () => {
+      onDeleteFromRecycleBin?.(selectedRbIds);
+      setSelectedRbIds([]);
+    }, "Delete Selected Permanently");
+  };
+
+  const handleClearAllRb = () => {
+    triggerConfirm("Are you sure you want to permanently clear the Recycle Bin? All deleted products, collections, pages, blogs, discounts, and navigation links will be purged forever from the database.", () => {
+      onClearRecycleBin?.();
+      setSelectedRbIds([]);
+    }, "Clear Recycle Bin");
+  };
+
+  // IF PAGE BUILDER IS ACTIVE, RENDER THE SHOPIFY 3-PANEL THEME BUILDER FULLSCREEN
+  if (selectedBuilderPageId) {
+    const pageToEdit = localPages.find(p => p.id === selectedBuilderPageId);
+    if (pageToEdit) {
+      return (
+        <ShopifyPageBuilder
+          page={pageToEdit}
+          allPages={localPages}
+          onSelectPage={(pageId) => {
+            setSelectedBuilderPageId(pageId);
+          }}
+          onUpdatePage={(updated) => {
+            const nextPages = localPages.map(p => p.id === updated.id ? updated : p);
+            setLocalPages(nextPages);
+            onUpdateCustomPages(nextPages);
+            setHasUnsavedChanges(true);
+            if (onDirtyChange) onDirtyChange(true);
+          }}
+          onExit={() => {
+            setSelectedBuilderPageId(null);
+          }}
+          products={products}
+          collections={collections}
+          blogs={blogs}
+          layoutSettings={localLayoutSettings}
+          onSave={handleGlobalSave}
+          isSaving={isSaving}
+          hasUnsavedChanges={hasUnsavedChanges}
+          onDirtyChange={onDirtyChange}
+        />
+      );
+    }
+  }
+
   return (
     <div id="admin-dashboard-scaffold" className="flex flex-col lg:flex-row min-h-screen bg-[#f6f6f7] text-slate-800 font-sans">
       
@@ -2747,6 +2913,7 @@ export default function AdminDashboard({
                 { id: 'customers', label: 'Customers', icon: Users },
                 { id: 'discounts', label: 'Discounts', icon: Percent },
                 { id: 'layout', label: 'Header & Footer', icon: LayoutGrid },
+                { id: 'recyclebin', label: 'Recycle Bin', icon: Trash2, badge: (recycleBin || []).length },
                 { id: 'settings', label: 'Settings', icon: Settings },
               ].map(item => {
                 const Icon = item.icon;
@@ -4647,7 +4814,17 @@ export default function AdminDashboard({
                           <button
                             disabled={page.isHomepage}
                             onClick={() => {
-                              if (confirm(`Are you sure you want to permanently delete "${page.title}"?`)) {
+                              if (confirm(`Move "${page.title}" to the Recycle Bin?`)) {
+                                const pageToMove = localPages.find(p => p.id === page.id);
+                                if (pageToMove) {
+                                  onMoveToRecycleBin?.([{
+                                    type: 'page',
+                                    originalId: pageToMove.id,
+                                    title: pageToMove.title,
+                                    subtitle: pageToMove.slug ? `/${pageToMove.slug}` : '/',
+                                    data: pageToMove
+                                  }]);
+                                }
                                 const updated = localPages.filter(p => p.id !== page.id);
                                 setLocalPages(updated);
                                 onUpdateCustomPages(updated);
@@ -4663,7 +4840,7 @@ export default function AdminDashboard({
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
-                            {page.isHomepage ? 'Homepage Cannot Be Deleted' : 'Delete Page'}
+                            {page.isHomepage ? 'Homepage Cannot Be Deleted' : 'Move to Recycle Bin'}
                           </div>
                         </div>
                       </div>
@@ -10444,6 +10621,216 @@ export default function AdminDashboard({
             </div>
 
           </div>
+        </div>
+      </div>
+    )}
+
+    {/* RECYCLE BIN VIEW */}
+    {activeTab === 'recyclebin' && (
+      <div className="space-y-6 text-left animate-fadeIn">
+        {/* Header with Title and Clear Bin button */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+          <div className="flex items-center gap-3">
+            <span className="p-3 bg-rose-50 text-rose-600 rounded-2xl border border-rose-200">
+              <Trash2 className="h-6 w-6" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-black text-slate-900">Recycle Bin</h2>
+                <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1.5 shadow-2xs">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Neon DB Connected (`recycle_bin` table)
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                Items deleted from your dashboard are held here. They are only permanently deleted when removed from this bin.
+              </p>
+            </div>
+          </div>
+
+          {/* One-Click Clear Bin Button */}
+          <button
+            type="button"
+            disabled={recycleBin.length === 0}
+            onClick={handleClearAllRb}
+            className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-200 text-white disabled:text-slate-400 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-rose-200 disabled:shadow-none flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+            title="Permanently erase all deleted items from Neon DB"
+          >
+            <Flame className="h-4 w-4" />
+            <span>Clear Recycle Bin</span>
+          </button>
+        </div>
+
+        {/* Quick Metrics Bar */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+          {[
+            { label: 'All Items', count: recycleBin.length, type: 'all' },
+            { label: 'Products', count: recycleBin.filter(i => i.type === 'product').length, type: 'product' },
+            { label: 'Collections', count: recycleBin.filter(i => i.type === 'collection').length, type: 'collection' },
+            { label: 'Pages', count: recycleBin.filter(i => i.type === 'page').length, type: 'page' },
+            { label: 'Blogs', count: recycleBin.filter(i => i.type === 'blog').length, type: 'blog' },
+            { label: 'Discounts', count: recycleBin.filter(i => i.type === 'discount').length, type: 'discount' },
+            { label: 'Header/Footer', count: recycleBin.filter(i => i.type === 'header_footer').length, type: 'header_footer' },
+          ].map(stat => (
+            <button
+              key={stat.type}
+              type="button"
+              onClick={() => setRecycleBinFilter(stat.type as any)}
+              className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                recycleBinFilter === stat.type
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <span className="text-[10px] uppercase font-bold block opacity-75">{stat.label}</span>
+              <span className="text-lg font-black">{stat.count}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Search and Bulk Actions Toolbar */}
+        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search deleted items..."
+              value={recycleBinSearch}
+              onChange={(e) => setRecycleBinSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-250 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#005bd3]"
+            />
+          </div>
+
+          {/* Bulk action buttons when items are selected */}
+          {selectedRbIds.length > 0 && (
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                {selectedRbIds.length} selected
+              </span>
+              <button
+                type="button"
+                onClick={handleBulkRestoreRb}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Restore Selected</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkDeleteRb}
+                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Delete Selected</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Items Table */}
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+          {filteredRbItems.length === 0 ? (
+            <div className="p-12 text-center text-slate-400 space-y-2">
+              <Trash2 className="h-10 w-10 mx-auto text-slate-300 stroke-1" />
+              <p className="text-sm font-bold text-slate-600">Recycle Bin is Empty</p>
+              <p className="text-xs">No deleted items match the selected filter. Any product, page, or link you delete will appear here safely.</p>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold text-[10px] uppercase tracking-wider">
+                  <th className="p-3 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedRbIds.length > 0 && selectedRbIds.length === filteredRbItems.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedRbIds(filteredRbItems.map(i => i.id));
+                        } else {
+                          setSelectedRbIds([]);
+                        }
+                      }}
+                      className="h-4 w-4 rounded accent-[#005bd3] cursor-pointer"
+                    />
+                  </th>
+                  <th className="p-3">Item Title & Details</th>
+                  <th className="p-3">Type</th>
+                  <th className="p-3">Original ID</th>
+                  <th className="p-3">Deleted Date</th>
+                  <th className="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredRbItems.map((item) => {
+                  const isChecked = selectedRbIds.includes(item.id);
+                  return (
+                    <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="p-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedRbIds(prev => [...prev, item.id]);
+                            } else {
+                              setSelectedRbIds(prev => prev.filter(i => i !== item.id));
+                            }
+                          }}
+                          className="h-4 w-4 rounded accent-[#005bd3] cursor-pointer"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <div className="font-bold text-slate-900 text-xs">{item.title}</div>
+                        {item.subtitle && (
+                          <div className="text-[10px] text-slate-400 font-medium">{item.subtitle}</div>
+                        )}
+                      </td>
+                      <td className="p-3">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                          item.type === 'product' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                          item.type === 'collection' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                          item.type === 'page' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                          item.type === 'blog' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                          item.type === 'discount' ? 'bg-pink-50 text-pink-700 border border-pink-200' :
+                          'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        }`}>
+                          {item.type.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="p-3 font-mono text-[10px] text-slate-500">
+                        {item.originalId}
+                      </td>
+                      <td className="p-3 text-[11px] text-slate-500">
+                        {item.deletedAt ? new Date(item.deletedAt).toLocaleString() : 'Recently'}
+                      </td>
+                      <td className="p-3 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleRestoreRbItem(item)}
+                            className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] rounded-lg border border-emerald-200 flex items-center gap-1 transition-colors cursor-pointer"
+                            title="Restore item back to dashboard and Neon DB"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            <span>Restore</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRbItem(item.id)}
+                            className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] rounded-lg border border-rose-200 flex items-center gap-1 transition-colors cursor-pointer"
+                            title="Permanently delete from Neon DB"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            <span>Delete Forever</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     )}
