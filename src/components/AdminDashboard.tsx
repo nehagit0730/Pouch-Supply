@@ -129,6 +129,7 @@ interface AdminDashboardProps {
   adminActionTrigger?: { action: 'save' | 'discard'; timestamp: number } | null;
   onAdminActionComplete?: (action: 'save' | 'discard') => void;
   onExitAdmin?: () => void;
+  onNavigateToPage?: (slug?: string) => void;
   onLogoutAdmin?: () => void;
 }
 
@@ -617,6 +618,7 @@ export default function AdminDashboard({
   adminActionTrigger,
   onAdminActionComplete,
   onExitAdmin,
+  onNavigateToPage,
   onLogoutAdmin
 }: AdminDashboardProps) {
   const tabToPathMap: Record<SidebarTab, string> = {
@@ -1113,7 +1115,7 @@ export default function AdminDashboard({
     }
   }, [parentProducts, parentCollections, parentCustomPages, parentDiscounts, parentOrders, parentCustomers, parentBlogs, hasUnsavedChanges]);
 
-  // Ensure the localPages homepage always has all 11 live sections matching live storefront
+  // Ensure the localPages homepage always has all 12 live sections matching live storefront
   React.useEffect(() => {
     const defaultHome = DEFAULT_PAGES.find(p => p.isHomepage);
     if (!defaultHome) return;
@@ -1127,12 +1129,13 @@ export default function AdminDashboard({
       'Styling Packages',
       'Client Reviews',
       'My Portfolio',
+      'Editorial Shop Banner',
       'News & Blog',
       'Make An Appointment',
       'Brand Logos'
     ];
     const isComplete = home && home.sections &&
-      home.sections.length === 11 &&
+      home.sections.length === 12 &&
       liveTypes.every(t => home.sections.some(s => s.type === t));
     
     if (!isComplete) {
@@ -1270,8 +1273,12 @@ export default function AdminDashboard({
   };
 
   const handlePreviewPage = (page: CustomPage) => {
-    const url = page.isHomepage ? '/' : `/pages/${page.slug}`;
-    window.open(url, '_blank');
+    if (onNavigateToPage) {
+      onNavigateToPage(page.isHomepage ? '' : page.slug);
+    } else {
+      const url = page.isHomepage ? '/' : `/pages/${page.slug}`;
+      window.open(url, '_blank');
+    }
   };
 
   const [fileQuery, setFileQuery] = useState('');
@@ -2849,8 +2856,50 @@ export default function AdminDashboard({
 
   // IF PAGE BUILDER IS ACTIVE, RENDER THE SHOPIFY 3-PANEL THEME BUILDER FULLSCREEN
   if (selectedBuilderPageId) {
-    const pageToEdit = localPages.find(p => p.id === selectedBuilderPageId);
+    let pageToEdit = localPages.find(p => p.id === selectedBuilderPageId || (selectedBuilderPageId === 'homepage' && p.isHomepage));
     if (pageToEdit) {
+      // If editing Homepage, ensure all 12 live sections exist and match live storefront design
+      if (pageToEdit.isHomepage) {
+        const defaultHome = DEFAULT_PAGES.find(p => p.isHomepage);
+        if (defaultHome) {
+          const liveTypes = [
+            'Hero banner',
+            'About Jade Tailor',
+            'My Services',
+            'Service Pillars',
+            'Video banner',
+            'Styling Packages',
+            'Client Reviews',
+            'My Portfolio',
+            'Editorial Shop Banner',
+            'News & Blog',
+            'Make An Appointment',
+            'Brand Logos'
+          ];
+          const isComplete = pageToEdit.sections &&
+            pageToEdit.sections.length === 12 &&
+            liveTypes.every(t => pageToEdit!.sections.some(s => s.type === t));
+          
+          if (!isComplete) {
+            const syncedHome: CustomPage = {
+              ...pageToEdit,
+              title: 'Home Page',
+              slug: '',
+              isHomepage: true,
+              visibility: 'Visible' as const,
+              sections: JSON.parse(JSON.stringify(defaultHome.sections))
+            };
+            pageToEdit = syncedHome;
+            const nextPages = localPages.map(p => p.isHomepage ? syncedHome : p);
+            setLocalPages(nextPages);
+            onUpdateCustomPages(nextPages);
+            try {
+              localStorage.setItem('ps_custom_pages', JSON.stringify(nextPages));
+            } catch (e) {}
+          }
+        }
+      }
+
       return (
         <ShopifyPageBuilder
           page={pageToEdit}
@@ -2876,6 +2925,9 @@ export default function AdminDashboard({
           isSaving={isSaving}
           hasUnsavedChanges={hasUnsavedChanges}
           onDirtyChange={onDirtyChange}
+          onPreviewLive={() => {
+            onNavigateToPage?.(pageToEdit.isHomepage ? '' : pageToEdit.slug);
+          }}
         />
       );
     }
@@ -2964,15 +3016,20 @@ export default function AdminDashboard({
             </div>
 
             {/* View Online Store main button */}
-            <a
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => {
+                if (onExitAdmin) {
+                  onExitAdmin();
+                } else if (onNavigateToPage) {
+                  onNavigateToPage('');
+                }
+              }}
               className="mt-4 w-full flex items-center justify-center gap-2 bg-[#05164e] hover:bg-[#092275] px-3.5 py-2.5 rounded-xl text-white font-black text-[11px] uppercase tracking-wider shadow-sm transition-colors cursor-pointer select-none text-center"
             >
               <Globe className="h-4 w-4 shrink-0" />
               <span>View Online Store</span>
-            </a>
+            </button>
 
             {onLogoutAdmin && (
               <button
@@ -3053,16 +3110,21 @@ export default function AdminDashboard({
               )}
 
               {/* View Online Store Button */}
-              <a
-                href="/"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={() => {
+                  if (onExitAdmin) {
+                    onExitAdmin();
+                  } else if (onNavigateToPage) {
+                    onNavigateToPage('');
+                  }
+                }}
                 className="py-2.5 px-4 bg-white hover:bg-slate-150 text-[#05164e] border border-slate-250 hover:border-slate-350 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all shadow-xs cursor-pointer select-none"
-                title="Open Customer Online Store in new tab"
+                title="Open Customer Online Store"
               >
                 <Globe className="h-4 w-4 shrink-0 text-[#05164e]" />
                 <span>View Online Store</span>
-              </a>
+              </button>
 
               <div className="bg-white border border-slate-250 px-4 py-2.5 rounded-xl shadow-xs">
                 <span className="text-slate-400 block text-[9px] font-bold uppercase tracking-wider">Gross Sales</span>
@@ -4713,7 +4775,7 @@ export default function AdminDashboard({
                           </span>
                           {page.isHomepage && (
                             <span className="text-[8px] py-0.5 px-2 font-black uppercase tracking-widest rounded bg-[#5674d5] text-white flex items-center gap-1 shadow-2xs">
-                              🏠 Active Homepage ({page.sections?.length || 11} Sections)
+                              🏠 Active Homepage ({page.sections?.length || DEFAULT_PAGES[0]?.sections.length || 12} Sections)
                             </span>
                           )}
                         </div>
@@ -4753,10 +4815,10 @@ export default function AdminDashboard({
                               }
                             }}
                             className="bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold py-1.5 px-2.5 rounded-lg border border-amber-200 flex items-center gap-1 cursor-pointer transition text-[10px] shadow-2xs"
-                            title="Reset homepage sections to match the exact 11 live sections"
+                            title="Reset homepage sections to match the exact 12 live sections"
                           >
                             <RefreshCw className="h-3 w-3 text-amber-600" />
-                            Sync Live Sections ({DEFAULT_PAGES[0]?.sections.length || 11})
+                            Sync Live Sections ({DEFAULT_PAGES[0]?.sections.length || 12})
                           </button>
                         )}
                         {!page.isHomepage && (
@@ -4946,10 +5008,10 @@ export default function AdminDashboard({
                           }
                         }}
                         className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-[10px] py-1.5 px-3 rounded-lg border border-amber-400/40 cursor-pointer transition flex items-center gap-1.5 shadow-xs"
-                        title="Sync sections to the 11 live homepage sections"
+                        title="Sync sections to the 12 live homepage sections"
                       >
                         <RefreshCw className="h-3 w-3 text-amber-300" />
-                        Sync Live Sections (11)
+                        Sync Live Sections ({DEFAULT_PAGES[0]?.sections.length || 12})
                       </button>
                     )}
                     {hasUnsavedChanges && (

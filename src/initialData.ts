@@ -461,6 +461,21 @@ export const DEFAULT_PAGES: CustomPage[] = [
         }
       },
       {
+        id: 'sec-editorial-shop-banner',
+        type: 'Editorial Shop Banner',
+        settings: {
+          fullWidth: true,
+          backgroundColor: '#141416',
+          headingColor: '#FFFFFF',
+          textColor: '#CCCCCC',
+          badge: 'CURATED WARDROBE • READY-TO-WEAR',
+          title: "Shop Jade's Curated Collection",
+          description: 'Explore hand-selected luxury tailoring, elevated silk separates, and signature wardrobe capsules.',
+          buttonText: 'SHOP NOW (/collections/all)',
+          buttonLink: '/collections/all'
+        }
+      },
+      {
         id: 'sec-news-blog',
         type: 'News & Blog',
         settings: {

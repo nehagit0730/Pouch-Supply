@@ -58,6 +58,7 @@ export default function StylistEditorialHome({
   const packagesSec = sections?.find(s => s.type === 'Styling Packages');
   const reviewsSec = sections?.find(s => s.type === 'Client Reviews');
   const portfolioSec = sections?.find(s => s.type === 'My Portfolio');
+  const shopBannerSec = sections?.find(s => s.type === 'Editorial Shop Banner' || s.type === 'Shop Banner');
   const newsSec = sections?.find(s => s.type === 'News & Blog');
   const appointmentSec = sections?.find(s => s.type === 'Make An Appointment');
   const logosSec = sections?.find(s => s.type === 'Brand Logos');
@@ -424,8 +425,8 @@ export default function StylistEditorialHome({
             <div className="grid grid-cols-1 md:grid-cols-12 items-stretch">
               <div className="md:col-span-7 h-64 md:h-auto min-h-[360px] relative overflow-hidden">
                 <img 
-                  src={defaultServices[serviceSlide]?.image || defaultServices[0].image} 
-                  alt={defaultServices[serviceSlide]?.title || ''}
+                  src={sec?.settings.imageUrl || defaultServices[serviceSlide]?.image || defaultServices[0].image} 
+                  alt={sec?.settings.cardTitle || defaultServices[serviceSlide]?.title || ''}
                   className="w-full h-full object-cover object-center transition-all duration-700"
                   referrerPolicy="no-referrer"
                 />
@@ -433,10 +434,10 @@ export default function StylistEditorialHome({
 
               <div className="md:col-span-5 p-8 md:p-10 flex flex-col justify-center bg-white">
                 <h3 className="font-serif text-2xl font-normal text-[#1a1a1a] mb-4">
-                  {defaultServices[serviceSlide]?.title}
+                  {sec?.settings.cardTitle || defaultServices[serviceSlide]?.title}
                 </h3>
                 <p className="text-xs text-[#666666] font-sans leading-relaxed mb-6">
-                  {defaultServices[serviceSlide]?.description}
+                  {sec?.settings.cardDescription || defaultServices[serviceSlide]?.description}
                 </p>
                 <div className="flex items-center gap-3">
                   <button
@@ -449,7 +450,7 @@ export default function StylistEditorialHome({
                     }}
                     className="px-6 py-2.5 bg-[#b58d59] hover:bg-[#a17849] active:scale-95 text-white text-[10px] font-sans font-bold uppercase tracking-[0.2em] rounded-xs shadow transition-all cursor-pointer"
                   >
-                    {defaultServices[serviceSlide]?.action || 'LEARN MORE'}
+                    {sec?.settings.cardButtonText || defaultServices[serviceSlide]?.action || 'LEARN MORE'}
                   </button>
                   {defaultServices[serviceSlide]?.title.toLowerCase().includes('shopping') && (
                     <a
@@ -662,6 +663,12 @@ export default function StylistEditorialHome({
     const badge = sec?.settings.badge || 'CLIENTS REVIEWS';
     const title = sec?.settings.title || 'What Clients Say';
     const italicTitle = sec?.settings.italicTitle || 'About Me';
+    const quote = sec?.settings.quote || defaultReviews[reviewSlide]?.quote;
+    const content = sec?.settings.content || defaultReviews[reviewSlide]?.content;
+    const author = sec?.settings.author || defaultReviews[reviewSlide]?.author;
+    const role = sec?.settings.role || defaultReviews[reviewSlide]?.role;
+    const avatar = sec?.settings.avatar || defaultReviews[reviewSlide]?.avatar;
+    const img = sec?.settings.imageUrl || defaultReviews[reviewSlide]?.image || defaultReviews[0].image;
 
     return (
       <section key={sec?.id || 'sec-client-reviews'} id="reviews-section" className="py-20 md:py-28 bg-[#fbf9f6] border-y border-[#ece7de]">
@@ -679,7 +686,7 @@ export default function StylistEditorialHome({
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
               <div className="md:col-span-5 h-[380px] rounded-xs overflow-hidden shadow-xl border border-white">
                 <img 
-                  src={defaultReviews[reviewSlide]?.image || defaultReviews[0].image} 
+                  src={img} 
                   alt="Client portrait"
                   className="w-full h-full object-cover object-center"
                   referrerPolicy="no-referrer"
@@ -692,26 +699,26 @@ export default function StylistEditorialHome({
                 </span>
 
                 <h3 className="font-serif text-xl sm:text-2xl font-normal text-[#1a1a1a] mb-4">
-                  "{defaultReviews[reviewSlide]?.quote}"
+                  "{quote}"
                 </h3>
 
                 <p className="text-xs sm:text-sm text-[#555555] font-sans leading-relaxed mb-6 font-light">
-                  {defaultReviews[reviewSlide]?.content}
+                  {content}
                 </p>
 
                 <div className="flex items-center gap-3 pt-4 border-t border-[#f0ece5]">
                   <img 
-                    src={defaultReviews[reviewSlide]?.avatar || defaultReviews[0].avatar} 
-                    alt={defaultReviews[reviewSlide]?.author || ''}
+                    src={avatar} 
+                    alt={author || ''}
                     className="w-10 h-10 rounded-full object-cover border border-[#b58d59]"
                     referrerPolicy="no-referrer"
                   />
                   <div>
                     <h4 className="font-serif text-sm font-semibold text-[#1a1a1a]">
-                      {defaultReviews[reviewSlide]?.author}
+                      {author}
                     </h4>
                     <span className="text-[10px] text-[#888888] font-sans uppercase tracking-wider block">
-                      {defaultReviews[reviewSlide]?.role}
+                      {role}
                     </span>
                   </div>
                 </div>
@@ -1067,6 +1074,7 @@ export default function StylistEditorialHome({
 
   // Helper to render section by type
   const renderSingleSection = (sec: PageSection) => {
+    if (sec.settings?.hidden === true) return null;
     switch (sec.type) {
       case 'Hero banner':
       case 'Image banner':
@@ -1091,6 +1099,10 @@ export default function StylistEditorialHome({
       case 'My Portfolio':
       case 'Images gallery':
         return renderPortfolio(sec);
+      case 'Editorial Shop Banner':
+      case 'Shop Banner':
+      case 'Clearance Sale':
+        return renderEditorialShopBanner(sec);
       case 'News & Blog':
       case 'Blog post':
         return renderNewsBlog(sec);
@@ -1101,11 +1113,8 @@ export default function StylistEditorialHome({
       case 'Brand list':
       case 'Brands we offer':
         return renderBrandLogos(sec);
-      case 'Shop Banner':
-      case 'Editorial Shop Banner':
       case 'Featured collection':
       case 'Collection list':
-      case 'Clearance Sale':
         return renderEditorialShopBanner(sec);
       default:
         return null;
@@ -1184,7 +1193,7 @@ export default function StylistEditorialHome({
           {renderStylingPackages(packagesSec)}
           {renderClientReviews(reviewsSec)}
           {renderPortfolio(portfolioSec)}
-          {renderEditorialShopBanner()}
+          {renderEditorialShopBanner(shopBannerSec)}
           {renderNewsBlog(newsSec)}
           {renderMakeAppointment(appointmentSec)}
           {renderBrandLogos(logosSec)}

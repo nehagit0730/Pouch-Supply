@@ -247,12 +247,13 @@ export default function App() {
       'Styling Packages',
       'Client Reviews',
       'My Portfolio',
+      'Editorial Shop Banner',
       'News & Blog',
       'Make An Appointment',
       'Brand Logos'
     ];
 
-    // Guaranteed presence check & full 11-section sync for Homepage in Pages list
+    // Guaranteed presence check & full 12-section sync for Homepage in Pages list
     const existingHomeIdx = finalPages.findIndex((p: any) => p && p.isHomepage);
     if (existingHomeIdx === -1) {
       if (defaultHome) {
@@ -261,10 +262,10 @@ export default function App() {
     } else if (defaultHome) {
       const currentHome = finalPages[existingHomeIdx];
       const hasAllLiveSections = currentHome.sections &&
-        currentHome.sections.length === 11 &&
+        currentHome.sections.length === 12 &&
         liveSectionTypes.every(t => currentHome.sections.some((s: any) => s.type === t));
       if (!hasAllLiveSections) {
-        // Automatically sync homepage to have the exact 11 sections matching live storefront design
+        // Automatically sync homepage to have the exact 12 sections matching live storefront design
         finalPages[existingHomeIdx] = {
           ...currentHome,
           title: 'Home Page',
@@ -431,6 +432,7 @@ export default function App() {
             'Styling Packages',
             'Client Reviews',
             'My Portfolio',
+            'Editorial Shop Banner',
             'News & Blog',
             'Make An Appointment',
             'Brand Logos'
@@ -442,7 +444,7 @@ export default function App() {
           } else if (defaultHome) {
             const currentHome = sanitizedPages[homeIdx];
             const hasAllLiveSections = currentHome.sections &&
-              currentHome.sections.length === 11 &&
+              currentHome.sections.length === 12 &&
               liveSectionTypes.every(t => currentHome.sections.some((s: any) => s.type === t));
             if (!hasAllLiveSections) {
               sanitizedPages[homeIdx] = {
@@ -1713,6 +1715,14 @@ export default function App() {
                   setShowUnsavedModal(true);
                 } else {
                   setIsAdminActive(false);
+                }
+              }}
+              onNavigateToPage={(slug) => {
+                setIsAdminActive(false);
+                if (!slug || slug === 'homepage') {
+                  navigateToTab('frontend-home');
+                } else {
+                  navigateToTab(slug);
                 }
               }}
               onLogoutAdmin={() => {

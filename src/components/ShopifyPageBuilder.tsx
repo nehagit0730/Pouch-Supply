@@ -10,10 +10,12 @@ import {
   FolderHeart, PlaySquare, Video, FileText, Compass, Flame, HelpCircle, 
   ArrowLeft, MoreHorizontal, Sliders, ExternalLink, RefreshCw, ChevronLeft, 
   Link as LinkIcon, Palette, AlignLeft, AlignCenter, AlignRight, Tag,
-  Globe, CheckCircle2, ChevronUp, Bell, Package, FileCode, CheckSquare
+  Globe, CheckCircle2, ChevronUp, Bell, Package, FileCode, CheckSquare,
+  Phone, Play, Star, Heart, ArrowRight, MapPin, Clock, Mail
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 import { AVAILABLE_SECTION_TEMPLATES, getSectionIcon, getSectionLabel } from './AdminDashboard';
+import { DEFAULT_PAGES } from '../initialData';
 
 export interface ShopifyPageBuilderProps {
   page: CustomPage;
@@ -29,6 +31,7 @@ export interface ShopifyPageBuilderProps {
   isSaving: boolean;
   hasUnsavedChanges: boolean;
   onDirtyChange?: (dirty: boolean) => void;
+  onPreviewLive?: () => void;
 }
 
 export default function ShopifyPageBuilder({
@@ -44,7 +47,8 @@ export default function ShopifyPageBuilder({
   onSave,
   isSaving,
   hasUnsavedChanges,
-  onDirtyChange
+  onDirtyChange,
+  onPreviewLive
 }: ShopifyPageBuilderProps) {
   // Device viewport preview state
   const [viewportMode, setViewportMode] = useState<'desktop' | 'mobile' | 'fullscreen'>('desktop');
@@ -53,6 +57,54 @@ export default function ShopifyPageBuilder({
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(() => {
     return page.sections && page.sections.length > 0 ? page.sections[0].id : null;
   });
+
+  // Keep selectedSectionId in sync when switching between different pages or section list updates
+  useEffect(() => {
+    if (page.sections && page.sections.length > 0) {
+      if (!selectedSectionId || !page.sections.some(s => s.id === selectedSectionId)) {
+        setSelectedSectionId(page.sections[0].id);
+      }
+    } else {
+      setSelectedSectionId(null);
+    }
+  }, [page.id, page.sections]);
+
+  // Guaranteed full 12-section sync for Homepage when editor opens
+  useEffect(() => {
+    if (page.isHomepage) {
+      const defaultHome = DEFAULT_PAGES.find(p => p.isHomepage);
+      if (defaultHome) {
+        const liveTypes = [
+          'Hero banner',
+          'About Jade Tailor',
+          'My Services',
+          'Service Pillars',
+          'Video banner',
+          'Styling Packages',
+          'Client Reviews',
+          'My Portfolio',
+          'Editorial Shop Banner',
+          'News & Blog',
+          'Make An Appointment',
+          'Brand Logos'
+        ];
+        const isComplete = page.sections &&
+          page.sections.length === 12 &&
+          liveTypes.every(t => page.sections.some(s => s.type === t));
+        if (!isComplete) {
+          onUpdatePage({
+            ...page,
+            title: 'Home Page',
+            slug: '',
+            isHomepage: true,
+            visibility: 'Visible',
+            sections: JSON.parse(JSON.stringify(defaultHome.sections)),
+            updatedAt: 'Just now'
+          });
+        }
+      }
+    }
+  }, [page.id, page.isHomepage]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
 
   // Expanded section blocks in left sidebar (sectionId -> boolean)
@@ -416,6 +468,19 @@ export default function ShopifyPageBuilder({
 
           <div className="h-4 w-px bg-[#333] hidden sm:block" />
 
+          {/* Preview Live Storefront Button */}
+          {onPreviewLive && (
+            <button
+              type="button"
+              onClick={onPreviewLive}
+              className="px-3 py-1.5 bg-[#2a2a2a] hover:bg-[#383838] text-slate-200 hover:text-white rounded-lg text-xs font-semibold border border-[#444] transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+              title="Preview on the live storefront"
+            >
+              <Eye className="h-3.5 w-3.5 text-sky-400" />
+              <span className="hidden md:inline">Preview Storefront</span>
+            </button>
+          )}
+
           {/* Prominent Save Pill Button */}
           <button
             type="button"
@@ -451,12 +516,43 @@ export default function ShopifyPageBuilder({
           
           {/* Left panel header */}
           <div className="p-3.5 px-4 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-900 truncate">
-              {page.title || 'Page Template'}
-            </h2>
-            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-              {page.sections.length} sections
-            </span>
+            <div className="truncate pr-2">
+              <h2 className="text-sm font-bold text-slate-900 truncate">
+                {page.title || (page.isHomepage ? 'Home Page' : 'Page Template')}
+              </h2>
+              {page.isHomepage && (
+                <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live Storefront Home
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {page.isHomepage && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const defaultHome = DEFAULT_PAGES.find(p => p.isHomepage);
+                    if (defaultHome) {
+                      onUpdatePage({
+                        ...page,
+                        sections: JSON.parse(JSON.stringify(defaultHome.sections)),
+                        updatedAt: 'Just now'
+                      });
+                      if (onDirtyChange) onDirtyChange(true);
+                    }
+                  }}
+                  className="p-1 px-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10px] font-bold rounded border border-amber-200 flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Sync with the exact 12 live storefront sections"
+                >
+                  <RefreshCw className="h-2.5 w-2.5 text-amber-600" />
+                  <span>Sync 12</span>
+                </button>
+              )}
+              <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                {page.sections.length} sections
+              </span>
+            </div>
           </div>
 
           {/* Scrollable list of Header, Template Sections, and Footer */}
@@ -844,28 +940,58 @@ export default function ShopifyPageBuilder({
             )}
 
             {/* --------------------------------------------------------------- */}
-            {/* STOREFRONT PREVIEW HEADER                                       */}
+            {/* STOREFRONT PREVIEW HEADER (MATCHING STOREFRONT HEADER)          */}
             {/* --------------------------------------------------------------- */}
-            <div className="border-b border-slate-200 bg-white">
-              {/* Top announcement */}
-              <div className="bg-[#111111] text-white text-[11px] py-2 px-4 text-center font-medium tracking-wide">
-                <span>COMPLIMENTARY CONCIERGE STYLING CONSULTATION ON ORDERS OVER £250</span>
+            <div className="border-b border-[#f0ece5] bg-white sticky top-0 z-30 shadow-xs">
+              {/* 1. Top micro bar (dark luxury) */}
+              <div className="bg-[#111111] text-[#cccccc] text-[10px] py-1.5 px-4 sm:px-6 border-b border-white/5">
+                <div className="max-w-[1340px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-1">
+                  <div className="flex items-center gap-4 text-[10px] font-sans tracking-wider">
+                    <div className="flex items-center gap-1 text-white/80">
+                      <MapPin className="h-2.5 w-2.5 text-[#b58d59]" />
+                      <span>{layoutSettings?.address || '0665 Broadway, NYC'}</span>
+                    </div>
+                    <span className="text-white/30 hidden sm:inline">•</span>
+                    <div className="flex items-center gap-1 text-white/90">
+                      <Phone className="h-2.5 w-2.5 text-[#b58d59]" />
+                      <span>{layoutSettings?.phone || '800 123 4444'}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-[10px] font-sans tracking-wider text-white/80">
+                    <Clock className="h-2.5 w-2.5 text-[#b58d59]" />
+                    <span>Opening: Mon-Fri 10.00 - 20.00</span>
+                  </div>
+                </div>
               </div>
               
-              {/* Header logo & nav */}
-              <div className="py-4 px-6 flex items-center justify-between">
-                <div className="font-serif text-lg font-bold tracking-widest text-[#111111]">
-                  {layoutSettings?.headerLogoText || 'JADE TAILOR'}
+              {/* 2. Main header logo & nav */}
+              <div className="py-3.5 px-6 flex items-center justify-between max-w-[1340px] mx-auto">
+                {/* Brand Logo */}
+                <div className="flex flex-col text-left">
+                  <span className="font-serif text-lg font-bold tracking-[0.22em] text-[#1a1a1a] uppercase leading-tight">
+                    {layoutSettings?.headerLogoText || 'JADE TAILOR'}
+                  </span>
+                  <span className="text-[7.5px] font-sans font-semibold tracking-[0.38em] text-[#b58d59] uppercase -mt-0.5">
+                    {layoutSettings?.headerLogoSubtext || 'PERSONAL STYLIST'}
+                  </span>
                 </div>
-                <div className="hidden sm:flex items-center gap-6 text-xs uppercase tracking-wider font-semibold text-slate-700">
-                  <span className="hover:text-black cursor-pointer">HOME</span>
-                  <span className="hover:text-black cursor-pointer">SHOP</span>
-                  <span className="hover:text-black cursor-pointer">MY SERVICES</span>
-                  <span className="hover:text-black cursor-pointer">STYLE JOURNAL</span>
+
+                {/* Nav Links */}
+                <div className="hidden md:flex items-center gap-5 text-[11px] uppercase tracking-wider font-semibold text-slate-700">
+                  <span className="text-[#b58d59] border-b border-[#b58d59] pb-0.5">HOME</span>
+                  <span className="hover:text-black">SHOP</span>
+                  <span className="hover:text-black">WORK WITH ME</span>
+                  <span className="hover:text-black">MY SERVICES</span>
+                  <span className="hover:text-black">STYLING PACKAGES</span>
+                  <span className="hover:text-black">STYLE JOURNAL</span>
                 </div>
+
+                {/* Right Action Icons */}
                 <div className="flex items-center gap-3 text-slate-700">
-                  <Search className="h-4 w-4" />
-                  <ShoppingBag className="h-4 w-4" />
+                  <Search className="h-3.5 w-3.5 hover:text-black" />
+                  <Heart className="h-3.5 w-3.5 hover:text-black hidden sm:block" />
+                  <User className="h-3.5 w-3.5 hover:text-black hidden sm:block" />
+                  <ShoppingBag className="h-3.5 w-3.5 hover:text-black" />
                 </div>
               </div>
             </div>
@@ -981,16 +1107,16 @@ export default function ShopifyPageBuilder({
                       )}
 
                       {/* ======================================================= */}
-                      {/* SECTION OUTPUT RENDERING (LIVE VISUALS)                  */}
+                      {/* SECTION OUTPUT RENDERING (MATCHING LIVE STOREFRONT)     */}
                       {/* ======================================================= */}
-                      <div className="py-12 px-6">
+                      <div className="w-full">
                         
-                        {/* 1. IMAGE BANNER / HERO BANNER */}
-                        {(sec.type === 'Image banner' || sec.type === 'Hero banner') && (
+                        {/* 1. HERO BANNER / IMAGE BANNER / SLIDESHOW */}
+                        {(sec.type === 'Image banner' || sec.type === 'Hero banner' || sec.type === 'Slideshow') && (
                           <div 
-                            className={`relative rounded-2xl overflow-hidden min-h-[420px] flex items-center justify-center p-8 bg-cover bg-center ${alignClass}`}
+                            className="relative w-full min-h-[480px] sm:min-h-[560px] bg-[#111111] overflow-hidden flex items-center justify-center p-8 bg-cover bg-center text-white"
                             style={{ 
-                              backgroundImage: `url(${settings.imageUrl || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=80'})` 
+                              backgroundImage: `url(${settings.imageUrl || 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=1920&q=85'})` 
                             }}
                           >
                             {/* Dark gradient overlay with live opacity control */}
@@ -998,38 +1124,580 @@ export default function ShopifyPageBuilder({
                               className="absolute inset-0 bg-black" 
                               style={{ opacity: (settings.overlayOpacity ?? 40) / 100 }} 
                             />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40" />
                             
                             {/* Banner Content Card */}
-                            <div className={`relative z-10 max-w-xl mx-auto space-y-4 text-white ${
-                              settings.showContainer ? 'bg-[#111111]/85 backdrop-blur-md p-8 rounded-2xl border border-white/10' : ''
-                            }`}>
-                              {settings.subtitle && (
-                                <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-[#d4af37] block">
-                                  {settings.subtitle}
+                            <div className="relative z-10 max-w-4xl mx-auto space-y-4 text-center">
+                              <span className="text-[11px] sm:text-xs tracking-[0.35em] uppercase font-sans font-semibold text-white/90 drop-shadow-sm block">
+                                {settings.subtitle || 'JADE TAILOR • PERSONAL STYLIST'}
+                              </span>
+                              <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-normal tracking-tight text-white drop-shadow-md leading-[1.1]">
+                                {settings.title || 'Elevate Your Style'}
+                              </h1>
+                              <p className="text-xs sm:text-sm text-white/80 max-w-lg mx-auto font-sans font-light leading-relaxed">
+                                {settings.description || 'Bespoke silhouettes, signature color palettes, and effortless everyday elegance.'}
+                              </p>
+                              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                                <span className="px-7 py-3 bg-[#b58d59] text-white text-[10px] font-sans font-bold uppercase tracking-[0.25em] rounded-xs shadow-lg">
+                                  {settings.buttonText || 'WORK WITH JADE'}
                                 </span>
-                              )}
-                              <h2 className="text-3xl sm:text-4xl font-serif font-normal tracking-tight text-white leading-tight">
-                                {settings.title || 'Browse our latest products'}
-                              </h2>
-                              {settings.description && (
-                                <p className="text-sm font-light text-slate-200 leading-relaxed">
-                                  {settings.description}
-                                </p>
-                              )}
-                              {settings.buttonText && (
-                                <div className="pt-2">
-                                  <span className="inline-block px-6 py-2.5 bg-white text-slate-900 font-bold text-xs uppercase tracking-wider rounded-md hover:bg-slate-100 transition-colors shadow-md">
-                                    {settings.buttonText}
-                                  </span>
-                                </div>
-                              )}
+                                <span className="px-6 py-3 bg-white/10 text-white border border-white/40 text-[10px] font-sans font-bold uppercase tracking-[0.25em] rounded-xs backdrop-blur-xs flex items-center gap-2">
+                                  <ShoppingBag className="h-3.5 w-3.5 text-[#b58d59]" />
+                                  <span>SHOP COLLECTION</span>
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Carousel slide indicators */}
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+                              <span className="h-1.5 w-7 bg-[#b58d59] rounded-full" />
+                              <span className="h-1.5 w-2 bg-white/50 rounded-full" />
                             </div>
                           </div>
                         )}
 
-                        {/* 2. FEATURED COLLECTION */}
+                        {/* 2. ABOUT JADE TAILOR */}
+                        {sec.type === 'About Jade Tailor' && (
+                          <div className="py-16 md:py-24 px-6 max-w-[1240px] mx-auto bg-white">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                              <div className="lg:col-span-6 space-y-5">
+                                <span className="text-[10px] tracking-[0.3em] font-sans font-bold uppercase text-[#888888] block">
+                                  {settings.badge || 'ABOUT JADE TAILOR'}
+                                </span>
+                                <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal tracking-tight text-[#1a1a1a] leading-tight">
+                                  {settings.title || 'Find Your Style'} <span className="font-editorial-italic font-normal">{settings.italicTitle || 'With Me'}</span>
+                                </h2>
+                                <div className="space-y-3 text-xs sm:text-[13px] text-[#555555] font-sans leading-relaxed">
+                                  <p>{settings.description || 'Style sit amet risus ac dui auctor posuere sit amet eget libero. Ut lacinia lectus non risus facilisis, semper consequat sem fringilla.'}</p>
+                                  {settings.description2 && <p>{settings.description2}</p>}
+                                </div>
+                                <div className="pt-2 space-y-2 text-xs font-sans text-[#333333]">
+                                  {(Array.isArray(settings.stats) ? settings.stats : ['7+ years of work', '150+ free consultations', '90+ happy clients']).map((stat: string, sIdx: number) => (
+                                    <div key={sIdx} className="flex items-center gap-2.5">
+                                      <span className="text-[#b58d59] font-bold text-sm">✓</span>
+                                      <span className="font-medium">{stat}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="lg:col-span-6 relative flex justify-center items-center py-4">
+                                <div className="relative w-[60%] sm:w-[240px] aspect-[4/5] rounded-xs overflow-hidden shadow-xl z-10 border border-white">
+                                  <img 
+                                    src={settings.imageUrl || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80'} 
+                                    alt="Jade Tailor"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="relative w-[55%] sm:w-[220px] aspect-[4/5] rounded-xs overflow-hidden shadow-2xl -ml-10 sm:-ml-14 mt-12 sm:mt-16 z-20 border-4 border-[#fdfcfb]">
+                                  <img 
+                                    src={settings.image2Url || 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80'} 
+                                    alt="Client Styling"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 3. MY SERVICES */}
+                        {sec.type === 'My Services' && (
+                          <div className="py-14 md:py-20 bg-[#f9f7f4] border-y border-[#ece7de] px-6">
+                            <div className="max-w-[1240px] mx-auto">
+                              <div className="text-center mb-10 space-y-2">
+                                <span className="text-[10px] tracking-[0.35em] font-sans font-bold uppercase text-[#888888] block">
+                                  {settings.badge || 'WHAT I DO'}
+                                </span>
+                                <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal text-[#1a1a1a]">
+                                  {settings.title || 'My'} <span className="font-editorial-italic font-normal">{settings.italicTitle || 'Services'}</span>
+                                </h2>
+                              </div>
+
+                              <div className="relative max-w-4xl mx-auto bg-white shadow-xl rounded-xs overflow-hidden border border-[#eee9df]">
+                                <div className="grid grid-cols-1 md:grid-cols-12 items-stretch">
+                                  <div className="md:col-span-7 h-64 md:h-auto min-h-[320px] relative overflow-hidden bg-slate-100">
+                                    <img 
+                                      src={settings.imageUrl || 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=1000&q=80'} 
+                                      alt="Service visual"
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="md:col-span-5 p-8 md:p-10 flex flex-col justify-center bg-white space-y-4">
+                                    <h3 className="font-serif text-xl sm:text-2xl font-normal text-[#1a1a1a]">
+                                      {settings.cardTitle || 'Individual Consultation'}
+                                    </h3>
+                                    <p className="text-xs text-[#666666] font-sans leading-relaxed">
+                                      {settings.cardDescription || 'A comprehensive one-on-one deep dive into your personal aesthetic, body architecture, and lifestyle requirements.'}
+                                    </p>
+                                    <div>
+                                      <span className="inline-block px-6 py-2.5 bg-[#b58d59] text-white text-[10px] font-sans font-bold uppercase tracking-[0.2em] rounded-xs shadow">
+                                        {settings.cardButtonText || 'LEARN MORE'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex justify-center items-center gap-2 mt-6">
+                                <span className="w-2 h-2 rounded-full bg-[#b58d59] scale-125" />
+                                <span className="w-2 h-2 rounded-full bg-[#d6cebf]" />
+                                <span className="w-2 h-2 rounded-full bg-[#d6cebf]" />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 4. SERVICE PILLARS / TEXT COLUMN WITH IMAGE */}
+                        {(sec.type === 'Service Pillars' || sec.type === 'Text column with image') && (
+                          <div className="py-12 bg-[#f9f7f4] border-b border-[#ece7de] px-6">
+                            <div className="max-w-[1240px] mx-auto">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+                                {(settings.pillars || [
+                                  { num: '01', title: 'Wardrobe Styling', desc: 'Lorem ipsum nisl quam nestibulum drana odio elementum scesue the monte.' },
+                                  { num: '02', title: 'Closet Cleanse', desc: 'Lorem ipsum nisl quam nestibulum drana odio elementum monte.' },
+                                  { num: '03', title: 'Shopping Tour', desc: 'Lorem ipsum nisl quam nestibulum drana odio elementum scesue the can.' }
+                                ]).map((p: any, idx: number) => (
+                                  <div key={idx} className="flex gap-4 items-start">
+                                    <span 
+                                      className="font-serif text-4xl sm:text-5xl font-light leading-none shrink-0" 
+                                      style={{ color: settings.accentColor || '#B58D59' }}
+                                    >
+                                      {p.num || `0${idx + 1}`}
+                                    </span>
+                                    <div className="space-y-1.5">
+                                      <h4 className="font-serif text-lg font-normal text-[#1a1a1a]">{p.title}</h4>
+                                      <p className="text-xs text-[#666666] font-sans leading-relaxed">{p.desc}</p>
+                                      <span className="inline-flex items-center gap-1.5 text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#b58d59] mt-1">
+                                        <span>Shop Curated Pieces</span>
+                                        <ArrowRight className="h-3 w-3" />
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 5. VIDEO BANNER */}
+                        {sec.type === 'Video banner' && (
+                          <div className="relative w-full h-[40vh] min-h-[340px] overflow-hidden bg-[#111111] flex items-center justify-center">
+                            <div 
+                              className="absolute inset-0 bg-cover bg-center"
+                              style={{ backgroundImage: `url('${settings.imageUrl || 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=1800&q=85'}')` }}
+                            >
+                              <div className="absolute inset-0 bg-black/45" />
+                              <div className="absolute inset-0 bg-[#b58d59]/15 mix-blend-overlay" />
+                            </div>
+
+                            <div className="relative z-10 text-center text-white px-6 space-y-5">
+                              <h2 className="font-serif text-2xl sm:text-4xl font-normal tracking-tight text-white leading-tight">
+                                <span className="font-editorial-italic text-[#caa26c]">{settings.italicWord || 'Discover'}</span> {settings.title ? settings.title.replace(settings.italicWord || 'Discover', '').trim() : 'My Video Tips And Hints'}
+                              </h2>
+                              <div>
+                                <div className="w-14 h-14 rounded-full border border-white/70 bg-white/10 text-white flex items-center justify-center mx-auto shadow-2xl">
+                                  <Play className="h-5 w-5 fill-white text-white translate-x-0.5" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 6. STYLING PACKAGES / PLANS */}
+                        {(sec.type === 'Styling Packages' || sec.type === 'Plans') && (
+                          <div className="py-16 md:py-24 px-6 max-w-[1240px] mx-auto bg-white">
+                            <div className="text-center mb-12 space-y-2">
+                              <span className="text-[10px] tracking-[0.35em] font-sans font-bold uppercase text-[#888888] block">
+                                {settings.badge || 'PRICING PLAN'}
+                              </span>
+                              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal text-[#1a1a1a]">
+                                {settings.title || 'Styling'} <span className="font-editorial-italic font-normal">{settings.italicTitle || 'Packages'}</span>
+                              </h2>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                              {(settings.packages || [
+                                {
+                                  title: 'In-Home Styling',
+                                  price: '$300',
+                                  imageUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=600&q=80',
+                                  features: [
+                                    { text: 'Complete closet audit & organization', included: true },
+                                    { text: 'Color analysis & silhouette mapping', included: true },
+                                    { text: 'Personalized digital lookbook', included: false }
+                                  ],
+                                  isFeatured: false,
+                                  btnText: 'WORK WITH ME'
+                                },
+                                {
+                                  title: 'Half Day Shopping',
+                                  price: '$450',
+                                  imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80',
+                                  features: [
+                                    { text: '4 hours private curated shopping tour', included: true },
+                                    { text: 'Pre-selected garments ready in VIP suites', included: true },
+                                    { text: 'Seasonal capsule wardrobe integration', included: false }
+                                  ],
+                                  isFeatured: true,
+                                  btnText: 'WORK WITH ME'
+                                },
+                                {
+                                  title: 'Full Day Shopping',
+                                  price: '$600',
+                                  imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80',
+                                  features: [
+                                    { text: 'Full 8 hours complete wardrobe overhaul', included: true },
+                                    { text: 'Luxury boutique access & stylist discounts', included: true },
+                                    { text: 'Comprehensive seasonal digital lookbook', included: true }
+                                  ],
+                                  isFeatured: false,
+                                  btnText: 'WORK WITH ME'
+                                }
+                              ]).map((pkg: any, idx: number) => (
+                                <div 
+                                  key={idx} 
+                                  className={`bg-white rounded-xs border transition-all flex flex-col justify-between overflow-hidden ${
+                                    pkg.isFeatured ? 'border-[#b58d59] shadow-lg ring-1 ring-[#b58d59]/20' : 'border-[#e8e4dc]'
+                                  }`}
+                                >
+                                  <div>
+                                    <div className="h-44 w-full overflow-hidden bg-slate-100">
+                                      <img 
+                                        src={pkg.imageUrl || pkg.image || 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=600&q=80'} 
+                                        alt={pkg.title}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                    <div className="p-6 text-center space-y-3">
+                                      <h3 className="font-serif text-lg font-normal text-[#1a1a1a]">{pkg.title}</h3>
+                                      <div className="flex items-baseline justify-center gap-1.5">
+                                        <span className="text-xs text-[#777777] font-sans font-light">starting at</span>
+                                        <span className="font-serif text-2xl font-light text-[#b58d59]">{pkg.price}</span>
+                                      </div>
+                                      <div className="pt-3 border-t border-[#f0ece5] space-y-2 text-left text-xs text-[#666666]">
+                                        {(pkg.features || []).map((f: any, fIdx: number) => (
+                                          <div key={fIdx} className="flex items-center gap-2">
+                                            {f.included !== false ? (
+                                              <span className="text-[#b58d59] font-bold text-sm leading-none shrink-0">✓</span>
+                                            ) : (
+                                              <span className="text-[#999999] text-xs leading-none shrink-0">✕</span>
+                                            )}
+                                            <span className={f.included !== false ? 'text-[#444444]' : 'text-[#888888] line-through'}>
+                                              {f.text}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="p-6 pt-0">
+                                    <span className={`block w-full py-2.5 text-center text-[10px] font-sans font-bold uppercase tracking-[0.2em] rounded-xs ${
+                                      pkg.isFeatured ? 'bg-[#b58d59] text-white' : 'bg-[#1a1a1a] text-white'
+                                    }`}>
+                                      {pkg.btnText || 'WORK WITH ME'}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="mt-8 p-5 bg-[#fbf9f6] border border-[#e8e4dc] rounded-xs flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+                              <div className="space-y-0.5">
+                                <h4 className="font-serif text-sm font-semibold text-[#1a1a1a]">Prefer to explore garments directly?</h4>
+                                <p className="text-[11px] text-[#666666] font-sans">Browse Jade's full curated storefront collections and ready-to-wear pieces online.</p>
+                              </div>
+                              <span className="px-5 py-2 bg-[#111111] text-white text-[10px] font-sans font-bold uppercase tracking-[0.2em] rounded-xs flex items-center gap-1.5 shrink-0">
+                                <ShoppingBag className="h-3 w-3 text-[#b58d59]" />
+                                <span>Go to Shop Page (/collections/all)</span>
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 7. CLIENT REVIEWS / FAQS */}
+                        {(sec.type === 'Client Reviews' || sec.type === 'FAQs') && (
+                          <div className="py-16 md:py-24 bg-[#fbf9f6] border-y border-[#ece7de] px-6">
+                            <div className="max-w-[1240px] mx-auto">
+                              <div className="text-center mb-12 space-y-2">
+                                <span className="text-[10px] tracking-[0.35em] font-sans font-bold uppercase text-[#888888] block">
+                                  {settings.badge || 'CLIENTS REVIEWS'}
+                                </span>
+                                <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal text-[#1a1a1a]">
+                                  {settings.title || 'What Clients Say'} <span className="font-editorial-italic font-normal">{settings.italicTitle || 'About Me'}</span>
+                                </h2>
+                              </div>
+
+                              <div className="relative max-w-4xl mx-auto">
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                                  <div className="md:col-span-5 h-[320px] rounded-xs overflow-hidden shadow-xl border border-white bg-slate-100">
+                                    <img 
+                                      src={settings.imageUrl || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80'} 
+                                      alt="Client portrait"
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="md:col-span-7 bg-white p-6 sm:p-10 shadow-xl rounded-xs border border-[#eee9df] relative">
+                                    <span className="text-5xl font-serif text-[#ebd9bd] absolute top-2 right-4 select-none opacity-80 leading-none">“</span>
+                                    <h3 className="font-serif text-lg sm:text-xl font-normal text-[#1a1a1a] mb-3">
+                                      "{settings.quote || 'Highly recommend, thank you again!'}"
+                                    </h3>
+                                    <p className="text-xs text-[#555555] font-sans leading-relaxed mb-5 font-light">
+                                      {settings.content || 'Jade is so lovely and did such a great job with my wedding dress along with bridal party and mother of the bride outfits... She understood exactly what flattered my shape while keeping me entirely comfortable.'}
+                                    </p>
+                                    <div className="flex items-center gap-3 pt-3 border-t border-[#f0ece5]">
+                                      <img 
+                                        src={settings.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80'} 
+                                        alt={settings.author || 'Emily Brown'}
+                                        className="w-9 h-9 rounded-full object-cover border border-[#b58d59]"
+                                      />
+                                      <div>
+                                        <h4 className="font-serif text-sm font-semibold text-[#1a1a1a]">
+                                          {settings.author || 'Emily Brown'}
+                                        </h4>
+                                        <span className="text-[9px] text-[#888888] font-sans uppercase tracking-wider block">
+                                          {settings.role || 'Customer Review'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 8. MY PORTFOLIO / IMAGES GALLERY */}
+                        {(sec.type === 'My Portfolio' || sec.type === 'Images gallery') && (
+                          <div className="py-16 md:py-24 px-6 max-w-[1240px] mx-auto bg-white">
+                            <div className="text-center mb-12 space-y-2">
+                              <span className="text-[10px] tracking-[0.35em] font-sans font-bold uppercase text-[#888888] block">
+                                {settings.badge || 'MY PORTFOLIO'}
+                              </span>
+                              <h2 className="font-serif text-2xl sm:text-4xl font-normal text-[#1a1a1a] whitespace-pre-line">
+                                {settings.title || 'Find Your Ideal Style and Look?'}
+                              </h2>
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                              {(settings.items || [
+                                { image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80', title: 'Architectural Tailoring & Cream Trench', category: 'Editorial Streetwear' },
+                                { image: 'https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=800&q=80', title: 'Effortless Summer Linen Ensemble', category: 'Casual Resort' },
+                                { image: 'https://images.unsplash.com/photo-1516762689617-e1cffcef479d?auto=format&fit=crop&w=800&q=80', title: 'Bohemian Sunhat & Warm Earth Tones', category: 'Seasonal Lookbook' },
+                                { image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80', title: 'Modern Sport-Luxe & Monochrome', category: 'Contemporary Casual' },
+                                { image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80', title: 'Pastel Blazer & Checked Silk Separates', category: 'Executive Style' },
+                                { image: 'https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?auto=format&fit=crop&w=800&q=80', title: 'Evening Velvet & Statement Eyewear', category: 'Gala & Red Carpet' }
+                              ]).map((item: any, idx: number) => (
+                                <div key={idx} className="group relative aspect-[3/4] rounded-xs overflow-hidden bg-slate-100 shadow-sm">
+                                  <img 
+                                    src={item.image} 
+                                    alt={item.title}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                  />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4 text-white">
+                                    <span className="text-[8px] uppercase tracking-[0.25em] text-[#dec196] font-sans font-bold">
+                                      {item.category}
+                                    </span>
+                                    <h4 className="font-serif text-xs font-normal mt-0.5 leading-snug line-clamp-1">
+                                      {item.title}
+                                    </h4>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 9. NEWS & BLOG / BLOG POST */}
+                        {(sec.type === 'News & Blog' || sec.type === 'Blog post') && (
+                          <div className="py-16 md:py-24 bg-[#0f0f10] text-white px-6">
+                            <div className="max-w-[1240px] mx-auto">
+                              <div className="text-center mb-12 space-y-2">
+                                <span className="text-[10px] tracking-[0.35em] font-sans font-bold uppercase text-[#888888] block">
+                                  {settings.badge || 'LATEST NEWS'}
+                                </span>
+                                <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal text-white">
+                                  {settings.title || 'News'} <span className="font-editorial-italic text-[#caa26c]">{settings.italicTitle || '& Blog'}</span>
+                                </h2>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                                {(blogs && blogs.length > 0 ? blogs.slice(0, 2) : [
+                                  {
+                                    id: 'b1',
+                                    title: 'How To Elevate Your Whimsical Wardrobe',
+                                    category: 'FASHION STYLE',
+                                    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80'
+                                  },
+                                  {
+                                    id: 'b2',
+                                    title: "Women's Business Formal Attire To Promote Your Style",
+                                    category: 'BUSINESS STYLE',
+                                    image: 'https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?auto=format&fit=crop&w=800&q=80'
+                                  }
+                                ]).map((b: any, bIdx: number) => (
+                                  <div key={bIdx} className="bg-[#18181a] border border-white/10 rounded-xs overflow-hidden">
+                                    <div className="relative h-56 overflow-hidden">
+                                      <img 
+                                        src={b.image || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80'} 
+                                        alt={b.title}
+                                        className="w-full h-full object-cover"
+                                      />
+                                      <div className="absolute top-3 left-3 bg-white/95 text-[#1a1a1a] px-2.5 py-1 text-center shadow-md">
+                                        <span className="block text-[7px] uppercase tracking-wider font-bold text-[#777777]">DEC</span>
+                                        <span className="block font-serif text-base font-bold leading-none text-[#b58d59]">{bIdx === 0 ? '29' : '27'}</span>
+                                      </div>
+                                    </div>
+                                    <div className="p-5 space-y-1.5">
+                                      <span className="text-[8px] uppercase tracking-[0.25em] text-[#caa26c] font-sans font-bold block">
+                                        {b.category || 'FASHION STYLE'}
+                                      </span>
+                                      <h3 className="font-serif text-base font-normal text-white leading-snug line-clamp-2">
+                                        {b.title}
+                                      </h3>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 10. MAKE AN APPOINTMENT */}
+                        {sec.type === 'Make An Appointment' && (
+                          <div 
+                            className="relative py-16 md:py-24 px-6 bg-cover bg-center overflow-hidden"
+                            style={{ backgroundImage: `url('${settings.imageUrl || 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=1600&q=80'}')` }}
+                          >
+                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+
+                            <div className="relative z-10 max-w-[1240px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center text-white">
+                              <div className="lg:col-span-6 space-y-5">
+                                <p className="font-serif italic text-lg sm:text-2xl text-white/90 leading-relaxed font-light">
+                                  "{settings.promptText || 'To submit an enquiry or to arrange an appointment please call me or alternatively please complete the form.'}"
+                                </p>
+                                <div className="pt-2 flex items-center gap-3.5">
+                                  <div className="w-11 h-11 rounded-full bg-[#b58d59] flex items-center justify-center text-white shadow-lg shrink-0">
+                                    <Phone className="h-5 w-5" />
+                                  </div>
+                                  <div>
+                                    <span className="text-[9px] tracking-[0.25em] uppercase font-sans font-bold text-[#caa26c] block">
+                                      CALL ME DIRECTLY
+                                    </span>
+                                    <span className="font-serif text-xl sm:text-2xl font-light text-white tracking-wide">
+                                      {settings.phone || '800 123 4444'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="lg:col-span-6 bg-white text-[#1a1a1a] p-6 sm:p-8 rounded-xs shadow-2xl border border-white/20">
+                                <h3 className="font-serif text-xl font-normal text-[#1a1a1a] mb-4 text-center">
+                                  {settings.formTitle || 'Make An Appointment'}
+                                </h3>
+                                <div className="space-y-3">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <input 
+                                      type="text" 
+                                      placeholder="Your Name *"
+                                      disabled
+                                      className="w-full px-3 py-2 bg-[#fdfcfb] border border-[#e5e0d8] text-xs"
+                                    />
+                                    <input 
+                                      type="text" 
+                                      placeholder="Your Phone *"
+                                      disabled
+                                      className="w-full px-3 py-2 bg-[#fdfcfb] border border-[#e5e0d8] text-xs"
+                                    />
+                                  </div>
+                                  <input 
+                                    type="email" 
+                                    placeholder="Your Email Address *"
+                                    disabled
+                                    className="w-full px-3 py-2 bg-[#fdfcfb] border border-[#e5e0d8] text-xs"
+                                  />
+                                  <textarea 
+                                    rows={2}
+                                    placeholder="Tell me about your styling goals..."
+                                    disabled
+                                    className="w-full px-3 py-2 bg-[#fdfcfb] border border-[#e5e0d8] text-xs"
+                                  />
+                                  <span className="block w-full py-3 bg-[#b58d59] text-white text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-center shadow">
+                                    {settings.buttonText || 'MAKE APPOINTMENT'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 11. BRAND LOGOS / LOGO LIST / BRAND LIST */}
+                        {(sec.type === 'Brand Logos' || sec.type === 'Logo list' || sec.type === 'Brand list' || sec.type === 'Brands we offer') && (
+                          <div className="py-10 bg-white border-b border-[#ece7de] overflow-hidden px-6">
+                            <div className="max-w-[1240px] mx-auto">
+                              <div className="flex flex-wrap items-center justify-between gap-6 md:gap-10 opacity-70 grayscale">
+                                {(settings.logos || ["CHIPPY'S", "FASTLANE", "SWEETY.", "MIGHTY FURNITURES", "CARA INDOORS", "GOLDEN NET 109", "avant garde"]).map((logo: string, lIdx: number) => {
+                                  if (logo.includes('FASTLANE')) {
+                                    return (
+                                      <div key={lIdx} className="flex items-center gap-1.5 font-sans font-black tracking-widest text-xs sm:text-sm text-[#222222]">
+                                        <span className="h-3.5 w-1 bg-[#1a1a1a] inline-block" />
+                                        <span>{logo}</span>
+                                      </div>
+                                    );
+                                  }
+                                  if (logo.includes('MIGHTY')) {
+                                    return (
+                                      <div key={lIdx} className="flex flex-col text-center font-sans">
+                                        <span className="text-[9px] font-black tracking-[0.3em] uppercase text-[#1a1a1a]">MIGHTY</span>
+                                        <span className="text-[7px] tracking-[0.2em] uppercase text-[#666666]">FURNITURES</span>
+                                      </div>
+                                    );
+                                  }
+                                  if (logo.includes('CARA')) {
+                                    return (
+                                      <div key={lIdx} className="flex items-center gap-1 text-[11px] font-bold tracking-widest text-[#333333]">
+                                        <span>CARA</span>
+                                        <span className="text-[8px] text-[#b58d59]">INDOORS</span>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <span key={lIdx} className="font-serif text-sm sm:text-base tracking-[0.2em] uppercase font-light text-[#111111]">
+                                      {logo}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 12. EDITORIAL SHOP BANNER / CLEARANCE SALE */}
+                        {(sec.type === 'Editorial Shop Banner' || sec.type === 'Shop Banner' || sec.type === 'Clearance Sale') && (
+                          <div className="py-14 md:py-18 bg-gradient-to-r from-[#141416] via-[#1c1c1f] to-[#141416] text-white border-y border-[#b58d59]/30 relative overflow-hidden px-6">
+                            <div className="absolute inset-0 bg-[radial-gradient(#b58d59_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+                            <div className="relative max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                              <div className="space-y-2 max-w-xl">
+                                <span className="text-[9px] tracking-[0.35em] font-sans font-bold uppercase text-[#b58d59] block">
+                                  {settings.badge || 'CURATED WARDROBE • READY-TO-WEAR'}
+                                </span>
+                                <h3 className="font-serif text-2xl sm:text-3xl font-normal text-white leading-tight">
+                                  {settings.title || "Shop Jade's Curated Collection"}
+                                </h3>
+                                <p className="text-xs text-[#cccccc] font-sans font-light leading-relaxed">
+                                  {settings.description || 'Explore hand-selected luxury tailoring, elevated silk separates, and signature wardrobe capsules.'}
+                                </p>
+                              </div>
+                              <span className="px-7 py-3 bg-[#b58d59] text-white text-[10px] font-sans font-bold uppercase tracking-[0.25em] rounded-xs shadow-xl flex items-center gap-2 shrink-0">
+                                <ShoppingBag className="h-3.5 w-3.5" />
+                                <span>{settings.buttonText || 'SHOP NOW (/collections/all)'}</span>
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 13. FEATURED COLLECTION */}
                         {sec.type === 'Featured collection' && (
-                          <div className={`space-y-6 ${alignClass}`}>
+                          <div className={`py-12 px-6 space-y-6 ${alignClass}`}>
                             <div className="space-y-1">
                               <h2 className="text-2xl font-serif font-bold" style={{ color: titleColor }}>
                                 {settings.title || 'Featured Collection'}
@@ -1064,9 +1732,9 @@ export default function ShopifyPageBuilder({
                           </div>
                         )}
 
-                        {/* 3. COLLECTION LIST */}
+                        {/* 14. COLLECTION LIST */}
                         {sec.type === 'Collection list' && (
-                          <div className={`space-y-6 ${alignClass}`}>
+                          <div className={`py-12 px-6 space-y-6 ${alignClass}`}>
                             <div className="space-y-1">
                               <h2 className="text-2xl font-serif font-bold" style={{ color: titleColor }}>
                                 {settings.title || 'Collections'}
@@ -1092,9 +1760,9 @@ export default function ShopifyPageBuilder({
                           </div>
                         )}
 
-                        {/* 4. IMAGE WITH TEXT */}
+                        {/* 15. IMAGE WITH TEXT */}
                         {sec.type === 'Image with text' && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                          <div className="py-12 px-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                             <div className="rounded-2xl overflow-hidden aspect-4/3 bg-slate-100 shadow-md">
                               <img 
                                 src={settings.imageUrl || 'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=800&q=80'} 
@@ -1121,9 +1789,9 @@ export default function ShopifyPageBuilder({
                           </div>
                         )}
 
-                        {/* 5. DEFAULT FALLBACK FOR OTHER SECTION TYPES */}
-                        {!['Image banner', 'Hero banner', 'Featured collection', 'Collection list', 'Image with text'].includes(sec.type) && (
-                          <div className={`py-6 space-y-3 ${alignClass}`}>
+                        {/* 16. DEFAULT FALLBACK FOR ANY OTHER CUSTOM SECTION TYPES */}
+                        {!['Image banner', 'Hero banner', 'Slideshow', 'About Jade Tailor', 'My Services', 'Service Pillars', 'Text column with image', 'Video banner', 'Styling Packages', 'Plans', 'Client Reviews', 'FAQs', 'My Portfolio', 'Images gallery', 'News & Blog', 'Blog post', 'Make An Appointment', 'Brand Logos', 'Logo list', 'Brand list', 'Brands we offer', 'Editorial Shop Banner', 'Shop Banner', 'Clearance Sale', 'Featured collection', 'Collection list', 'Image with text'].includes(sec.type) && (
+                          <div className={`py-12 px-6 space-y-3 ${alignClass}`}>
                             <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#d4af37] block">
                               {settings.subtitle || sec.type}
                             </span>
@@ -1149,17 +1817,80 @@ export default function ShopifyPageBuilder({
             </div>
 
             {/* --------------------------------------------------------------- */}
-            {/* STOREFRONT PREVIEW FOOTER                                       */}
+            {/* STOREFRONT PREVIEW FOOTER (MATCHING STOREFRONT FOOTER)          */}
             {/* --------------------------------------------------------------- */}
-            <div className="border-t border-slate-200 bg-[#111111] text-white p-8 space-y-6 text-center text-xs font-light">
-              <div className="font-serif text-base tracking-widest text-[#d4af37]">
-                {layoutSettings?.footerLogoText || 'JADE TAILOR'}
+            <div className="bg-[#0e0e10] text-[#a0a0a5] border-t border-white/5 font-sans p-8 sm:p-12 text-left">
+              <div className="max-w-[1240px] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+                {/* Col 1: Contact */}
+                <div className="space-y-3">
+                  <h4 className="font-serif text-base font-normal text-white">Contact</h4>
+                  <p className="text-[11px] text-[#8f8f94] font-light leading-relaxed">
+                    {layoutSettings?.address || '0665 Broadway NY, New York 10001 United States of America'}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-white/90">
+                    <Phone className="h-3 w-3 text-[#b58d59]" />
+                    <span>{layoutSettings?.phone || '800 123 4444'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[#8f8f94]">
+                    <Mail className="h-3 w-3 text-[#b58d59]" />
+                    <span>concierge@jadetailor.com</span>
+                  </div>
+                </div>
+
+                {/* Col 2: Navigation */}
+                <div className="space-y-3">
+                  <h4 className="font-serif text-base font-normal text-white">Navigation</h4>
+                  <ul className="space-y-1.5 text-[11px] text-[#8f8f94] font-light">
+                    <li className="hover:text-white transition-colors">Home Page</li>
+                    <li className="hover:text-white transition-colors">Curated Shop (/collections/all)</li>
+                    <li className="hover:text-white transition-colors">Work With Me</li>
+                    <li className="hover:text-white transition-colors">Personal Styling Packages</li>
+                    <li className="hover:text-white transition-colors">Style Journal & Blog</li>
+                  </ul>
+                </div>
+
+                {/* Col 3: Services */}
+                <div className="space-y-3">
+                  <h4 className="font-serif text-base font-normal text-white">Services</h4>
+                  <ul className="space-y-1.5 text-[11px] text-[#8f8f94] font-light">
+                    <li>Personal Wardrobe Styling</li>
+                    <li>Closet Cleanse & Edit</li>
+                    <li>Curated VIP Shopping Tour</li>
+                    <li>Editorial & Photoshoots</li>
+                    <li>Virtual Consultations</li>
+                  </ul>
+                </div>
+
+                {/* Col 4: Newsletter */}
+                <div className="space-y-3">
+                  <h4 className="font-serif text-base font-normal text-white">Newsletter</h4>
+                  <p className="text-[11px] text-[#8f8f94] font-light leading-relaxed">
+                    Subscribe for exclusive style dispatches, trend forecasts, and private shopping releases.
+                  </p>
+                  <div className="flex gap-1.5">
+                    <input 
+                      type="email" 
+                      placeholder="Your email address" 
+                      disabled 
+                      className="bg-white/5 border border-white/10 rounded-xs px-2.5 py-1.5 text-xs text-white w-full placeholder:text-white/40"
+                    />
+                    <button className="bg-[#b58d59] text-white px-3 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-wider shrink-0">
+                      Join
+                    </button>
+                  </div>
+                </div>
               </div>
-              <p className="max-w-md mx-auto text-slate-400 text-[11px] leading-relaxed">
-                {layoutSettings?.footerLogoDescription || 'Luxury personal styling, bespoke capsule curations, and private boutique shopping tours.'}
-              </p>
-              <div className="text-[10px] text-slate-500">
-                © {new Date().getFullYear()} {layoutSettings?.storeName || 'Jade Tailor Store'}. Powered by Atelier Engine.
+
+              {/* Bottom Copyright */}
+              <div className="max-w-[1240px] mx-auto mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-[#666666]">
+                <div>
+                  © {new Date().getFullYear()} {layoutSettings?.storeName || 'Jade Tailor Store'}. All rights reserved.
+                </div>
+                <div className="flex items-center gap-4 text-[#888888]">
+                  <span>Privacy Policy</span>
+                  <span>Terms & Conditions</span>
+                  <span>Shipping & Returns</span>
+                </div>
               </div>
             </div>
 
@@ -1440,40 +2171,178 @@ export default function ShopifyPageBuilder({
 
                 {/* 5. TEXT CONTENT & BUTTON CONTROLS */}
                 <div className="pt-4 space-y-3">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">Typography & Links</span>
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">Typography & Content</span>
 
+                  {/* Eyebrow / Badge */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Badge / Eyebrow Tag</label>
+                    <input
+                      type="text"
+                      value={selectedSection.settings.badge || ''}
+                      onChange={(e) => updateSectionSettings(selectedSection.id, { badge: e.target.value })}
+                      placeholder="e.g. ABOUT JADE TAILOR or WHAT I DO"
+                      className="w-full p-2 border border-slate-250 rounded-lg text-slate-800 font-medium text-xs focus:ring-2 focus:ring-[#005bd3] focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Heading */}
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 mb-1">Heading</label>
                     <input
                       type="text"
                       value={selectedSection.settings.title || ''}
                       onChange={(e) => updateSectionSettings(selectedSection.id, { title: e.target.value })}
-                      placeholder="e.g. Browse our latest products"
+                      placeholder="e.g. Find Your Style or Elevate Your Style"
                       className="w-full p-2 border border-slate-250 rounded-lg text-slate-800 font-medium text-xs focus:ring-2 focus:ring-[#005bd3] focus:outline-none"
                     />
                   </div>
 
+                  {/* Italic Accent Word / Subtitle */}
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Subheading</label>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Italic Editorial Accent Word</label>
+                    <input
+                      type="text"
+                      value={selectedSection.settings.italicTitle || selectedSection.settings.italicWord || ''}
+                      onChange={(e) => updateSectionSettings(selectedSection.id, { 
+                        italicTitle: e.target.value,
+                        italicWord: e.target.value
+                      })}
+                      placeholder="e.g. With Me or Services"
+                      className="w-full p-2 border border-slate-250 rounded-lg text-slate-800 font-medium text-xs focus:ring-2 focus:ring-[#005bd3] focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Subtitle */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Subtitle / Tagline</label>
                     <input
                       type="text"
                       value={selectedSection.settings.subtitle || ''}
                       onChange={(e) => updateSectionSettings(selectedSection.id, { subtitle: e.target.value })}
-                      placeholder="e.g. Spring 2026 Collection"
+                      placeholder="e.g. JADE TAILOR • PERSONAL STYLIST"
                       className="w-full p-2 border border-slate-250 rounded-lg text-slate-800 font-medium text-xs focus:ring-2 focus:ring-[#005bd3] focus:outline-none"
                     />
                   </div>
 
+                  {/* Description Text */}
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 mb-1">Description Text</label>
                     <textarea
                       rows={3}
                       value={selectedSection.settings.description || ''}
                       onChange={(e) => updateSectionSettings(selectedSection.id, { description: e.target.value })}
-                      placeholder="Pair text with an image to focus on your chosen product, collection, or blog post."
+                      placeholder="Section narrative, biography, or overview text..."
                       className="w-full p-2 border border-slate-250 rounded-lg text-slate-800 font-medium text-xs focus:ring-2 focus:ring-[#005bd3] focus:outline-none"
                     />
                   </div>
+
+                  {/* Specific fields for Service / Card */}
+                  {(selectedSection.type === 'My Services' || selectedSection.settings.cardTitle) && (
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide block">Featured Service Card</span>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Card Title</label>
+                        <input
+                          type="text"
+                          value={selectedSection.settings.cardTitle || ''}
+                          onChange={(e) => updateSectionSettings(selectedSection.id, { cardTitle: e.target.value })}
+                          placeholder="e.g. Individual Consultation"
+                          className="w-full p-1.5 border border-slate-250 rounded bg-white text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Card Description</label>
+                        <textarea
+                          rows={2}
+                          value={selectedSection.settings.cardDescription || ''}
+                          onChange={(e) => updateSectionSettings(selectedSection.id, { cardDescription: e.target.value })}
+                          placeholder="Comprehensive deep dive into personal aesthetic..."
+                          className="w-full p-1.5 border border-slate-250 rounded bg-white text-xs"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Specific fields for Appointment / Contact */}
+                  {(selectedSection.type === 'Make An Appointment' || selectedSection.settings.phone) && (
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide block">Direct Contact & Form</span>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Direct Phone</label>
+                        <input
+                          type="text"
+                          value={selectedSection.settings.phone || ''}
+                          onChange={(e) => updateSectionSettings(selectedSection.id, { phone: e.target.value })}
+                          placeholder="800 123 4444"
+                          className="w-full p-1.5 border border-slate-250 rounded bg-white text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Prompt Text</label>
+                        <input
+                          type="text"
+                          value={selectedSection.settings.promptText || ''}
+                          onChange={(e) => updateSectionSettings(selectedSection.id, { promptText: e.target.value })}
+                          placeholder="To submit an enquiry or to arrange an appointment..."
+                          className="w-full p-1.5 border border-slate-250 rounded bg-white text-xs"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Specific fields for Video */}
+                  {(selectedSection.type === 'Video banner' || selectedSection.settings.videoUrl) && (
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide block">Video Settings</span>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 mb-0.5">YouTube Video ID</label>
+                        <input
+                          type="text"
+                          value={selectedSection.settings.videoUrl || ''}
+                          onChange={(e) => updateSectionSettings(selectedSection.id, { videoUrl: e.target.value })}
+                          placeholder="e.g. dQw4w9WgXcQ"
+                          className="w-full p-1.5 border border-slate-250 rounded bg-white text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Specific fields for Client Review */}
+                  {(selectedSection.type === 'Client Reviews' || selectedSection.settings.quote) && (
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide block">Testimonial Data</span>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Quote Headline</label>
+                        <input
+                          type="text"
+                          value={selectedSection.settings.quote || ''}
+                          onChange={(e) => updateSectionSettings(selectedSection.id, { quote: e.target.value })}
+                          placeholder="Highly recommend, thank you again!"
+                          className="w-full p-1.5 border border-slate-250 rounded bg-white text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Author Name</label>
+                        <input
+                          type="text"
+                          value={selectedSection.settings.author || ''}
+                          onChange={(e) => updateSectionSettings(selectedSection.id, { author: e.target.value })}
+                          placeholder="Emily Brown"
+                          className="w-full p-1.5 border border-slate-250 rounded bg-white text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Role / Subtitle</label>
+                        <input
+                          type="text"
+                          value={selectedSection.settings.role || ''}
+                          onChange={(e) => updateSectionSettings(selectedSection.id, { role: e.target.value })}
+                          placeholder="Customer Review"
+                          className="w-full p-1.5 border border-slate-250 rounded bg-white text-xs"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Button label & link */}
                   <div className="space-y-2 pt-1">
@@ -1483,7 +2352,7 @@ export default function ShopifyPageBuilder({
                         type="text"
                         value={selectedSection.settings.buttonText || ''}
                         onChange={(e) => updateSectionSettings(selectedSection.id, { buttonText: e.target.value })}
-                        placeholder="e.g. Shop all"
+                        placeholder="e.g. WORK WITH JADE or LEARN MORE"
                         className="w-full p-2 border border-slate-250 rounded-lg text-slate-800 font-medium text-xs focus:ring-2 focus:ring-[#005bd3] focus:outline-none"
                       />
                     </div>
@@ -1493,7 +2362,7 @@ export default function ShopifyPageBuilder({
                         type="text"
                         value={selectedSection.settings.buttonLink || ''}
                         onChange={(e) => updateSectionSettings(selectedSection.id, { buttonLink: e.target.value })}
-                        placeholder="/collections/all"
+                        placeholder="#appointment-section or /collections/all"
                         className="w-full p-2 border border-slate-250 rounded-lg text-slate-800 font-medium text-xs focus:ring-2 focus:ring-[#005bd3] focus:outline-none"
                       />
                     </div>
