@@ -1146,13 +1146,23 @@ export default function StylistEditorialHome({
               </button>
             </div>
             <div className="aspect-video w-full bg-black flex items-center justify-center">
-              <iframe 
-                className="w-full h-full"
-                src={`https://www.youtube.com/embed/${videoSec?.settings.videoUrl || 'dQw4w9WgXcQ'}?autoplay=1`}
-                title="Styling Masterclass"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+              {videoSec?.settings.videoMp4Url ? (
+                <video
+                  src={videoSec.settings.videoMp4Url}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <iframe 
+                  className="w-full h-full"
+                  src={`https://www.youtube.com/embed/${videoSec?.settings.videoUrl || 'dQw4w9WgXcQ'}?autoplay=1`}
+                  title="Styling Masterclass"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              )}
             </div>
           </div>
         </div>

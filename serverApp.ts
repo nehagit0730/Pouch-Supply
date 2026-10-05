@@ -14,6 +14,10 @@ import customPagesRouter from "./backend/routes/customPages";
 import blogsRouter from "./backend/routes/blogs";
 import razorpayRouter from "./backend/routes/razorpay";
 import recycleBinRouter from "./backend/routes/recycleBin";
+import cloudinaryRouter from "./backend/routes/cloudinary";
+import multer from "multer";
+import { uploadToCloudinary } from "./backend/services/cloudinaryService";
+import { FileEntry } from "./src/types";
 
 export async function createExpressApp() {
   const app = express();
@@ -90,44 +94,129 @@ export async function createExpressApp() {
   // Serve static uploaded files locally from disk as a fallback for standard directory requests
   app.use("/uploads", express.static(uploadsPath));
 
-  // API Route: Secure binary/base64 Image Storage
-  app.post("/api/upload", async (req, res) => {
+  const uploadMiddleware = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 100 * 1024 * 1024 }
+  });
+
+  // API Route: Cloudinary & Database Image and Video Upload
+  app.post("/api/upload", uploadMiddleware.single("file"), async (req, res) => {
     try {
-      const { data, filename } = req.body;
-      if (!data) {
-        return res.status(400).json({ error: "Missing data payload for upload." });
-      }
-
-      // Check if it's already a clean base64 dataURI
-      let base64String = data;
+      let fileBuffer: Buffer | null = null;
+      let originalFilename = "";
       let mimeType = "image/png";
+      let base64String = "";
 
-      if (data.startsWith("data:")) {
-        const matches = data.match(/^data:([^;]+);base64,(.+)$/);
-        if (matches && matches.length === 3) {
-          mimeType = matches[1];
-          base64String = matches[2];
+      if (req.file) {
+        fileBuffer = req.file.buffer;
+        originalFilename = req.file.originalname || "uploaded-asset";
+        mimeType = req.file.mimetype || "image/png";
+        base64String = req.file.buffer.toString("base64");
+      } else if (req.body && req.body.data) {
+        const data = req.body.data;
+        originalFilename = req.body.filename || req.body.fileName || "uploaded-asset";
+        base64String = data;
+
+        if (typeof data === 'string' && data.startsWith("data:")) {
+          const matches = data.match(/^data:([^;]+);base64,(.+)$/);
+          if (matches && matches.length === 3) {
+            mimeType = matches[1];
+            base64String = matches[2];
+          }
         }
+        try {
+          fileBuffer = Buffer.from(base64String, "base64");
+        } catch (_) {}
+      } else {
+        return res.status(400).json({ error: "Missing file or data payload for upload." });
       }
 
-      const id = `img-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
-      const relativeUrl = await saveUploadedImage(id, base64String, mimeType);
-      
-      // Also write to disk cache if possible
+      // Detect if video or image
+      const isVideo = mimeType.startsWith("video/") || 
+        /\.(mp4|mov|webm|avi|mkv|flv|wmv|m4v|ogv)$/i.test(originalFilename) ||
+        req.body?.resource_type === "video";
+      const resourceType: 'image' | 'video' = isVideo ? "video" : "image";
+
+      const ext = mimeType.includes('/') ? mimeType.split('/')[1] : (isVideo ? 'mp4' : 'png');
+      const cleanExt = ext.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || (isVideo ? 'mp4' : 'png');
+      const uniqueId = `${isVideo ? 'vid' : 'img'}-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+      const safeFileName = originalFilename && originalFilename.includes('.') ? originalFilename : `${uniqueId}.${cleanExt}`;
+
+      let finalUrl = "";
+      let isCloudinary = false;
+      let cloudinaryPublicId = "";
+      let fileSize = fileBuffer ? fileBuffer.length : (base64String ? Math.round(base64String.length * 0.75) : 0);
+
+      // 1. Try uploading to Cloudinary
       try {
-        const ext = mimeType.includes('/') ? mimeType.split('/')[1] : 'png';
-        const diskFile = path.join(uploadsPath, `${id}.${ext}`);
-        fs.writeFileSync(diskFile, Buffer.from(base64String, 'base64'));
-      } catch (e) {
-        console.warn('Could not write uploaded image to disk:', e);
+        const uploadPayload = fileBuffer || (dataUriOrBase64 => dataUriOrBase64.startsWith('data:') ? dataUriOrBase64 : `data:${mimeType};base64,${dataUriOrBase64}`)(base64String);
+        const cldResult = await uploadToCloudinary(uploadPayload, {
+          resourceType: isVideo ? "video" : "auto",
+          fileName: safeFileName
+        });
+
+        if (cldResult && cldResult.secure_url) {
+          finalUrl = cldResult.secure_url;
+          isCloudinary = true;
+          cloudinaryPublicId = cldResult.public_id;
+          if (cldResult.bytes) fileSize = cldResult.bytes;
+          console.log(`[API Upload] Successfully uploaded to Cloudinary: ${finalUrl} (resource_type: ${cldResult.resource_type})`);
+        }
+      } catch (cldErr: any) {
+        console.warn("[API Upload] Cloudinary upload attempt failed or not configured, using database/local storage fallback:", cldErr.message);
       }
 
-      // Return relative URL /api/images/${id} so it renders seamlessly across ALL environments and domains
-      console.log(`[API Upload] Successfully persisted ${mimeType} image with ID: ${id}. URL: ${relativeUrl}`);
-      res.json({ url: relativeUrl, relativeUrl, id });
+      // 2. Fallback to database/local disk storage if Cloudinary wasn't used or unavailable
+      if (!finalUrl) {
+        finalUrl = await saveUploadedImage(uniqueId, base64String, mimeType);
+        // Write to uploads disk cache if writable
+        try {
+          const diskFile = path.join(uploadsPath, `${uniqueId}.${cleanExt}`);
+          fs.writeFileSync(diskFile, Buffer.from(base64String, 'base64'));
+        } catch (_) {}
+      }
+
+      // 3. PERSIST FILE RECORD TO DATABASE ('files' table in Neon Postgres)
+      const sizeStr = fileSize > 1024 * 1024
+        ? `${(fileSize / (1024 * 1024)).toFixed(1)} MB`
+        : `${Math.max(1, Math.round(fileSize / 1024))} KB`;
+
+      const newFileDoc: FileEntry = {
+        id: uniqueId,
+        fileName: safeFileName,
+        altText: safeFileName.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
+        dateAdded: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        size: sizeStr,
+        references: isVideo ? 'Video Section' : 'Storefront Media',
+        url: finalUrl,
+        resourceType: resourceType,
+        format: cleanExt,
+        cloudinaryPublicId: isCloudinary ? cloudinaryPublicId : undefined
+      };
+
+      try {
+        const existingFiles = await fetchResource("files");
+        const updatedFiles = [newFileDoc, ...(Array.isArray(existingFiles) ? existingFiles.filter(f => f.url !== finalUrl) : [])];
+        await saveResource("files", updatedFiles);
+        console.log(`[API Upload] Persisted file record to database: ${safeFileName} (${newFileDoc.id})`);
+      } catch (dbErr) {
+        console.warn("[API Upload] Failed to write file entry to files table:", dbErr);
+      }
+
+      res.json({
+        url: finalUrl,
+        secure_url: finalUrl,
+        id: uniqueId,
+        fileName: safeFileName,
+        resource_type: resourceType,
+        format: cleanExt,
+        isCloudinary,
+        cloudinaryPublicId: isCloudinary ? cloudinaryPublicId : undefined,
+        file: newFileDoc
+      });
     } catch (err: any) {
       console.error("[API Upload] Fail:", err);
-      res.status(500).json({ error: err.message || "Failed to process image upload database insertion" });
+      res.status(500).json({ error: err.message || "Failed to process upload" });
     }
   });
 
@@ -233,6 +322,7 @@ export async function createExpressApp() {
   app.use("/api/blogs", blogsRouter);
   app.use("/api/razorpay", razorpayRouter);
   app.use("/api/recyclebin", recycleBinRouter);
+  app.use("/api/cloudinary", cloudinaryRouter);
 
   // Serve placeholder.png directly from root workspace to handle all environments smoothly
   app.get("/placeholder.png", (req, res) => {

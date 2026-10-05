@@ -1950,87 +1950,39 @@ export default function ShopifyPageBuilder({
                 {/* 1. MEDIA / IMAGE PICKER 1 & 2 */}
                 <div className="space-y-4 pt-1">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-2">Image 1</label>
-                    <div className="border border-slate-200 rounded-xl p-2.5 bg-slate-50 space-y-2">
-                      {selectedSection.settings.imageUrl ? (
-                        <div className="relative rounded-lg overflow-hidden aspect-16/9 bg-slate-200 group">
-                          <img 
-                            src={selectedSection.settings.imageUrl} 
-                            alt="Selected" 
-                            className="w-full h-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => updateSectionSettings(selectedSection.id, { imageUrl: '' })}
-                            className="absolute top-1.5 right-1.5 p-1 bg-black/60 hover:bg-black text-white rounded-md text-[10px] font-bold transition-colors"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="border-2 border-dashed border-slate-250 rounded-lg p-4 text-center text-slate-400">
-                          <ImageIcon className="h-6 w-6 mx-auto mb-1 text-slate-300" />
-                          <span className="text-[11px] block">No image selected</span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-2">
-                        <label className="flex-1 py-1.5 px-3 bg-white hover:bg-slate-100 border border-slate-250 rounded-lg text-center font-bold text-slate-700 text-xs cursor-pointer shadow-2xs transition-colors">
-                          Select
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              const reader = new FileReader();
-                              reader.onload = async () => {
-                                if (typeof reader.result === 'string') {
-                                  try {
-                                    const res = await fetch('/api/upload', {
-                                      method: 'POST',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({ data: reader.result })
-                                    });
-                                    if (res.ok) {
-                                      const data = await res.json();
-                                      updateSectionSettings(selectedSection.id, { imageUrl: data.url });
-                                    }
-                                  } catch (_) {
-                                    updateSectionSettings(selectedSection.id, { imageUrl: reader.result });
-                                  }
-                                }
-                              };
-                              reader.readAsDataURL(file);
-                            }}
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setShowStockImageModal(selectedSection.id)}
-                          className="py-1.5 px-3 bg-white hover:bg-slate-100 border border-slate-250 rounded-lg text-slate-600 font-semibold text-xs transition-colors cursor-pointer"
-                        >
-                          Explore free images
-                        </button>
-                      </div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="block text-[11px] font-bold text-slate-700">Primary Media Image</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowStockImageModal(selectedSection.id)}
+                        className="text-[10px] text-indigo-650 hover:text-indigo-800 font-bold hover:underline cursor-pointer"
+                      >
+                        Explore free images
+                      </button>
                     </div>
+                    <ImageUploadInput
+                      label=""
+                      value={selectedSection.settings.imageUrl || ''}
+                      onChange={(url) => updateSectionSettings(selectedSection.id, { imageUrl: url })}
+                      placeholder="Cloudinary CDN or image URL..."
+                      accept="image/*"
+                      resourceType="image"
+                      allowMediaLibrary={true}
+                    />
                   </div>
 
                   {/* Optional Image 2 */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-2">Image 2 (Optional)</label>
-                    <div className="border border-slate-200 rounded-xl p-2.5 bg-slate-50 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setShowStockImageModal(selectedSection.id)}
-                          className="w-full py-1.5 px-3 bg-white hover:bg-slate-100 border border-slate-250 rounded-lg text-center font-bold text-slate-700 text-xs shadow-2xs transition-colors"
-                        >
-                          Select Image 2
-                        </button>
-                      </div>
-                    </div>
+                  <div className="pt-1 border-t border-slate-100">
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1.5">Secondary Image 2 (Optional)</label>
+                    <ImageUploadInput
+                      label=""
+                      value={selectedSection.settings.imageUrl2 || ''}
+                      onChange={(url) => updateSectionSettings(selectedSection.id, { imageUrl2: url })}
+                      placeholder="Second image URL (e.g. hover or side-by-side)..."
+                      accept="image/*"
+                      resourceType="image"
+                      allowMediaLibrary={true}
+                    />
                   </div>
                 </div>
 
@@ -2291,17 +2243,52 @@ export default function ShopifyPageBuilder({
                   )}
 
                   {/* Specific fields for Video */}
-                  {(selectedSection.type === 'Video banner' || selectedSection.settings.videoUrl) && (
-                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide block">Video Settings</span>
+                  {(selectedSection.type === 'Video banner' || selectedSection.settings.videoUrl || selectedSection.settings.videoMp4Url) && (
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                          <Video className="h-3.5 w-3.5 text-indigo-600" />
+                          Video Banner Settings
+                        </span>
+                        <span className="text-[8px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.5 rounded">
+                          Cloudinary & Database
+                        </span>
+                      </div>
+
+                      {/* Native / Cloudinary Video Upload */}
+                      <ImageUploadInput
+                        label="Upload Cloudinary MP4 Video"
+                        value={selectedSection.settings.videoMp4Url || ''}
+                        onChange={(url) => updateSectionSettings(selectedSection.id, { videoMp4Url: url })}
+                        placeholder="MP4 video URL or upload file..."
+                        accept="video/mp4,video/*"
+                        resourceType="video"
+                        allowMediaLibrary={true}
+                      />
+
+                      {/* YouTube Fallback / Alternative */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-700 mb-0.5">YouTube Video ID</label>
+                        <label className="block text-[10px] font-bold text-slate-700 mb-0.5">YouTube Video ID / URL (Alternative)</label>
                         <input
                           type="text"
                           value={selectedSection.settings.videoUrl || ''}
                           onChange={(e) => updateSectionSettings(selectedSection.id, { videoUrl: e.target.value })}
                           placeholder="e.g. dQw4w9WgXcQ"
                           className="w-full p-1.5 border border-slate-250 rounded bg-white text-xs font-mono"
+                        />
+                        <p className="text-[9px] text-slate-400 mt-0.5">Used if no native MP4 video is provided.</p>
+                      </div>
+
+                      {/* Video Poster Image */}
+                      <div>
+                        <ImageUploadInput
+                          label="Video Poster / Cover Image"
+                          value={selectedSection.settings.imageUrl || ''}
+                          onChange={(url) => updateSectionSettings(selectedSection.id, { imageUrl: url })}
+                          placeholder="Poster image before video plays..."
+                          accept="image/*"
+                          resourceType="image"
+                          allowMediaLibrary={true}
                         />
                       </div>
                     </div>

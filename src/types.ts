@@ -108,6 +108,10 @@ export interface FileEntry {
   size: string;
   references: string;
   url: string;
+  resourceType?: 'image' | 'video' | 'raw';
+  format?: string;
+  cloudinaryPublicId?: string;
+  isCloudinary?: boolean;
 }
 
 export interface Customer {

@@ -8,7 +8,7 @@ import {
   Columns, Grid, Video, HelpCircle, FolderHeart, Layers, Award, PlaySquare, Compass, ShieldCheck, ChevronLeft,
   ChevronDown, ChevronUp, Star, Heart, FileText, BookOpen, LayoutGrid, Database, Server, Lock, Gift, Check, Clock, Truck, ArrowRight, Zap, Shield,
   Pencil, Copy, Bold, Italic, Underline, AlignLeft, Link, Calendar, ArrowLeft, MoreHorizontal, Code, FileEdit, LogOut, Download, Upload,
-  User, MessageSquare, Phone, RotateCcw, Undo2
+  User, MessageSquare, Phone, RotateCcw, Undo2, Cloud, Play, Film
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 import CollectionEditor from './CollectionEditor';
@@ -17,6 +17,7 @@ import BlogContentEditor from './BlogContentEditor';
 import DiscountEditor from './DiscountEditor';
 import ShopifyPageBuilder from './ShopifyPageBuilder';
 import PlansCanOverlay from './PlansCanOverlay';
+import CloudinarySettingsCard from './CloudinarySettingsCard';
 import { Crown, Flame } from 'lucide-react';
 import { SUPPORTED_CURRENCIES, getActiveCurrency, setActiveCurrency, formatPrice } from '../utils/currency';
 import { DEFAULT_PAGES } from '../initialData';
@@ -1284,7 +1285,8 @@ export default function AdminDashboard({
   const [fileQuery, setFileQuery] = useState('');
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [showAddFile, setShowAddFile] = useState(false);
-  const [newFileForm, setNewFileForm] = useState({ fileName: '', altText: '', url: '' });
+  const [showCloudinaryConfigModal, setShowCloudinaryConfigModal] = useState(false);
+  const [newFileForm, setNewFileForm] = useState({ fileName: '', altText: '', url: '', resourceType: 'image' as 'image' | 'video' });
 
   const [customerQuery, setCustomerQuery] = useState('');
   const [showAddCustomer, setShowAddCustomer] = useState(false);
@@ -2548,24 +2550,32 @@ export default function AdminDashboard({
     if (onDirtyChange) onDirtyChange(true);
   };
 
-  // Add Mock File Upload
+  // Add File Upload (Cloudinary CDN & Database)
   const handleAddFileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newFileForm.fileName || !newFileForm.url) return;
+    if (!newFileForm.url) return;
 
+    const isVid = newFileForm.url.toLowerCase().includes('.mp4') || 
+                  newFileForm.url.toLowerCase().includes('.webm') || 
+                  newFileForm.url.toLowerCase().includes('.mov') || 
+                  newFileForm.url.toLowerCase().includes('/video/upload/');
+
+    const cleanName = newFileForm.fileName.trim() || (isVid ? `video-${Date.now()}.mp4` : `asset-${Date.now()}.png`);
     const file: FileEntry = {
       id: `file-${Date.now()}`,
-      fileName: newFileForm.fileName.endsWith('.png') || newFileForm.fileName.endsWith('.jpg') ? newFileForm.fileName : `${newFileForm.fileName}.png`,
-      altText: newFileForm.altText || 'Media File Asset description text',
+      fileName: cleanName,
+      altText: newFileForm.altText || (isVid ? 'Runway / Video Banner' : 'Storefront Media Asset'),
       dateAdded: 'Today at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      size: `${(Math.random() * 400 + 40).toFixed(2)} KB`,
-      references: 'Unused / Builder',
-      url: newFileForm.url
+      size: isVid ? '15.2 MB' : `${(Math.random() * 400 + 40).toFixed(2)} KB`,
+      references: isVid ? 'Video Section' : 'Storefront Media',
+      url: newFileForm.url,
+      resourceType: isVid ? 'video' : 'image',
+      isCloudinary: newFileForm.url.includes('cloudinary')
     };
 
     onUpdateFiles([file, ...files]);
     setShowAddFile(false);
-    setNewFileForm({ fileName: '', altText: '', url: '' });
+    setNewFileForm({ fileName: '', altText: '', url: '', resourceType: 'image' });
   };
 
   const handleDeleteFile = (id: string) => {
@@ -7295,59 +7305,26 @@ export default function AdminDashboard({
                               <p className="text-[8.5px] text-slate-400 mt-1">Provide the YouTube 11-char ID or URL. If blank, it will fall back to MP4 upload/link.</p>
                             </div>
 
-                            {/* MP4 Source Input */}
-                            <div className="border-t border-slate-100 pt-3">
-                              <label className="block text-slate-650 font-bold uppercase tracking-wider text-[8.5px] mb-1">Direct MP4 URL (Fallback / Native Upload)</label>
-                              <input
-                                type="text"
-                                placeholder="https://example.com/video.mp4"
+                            {/* MP4 Video Uploader via Cloudinary & Database */}
+                            <div className="border-t border-slate-100 pt-3 space-y-3">
+                              <ImageUploadInput
+                                label="Upload Cloudinary / MP4 Video File"
                                 value={currentlyEditingSection.settings.videoMp4Url || ''}
-                                onChange={(e) => handleUpdateSectionSettings('videoMp4Url', e.target.value)}
-                                className="w-full text-xs font-semibold border p-2 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-indigo-650"
-                              />
-                            </div>
-
-                            {/* Native MP4 File Uploader */}
-                            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60 space-y-2">
-                              <span className="text-[8.5px] font-black text-slate-500 uppercase block">Upload Local MP4 Video File</span>
-                              <input
-                                type="file"
+                                onChange={(url) => handleUpdateSectionSettings('videoMp4Url', url)}
+                                placeholder="https://res.cloudinary.com/... or upload local MP4"
                                 accept="video/mp4,video/*"
-                                onChange={async (e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    if (!file.type.startsWith('video/')) {
-                                      alert('Only video files are permitted (e.g., mp4, webm)!');
-                                      return;
-                                    }
-                                    const reader = new FileReader();
-                                    reader.onload = async () => {
-                                      if (typeof reader.result === 'string') {
-                                        try {
-                                          const res = await fetch('/api/upload', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ data: reader.result })
-                                          });
-                                          if (!res.ok) throw new Error(`Server returned status code ${res.status}`);
-                                          const info = await res.json();
-                                          if (info.url) {
-                                            handleUpdateSectionSettings('videoMp4Url', info.url);
-                                            alert('MP4 Video uploaded successfully and database streaming URL saved!');
-                                          } else {
-                                            handleUpdateSectionSettings('videoMp4Url', reader.result);
-                                          }
-                                        } catch (err) {
-                                          console.warn('[VideoUpload] API upload failed, falling back to local base64:', err);
-                                          handleUpdateSectionSettings('videoMp4Url', reader.result);
-                                          alert('Uploaded successfully (stored in browser fallback state).');
-                                        }
-                                      }
-                                    };
-                                    reader.readAsDataURL(file);
-                                  }
-                                }}
-                                className="text-[10px] w-full cursor-pointer file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-black file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                resourceType="video"
+                                allowMediaLibrary={true}
+                              />
+
+                              <ImageUploadInput
+                                label="Video Poster / Fallback Image"
+                                value={currentlyEditingSection.settings.imageUrl || ''}
+                                onChange={(url) => handleUpdateSectionSettings('imageUrl', url)}
+                                placeholder="Poster image displayed before video plays..."
+                                accept="image/*"
+                                resourceType="image"
+                                allowMediaLibrary={true}
                               />
                             </div>
 
@@ -8466,6 +8443,40 @@ export default function AdminDashboard({
         {activeTab === 'files' && (
           <div className="space-y-6">
             
+            {/* Cloudinary CDN & Database Storage Status Banner */}
+            <div className="bg-gradient-to-r from-sky-50 via-white to-indigo-50/50 border border-sky-150 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white flex items-center justify-center shadow-xs">
+                  <Cloud className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                      Cloudinary Media CDN & Database Storage
+                    </h3>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" />
+                      Active CDN & Backup
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                    Images and MP4 videos uploaded across the store are stored on Cloudinary and tracked in your database
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowCloudinaryConfigModal(true)}
+                  className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Settings className="h-3.5 w-3.5 text-slate-500" />
+                  <span>Cloudinary Credentials</span>
+                </button>
+              </div>
+            </div>
+
             {/* Header controls filter */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
@@ -8511,7 +8522,7 @@ export default function AdminDashboard({
                   onClick={() => setShowAddFile(true)}
                   className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs p-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
-                  <Plus className="h-4 w-4" /> Upload Custom Image Asset
+                  <Plus className="h-4 w-4" /> Upload Image / Video Asset
                 </button>
               </div>
             </div>
@@ -8560,7 +8571,7 @@ export default function AdminDashboard({
                       <th className="p-4">File Name</th>
                       <th className="p-4">Alternative Alt Text</th>
                       <th className="p-4">Date Uploaded</th>
-                      <th className="p-4">Size</th>
+                      <th className="p-4">Size & Storage</th>
                       <th className="p-4">Linked Reference</th>
                       <th className="p-4 text-center">Action</th>
                     </tr>
@@ -8571,99 +8582,172 @@ export default function AdminDashboard({
                         <td colSpan={8} className="text-center py-12 text-slate-400">No media assets configured.</td>
                       </tr>
                     ) : (
-                      filteredFiles.map(file => (
-                        <tr key={file.id} className="hover:bg-slate-50/50">
-                          <td className="p-4 w-12 text-center">
-                            <input 
-                              type="checkbox"
-                              className="rounded border-slate-300 text-slate-900 focus:ring-slate-500 h-4 w-4 cursor-pointer"
-                              checked={selectedFileIds.includes(file.id)}
-                              onChange={(e) => handleSelectFile(file.id, e.target.checked)}
-                            />
-                          </td>
-                          <td className="p-4 shrink-0">
-                            <img
-                              src={file.url}
-                              alt={file.altText}
-                              className="w-12 h-12 object-cover rounded-md bg-slate-50 border border-slate-100"
-                              referrerPolicy="no-referrer"
-                            />
-                          </td>
-                          <td className="p-4 text-slate-905 max-w-xs font-mono font-bold leading-normal text-[11px] truncate">{file.fileName}</td>
-                          <td className="p-4 text-slate-500 max-w-xs truncate">{file.altText}</td>
-                          <td className="p-4 text-slate-400">{file.dateAdded}</td>
-                          <td className="p-4 font-semibold text-slate-700">{file.size}</td>
-                          <td className="p-4 text-indigo-600 font-bold">{file.references}</td>
-                          <td className="p-4 text-center">
-                            <button
-                              onClick={() => handleDeleteFile(file.id)}
-                              className="text-red-500 hover:text-red-700 font-extrabold cursor-pointer"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                      filteredFiles.map(file => {
+                        const isVid = file.resourceType === 'video' || 
+                                      file.fileName?.toLowerCase().endsWith('.mp4') || 
+                                      file.fileName?.toLowerCase().endsWith('.webm') || 
+                                      file.url?.toLowerCase().includes('.mp4') || 
+                                      file.url?.toLowerCase().includes('/video/upload/');
+
+                        return (
+                          <tr key={file.id} className="hover:bg-slate-50/50">
+                            <td className="p-4 w-12 text-center">
+                              <input 
+                                type="checkbox"
+                                className="rounded border-slate-300 text-slate-900 focus:ring-slate-500 h-4 w-4 cursor-pointer"
+                                checked={selectedFileIds.includes(file.id)}
+                                onChange={(e) => handleSelectFile(file.id, e.target.checked)}
+                              />
+                            </td>
+                            <td className="p-4 shrink-0">
+                              {isVid ? (
+                                <div className="w-12 h-12 rounded-md bg-black relative flex items-center justify-center overflow-hidden border border-slate-200">
+                                  <video src={file.url} className="w-full h-full object-cover opacity-80" preload="metadata" />
+                                  <Play className="h-4 w-4 text-white fill-white absolute" />
+                                </div>
+                              ) : (
+                                <img
+                                  src={file.url}
+                                  alt={file.altText}
+                                  className="w-12 h-12 object-cover rounded-md bg-slate-50 border border-slate-100"
+                                  referrerPolicy="no-referrer"
+                                />
+                              )}
+                            </td>
+                            <td className="p-4 text-slate-905 max-w-xs font-mono font-bold leading-normal text-[11px] truncate">
+                              <div className="flex items-center gap-1.5">
+                                {isVid ? (
+                                  <Film className="h-3 w-3 text-indigo-600 shrink-0" />
+                                ) : (
+                                  <ImageIcon className="h-3 w-3 text-slate-400 shrink-0" />
+                                )}
+                                <span className="truncate">{file.fileName}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 text-slate-500 max-w-xs truncate">{file.altText}</td>
+                            <td className="p-4 text-slate-400">{file.dateAdded}</td>
+                            <td className="p-4 text-slate-700">
+                              <div className="font-semibold">{file.size}</div>
+                              {file.url?.includes('cloudinary') ? (
+                                <span className="inline-flex items-center gap-0.5 text-[8px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200 mt-0.5">
+                                  <Cloud className="h-2 w-2 text-sky-600" /> Cloudinary CDN
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-0.5 text-[8px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mt-0.5">
+                                  <Database className="h-2 w-2 text-emerald-600" /> Database Stored
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-4 text-indigo-600 font-bold">{file.references}</td>
+                            <td className="p-4 text-center">
+                              <button
+                                onClick={() => handleDeleteFile(file.id)}
+                                className="text-red-500 hover:text-red-700 font-extrabold cursor-pointer"
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            {/* Upload File Modal */}
+            {/* Cloudinary & Database Media Uploader Modal */}
             {showAddFile && (
-              <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl animate-scale">
+              <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 max-w-md w-full shadow-2xl animate-scale text-left">
                   <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
-                    <h3 className="font-extrabold text-slate-800 text-sm">Upload Mock File Link</h3>
-                    <button onClick={() => setShowAddFile(false)} className="text-slate-400 hover:text-slate-650 cursor-pointer text-xs font-bold">Close</button>
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-xl shadow-xs">
+                        <Upload className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-slate-900 text-sm">Upload Media to Cloudinary</h3>
+                        <p className="text-[10px] text-slate-500">Image & MP4 Video CDN with Database Backup</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setShowAddFile(false)} className="text-slate-400 hover:text-slate-650 cursor-pointer text-xs font-bold p-1">Close</button>
                   </div>
 
-                  <form onSubmit={handleAddFileSubmit} className="space-y-4 text-xs">
+                  <div className="space-y-4 text-xs">
+                    <ImageUploadInput
+                      label="Select or Drag Image / Video File"
+                      value={newFileForm.url}
+                      onChange={(uploadedUrl) => {
+                        const isVid = uploadedUrl.includes('.mp4') || uploadedUrl.includes('.webm') || uploadedUrl.includes('/video/upload/');
+                        setNewFileForm(prev => ({
+                          ...prev,
+                          url: uploadedUrl,
+                          fileName: prev.fileName || (isVid ? `runway-video-${Date.now()}.mp4` : `media-asset-${Date.now()}.png`),
+                          resourceType: isVid ? 'video' : 'image'
+                        }));
+                      }}
+                      accept="image/*,video/*"
+                      resourceType="auto"
+                      allowMediaLibrary={false}
+                      placeholder="Paste Cloudinary / HTTPS URL or drop file..."
+                    />
+
                     <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">File Name</label>
+                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Custom File Name</label>
                       <input
-                        id="file-form-name"
                         type="text"
-                        required
-                        placeholder="e.g. Clew_Spearmint_pack.png"
+                        placeholder="e.g. Clew_Spearmint_pack.png or runway.mp4"
                         value={newFileForm.fileName}
                         onChange={(e) => setNewFileForm({ ...newFileForm, fileName: e.target.value })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
+                        className="w-full border border-slate-250 p-2.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-650 bg-slate-50"
                       />
                     </div>
+
                     <div>
                       <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Alternative Alt Description</label>
                       <input
-                        id="file-form-alt"
                         type="text"
-                        required
-                        placeholder="e.g. Atelier Heavyweight Wool Overcoat banner"
+                        placeholder="e.g. Atelier Fall Runway Showcase"
                         value={newFileForm.altText}
                         onChange={(e) => setNewFileForm({ ...newFileForm, altText: e.target.value })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-600 uppercase tracking-widest text-[9px] mb-1">Image Cloud Asset URL</label>
-                      <input
-                        id="file-form-url"
-                        type="text"
-                        required
-                        placeholder="https://images.unsplash.com/..."
-                        value={newFileForm.url}
-                        onChange={(e) => setNewFileForm({ ...newFileForm, url: e.target.value })}
-                        className="w-full border p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500"
+                        className="w-full border border-slate-250 p-2.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-650 bg-slate-50"
                       />
                     </div>
 
-                    <button
-                      type="submit"
-                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg cursor-pointer"
-                    >
-                      Save Media file Asset
-                    </button>
-                  </form>
+                    <div className="flex items-center justify-end gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddFile(false)}
+                        className="px-4 py-2 border border-slate-200 text-slate-600 font-bold rounded-xl text-xs hover:bg-slate-50 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!newFileForm.url}
+                        onClick={handleAddFileSubmit}
+                        className="px-5 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold rounded-xl text-xs cursor-pointer shadow-xs flex items-center gap-1.5"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        Save to Media Library
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Cloudinary Credentials Config Modal */}
+            {showCloudinaryConfigModal && (
+              <div 
+                className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
+                onClick={() => setShowCloudinaryConfigModal(false)}
+              >
+                <div 
+                  className="max-w-2xl w-full animate-scale"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <CloudinarySettingsCard onConfigChanged={() => {}} />
                 </div>
               </div>
             )}
@@ -10581,6 +10665,9 @@ export default function AdminDashboard({
                 </div>
               </div>
             </div>
+
+            {/* Card 4: Cloudinary Media Storage CDN Configuration */}
+            <CloudinarySettingsCard onConfigChanged={() => {}} />
 
           </div>
 
