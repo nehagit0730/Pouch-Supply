@@ -4,28 +4,67 @@ import { fetchLayoutSettingsFromNeon, saveResourceToNeon, fetchResourceFromNeon 
 import fs from 'fs';
 import path from 'path';
 
+// Helper to check if a string is an unreplaced template placeholder
+function isPlaceholder(str?: string): boolean {
+  if (!str) return true;
+  const lower = str.toLowerCase();
+  return (
+    lower.includes('<') ||
+    lower.includes('>') ||
+    lower.includes('your_api_key') ||
+    lower.includes('your_api_secret') ||
+    lower.includes('api_key:api_secret')
+  );
+}
+
 // Check for Cloudinary configuration from process.env or database settings
 export function configureCloudinary(customConfig?: { cloudName?: string; apiKey?: string; apiSecret?: string; cloudinaryUrl?: string }) {
-  const cloudinaryUrl = customConfig?.cloudinaryUrl || process.env.CLOUDINARY_URL;
-  const cloudName = customConfig?.cloudName || process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = customConfig?.apiKey || process.env.CLOUDINARY_API_KEY;
-  const apiSecret = customConfig?.apiSecret || process.env.CLOUDINARY_API_SECRET;
+  const rawCloudName = (customConfig?.cloudName || process.env.CLOUDINARY_CLOUD_NAME || '').replace(/^@+/, '').trim();
+  const rawApiKey = (customConfig?.apiKey || process.env.CLOUDINARY_API_KEY || '').trim();
+  const rawApiSecret = (customConfig?.apiSecret || process.env.CLOUDINARY_API_SECRET || '').trim();
+  const rawUrl = (customConfig?.cloudinaryUrl || process.env.CLOUDINARY_URL || '').trim();
 
-  if (cloudinaryUrl && cloudinaryUrl.trim() !== '') {
+  // 1. If explicit credentials are provided and valid, prioritize them
+  if (rawCloudName && rawApiKey && rawApiSecret && !isPlaceholder(rawApiKey) && !isPlaceholder(rawApiSecret)) {
     cloudinary.config({
-      cloudinary_url: cloudinaryUrl.trim()
+      cloud_name: rawCloudName,
+      api_key: rawApiKey,
+      api_secret: rawApiSecret,
+      secure: true
+    });
+    // Set valid environment variable so SDK helpers use the real credentials
+    process.env.CLOUDINARY_URL = `cloudinary://${rawApiKey}:${rawApiSecret}@${rawCloudName}`;
+    process.env.CLOUDINARY_CLOUD_NAME = rawCloudName;
+    process.env.CLOUDINARY_API_KEY = rawApiKey;
+    process.env.CLOUDINARY_API_SECRET = rawApiSecret;
+    return true;
+  }
+
+  // 2. If a real (non-placeholder) CLOUDINARY_URL was provided
+  if (rawUrl && !isPlaceholder(rawUrl) && rawUrl.startsWith('cloudinary://')) {
+    cloudinary.config({
+      cloudinary_url: rawUrl,
+      secure: true
     });
     return true;
   }
 
-  if (cloudName && apiKey && apiSecret) {
-    cloudinary.config({
-      cloud_name: cloudName.trim(),
-      api_key: apiKey.trim(),
-      api_secret: apiSecret.trim(),
-      secure: true
-    });
-    return true;
+  // 3. If rawUrl had placeholders but rawCloudName is known
+  if (rawUrl && isPlaceholder(rawUrl)) {
+    try {
+      const match = rawUrl.match(/@([^/?#]+)/);
+      const extractedName = match && match[1] ? match[1].replace(/^@+/, '').trim() : rawCloudName;
+      if (extractedName && rawApiKey && rawApiSecret && !isPlaceholder(rawApiKey) && !isPlaceholder(rawApiSecret)) {
+        cloudinary.config({
+          cloud_name: extractedName,
+          api_key: rawApiKey,
+          api_secret: rawApiSecret,
+          secure: true
+        });
+        process.env.CLOUDINARY_URL = `cloudinary://${rawApiKey}:${rawApiSecret}@${extractedName}`;
+        return true;
+      }
+    } catch (_) {}
   }
 
   return false;
@@ -41,16 +80,18 @@ export function disconnectCloudinary() {
 }
 
 export async function ensureCloudinaryConfigured(): Promise<boolean> {
-  if (isCloudinaryConfigured()) return true;
-
-  // 1. Try env vars
-  if (configureCloudinary()) return true;
+  // 1. Try env / direct config
+  if (configureCloudinary()) {
+    if (isCloudinaryConfigured()) return true;
+  }
 
   // 2. Try fetching from Neon Postgres database
   try {
     const dbSettings = await fetchLayoutSettingsFromNeon();
     if (dbSettings && dbSettings.cloudinaryConfig) {
-      if (configureCloudinary(dbSettings.cloudinaryConfig)) return true;
+      if (configureCloudinary(dbSettings.cloudinaryConfig)) {
+        if (isCloudinaryConfigured()) return true;
+      }
     }
   } catch (_) {}
 
@@ -60,12 +101,14 @@ export async function ensureCloudinaryConfigured(): Promise<boolean> {
     if (fs.existsSync(localPath)) {
       const raw = JSON.parse(fs.readFileSync(localPath, 'utf8'));
       if (raw && raw.cloudinaryConfig) {
-        if (configureCloudinary(raw.cloudinaryConfig)) return true;
+        if (configureCloudinary(raw.cloudinaryConfig)) {
+          if (isCloudinaryConfigured()) return true;
+        }
       }
     }
   } catch (_) {}
 
-  return false;
+  return isCloudinaryConfigured();
 }
 
 // Initial configuration attempt from env
@@ -86,7 +129,14 @@ export interface CloudinaryUploadResult {
 
 export function isCloudinaryConfigured(): boolean {
   const config = cloudinary.config();
-  return Boolean(config.cloud_name && (config.api_key || process.env.CLOUDINARY_URL));
+  return Boolean(
+    config.cloud_name && 
+    !isPlaceholder(config.cloud_name) &&
+    config.api_key && 
+    !isPlaceholder(config.api_key) &&
+    config.api_secret &&
+    !isPlaceholder(config.api_secret)
+  );
 }
 
 export function getCloudinaryStatus() {

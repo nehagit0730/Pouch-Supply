@@ -14,11 +14,8 @@ const uploadMiddleware = multer({
 // GET /api/cloudinary/status
 router.get("/status", async (req, res) => {
   try {
-    // Also check if credentials stored in layoutSettings
-    const settings = await fetchLayoutSettings();
-    if (settings && (settings as any).cloudinaryConfig) {
-      configureCloudinary((settings as any).cloudinaryConfig);
-    }
+    const { ensureCloudinaryConfigured } = await import("../services/cloudinaryService");
+    await ensureCloudinaryConfigured();
     const status = getCloudinaryStatus();
     res.json(status);
   } catch (err: any) {
@@ -29,12 +26,16 @@ router.get("/status", async (req, res) => {
 // POST /api/cloudinary/config
 router.post("/config", async (req, res) => {
   try {
-    const { cloudName, apiKey, apiSecret, cloudinaryUrl } = req.body;
+    let { cloudName, apiKey, apiSecret, cloudinaryUrl } = req.body;
+    cloudName = cloudName ? String(cloudName).replace(/^@+/, '').trim() : '';
+    apiKey = apiKey ? String(apiKey).trim() : '';
+    apiSecret = apiSecret ? String(apiSecret).trim() : '';
+    cloudinaryUrl = cloudinaryUrl ? String(cloudinaryUrl).trim() : '';
     
     // Test configuration
     const success = configureCloudinary({ cloudName, apiKey, apiSecret, cloudinaryUrl });
     if (!success) {
-      return res.status(400).json({ error: "Please provide either a CLOUDINARY_URL or Cloud Name, API Key, and API Secret." });
+      return res.status(400).json({ error: "Please provide either a valid CLOUDINARY_URL or Cloud Name, API Key, and API Secret." });
     }
 
     // Verify connection by calling Cloudinary ping
@@ -42,7 +43,6 @@ router.post("/config", async (req, res) => {
       await cloudinary.api.ping();
     } catch (pingErr: any) {
       console.warn("[Cloudinary Config] Ping check failed with provided credentials:", pingErr.message);
-      // Still persist if user wants to save
     }
 
     // Persist to database layout_settings so it survives server restarts
@@ -50,10 +50,10 @@ router.post("/config", async (req, res) => {
     const updatedSettings = {
       ...currentSettings,
       cloudinaryConfig: {
-        cloudName: cloudName?.trim(),
-        apiKey: apiKey?.trim(),
-        apiSecret: apiSecret?.trim(),
-        cloudinaryUrl: cloudinaryUrl?.trim()
+        cloudName,
+        apiKey,
+        apiSecret,
+        cloudinaryUrl
       }
     };
     await saveLayoutSettings(updatedSettings);
@@ -89,10 +89,19 @@ router.get("/config", async (req, res) => {
 // POST /api/cloudinary/test
 router.post("/test", async (req, res) => {
   try {
-    const { cloudName, apiKey, apiSecret, cloudinaryUrl } = req.body;
-    if (cloudName || cloudinaryUrl) {
+    let { cloudName, apiKey, apiSecret, cloudinaryUrl } = req.body;
+    cloudName = cloudName ? String(cloudName).replace(/^@+/, '').trim() : undefined;
+    apiKey = apiKey ? String(apiKey).trim() : undefined;
+    apiSecret = apiSecret ? String(apiSecret).trim() : undefined;
+    cloudinaryUrl = cloudinaryUrl ? String(cloudinaryUrl).trim() : undefined;
+
+    if (cloudName || cloudinaryUrl || apiKey) {
       configureCloudinary({ cloudName, apiKey, apiSecret, cloudinaryUrl });
+    } else {
+      const { ensureCloudinaryConfigured } = await import("../services/cloudinaryService");
+      await ensureCloudinaryConfigured();
     }
+
     const pingResult = await cloudinary.api.ping();
     res.json({
       success: true,
