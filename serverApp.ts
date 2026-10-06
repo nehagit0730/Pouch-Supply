@@ -15,12 +15,16 @@ import blogsRouter from "./backend/routes/blogs";
 import razorpayRouter from "./backend/routes/razorpay";
 import recycleBinRouter from "./backend/routes/recycleBin";
 import cloudinaryRouter from "./backend/routes/cloudinary";
+import developerModeRouter from "./backend/routes/developerMode";
 import multer from "multer";
-import { uploadToCloudinary } from "./backend/services/cloudinaryService";
+import { uploadToCloudinary, ensureCloudinaryConfigured } from "./backend/services/cloudinaryService";
 import { FileEntry } from "./src/types";
 
 export async function createExpressApp() {
   const app = express();
+
+  // Initialize Cloudinary configuration asynchronously
+  ensureCloudinaryConfigured().catch(() => {});
 
   // Set limits for payload uploads since products or media arrays can be large
   // Vercel serverless functions pre-parse req.body. To prevent hanging on the streams,
@@ -323,6 +327,7 @@ export async function createExpressApp() {
   app.use("/api/razorpay", razorpayRouter);
   app.use("/api/recyclebin", recycleBinRouter);
   app.use("/api/cloudinary", cloudinaryRouter);
+  app.use("/api/developer-mode", developerModeRouter);
 
   // Serve placeholder.png directly from root workspace to handle all environments smoothly
   app.get("/placeholder.png", (req, res) => {

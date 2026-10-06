@@ -200,4 +200,48 @@ router.post("/upload", uploadMiddleware.single("file"), async (req, res) => {
   }
 });
 
+// POST /api/cloudinary/upload-url (Upload or migrate external URL into Cloudinary CDN)
+router.post("/upload-url", async (req, res) => {
+  try {
+    const { url, folder, fileName } = req.body;
+    if (!url || typeof url !== "string") {
+      return res.status(400).json({ error: "Missing url parameter" });
+    }
+
+    if (url.includes("res.cloudinary.com")) {
+      return res.json({
+        success: true,
+        url: url,
+        secure_url: url,
+        isCloudinary: true,
+        message: "Already on Cloudinary CDN"
+      });
+    }
+
+    const result = await uploadToCloudinary(url, {
+      folder: folder || "jade_tailor_luxury_store",
+      fileName: fileName || "migrated-asset"
+    });
+
+    if (!result) {
+      return res.status(400).json({
+        error: "Cloudinary is not configured. Please check your credentials in Development Mode."
+      });
+    }
+
+    res.json({
+      success: true,
+      url: result.secure_url,
+      secure_url: result.secure_url,
+      public_id: result.public_id,
+      format: result.format,
+      resource_type: result.resource_type,
+      isCloudinary: true
+    });
+  } catch (err: any) {
+    console.error("[Cloudinary Upload URL] Error:", err);
+    res.status(500).json({ error: err.message || "Failed to upload URL to Cloudinary" });
+  }
+});
+
 export default router;

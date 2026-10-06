@@ -18,7 +18,8 @@ import DiscountEditor from './DiscountEditor';
 import ShopifyPageBuilder from './ShopifyPageBuilder';
 import PlansCanOverlay from './PlansCanOverlay';
 import CloudinarySettingsCard from './CloudinarySettingsCard';
-import { Crown, Flame } from 'lucide-react';
+import DevelopmentModePanel from './DevelopmentModePanel';
+import { Crown, Flame, Terminal } from 'lucide-react';
 import { SUPPORTED_CURRENCIES, getActiveCurrency, setActiveCurrency, formatPrice } from '../utils/currency';
 import { DEFAULT_PAGES } from '../initialData';
 
@@ -589,7 +590,7 @@ function HowItWorksSectionAdmin({ sec }: HowItWorksSectionAdminProps) {
   );
 }
 
-type SidebarTab = 'analytics' | 'orders' | 'collections' | 'products' | 'pages' | 'blogs' | 'files' | 'customers' | 'discounts' | 'layout' | 'settings' | 'recyclebin';
+type SidebarTab = 'analytics' | 'orders' | 'collections' | 'products' | 'pages' | 'blogs' | 'files' | 'customers' | 'discounts' | 'layout' | 'settings' | 'recyclebin' | 'development';
 
 export default function AdminDashboard({
   products: parentProducts,
@@ -635,6 +636,7 @@ export default function AdminDashboard({
     layout: 'layout',
     settings: 'settings',
     recyclebin: 'recycle-bin',
+    development: 'devlopment-mode',
   };
 
   const pathToTabMap: Record<string, SidebarTab> = {
@@ -651,6 +653,9 @@ export default function AdminDashboard({
     settings: 'settings',
     'recycle-bin': 'recyclebin',
     'recyclebin': 'recyclebin',
+    'devlopment-mode': 'development',
+    'development-mode': 'development',
+    'development': 'development',
   };
 
   const getInitialTab = (): SidebarTab => {
@@ -2977,6 +2982,7 @@ export default function AdminDashboard({
                 { id: 'layout', label: 'Header & Footer', icon: LayoutGrid },
                 { id: 'recyclebin', label: 'Recycle Bin', icon: Trash2, badge: (recycleBin || []).length },
                 { id: 'settings', label: 'Settings', icon: Settings },
+                { id: 'development', label: 'Development Mode', icon: Terminal, customBadge: 'Dev' },
               ].map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -3000,6 +3006,11 @@ export default function AdminDashboard({
                     {item.badge !== undefined && item.badge > 0 && (
                       <span className="bg-[#e8ecf8] text-[#05164e] font-bold text-[10px] py-0.5 px-2 rounded-full border border-[#c5d0f1]">
                         {item.badge}
+                      </span>
+                    )}
+                    {(item as any).customBadge && (
+                      <span className="bg-indigo-100 text-indigo-700 font-extrabold text-[9px] py-0.5 px-1.5 rounded uppercase border border-indigo-200">
+                        {(item as any).customBadge}
                       </span>
                     )}
                   </button>
@@ -4320,12 +4331,19 @@ export default function AdminDashboard({
                                 )}
                               </td>
                               <td className="p-4 shrink-0">
-                                <img
-                                  src={col.image}
-                                  alt=""
-                                  className="w-10 h-10 object-cover rounded-md bg-slate-50 border border-slate-100"
-                                  referrerPolicy="no-referrer"
-                                />
+                                <div className="relative inline-block">
+                                  <img
+                                    src={col.image}
+                                    alt=""
+                                    className="w-10 h-10 object-cover rounded-md bg-slate-50 border border-slate-100"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                  {col.image && col.image.includes('res.cloudinary.com') && (
+                                    <span className="absolute -bottom-1 -right-1 bg-sky-600 text-white rounded p-0.5 shadow-xs" title="Hosted on Cloudinary CDN">
+                                      <Cloud className="w-2.5 h-2.5" />
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                               <td className="p-4 font-bold text-slate-900 leading-normal max-w-xs">{col.title}</td>
                               <td className="p-4">
@@ -10981,6 +10999,13 @@ export default function AdminDashboard({
             </table>
           )}
         </div>
+      </div>
+    )}
+
+    {/* DEVELOPMENT MODE VIEW */}
+    {activeTab === 'development' && (
+      <div className="space-y-6 text-left animate-fadeIn">
+        <DevelopmentModePanel />
       </div>
     )}
 

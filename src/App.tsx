@@ -25,6 +25,7 @@ import TermsConditions from './components/TermsConditions';
 import ProductDetailView from './components/ProductDetailView';
 import CollectionDetailView from './components/CollectionDetailView';
 import CheckoutView from './components/CheckoutView';
+import PasswordProtectionGate from './components/PasswordProtectionGate';
 import { RazorpayGatewaySimulator, PaymentSuccessScreen, PaymentFailedScreen, PaymentCancelledScreen } from './components/PaymentStatusScreens';
 import { 
   Sparkles, ShieldCheck, Truck, RefreshCw, Star, ArrowRight, Package, ShoppingCart, Check, Heart, User, CheckCircle2, Save, AlertTriangle, Search, Mail, X
@@ -312,6 +313,83 @@ export default function App() {
 
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
   const [isDbOffline, setIsDbOffline] = useState<boolean>(false);
+
+  // Developer Mode Settings (Custom CSS, Custom JS, Site Protection Mode)
+  const [devSettings, setDevSettings] = useState<{
+    customCssEnabled?: boolean;
+    customCss?: string;
+    customJsEnabled?: boolean;
+    customJs?: string;
+    siteProtectionMode?: 'live' | 'password_protected';
+    comingSoonTitle?: string;
+    comingSoonSubtitle?: string;
+    comingSoonMessage?: string;
+    comingSoonLaunchDate?: string;
+    comingSoonShowNewsletter?: boolean;
+    comingSoonBackgroundUrl?: string;
+    projectName?: string;
+  }>({});
+
+  const [isStorefrontUnlocked, setIsStorefrontUnlocked] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('storefront_unlocked') === 'true';
+    } catch (_) {
+      return false;
+    }
+  });
+
+  // Load public developer settings
+  const loadDevPublicSettings = async () => {
+    try {
+      const res = await fetch('/api/developer-mode/public');
+      if (res.ok) {
+        const data = await res.json();
+        setDevSettings(data);
+      }
+    } catch (_) {}
+  };
+
+  useEffect(() => {
+    loadDevPublicSettings();
+
+    const handleDevUpdate = (e: any) => {
+      if (e.detail) {
+        setDevSettings(prev => ({ ...prev, ...e.detail }));
+      } else {
+        loadDevPublicSettings();
+      }
+    };
+
+    window.addEventListener('devmode-settings-updated', handleDevUpdate);
+    return () => window.removeEventListener('devmode-settings-updated', handleDevUpdate);
+  }, []);
+
+  // Dynamically inject Custom CSS into document head
+  useEffect(() => {
+    let existingStyle = document.getElementById('custom-developer-css');
+    if (devSettings.customCssEnabled && devSettings.customCss) {
+      if (!existingStyle) {
+        existingStyle = document.createElement('style');
+        existingStyle.id = 'custom-developer-css';
+        document.head.appendChild(existingStyle);
+      }
+      existingStyle.textContent = devSettings.customCss;
+    } else if (existingStyle) {
+      existingStyle.remove();
+    }
+  }, [devSettings.customCss, devSettings.customCssEnabled]);
+
+  // Dynamically execute Custom JavaScript safely
+  useEffect(() => {
+    if (devSettings.customJsEnabled && devSettings.customJs) {
+      try {
+        const runner = new Function(devSettings.customJs);
+        runner();
+      } catch (err) {
+        console.warn('[Custom JavaScript Error]:', err);
+      }
+    }
+  }, [devSettings.customJs, devSettings.customJsEnabled]);
 
   // Reusable, highly robust sync engine that checks database connectivity headers
   const syncToApi = async (resource: string, payload: any[]) => {
@@ -1615,7 +1693,7 @@ export default function App() {
       )}
 
       {/* Universal header layout */}
-      {!isAdminActive && (
+      {!isAdminActive && !(devSettings.siteProtectionMode === 'password_protected' && !isStorefrontUnlocked) && (
         <Header
           currentTab={currentTab}
           onTabChange={(tab) => {
@@ -1732,6 +1810,22 @@ export default function App() {
               }}
             />
           )
+        ) : devSettings.siteProtectionMode === 'password_protected' && !isStorefrontUnlocked ? (
+          <PasswordProtectionGate
+            title={devSettings.comingSoonTitle}
+            subtitle={devSettings.comingSoonSubtitle}
+            message={devSettings.comingSoonMessage}
+            launchDate={devSettings.comingSoonLaunchDate}
+            showNewsletter={devSettings.comingSoonShowNewsletter}
+            backgroundUrl={devSettings.comingSoonBackgroundUrl}
+            projectName={devSettings.projectName || 'Jade Tailor'}
+            onUnlocked={() => {
+              setIsStorefrontUnlocked(true);
+            }}
+            onAdminLoginClick={() => {
+              setIsAdminActive(true);
+            }}
+          />
         ) : (
           
           /* VIEW 2: FRONTEND VIEW NAVIGATION */
@@ -2614,7 +2708,7 @@ export default function App() {
       )}
 
       {/* Universal Footer layout */}
-      {!isAdminActive && !['payment-razorpay-gateway', 'payment-success', 'payment-failed', 'payment-cancelled', 'frontend-checkout'].includes(currentTab) && (
+      {!isAdminActive && !(devSettings.siteProtectionMode === 'password_protected' && !isStorefrontUnlocked) && !['payment-razorpay-gateway', 'payment-success', 'payment-failed', 'payment-cancelled', 'frontend-checkout'].includes(currentTab) && (
         <Footer onNavigate={navigateToTab} layoutSettings={layoutSettings} />
       )}
 

@@ -3,7 +3,7 @@ import { Collection, Product } from '../types';
 import { 
   ArrowLeft, Search, Plus, X, Image as ImageIcon, Save, Check, Globe, LayoutTemplate, 
   HelpCircle, Sparkles, SlidersHorizontal, Trash2, ArrowUpDown, GripVertical, ChevronDown, CheckSquare, Square,
-  Eye
+  Eye, Cloud, ExternalLink, Copy, RefreshCw
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 
@@ -50,6 +50,34 @@ export default function CollectionEditor({
   // Toast confirmation
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [migratingCld, setMigratingCld] = useState(false);
+
+  const handleMigrateToCloudinary = async (targetUrl: string, isOg: boolean = false) => {
+    if (!targetUrl || targetUrl.includes('res.cloudinary.com')) return;
+    setMigratingCld(true);
+    try {
+      const res = await fetch('/api/cloudinary/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: targetUrl, folder: 'collections' })
+      });
+      const data = await res.json();
+      if (res.ok && data.secure_url) {
+        if (isOg) {
+          setOgImage(data.secure_url);
+        } else {
+          setImage(data.secure_url);
+        }
+        triggerToast('✓ Successfully uploaded image to Cloudinary CDN!');
+      } else {
+        throw new Error(data.error || 'Failed to upload to Cloudinary');
+      }
+    } catch (err: any) {
+      triggerToast('Cloudinary upload note: ' + err.message);
+    } finally {
+      setMigratingCld(false);
+    }
+  };
 
   // Initialize states from existing collection or draft blank
   useEffect(() => {
@@ -713,9 +741,16 @@ export default function CollectionEditor({
           </div>
 
           {/* Sidebar block 2: Image asset selection */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4.5">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-indigo-50/50">
-              <h3 className="font-extrabold text-slate-805 text-[10.5px] uppercase tracking-widest">Collection Image</h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-extrabold text-slate-805 text-[10.5px] uppercase tracking-widest">Collection Image</h3>
+                {image && image.includes('res.cloudinary.com') && (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] font-bold bg-sky-100 text-sky-800">
+                    <Cloud className="w-2.5 h-2.5 text-sky-600" /> CDN
+                  </span>
+                )}
+              </div>
               
               {image && (
                 <div className="relative">
@@ -736,16 +771,82 @@ export default function CollectionEditor({
               )}
             </div>
 
-            <div className="space-y-3.5 text-center">
+            <div className="space-y-3 text-center">
               <ImageUploadInput
                 label="Featured Cover visual"
                 value={image}
                 onChange={(res) => {
                   setImage(res);
-                  triggerToast('Featured image updated.');
+                  if (res.includes('res.cloudinary.com')) {
+                    triggerToast('✓ Collection cover uploaded to Cloudinary CDN!');
+                  } else {
+                    triggerToast('Featured image updated.');
+                  }
                 }}
                 placeholder="Or specify cover URL link..."
               />
+
+              {/* Cloudinary CDN Indicator & Migration Helper */}
+              {image && (
+                <div className="p-2.5 rounded-xl border text-left text-xs space-y-1.5 bg-slate-50/70 border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Asset Storage:</span>
+                    {image.includes('res.cloudinary.com') ? (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
+                        <Cloud className="w-3 h-3 text-sky-600" />
+                        <span>Cloudinary CDN Active</span>
+                      </span>
+                    ) : image.startsWith('/api/images/') ? (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        <span>Database Stored</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                        <ExternalLink className="w-2.5 h-2.5" />
+                        <span>External Web URL</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* URL display & copy bar */}
+                  <div className="flex items-center gap-1 bg-white p-1.5 rounded-lg border border-slate-200 text-[10px] font-mono">
+                    <span className="truncate flex-1 text-slate-600" title={image}>{image}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(image);
+                        triggerToast('Copied image URL to clipboard!');
+                      }}
+                      className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-800 cursor-pointer shrink-0"
+                      title="Copy URL"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </button>
+                    <a
+                      href={image}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-800 cursor-pointer shrink-0"
+                      title="Open full size image"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  {/* If not yet on Cloudinary, provide one-click migration */}
+                  {!image.includes('res.cloudinary.com') && (
+                    <button
+                      type="button"
+                      disabled={migratingCld}
+                      onClick={() => handleMigrateToCloudinary(image, false)}
+                      className="w-full py-1.5 px-2 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <Cloud className={`w-3 h-3 ${migratingCld ? 'animate-bounce' : ''}`} />
+                      <span>{migratingCld ? 'Migrating to Cloudinary...' : 'Upload / Convert to Cloudinary CDN'}</span>
+                    </button>
+                  )}
+                </div>
+              )}
 
               <p className="text-[9.5px] leading-relaxed text-slate-400 max-w-xs mx-auto">
                 Appears on collection grids and slideshow elements as head visual banner. Ensure to insert high contrast landscapes.

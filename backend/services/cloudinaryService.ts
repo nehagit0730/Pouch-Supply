@@ -19,10 +19,23 @@ function isPlaceholder(str?: string): boolean {
 
 // Check for Cloudinary configuration from process.env or database settings
 export function configureCloudinary(customConfig?: { cloudName?: string; apiKey?: string; apiSecret?: string; cloudinaryUrl?: string }) {
-  const rawCloudName = (customConfig?.cloudName || process.env.CLOUDINARY_CLOUD_NAME || '').replace(/^@+/, '').trim();
-  const rawApiKey = (customConfig?.apiKey || process.env.CLOUDINARY_API_KEY || '').trim();
-  const rawApiSecret = (customConfig?.apiSecret || process.env.CLOUDINARY_API_SECRET || '').trim();
+  let rawCloudName = (customConfig?.cloudName || process.env.CLOUDINARY_CLOUD_NAME || '').replace(/^@+/, '').trim();
+  let rawApiKey = (customConfig?.apiKey || process.env.CLOUDINARY_API_KEY || '').trim();
+  let rawApiSecret = (customConfig?.apiSecret || process.env.CLOUDINARY_API_SECRET || '').trim();
   const rawUrl = (customConfig?.cloudinaryUrl || process.env.CLOUDINARY_URL || '').trim();
+
+  // If a full CLOUDINARY_URL was provided, parse out credentials to guarantee compatibility
+  if (rawUrl && !isPlaceholder(rawUrl) && rawUrl.startsWith('cloudinary://')) {
+    const urlMatch = rawUrl.match(/^cloudinary:\/\/([^:]+):([^@]+)@([^/?#]+)/);
+    if (urlMatch) {
+      const parsedKey = urlMatch[1].trim();
+      const parsedSecret = urlMatch[2].trim();
+      const parsedName = urlMatch[3].replace(/^@+/, '').trim();
+      if (!rawApiKey && !isPlaceholder(parsedKey)) rawApiKey = parsedKey;
+      if (!rawApiSecret && !isPlaceholder(parsedSecret)) rawApiSecret = parsedSecret;
+      if (!rawCloudName && !isPlaceholder(parsedName)) rawCloudName = parsedName;
+    }
+  }
 
   // 1. If explicit credentials are provided and valid, prioritize them
   if (rawCloudName && rawApiKey && rawApiSecret && !isPlaceholder(rawApiKey) && !isPlaceholder(rawApiSecret)) {
@@ -40,16 +53,7 @@ export function configureCloudinary(customConfig?: { cloudName?: string; apiKey?
     return true;
   }
 
-  // 2. If a real (non-placeholder) CLOUDINARY_URL was provided
-  if (rawUrl && !isPlaceholder(rawUrl) && rawUrl.startsWith('cloudinary://')) {
-    cloudinary.config({
-      cloudinary_url: rawUrl,
-      secure: true
-    });
-    return true;
-  }
-
-  // 3. If rawUrl had placeholders but rawCloudName is known
+  // 2. If rawUrl had placeholders but rawCloudName is known
   if (rawUrl && isPlaceholder(rawUrl)) {
     try {
       const match = rawUrl.match(/@([^/?#]+)/);
@@ -62,6 +66,7 @@ export function configureCloudinary(customConfig?: { cloudName?: string; apiKey?
           secure: true
         });
         process.env.CLOUDINARY_URL = `cloudinary://${rawApiKey}:${rawApiSecret}@${extractedName}`;
+        process.env.CLOUDINARY_CLOUD_NAME = extractedName;
         return true;
       }
     } catch (_) {}

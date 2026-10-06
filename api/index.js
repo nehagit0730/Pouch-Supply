@@ -1,518 +1,630 @@
-// serverApp.ts
-import express from "express";
-import path3 from "path";
-import fs3 from "fs";
-
-// serverDb.ts
-import fs2 from "fs";
-import path2 from "path";
-import dotenv2 from "dotenv";
+var __defProp = Object.defineProperty;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
 
 // src/initialData.ts
-var INITIAL_PRODUCTS = [
-  {
-    id: "prod-1",
-    title: "Oversized Heavyweight Wool Overcoat",
-    description: "Double-faced melton wool overcoat featuring dropped shoulders, wide notch lapels, horn buttons, and deep welt pockets. Designed for effortless cold-weather layering.",
-    price: 185,
-    compareAtPrice: 220,
-    costPerItem: 70,
-    sku: "APP-OVC-01",
-    barcode: "506001234001",
-    inventoryQuantity: 34,
-    status: "Active",
-    category: "Outerwear",
-    vendor: "Atelier",
-    tags: ["Outerwear", "Wool", "Bestseller", "Winter"],
-    image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80",
-    media: [
-      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&q=80"
-    ],
-    strength: "Charcoal Grey",
-    flavour: "Relaxed Fit",
-    format: "Outerwear",
-    weight: "1200g",
-    createdAt: "2026-09-01"
-  },
-  {
-    id: "prod-2",
-    title: "Relaxed Boxy Fit Organic Hoodie",
-    description: "Heavyweight 450gsm organic French terry cotton hoodie. Pre-shrunk with double-layered hood, kangaroo pocket, and ribbed side panels for maximum movement.",
-    price: 75,
-    compareAtPrice: 90,
-    costPerItem: 24,
-    sku: "APP-HOD-02",
-    barcode: "506001234002",
-    inventoryQuantity: 58,
-    status: "Active",
-    category: "Streetwear",
-    vendor: "Essentials",
-    tags: ["Streetwear", "Cotton", "New In", "Tops"],
-    image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80",
-    media: [
-      "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80"
-    ],
-    strength: "Washed Black",
-    flavour: "Boxy Fit",
-    format: "Tops",
-    weight: "750g",
-    createdAt: "2026-09-05"
-  },
-  {
-    id: "prod-3",
-    title: "Minimal Pleated Wide-Leg Trousers",
-    description: "Architectural tailored trousers cut from structured tropical wool blend. Features front double pleats, concealed hook closure, and clean straight-leg drape.",
-    price: 95,
-    compareAtPrice: 115,
-    costPerItem: 32,
-    sku: "APP-TRS-03",
-    barcode: "506001234003",
-    inventoryQuantity: 42,
-    status: "Active",
-    category: "Tailoring",
-    vendor: "Studio",
-    tags: ["Tailoring", "Pants", "Trending", "Minimalist"],
-    image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80",
-    media: [
-      "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80"
-    ],
-    strength: "Earthy Olive",
-    flavour: "Wide Leg",
-    format: "Bottoms",
-    weight: "500g",
-    createdAt: "2026-09-08"
-  },
-  {
-    id: "prod-4",
-    title: "Chunky Ribbed Cashmere Knit Sweater",
-    description: "Spun from 7-gauge Mongolian cashmere and extrafine merino wool. Designed with a structured mock neck, dropped shoulders, and chunky fisherman ribbing.",
-    price: 130,
-    compareAtPrice: 155,
-    costPerItem: 48,
-    sku: "APP-KNT-04",
-    barcode: "506001234004",
-    inventoryQuantity: 26,
-    status: "Active",
-    category: "Knitwear",
-    vendor: "Atelier",
-    tags: ["Knitwear", "Cashmere", "Bestseller", "Winter"],
-    image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&q=80",
-    media: [
-      "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&q=80"
-    ],
-    strength: "Oatmeal Melange",
-    flavour: "Regular Fit",
-    format: "Knitwear",
-    weight: "620g",
-    createdAt: "2026-09-10"
-  },
-  {
-    id: "prod-5",
-    title: "Structured Double-Breasted Blazer",
-    description: "Tailored unstructured blazer crafted from Italian virgin wool canvas. Complete with peak lapels, horn buttons, interior passport pockets, and unlined sleeves.",
-    price: 160,
-    compareAtPrice: 195,
-    costPerItem: 55,
-    sku: "APP-BLZ-05",
-    barcode: "506001234005",
-    inventoryQuantity: 19,
-    status: "Active",
-    category: "Tailoring",
-    vendor: "Studio",
-    tags: ["Tailoring", "Blazer", "Formal"],
-    image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80",
-    media: [
-      "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80"
-    ],
-    strength: "Deep Navy",
-    flavour: "Tailored Fit",
-    format: "Tailoring",
-    weight: "850g",
-    createdAt: "2026-09-12"
-  },
-  {
-    id: "prod-6",
-    title: "Vintage Washed Heavyweight Graphic Tee",
-    description: "Constructed from 280gsm combed organic cotton with garment-dyed wash for a lived-in feel. Features subtle tonal embroidery and reinforced rib collar.",
-    price: 42,
-    compareAtPrice: 50,
-    costPerItem: 12,
-    sku: "APP-TEE-06",
-    barcode: "506001234006",
-    inventoryQuantity: 75,
-    status: "Active",
-    category: "Tees",
-    vendor: "Essentials",
-    tags: ["Tees", "Cotton", "New In", "Streetwear"],
-    image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
-    media: [
-      "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80"
-    ],
-    strength: "Vintage Cream",
-    flavour: "Relaxed Fit",
-    format: "Tops",
-    weight: "320g",
-    createdAt: "2026-09-14"
-  },
-  {
-    id: "prod-7",
-    title: "Clean Japanese Raw Denim Jacket",
-    description: "14oz selvedge denim woven on vintage shuttle looms in Okayama. Finished with copper shank hardware, clean bar-tacking, and internal selvedge ID detail.",
-    price: 145,
-    compareAtPrice: 175,
-    costPerItem: 50,
-    sku: "APP-DNM-07",
-    barcode: "506001234007",
-    inventoryQuantity: 28,
-    status: "Active",
-    category: "Outerwear",
-    vendor: "Atelier",
-    tags: ["Outerwear", "Denim", "Trending"],
-    image: "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&w=800&q=80",
-    media: [
-      "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&w=800&q=80"
-    ],
-    strength: "Indigo Raw",
-    flavour: "Classic Trucker",
-    format: "Outerwear",
-    weight: "900g",
-    createdAt: "2026-09-15"
-  },
-  {
-    id: "prod-8",
-    title: "Monochrome Suede Minimalist Loafers",
-    description: "Italian calf suede slip-on shoes with lightweight Vibram rubber soles and leather lining. Hand-stitched apron toe for sophisticated day-to-night styling.",
-    price: 110,
-    compareAtPrice: 135,
-    costPerItem: 38,
-    sku: "APP-SHS-08",
-    barcode: "506001234008",
-    inventoryQuantity: 31,
-    status: "Active",
-    category: "Footwear",
-    vendor: "Footwear",
-    tags: ["Footwear", "Leather", "Trending", "Accessories"],
-    image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80",
-    media: [
-      "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80"
-    ],
-    strength: "Sand Taupe",
-    flavour: "Slip-on",
-    format: "Footwear",
-    weight: "700g",
-    createdAt: "2026-09-16"
-  }
-];
-var INITIAL_COLLECTIONS = [
-  {
-    id: "col-new",
-    title: "New In & Trending",
-    description: "The latest drops, contemporary silhouettes, and seasonal highlights fresh from the atelier.",
-    image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80",
-    productIds: ["prod-1", "prod-2", "prod-3", "prod-6"],
-    createdAt: "2026-09-01"
-  },
-  {
-    id: "col-outerwear",
-    title: "Coats & Outerwear",
-    description: "Engineered coats, double-breasted blazers, and heavy denim jackets designed for cold climates.",
-    image: "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&q=80",
-    productIds: ["prod-1", "prod-5", "prod-7"],
-    createdAt: "2026-09-01"
-  },
-  {
-    id: "col-knitwear",
-    title: "Knitwear & Sweaters",
-    description: "Cashmere blends, ribbed fisherman knits, and heavyweight cardigans woven for luxurious warmth.",
-    image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=800&q=80",
-    productIds: ["prod-4", "prod-2"],
-    createdAt: "2026-09-01"
-  },
-  {
-    id: "col-tailoring",
-    title: "Minimalist Tailoring",
-    description: "Pleated trousers, unstructured suiting, and elevated formal silhouettes for the modern wardrobe.",
-    image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
-    productIds: ["prod-3", "prod-5", "prod-8"],
-    createdAt: "2026-09-01"
-  }
-];
-var INITIAL_ORDERS = [];
-var INITIAL_FILES = [];
-var INITIAL_CUSTOMERS = [];
-var INITIAL_DISCOUNTS = [];
-var INITIAL_BLOGS = [
-  {
-    id: "blog-1",
-    title: "How To Elevate Your Whimsical Wardrobe",
-    slug: "how-to-elevate-your-whimsical-wardrobe",
-    category: "Fashion Style",
-    image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80",
-    excerpt: "An in-depth exploration of architectural layering, romantic textures, and how to balance whimsical silhouettes with understated sophistication.",
-    author: "Jade Tailor",
-    status: "Active",
-    publishedAt: "Dec 29, 2026",
-    readTime: "4 min read",
-    tags: ["Fashion Style", "Whimsical", "Capsule Wardrobe"],
-    content: "Whimsical fashion is not about costume; it is about intentional delight. In this editorial guide, Jade Tailor breaks down how to weave playful textures, voluminous skirts, and vintage-inspired collars into everyday luxury tailoring."
-  },
-  {
-    id: "blog-2",
-    title: "Women's Business Formal Attire To Promote Your Style",
-    slug: "womens-business-formal-attire-to-promote-your-style",
-    category: "Business Style",
-    image: "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?auto=format&fit=crop&w=800&q=80",
-    excerpt: "Redefining corporate elegance with structured blazers, high-waisted cigarette trousers, and refined neutral palettes that project authority and poise.",
-    author: "Jade Tailor",
-    status: "Active",
-    publishedAt: "Dec 27, 2026",
-    readTime: "5 min read",
-    tags: ["Business Style", "Executive", "Tailoring"],
-    content: "Executive styling is the ultimate power move. Discover how tailored double-breasted suits, premium Italian silk camisoles, and minimalist leather accessories elevate your presence in boardrooms and beyond."
-  },
-  {
-    id: "blog-3",
-    title: "The Essential Capsule: 7 Pieces for 30 Outfits",
-    slug: "the-essential-capsule-7-pieces-for-30-outfits",
-    category: "Wardrobe Guide",
-    image: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80",
-    excerpt: "Mastering understated versatility with timeless tailoring, neutral knitwear, and classic raw selvedge denim.",
-    author: "Jade Tailor",
-    status: "Active",
-    publishedAt: "Dec 15, 2026",
-    readTime: "3 min read",
-    tags: ["Capsule", "Minimalism", "Personal Styling"],
-    content: "A comprehensive styling blueprint for building an intentional, cohesive wardrobe that eliminates decision fatigue and transforms getting dressed into pure effortless confidence."
-  }
-];
-var DEFAULT_PAGES = [
-  {
-    id: "homepage",
-    title: "Home Page",
-    slug: "",
-    visibility: "Visible",
-    updatedAt: "Sep 24, 2026",
-    isHomepage: true,
-    sections: [
+var INITIAL_PRODUCTS, INITIAL_COLLECTIONS, INITIAL_ORDERS, INITIAL_FILES, INITIAL_CUSTOMERS, INITIAL_DISCOUNTS, INITIAL_BLOGS, DEFAULT_PAGES;
+var init_initialData = __esm({
+  "src/initialData.ts"() {
+    INITIAL_PRODUCTS = [
       {
-        id: "h-sec-slideshow",
-        type: "Slideshow",
-        settings: {
-          fullWidth: true,
-          backgroundColor: "#0F172A",
-          headingColor: "#FFFFFF",
-          textColor: "#E2E8F0",
-          slides: [
-            {
-              title: "THE AUTUMN / WINTER ATELIER",
-              description: "Architectural tailoring, luxurious double-faced wool, and modern silhouettes crafted for enduring versatility.",
-              imageUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1800&q=85",
-              buttonText: "SHOP NEW ARRIVALS",
-              buttonLink: "frontend-shop"
-            },
-            {
-              title: "MINIMALIST STREETWEAR",
-              description: "Heavyweight 450gsm organic cotton, dropped shoulder proportions, and relaxed monochrome palettes engineered for everyday comfort.",
-              imageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1800&q=85",
-              buttonText: "EXPLORE THE DROP",
-              buttonLink: "frontend-shop"
-            },
-            {
-              title: "TIMELESS CONTEMPORARY TAILORING",
-              description: "Unstructured blazers, relaxed pleated trousers, and breathable linen-blend overshirts designed for effortless layering.",
-              imageUrl: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1800&q=85",
-              buttonText: "DISCOVER LOOKBOOK",
-              buttonLink: "frontend-shop"
+        id: "prod-1",
+        title: "Oversized Heavyweight Wool Overcoat",
+        description: "Double-faced melton wool overcoat featuring dropped shoulders, wide notch lapels, horn buttons, and deep welt pockets. Designed for effortless cold-weather layering.",
+        price: 185,
+        compareAtPrice: 220,
+        costPerItem: 70,
+        sku: "APP-OVC-01",
+        barcode: "506001234001",
+        inventoryQuantity: 34,
+        status: "Active",
+        category: "Outerwear",
+        vendor: "Atelier",
+        tags: ["Outerwear", "Wool", "Bestseller", "Winter"],
+        image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80",
+        media: [
+          "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&q=80"
+        ],
+        strength: "Charcoal Grey",
+        flavour: "Relaxed Fit",
+        format: "Outerwear",
+        weight: "1200g",
+        createdAt: "2026-09-01"
+      },
+      {
+        id: "prod-2",
+        title: "Relaxed Boxy Fit Organic Hoodie",
+        description: "Heavyweight 450gsm organic French terry cotton hoodie. Pre-shrunk with double-layered hood, kangaroo pocket, and ribbed side panels for maximum movement.",
+        price: 75,
+        compareAtPrice: 90,
+        costPerItem: 24,
+        sku: "APP-HOD-02",
+        barcode: "506001234002",
+        inventoryQuantity: 58,
+        status: "Active",
+        category: "Streetwear",
+        vendor: "Essentials",
+        tags: ["Streetwear", "Cotton", "New In", "Tops"],
+        image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80",
+        media: [
+          "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80"
+        ],
+        strength: "Washed Black",
+        flavour: "Boxy Fit",
+        format: "Tops",
+        weight: "750g",
+        createdAt: "2026-09-05"
+      },
+      {
+        id: "prod-3",
+        title: "Minimal Pleated Wide-Leg Trousers",
+        description: "Architectural tailored trousers cut from structured tropical wool blend. Features front double pleats, concealed hook closure, and clean straight-leg drape.",
+        price: 95,
+        compareAtPrice: 115,
+        costPerItem: 32,
+        sku: "APP-TRS-03",
+        barcode: "506001234003",
+        inventoryQuantity: 42,
+        status: "Active",
+        category: "Tailoring",
+        vendor: "Studio",
+        tags: ["Tailoring", "Pants", "Trending", "Minimalist"],
+        image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80",
+        media: [
+          "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80"
+        ],
+        strength: "Earthy Olive",
+        flavour: "Wide Leg",
+        format: "Bottoms",
+        weight: "500g",
+        createdAt: "2026-09-08"
+      },
+      {
+        id: "prod-4",
+        title: "Chunky Ribbed Cashmere Knit Sweater",
+        description: "Spun from 7-gauge Mongolian cashmere and extrafine merino wool. Designed with a structured mock neck, dropped shoulders, and chunky fisherman ribbing.",
+        price: 130,
+        compareAtPrice: 155,
+        costPerItem: 48,
+        sku: "APP-KNT-04",
+        barcode: "506001234004",
+        inventoryQuantity: 26,
+        status: "Active",
+        category: "Knitwear",
+        vendor: "Atelier",
+        tags: ["Knitwear", "Cashmere", "Bestseller", "Winter"],
+        image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&q=80",
+        media: [
+          "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&q=80"
+        ],
+        strength: "Oatmeal Melange",
+        flavour: "Regular Fit",
+        format: "Knitwear",
+        weight: "620g",
+        createdAt: "2026-09-10"
+      },
+      {
+        id: "prod-5",
+        title: "Structured Double-Breasted Blazer",
+        description: "Tailored unstructured blazer crafted from Italian virgin wool canvas. Complete with peak lapels, horn buttons, interior passport pockets, and unlined sleeves.",
+        price: 160,
+        compareAtPrice: 195,
+        costPerItem: 55,
+        sku: "APP-BLZ-05",
+        barcode: "506001234005",
+        inventoryQuantity: 19,
+        status: "Active",
+        category: "Tailoring",
+        vendor: "Studio",
+        tags: ["Tailoring", "Blazer", "Formal"],
+        image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80",
+        media: [
+          "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80"
+        ],
+        strength: "Deep Navy",
+        flavour: "Tailored Fit",
+        format: "Tailoring",
+        weight: "850g",
+        createdAt: "2026-09-12"
+      },
+      {
+        id: "prod-6",
+        title: "Vintage Washed Heavyweight Graphic Tee",
+        description: "Constructed from 280gsm combed organic cotton with garment-dyed wash for a lived-in feel. Features subtle tonal embroidery and reinforced rib collar.",
+        price: 42,
+        compareAtPrice: 50,
+        costPerItem: 12,
+        sku: "APP-TEE-06",
+        barcode: "506001234006",
+        inventoryQuantity: 75,
+        status: "Active",
+        category: "Tees",
+        vendor: "Essentials",
+        tags: ["Tees", "Cotton", "New In", "Streetwear"],
+        image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
+        media: [
+          "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80"
+        ],
+        strength: "Vintage Cream",
+        flavour: "Relaxed Fit",
+        format: "Tops",
+        weight: "320g",
+        createdAt: "2026-09-14"
+      },
+      {
+        id: "prod-7",
+        title: "Clean Japanese Raw Denim Jacket",
+        description: "14oz selvedge denim woven on vintage shuttle looms in Okayama. Finished with copper shank hardware, clean bar-tacking, and internal selvedge ID detail.",
+        price: 145,
+        compareAtPrice: 175,
+        costPerItem: 50,
+        sku: "APP-DNM-07",
+        barcode: "506001234007",
+        inventoryQuantity: 28,
+        status: "Active",
+        category: "Outerwear",
+        vendor: "Atelier",
+        tags: ["Outerwear", "Denim", "Trending"],
+        image: "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&w=800&q=80",
+        media: [
+          "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&w=800&q=80"
+        ],
+        strength: "Indigo Raw",
+        flavour: "Classic Trucker",
+        format: "Outerwear",
+        weight: "900g",
+        createdAt: "2026-09-15"
+      },
+      {
+        id: "prod-8",
+        title: "Monochrome Suede Minimalist Loafers",
+        description: "Italian calf suede slip-on shoes with lightweight Vibram rubber soles and leather lining. Hand-stitched apron toe for sophisticated day-to-night styling.",
+        price: 110,
+        compareAtPrice: 135,
+        costPerItem: 38,
+        sku: "APP-SHS-08",
+        barcode: "506001234008",
+        inventoryQuantity: 31,
+        status: "Active",
+        category: "Footwear",
+        vendor: "Footwear",
+        tags: ["Footwear", "Leather", "Trending", "Accessories"],
+        image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80",
+        media: [
+          "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80"
+        ],
+        strength: "Sand Taupe",
+        flavour: "Slip-on",
+        format: "Footwear",
+        weight: "700g",
+        createdAt: "2026-09-16"
+      }
+    ];
+    INITIAL_COLLECTIONS = [
+      {
+        id: "col-new",
+        title: "New In & Trending",
+        description: "The latest drops, contemporary silhouettes, and seasonal highlights fresh from the atelier.",
+        image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80",
+        productIds: ["prod-1", "prod-2", "prod-3", "prod-6"],
+        createdAt: "2026-09-01"
+      },
+      {
+        id: "col-outerwear",
+        title: "Coats & Outerwear",
+        description: "Engineered coats, double-breasted blazers, and heavy denim jackets designed for cold climates.",
+        image: "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&q=80",
+        productIds: ["prod-1", "prod-5", "prod-7"],
+        createdAt: "2026-09-01"
+      },
+      {
+        id: "col-knitwear",
+        title: "Knitwear & Sweaters",
+        description: "Cashmere blends, ribbed fisherman knits, and heavyweight cardigans woven for luxurious warmth.",
+        image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=800&q=80",
+        productIds: ["prod-4", "prod-2"],
+        createdAt: "2026-09-01"
+      },
+      {
+        id: "col-tailoring",
+        title: "Minimalist Tailoring",
+        description: "Pleated trousers, unstructured suiting, and elevated formal silhouettes for the modern wardrobe.",
+        image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
+        productIds: ["prod-3", "prod-5", "prod-8"],
+        createdAt: "2026-09-01"
+      }
+    ];
+    INITIAL_ORDERS = [];
+    INITIAL_FILES = [];
+    INITIAL_CUSTOMERS = [];
+    INITIAL_DISCOUNTS = [];
+    INITIAL_BLOGS = [
+      {
+        id: "blog-1",
+        title: "How To Elevate Your Whimsical Wardrobe",
+        slug: "how-to-elevate-your-whimsical-wardrobe",
+        category: "Fashion Style",
+        image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80",
+        excerpt: "An in-depth exploration of architectural layering, romantic textures, and how to balance whimsical silhouettes with understated sophistication.",
+        author: "Jade Tailor",
+        status: "Active",
+        publishedAt: "Dec 29, 2026",
+        readTime: "4 min read",
+        tags: ["Fashion Style", "Whimsical", "Capsule Wardrobe"],
+        content: "Whimsical fashion is not about costume; it is about intentional delight. In this editorial guide, Jade Tailor breaks down how to weave playful textures, voluminous skirts, and vintage-inspired collars into everyday luxury tailoring."
+      },
+      {
+        id: "blog-2",
+        title: "Women's Business Formal Attire To Promote Your Style",
+        slug: "womens-business-formal-attire-to-promote-your-style",
+        category: "Business Style",
+        image: "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?auto=format&fit=crop&w=800&q=80",
+        excerpt: "Redefining corporate elegance with structured blazers, high-waisted cigarette trousers, and refined neutral palettes that project authority and poise.",
+        author: "Jade Tailor",
+        status: "Active",
+        publishedAt: "Dec 27, 2026",
+        readTime: "5 min read",
+        tags: ["Business Style", "Executive", "Tailoring"],
+        content: "Executive styling is the ultimate power move. Discover how tailored double-breasted suits, premium Italian silk camisoles, and minimalist leather accessories elevate your presence in boardrooms and beyond."
+      },
+      {
+        id: "blog-3",
+        title: "The Essential Capsule: 7 Pieces for 30 Outfits",
+        slug: "the-essential-capsule-7-pieces-for-30-outfits",
+        category: "Wardrobe Guide",
+        image: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80",
+        excerpt: "Mastering understated versatility with timeless tailoring, neutral knitwear, and classic raw selvedge denim.",
+        author: "Jade Tailor",
+        status: "Active",
+        publishedAt: "Dec 15, 2026",
+        readTime: "3 min read",
+        tags: ["Capsule", "Minimalism", "Personal Styling"],
+        content: "A comprehensive styling blueprint for building an intentional, cohesive wardrobe that eliminates decision fatigue and transforms getting dressed into pure effortless confidence."
+      }
+    ];
+    DEFAULT_PAGES = [
+      {
+        id: "homepage",
+        title: "Home Page",
+        slug: "",
+        visibility: "Visible",
+        updatedAt: "Sep 24, 2026",
+        isHomepage: true,
+        sections: [
+          {
+            id: "sec-hero-banner",
+            type: "Hero banner",
+            settings: {
+              fullWidth: true,
+              backgroundColor: "#111111",
+              headingColor: "#FFFFFF",
+              textColor: "#E5E5E5",
+              subtitle: "JADE TAILOR \u2022 PERSONAL STYLIST",
+              title: "Elevate Your Style",
+              description: "Bespoke silhouettes, signature color palettes, and effortless everyday elegance.",
+              buttonText: "WORK WITH JADE",
+              buttonLink: "#appointment-section",
+              imageUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=1920&q=85"
             }
-          ]
-        }
-      },
-      {
-        id: "h-sec-collections",
-        type: "Collection list",
-        settings: {
-          fullWidth: false,
-          headingColor: "#0F172A",
-          textColor: "#64748B",
-          title: "CURATED COLLECTIONS",
-          description: "Explore contemporary menswear and womenswear across tailored outerwear, fine knitwear, and streetwear essentials.",
-          itemsCount: 4
-        }
-      },
-      {
-        id: "h-sec-products",
-        type: "Featured collection",
-        settings: {
-          fullWidth: false,
-          headingColor: "#0F172A",
-          textColor: "#64748B",
-          title: "TRENDING THIS WEEK",
-          description: "Our most coveted garments, tailored with architectural precision and crafted from sustainable luxury textiles.",
-          itemsCount: 8
-        }
-      },
-      {
-        id: "h-sec-marquee",
-        type: "Marquee text",
-        settings: {
-          fullWidth: true,
-          backgroundColor: "#0F172A",
-          headingColor: "#FFFFFF",
-          textColor: "#E2E8F0",
-          title: "COMPLIMENTARY EXPRESS SHIPPING ACROSS INDIA ON ORDERS OVER \u20B9999  \xB7  30-DAY EFFORTLESS RETURNS  \xB7  SUSTAINABLY CRAFTED FROM ORGANIC TEXTILES  \xB7  HAND-FINISHED IN ATELIERS  \xB7  NEW CURATED DROPS EVERY THURSDAY",
-          marqueeSpeed: 4
-        }
-      },
-      {
-        id: "h-sec-editorial",
-        type: "Image with text",
-        settings: {
-          fullWidth: false,
-          backgroundColor: "#F8FAFC",
-          headingColor: "#0F172A",
-          textColor: "#475569",
-          title: "THE ART OF UNDERSTATED LUXURY",
-          description: "We believe in wardrobe longevity over disposable fast-fashion cycles. Every silhouette in our studio is cut with clean architectural lines, woven from GOTS-certified organic cotton and European virgin wool, and finished with meticulous double-needle craftsmanship designed to endure for decades.",
-          buttonText: "EXPLORE OUR ATELIER",
-          buttonLink: "frontend-shop",
-          imageUrl: "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1200&q=80"
-        }
-      },
-      {
-        id: "h-sec-trust",
-        type: "Trust badges",
-        settings: {
-          fullWidth: false,
-          backgroundColor: "#FFFFFF",
-          trustBadges: [
-            { iconType: "badge", title: "ETHICALLY CRAFTED", description: "GOTS certified organic cotton & recycled wool." },
-            { iconType: "shield", title: "EXPRESS TRACKED SHIPPING", description: "Carbon-neutral delivery across India & Worldwide." },
-            { iconType: "globe", title: "COMPLIMENTARY RETURNS", description: "30-day effortless return and exchange policy." },
-            { iconType: "tag", title: "PREMIUM SUSTAINABILITY", description: "Zero single-use plastics in all shipping packaging." }
-          ]
-        }
-      },
-      {
-        id: "h-sec-blog",
-        type: "Blog post",
-        settings: {
-          fullWidth: false,
-          headingColor: "#0F172A",
-          textColor: "#64748B",
-          title: "THE STYLE JOURNAL",
-          description: "Editorials, seasonal styling blueprints, and craftsmanship stories direct from our European ateliers.",
-          columnsDesktop: 3,
-          columnsMobile: 1
-        }
-      }
-    ]
-  },
-  {
-    id: "brands",
-    title: "Atelier Directory",
-    slug: "brands",
-    visibility: "Visible",
-    updatedAt: "Sep 24, 2026",
-    sections: [
-      {
-        id: "s2",
-        type: "Rich text",
-        settings: {
-          fullWidth: false,
-          backgroundColor: "#FFFFFF",
-          headingColor: "#1E293B",
-          textColor: "#64748B",
-          title: "Curated Brands & Designers",
-          description: "Explore our catalog of certified ethical fashion brands and independent ateliers."
-        }
-      }
-    ]
-  },
-  {
-    id: "subscribe",
-    title: "Wardrobe Capsule Plans",
-    slug: "subscribe",
-    visibility: "Visible",
-    updatedAt: "Sep 24, 2026",
-    sections: [
-      {
-        id: "subs-sec-1",
-        type: "Plans",
-        settings: {
-          fullWidth: false,
-          backgroundColor: "#0F172A",
-          headingColor: "#FFFFFF",
-          textColor: "#E2E8F0",
-          title: "SEASONAL CAPSULE PLANS",
-          description: "Curated wardrobe drops. Timeless garments. Member pricing.",
-          alertBadgeText: "Subscribers save up to 25% on new season releases",
-          promoBannerText: "\u2605 NEW MEMBERS - COMPLIMENTARY WELCOME GIFT WITH FIRST CAPSULE >",
-          planItems: [
-            {
-              slug: "lite",
-              name: "ESSENTIALS",
-              subtitle: "Perfect for wardrobe updates",
-              price: 69,
-              limit: 3,
-              saveAmountText: "Save \xA315.00/month",
-              imageUrl: "",
-              features: [
-                "3 premium curated garments",
-                "Seasonal style delivery",
-                "Swap sizes or fits anytime",
-                "Skip or pause with one click"
-              ],
-              isPopular: false
-            },
-            {
-              slug: "core",
-              name: "SIGNATURE",
-              subtitle: "Most popular wardrobe tier",
-              price: 119,
-              limit: 5,
-              saveAmountText: "Save \xA335.00/month",
-              imageUrl: "",
-              features: [
-                "5 premium curated garments",
-                "Includes premium knitwear & tops",
-                "Complimentary exchanges",
-                "Priority access to new drops"
-              ],
-              isPopular: true
-            },
-            {
-              slug: "pro",
-              name: "ATELIER LUXURY",
-              subtitle: "Complete seasonal wardrobe",
-              price: 189,
-              limit: 8,
-              saveAmountText: "Save \xA365.00/month",
-              imageUrl: "",
-              features: [
-                "8 luxury tailored pieces",
-                "Includes tailored outerwear & coats",
-                "FREE Express tracked courier",
-                "Complimentary personal styling consultation",
-                "Full control to pause or cancel anytime"
-              ],
-              isPopular: false
+          },
+          {
+            id: "sec-about-jade",
+            type: "About Jade Tailor",
+            settings: {
+              fullWidth: false,
+              backgroundColor: "#FFFFFF",
+              headingColor: "#1A1A1A",
+              textColor: "#555555",
+              badge: "ABOUT JADE TAILOR",
+              title: "Find Your Style",
+              italicTitle: "With Me",
+              description: "Style sit amet risus ac dui auctor posuere sit amet eget libero. Ut lacinia lectus non risus facilisis, semper consequat sem fringilla. Etiam et tincidunt felis. Quisque at maximus nulla dictum vestibulum sed interdum neque dictum.",
+              description2: "Your style laboris sollicitudin purus vel posuere. Maecenas auctor, turpis quis mattis tristique, ligula dolor vestibulum risus, nec ullamcorper justo dolor soda lorem. Sed interdum arcu ac metus mollis venenatis.",
+              stats: ["7+ years of work", "150+ free consultations", "90+ happy clients"],
+              imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80",
+              image2Url: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80"
             }
-          ]
-        }
+          },
+          {
+            id: "sec-my-services",
+            type: "My Services",
+            settings: {
+              fullWidth: false,
+              backgroundColor: "#F9F7F4",
+              headingColor: "#1A1A1A",
+              textColor: "#666666",
+              badge: "WHAT I DO",
+              title: "My",
+              italicTitle: "Services",
+              cardTitle: "Individual Consultation",
+              cardDescription: "A comprehensive one-on-one deep dive into your personal aesthetic, body architecture, and lifestyle requirements. We assess your color typology, define your signature silhouette, and formulate a seasonal style blueprint tailored specifically for you.",
+              cardButtonText: "LEARN MORE",
+              imageUrl: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=1000&q=80"
+            }
+          },
+          {
+            id: "sec-service-pillars",
+            type: "Service Pillars",
+            settings: {
+              fullWidth: false,
+              backgroundColor: "#F9F7F4",
+              headingColor: "#1A1A1A",
+              textColor: "#666666",
+              accentColor: "#B58D59",
+              pillars: [
+                { num: "01", title: "Wardrobe Styling", desc: "Lorem ipsum nisl quam nestibulum drana odio elementum scesue the monte." },
+                { num: "02", title: "Closet Cleanse", desc: "Lorem ipsum nisl quam nestibulum drana odio elementum monte." },
+                { num: "03", title: "Shopping Tour", desc: "Lorem ipsum nisl quam nestibulum drana odio elementum scesue the can." }
+              ]
+            }
+          },
+          {
+            id: "sec-video-tips",
+            type: "Video banner",
+            settings: {
+              fullWidth: true,
+              backgroundColor: "#111111",
+              headingColor: "#FFFFFF",
+              textColor: "#E5E5E5",
+              title: "Discover My Video Tips And Hints",
+              italicWord: "Discover",
+              videoUrl: "dQw4w9WgXcQ",
+              imageUrl: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=1800&q=85"
+            }
+          },
+          {
+            id: "sec-styling-packages",
+            type: "Styling Packages",
+            settings: {
+              fullWidth: false,
+              backgroundColor: "#FFFFFF",
+              headingColor: "#1A1A1A",
+              textColor: "#666666",
+              badge: "PRICING PLAN",
+              title: "Styling",
+              italicTitle: "Packages",
+              packages: [
+                {
+                  title: "In-Home Styling",
+                  price: "$300",
+                  imageUrl: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=600&q=80",
+                  features: [
+                    { text: "Complete closet audit & organization", included: true },
+                    { text: "Color analysis & silhouette mapping", included: true },
+                    { text: "Personalized digital lookbook (20 outfits)", included: false }
+                  ],
+                  isFeatured: false,
+                  btnText: "WORK WITH ME"
+                },
+                {
+                  title: "Half Day Shopping",
+                  price: "$450",
+                  imageUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80",
+                  features: [
+                    { text: "4 hours private curated shopping tour", included: true },
+                    { text: "Pre-selected garments ready in VIP suites", included: true },
+                    { text: "Seasonal capsule wardrobe integration", included: false }
+                  ],
+                  isFeatured: true,
+                  btnText: "WORK WITH ME"
+                },
+                {
+                  title: "Full Day Shopping",
+                  price: "$600",
+                  imageUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80",
+                  features: [
+                    { text: "Full 8 hours complete wardrobe overhaul", included: true },
+                    { text: "Luxury boutique access & stylist discounts", included: true },
+                    { text: "Comprehensive seasonal digital lookbook", included: true }
+                  ],
+                  isFeatured: false,
+                  btnText: "WORK WITH ME"
+                }
+              ]
+            }
+          },
+          {
+            id: "sec-client-reviews",
+            type: "Client Reviews",
+            settings: {
+              fullWidth: false,
+              backgroundColor: "#FBF9F6",
+              headingColor: "#1A1A1A",
+              textColor: "#555555",
+              badge: "CLIENTS REVIEWS",
+              title: "What Clients Say",
+              italicTitle: "About Me",
+              quote: "Highly recommend, thank you again!",
+              content: "Jade is so lovely and did such a great job with my wedding dress along with bridal party and mother of the bride outfits... She understood exactly what flattered my shape while keeping me entirely comfortable. Highly recommend, thank you again!",
+              author: "Emily Brown",
+              role: "Customer Review",
+              avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
+              imageUrl: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80"
+            }
+          },
+          {
+            id: "sec-my-portfolio",
+            type: "My Portfolio",
+            settings: {
+              fullWidth: false,
+              backgroundColor: "#FFFFFF",
+              headingColor: "#1A1A1A",
+              badge: "MY PORTFOLIO",
+              title: "Find Your Ideal Style and Look?",
+              items: [
+                { image: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80", title: "Architectural Tailoring & Cream Trench", category: "Editorial Streetwear" },
+                { image: "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=800&q=80", title: "Effortless Summer Linen Ensemble", category: "Casual Resort" },
+                { image: "https://images.unsplash.com/photo-1516762689617-e1cffcef479d?auto=format&fit=crop&w=800&q=80", title: "Bohemian Sunhat & Warm Earth Tones", category: "Seasonal Lookbook" },
+                { image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80", title: "Modern Sport-Luxe & Monochrome", category: "Contemporary Casual" },
+                { image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80", title: "Pastel Blazer & Checked Silk Separates", category: "Executive Style" },
+                { image: "https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?auto=format&fit=crop&w=800&q=80", title: "Evening Velvet & Statement Eyewear", category: "Gala & Red Carpet" }
+              ]
+            }
+          },
+          {
+            id: "sec-editorial-shop-banner",
+            type: "Editorial Shop Banner",
+            settings: {
+              fullWidth: true,
+              backgroundColor: "#141416",
+              headingColor: "#FFFFFF",
+              textColor: "#CCCCCC",
+              badge: "CURATED WARDROBE \u2022 READY-TO-WEAR",
+              title: "Shop Jade's Curated Collection",
+              description: "Explore hand-selected luxury tailoring, elevated silk separates, and signature wardrobe capsules.",
+              buttonText: "SHOP NOW (/collections/all)",
+              buttonLink: "/collections/all"
+            }
+          },
+          {
+            id: "sec-news-blog",
+            type: "News & Blog",
+            settings: {
+              fullWidth: true,
+              backgroundColor: "#0F0F10",
+              headingColor: "#FFFFFF",
+              textColor: "#CCCCCC",
+              badge: "LATEST NEWS",
+              title: "News",
+              italicTitle: "& Blog"
+            }
+          },
+          {
+            id: "sec-make-appointment",
+            type: "Make An Appointment",
+            settings: {
+              fullWidth: true,
+              backgroundColor: "#111111",
+              headingColor: "#FFFFFF",
+              promptText: "To submit an enquiry or to arrange an appointment please call me or alternatively please complete the form.",
+              phone: "800 123 4444",
+              formTitle: "Make An Appointment",
+              buttonText: "MAKE APPOINTMENT",
+              imageUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=1600&q=80"
+            }
+          },
+          {
+            id: "sec-brand-logos",
+            type: "Brand Logos",
+            settings: {
+              fullWidth: false,
+              backgroundColor: "#FFFFFF",
+              logos: ["CHIPPY'S", "FASTLANE", "SWEETY.", "MIGHTY FURNITURES", "CARA INDOORS", "GOLDEN NET 109", "avant garde"]
+            }
+          }
+        ]
+      },
+      {
+        id: "brands",
+        title: "Atelier Directory",
+        slug: "brands",
+        visibility: "Visible",
+        updatedAt: "Sep 24, 2026",
+        sections: [
+          {
+            id: "s2",
+            type: "Rich text",
+            settings: {
+              fullWidth: false,
+              backgroundColor: "#FFFFFF",
+              headingColor: "#1E293B",
+              textColor: "#64748B",
+              title: "Curated Brands & Designers",
+              description: "Explore our catalog of certified ethical fashion brands and independent ateliers."
+            }
+          }
+        ]
+      },
+      {
+        id: "subscribe",
+        title: "Wardrobe Capsule Plans",
+        slug: "subscribe",
+        visibility: "Visible",
+        updatedAt: "Sep 24, 2026",
+        sections: [
+          {
+            id: "subs-sec-1",
+            type: "Plans",
+            settings: {
+              fullWidth: false,
+              backgroundColor: "#0F172A",
+              headingColor: "#FFFFFF",
+              textColor: "#E2E8F0",
+              title: "SEASONAL CAPSULE PLANS",
+              description: "Curated wardrobe drops. Timeless garments. Member pricing.",
+              alertBadgeText: "Subscribers save up to 25% on new season releases",
+              promoBannerText: "\u2605 NEW MEMBERS - COMPLIMENTARY WELCOME GIFT WITH FIRST CAPSULE >",
+              planItems: [
+                {
+                  slug: "lite",
+                  name: "ESSENTIALS",
+                  subtitle: "Perfect for wardrobe updates",
+                  price: 69,
+                  limit: 3,
+                  saveAmountText: "Save \xA315.00/month",
+                  imageUrl: "",
+                  features: [
+                    "3 premium curated garments",
+                    "Seasonal style delivery",
+                    "Swap sizes or fits anytime",
+                    "Skip or pause with one click"
+                  ],
+                  isPopular: false
+                },
+                {
+                  slug: "core",
+                  name: "SIGNATURE",
+                  subtitle: "Most popular wardrobe tier",
+                  price: 119,
+                  limit: 5,
+                  saveAmountText: "Save \xA335.00/month",
+                  imageUrl: "",
+                  features: [
+                    "5 premium curated garments",
+                    "Includes premium knitwear & tops",
+                    "Complimentary exchanges",
+                    "Priority access to new drops"
+                  ],
+                  isPopular: true
+                },
+                {
+                  slug: "pro",
+                  name: "ATELIER LUXURY",
+                  subtitle: "Complete seasonal wardrobe",
+                  price: 189,
+                  limit: 8,
+                  saveAmountText: "Save \xA365.00/month",
+                  imageUrl: "",
+                  features: [
+                    "8 luxury tailored pieces",
+                    "Includes tailored outerwear & coats",
+                    "FREE Express tracked courier",
+                    "Complimentary personal styling consultation",
+                    "Full control to pause or cancel anytime"
+                  ],
+                  isPopular: false
+                }
+              ]
+            }
+          }
+        ]
       }
-    ]
+    ];
   }
-];
+});
 
 // neonDb.ts
 import { neon } from "@neondatabase/serverless";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
-dotenv.config();
-var lastStatus = { status: "pending", databaseType: "Neon Postgres" };
-var tablesInitialized = false;
 function getNeonUri() {
   const uri = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL || process.env.POSTGRES_URL || "";
   return cleanUri(uri);
@@ -566,6 +678,9 @@ function getTableName(resource) {
       return "custom_pages";
     case "blogs":
       return "blogs";
+    case "recycle_bin":
+    case "recyclebin":
+      return "recycle_bin";
     default:
       return null;
   }
@@ -584,7 +699,8 @@ async function initTables() {
       sql`CREATE TABLE IF NOT EXISTS custom_pages (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`,
       sql`CREATE TABLE IF NOT EXISTS blogs (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`,
       sql`CREATE TABLE IF NOT EXISTS uploaded_images (id TEXT PRIMARY KEY, base64_data TEXT NOT NULL, mime_type TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW());`,
-      sql`CREATE TABLE IF NOT EXISTS layout_settings (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`
+      sql`CREATE TABLE IF NOT EXISTS layout_settings (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`,
+      sql`CREATE TABLE IF NOT EXISTS recycle_bin (id TEXT PRIMARY KEY, type TEXT NOT NULL, original_id TEXT NOT NULL, title TEXT NOT NULL, data JSONB NOT NULL, deleted_at TIMESTAMPTZ DEFAULT NOW());`
     ]);
     tablesInitialized = true;
     lastStatus = {
@@ -721,7 +837,7 @@ async function getNeonDetails() {
       await initTables();
       await seedIfEmpty();
     }
-    const tableNames = ["products", "collections", "orders", "files", "customers", "discounts", "custom_pages", "blogs", "uploaded_images", "layout_settings"];
+    const tableNames = ["products", "collections", "orders", "files", "customers", "discounts", "custom_pages", "blogs", "uploaded_images", "layout_settings", "recycle_bin"];
     const tablesInfo = [];
     for (const t of tableNames) {
       try {
@@ -936,8 +1052,297 @@ async function saveLayoutSettingsToNeon(settings) {
     return false;
   }
 }
+async function fetchRecycleBinFromNeon() {
+  const sql = getSqlClient();
+  if (!sql) return null;
+  try {
+    if (!tablesInitialized) {
+      await initTables();
+    }
+    const rows = await sql.query(`SELECT id, type, original_id, title, data, deleted_at FROM recycle_bin ORDER BY deleted_at DESC`);
+    if (rows && Array.isArray(rows)) {
+      return rows.map((r) => {
+        const parsedData = typeof r.data === "string" ? JSON.parse(r.data) : r.data;
+        return {
+          id: r.id,
+          type: r.type,
+          originalId: r.original_id,
+          title: r.title,
+          deletedAt: r.deleted_at,
+          data: parsedData
+        };
+      });
+    }
+    return [];
+  } catch (err) {
+    console.error("[Neon Postgres] Error fetching recycle bin:", err);
+    return null;
+  }
+}
+async function saveRecycleBinItemToNeon(item) {
+  const sql = getSqlClient();
+  if (!sql) return false;
+  try {
+    if (!tablesInitialized) {
+      await initTables();
+    }
+    await sql.query(
+      `INSERT INTO recycle_bin (id, type, original_id, title, data, deleted_at)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (id) DO UPDATE SET
+         type = EXCLUDED.type,
+         original_id = EXCLUDED.original_id,
+         title = EXCLUDED.title,
+         data = EXCLUDED.data,
+         deleted_at = EXCLUDED.deleted_at`,
+      [
+        item.id,
+        item.type,
+        item.originalId,
+        item.title,
+        JSON.stringify(item.data),
+        item.deletedAt ? new Date(item.deletedAt) : /* @__PURE__ */ new Date()
+      ]
+    );
+    return true;
+  } catch (err) {
+    console.error(`[Neon Postgres] Error saving item ${item.id} to recycle bin:`, err);
+    return false;
+  }
+}
+async function deleteFromRecycleBinInNeon(ids) {
+  const sql = getSqlClient();
+  if (!sql) return false;
+  try {
+    if (!tablesInitialized) {
+      await initTables();
+    }
+    if (ids.length === 0) return true;
+    await sql.query(
+      `DELETE FROM recycle_bin WHERE id = ANY($1::text[])`,
+      [ids]
+    );
+    return true;
+  } catch (err) {
+    console.error("[Neon Postgres] Error deleting from recycle bin:", err);
+    return false;
+  }
+}
+async function clearRecycleBinInNeon() {
+  const sql = getSqlClient();
+  if (!sql) return false;
+  try {
+    if (!tablesInitialized) {
+      await initTables();
+    }
+    await sql.query(`DELETE FROM recycle_bin`);
+    return true;
+  } catch (err) {
+    console.error("[Neon Postgres] Error clearing recycle bin:", err);
+    return false;
+  }
+}
+var lastStatus, tablesInitialized;
+var init_neonDb = __esm({
+  "neonDb.ts"() {
+    init_initialData();
+    dotenv.config();
+    lastStatus = { status: "pending", databaseType: "Neon Postgres" };
+    tablesInitialized = false;
+  }
+});
+
+// backend/services/cloudinaryService.ts
+var cloudinaryService_exports = {};
+__export(cloudinaryService_exports, {
+  configureCloudinary: () => configureCloudinary,
+  disconnectCloudinary: () => disconnectCloudinary,
+  ensureCloudinaryConfigured: () => ensureCloudinaryConfigured,
+  getCloudinaryStatus: () => getCloudinaryStatus,
+  isCloudinaryConfigured: () => isCloudinaryConfigured,
+  uploadToCloudinary: () => uploadToCloudinary
+});
+import { v2 as cloudinary } from "cloudinary";
+import fs3 from "fs";
+import path3 from "path";
+function isPlaceholder(str) {
+  if (!str) return true;
+  const lower = str.toLowerCase();
+  return lower.includes("<") || lower.includes(">") || lower.includes("your_api_key") || lower.includes("your_api_secret") || lower.includes("api_key:api_secret");
+}
+function configureCloudinary(customConfig) {
+  let rawCloudName = (customConfig?.cloudName || process.env.CLOUDINARY_CLOUD_NAME || "").replace(/^@+/, "").trim();
+  let rawApiKey = (customConfig?.apiKey || process.env.CLOUDINARY_API_KEY || "").trim();
+  let rawApiSecret = (customConfig?.apiSecret || process.env.CLOUDINARY_API_SECRET || "").trim();
+  const rawUrl = (customConfig?.cloudinaryUrl || process.env.CLOUDINARY_URL || "").trim();
+  if (rawUrl && !isPlaceholder(rawUrl) && rawUrl.startsWith("cloudinary://")) {
+    const urlMatch = rawUrl.match(/^cloudinary:\/\/([^:]+):([^@]+)@([^/?#]+)/);
+    if (urlMatch) {
+      const parsedKey = urlMatch[1].trim();
+      const parsedSecret = urlMatch[2].trim();
+      const parsedName = urlMatch[3].replace(/^@+/, "").trim();
+      if (!rawApiKey && !isPlaceholder(parsedKey)) rawApiKey = parsedKey;
+      if (!rawApiSecret && !isPlaceholder(parsedSecret)) rawApiSecret = parsedSecret;
+      if (!rawCloudName && !isPlaceholder(parsedName)) rawCloudName = parsedName;
+    }
+  }
+  if (rawCloudName && rawApiKey && rawApiSecret && !isPlaceholder(rawApiKey) && !isPlaceholder(rawApiSecret)) {
+    cloudinary.config({
+      cloud_name: rawCloudName,
+      api_key: rawApiKey,
+      api_secret: rawApiSecret,
+      secure: true
+    });
+    process.env.CLOUDINARY_URL = `cloudinary://${rawApiKey}:${rawApiSecret}@${rawCloudName}`;
+    process.env.CLOUDINARY_CLOUD_NAME = rawCloudName;
+    process.env.CLOUDINARY_API_KEY = rawApiKey;
+    process.env.CLOUDINARY_API_SECRET = rawApiSecret;
+    return true;
+  }
+  if (rawUrl && isPlaceholder(rawUrl)) {
+    try {
+      const match = rawUrl.match(/@([^/?#]+)/);
+      const extractedName = match && match[1] ? match[1].replace(/^@+/, "").trim() : rawCloudName;
+      if (extractedName && rawApiKey && rawApiSecret && !isPlaceholder(rawApiKey) && !isPlaceholder(rawApiSecret)) {
+        cloudinary.config({
+          cloud_name: extractedName,
+          api_key: rawApiKey,
+          api_secret: rawApiSecret,
+          secure: true
+        });
+        process.env.CLOUDINARY_URL = `cloudinary://${rawApiKey}:${rawApiSecret}@${extractedName}`;
+        process.env.CLOUDINARY_CLOUD_NAME = extractedName;
+        return true;
+      }
+    } catch (_) {
+    }
+  }
+  return false;
+}
+function disconnectCloudinary() {
+  cloudinary.config({
+    cloud_name: "",
+    api_key: "",
+    api_secret: "",
+    cloudinary_url: ""
+  });
+}
+async function ensureCloudinaryConfigured() {
+  if (configureCloudinary()) {
+    if (isCloudinaryConfigured()) return true;
+  }
+  try {
+    const dbSettings = await fetchLayoutSettingsFromNeon();
+    if (dbSettings && dbSettings.cloudinaryConfig) {
+      if (configureCloudinary(dbSettings.cloudinaryConfig)) {
+        if (isCloudinaryConfigured()) return true;
+      }
+    }
+  } catch (_) {
+  }
+  try {
+    const localPath = path3.join(process.cwd(), "layout_settings.json");
+    if (fs3.existsSync(localPath)) {
+      const raw = JSON.parse(fs3.readFileSync(localPath, "utf8"));
+      if (raw && raw.cloudinaryConfig) {
+        if (configureCloudinary(raw.cloudinaryConfig)) {
+          if (isCloudinaryConfigured()) return true;
+        }
+      }
+    }
+  } catch (_) {
+  }
+  return isCloudinaryConfigured();
+}
+function isCloudinaryConfigured() {
+  const config = cloudinary.config();
+  return Boolean(
+    config.cloud_name && !isPlaceholder(config.cloud_name) && config.api_key && !isPlaceholder(config.api_key) && config.api_secret && !isPlaceholder(config.api_secret)
+  );
+}
+function getCloudinaryStatus() {
+  const config = cloudinary.config();
+  const configured = Boolean(config.cloud_name && (config.api_key || process.env.CLOUDINARY_URL));
+  return {
+    configured,
+    cloudName: config.cloud_name || null,
+    hasApiKey: Boolean(config.api_key),
+    hasApiSecret: Boolean(config.api_secret),
+    hasUrl: Boolean(process.env.CLOUDINARY_URL)
+  };
+}
+async function uploadToCloudinary(fileInput, options) {
+  await ensureCloudinaryConfigured();
+  const configured = isCloudinaryConfigured();
+  if (!configured) {
+    return null;
+  }
+  const folder = options?.folder || "jade_tailor_luxury_store";
+  const resourceType = options?.resourceType || "auto";
+  try {
+    let result;
+    if (Buffer.isBuffer(fileInput)) {
+      result = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            resource_type: resourceType,
+            folder,
+            public_id: options?.publicId,
+            use_filename: true,
+            unique_filename: true
+          },
+          (error, res) => {
+            if (error) return reject(error);
+            if (!res) return reject(new Error("Cloudinary returned empty response"));
+            resolve(res);
+          }
+        );
+        uploadStream.end(fileInput);
+      });
+    } else {
+      result = await cloudinary.uploader.upload(fileInput, {
+        resource_type: resourceType,
+        folder,
+        public_id: options?.publicId,
+        use_filename: true,
+        unique_filename: true
+      });
+    }
+    return {
+      url: result.url,
+      secure_url: result.secure_url,
+      public_id: result.public_id,
+      format: result.format,
+      resource_type: result.resource_type || "image",
+      bytes: result.bytes,
+      width: result.width,
+      height: result.height,
+      duration: result.duration,
+      isCloudinary: true
+    };
+  } catch (error) {
+    console.error("[Cloudinary Service] Upload failed:", error);
+    throw error;
+  }
+}
+var init_cloudinaryService = __esm({
+  "backend/services/cloudinaryService.ts"() {
+    init_neonDb();
+    configureCloudinary();
+  }
+});
+
+// serverApp.ts
+import express from "express";
+import path5 from "path";
+import fs5 from "fs";
 
 // serverDb.ts
+init_initialData();
+init_neonDb();
+import fs2 from "fs";
+import path2 from "path";
+import dotenv2 from "dotenv";
 dotenv2.config();
 var memoryCache = {
   products: [...INITIAL_PRODUCTS],
@@ -948,7 +1353,8 @@ var memoryCache = {
   discounts: [...INITIAL_DISCOUNTS],
   customPages: [...DEFAULT_PAGES],
   custompages: [...DEFAULT_PAGES],
-  blogs: [...INITIAL_BLOGS]
+  blogs: [...INITIAL_BLOGS],
+  recycle_bin: []
 };
 function getConnectionStatus() {
   return getNeonStatus();
@@ -1103,35 +1509,57 @@ async function getUploadedImage(rawId) {
 async function fetchLayoutSettings() {
   const defaultSettings = {
     id: "layout_settings",
-    headerLogoText: "STOREFRONT",
-    headerLogoSubtext: "Premium Essentials",
+    headerLogoText: "JADE TAILOR",
+    headerLogoSubtext: "PERSONAL STYLIST",
     headerLogoImage: "",
-    footerLogoText: "STOREFRONT",
-    footerLogoDescription: "Curated premium eCommerce store delivering high-quality essentials directly to your door. Seamless online shopping, flexible subscriptions, and express tracked shipping.",
+    footerLogoText: "JADE TAILOR",
+    footerLogoDescription: "Luxury personal styling, bespoke capsule curations, and private boutique shopping tours designed to elevate your effortless style.",
     footerLogoImage: "",
     klaviyoPublicKey: "",
+    phone: "800 123 4444",
+    address: "0665 Broadway NY, New York 10001 United States of America",
+    email: "jade@tailorand.com",
     menuItems: [
-      { id: "1", label: "Home", tab: "frontend-home", type: "tab" },
-      { id: "2", label: "Subscribe", tab: "frontend-subscribe", type: "tab" },
-      { id: "3", label: "Shop Now", tab: "frontend-shop", type: "tab" },
-      { id: "4", label: "All Brands", tab: "frontend-brands", type: "tab" },
-      { id: "5", label: "About", tab: "about", type: "tab" }
+      { id: "1", label: "HOME", tab: "frontend-home", type: "tab" },
+      { id: "2", label: "SHOP", tab: "frontend-shop", type: "tab" },
+      { id: "3", label: "WORK WITH ME", tab: "#appointment-section", type: "tab" },
+      { id: "4", label: "MY SERVICES", tab: "#services-section", type: "tab" },
+      { id: "5", label: "STYLING PACKAGES", tab: "#pricing-section", type: "tab" },
+      { id: "6", label: "STYLE JOURNAL", tab: "blogs", type: "tab" }
     ]
   };
   const sanitizeSettings = (raw) => {
     if (!raw) return defaultSettings;
     const cleaned = { ...raw };
-    if (!cleaned.headerLogoText || /pouch supply/i.test(cleaned.headerLogoText)) {
-      cleaned.headerLogoText = "STOREFRONT";
+    if (!cleaned.headerLogoText || /pouch supply|storefront/i.test(cleaned.headerLogoText)) {
+      cleaned.headerLogoText = "JADE TAILOR";
     }
-    if (!cleaned.headerLogoSubtext || /premium nicotine/i.test(cleaned.headerLogoSubtext)) {
-      cleaned.headerLogoSubtext = "Premium Essentials";
+    if (!cleaned.headerLogoSubtext || /premium nicotine|premium essentials/i.test(cleaned.headerLogoSubtext)) {
+      cleaned.headerLogoSubtext = "PERSONAL STYLIST";
     }
-    if (!cleaned.footerLogoText || /pouch supply/i.test(cleaned.footerLogoText)) {
-      cleaned.footerLogoText = "STOREFRONT";
+    if (!cleaned.footerLogoText || /pouch supply|storefront/i.test(cleaned.footerLogoText)) {
+      cleaned.footerLogoText = "JADE TAILOR";
     }
-    if (!cleaned.footerLogoDescription || /nicotine|canisters|pouch supply/i.test(cleaned.footerLogoDescription)) {
-      cleaned.footerLogoDescription = "Curated premium eCommerce store delivering high-quality essentials directly to your door. Seamless online shopping, flexible subscriptions, and express tracked shipping.";
+    if (!cleaned.footerLogoDescription || /nicotine|canisters|pouch supply|curated premium ecommerce/i.test(cleaned.footerLogoDescription)) {
+      cleaned.footerLogoDescription = "Luxury personal styling, bespoke capsule curations, and private boutique shopping tours designed to elevate your effortless style.";
+    }
+    if (!cleaned.phone) cleaned.phone = "800 123 4444";
+    if (!cleaned.address) cleaned.address = "0665 Broadway NY, New York 10001 United States of America";
+    if (!cleaned.email) cleaned.email = "jade@tailorand.com";
+    if (Array.isArray(cleaned.menuItems)) {
+      const sanitizedItems = cleaned.menuItems.filter((item) => item && item.tab !== "about" && item.tab !== "frontend-brands" && item.label !== "All Brands" && item.label !== "About").map((item) => {
+        if (item.tab === "frontend-subscribe") {
+          return { ...item, label: item.label === "Subscribe" ? "WORK WITH ME" : item.label, tab: "#appointment-section" };
+        }
+        return item;
+      });
+      if (sanitizedItems.length > 0) {
+        cleaned.menuItems = sanitizedItems;
+      } else {
+        cleaned.menuItems = defaultSettings.menuItems;
+      }
+    } else {
+      cleaned.menuItems = defaultSettings.menuItems;
     }
     return cleaned;
   };
@@ -1178,6 +1606,144 @@ async function saveLayoutSettings(settings) {
     console.error("[serverDb] Failed to save layout settings to Neon DB:", error);
   }
   return payload;
+}
+var RECYCLE_BIN_FILE = path2.join(process.cwd(), "recycle_bin.json");
+function loadRecycleBinFromFile() {
+  try {
+    if (fs2.existsSync(RECYCLE_BIN_FILE)) {
+      const data = fs2.readFileSync(RECYCLE_BIN_FILE, "utf-8");
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.warn("[serverDb] Failed loading recycle_bin.json fallback:", e);
+  }
+  return [];
+}
+function persistRecycleBinToFile(items) {
+  try {
+    fs2.writeFileSync(RECYCLE_BIN_FILE, JSON.stringify(items, null, 2), "utf-8");
+  } catch (e) {
+    console.warn("[serverDb] Failed saving recycle_bin.json fallback:", e);
+  }
+}
+async function fetchRecycleBin() {
+  try {
+    const neonItems = await fetchRecycleBinFromNeon();
+    if (neonItems !== null) {
+      memoryCache["recycle_bin"] = neonItems;
+      persistRecycleBinToFile(neonItems);
+      return neonItems;
+    }
+  } catch (err) {
+    console.error("[serverDb] Failed to fetch recycle bin from Neon DB:", err);
+  }
+  if (memoryCache["recycle_bin"].length === 0) {
+    memoryCache["recycle_bin"] = loadRecycleBinFromFile();
+  }
+  return memoryCache["recycle_bin"];
+}
+async function addToRecycleBin(items) {
+  const current = await fetchRecycleBin();
+  const formattedItems = items.map((item) => ({
+    id: item.id || `rb_${item.type}_${item.originalId}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    type: item.type,
+    originalId: item.originalId,
+    title: item.title || "Untitled Item",
+    deletedAt: item.deletedAt || (/* @__PURE__ */ new Date()).toISOString(),
+    data: item.data
+  }));
+  const updated = [...formattedItems, ...current];
+  memoryCache["recycle_bin"] = updated;
+  persistRecycleBinToFile(updated);
+  try {
+    for (const item of formattedItems) {
+      await saveRecycleBinItemToNeon(item);
+    }
+    console.log(`[Neon DB Recycle Bin] Persisted ${formattedItems.length} items to recycle_bin table.`);
+  } catch (err) {
+    console.error("[Neon DB Recycle Bin] Error syncing to DB:", err);
+  }
+  return updated;
+}
+async function deleteFromRecycleBin(ids) {
+  const current = await fetchRecycleBin();
+  const remaining = current.filter((item) => !ids.includes(item.id));
+  memoryCache["recycle_bin"] = remaining;
+  persistRecycleBinToFile(remaining);
+  try {
+    await deleteFromRecycleBinInNeon(ids);
+    console.log(`[Neon DB Recycle Bin] Permanently deleted ${ids.length} items from recycle_bin table.`);
+  } catch (err) {
+    console.error("[Neon DB Recycle Bin] Error deleting from DB:", err);
+  }
+  return remaining;
+}
+async function clearRecycleBin() {
+  memoryCache["recycle_bin"] = [];
+  persistRecycleBinToFile([]);
+  try {
+    await clearRecycleBinInNeon();
+    console.log("[Neon DB Recycle Bin] Cleared all items from recycle_bin table.");
+    return true;
+  } catch (err) {
+    console.error("[Neon DB Recycle Bin] Error clearing DB table:", err);
+    return false;
+  }
+}
+async function restoreFromRecycleBin(ids) {
+  const current = await fetchRecycleBin();
+  const toRestore = current.filter((item) => ids.includes(item.id));
+  const remaining = current.filter((item) => !ids.includes(item.id));
+  memoryCache["recycle_bin"] = remaining;
+  persistRecycleBinToFile(remaining);
+  try {
+    await deleteFromRecycleBinInNeon(ids);
+  } catch (err) {
+    console.error("[Neon DB Recycle Bin] Error removing restored items from DB recycle bin:", err);
+  }
+  for (const item of toRestore) {
+    try {
+      const type = item.type;
+      if (type === "product") {
+        const prods = await fetchResource("products");
+        if (!prods.some((p) => p.id === item.originalId)) {
+          await saveResource("products", [item.data, ...prods]);
+        }
+      } else if (type === "collection") {
+        const colls = await fetchResource("collections");
+        if (!colls.some((c) => c.id === item.originalId)) {
+          await saveResource("collections", [item.data, ...colls]);
+        }
+      } else if (type === "page") {
+        const pages = await fetchResource("custompages");
+        if (!pages.some((p) => p.id === item.originalId)) {
+          await saveResource("custompages", [item.data, ...pages]);
+        }
+      } else if (type === "blog") {
+        const blogs = await fetchResource("blogs");
+        if (!blogs.some((b) => b.id === item.originalId)) {
+          await saveResource("blogs", [item.data, ...blogs]);
+        }
+      } else if (type === "discount") {
+        const discounts = await fetchResource("discounts");
+        if (!discounts.some((d) => d.id === item.originalId)) {
+          await saveResource("discounts", [item.data, ...discounts]);
+        }
+      } else if (type === "header_footer") {
+        const settings = await fetchLayoutSettings();
+        const currentItems = Array.isArray(settings.menuItems) ? settings.menuItems : [];
+        if (!currentItems.some((m) => m.id === item.originalId)) {
+          await saveLayoutSettings({
+            ...settings,
+            menuItems: [...currentItems, item.data]
+          });
+        }
+      }
+    } catch (restoreErr) {
+      console.error(`[Recycle Bin] Failed restoring item ${item.id} to resource:`, restoreErr);
+    }
+  }
+  return { restored: toRestore, remaining };
 }
 
 // backend/routes/products.ts
@@ -2146,9 +2712,740 @@ router9.post("/webhook", async (req, res) => {
 });
 var razorpay_default = router9;
 
+// backend/routes/recycleBin.ts
+import { Router as Router10 } from "express";
+var router10 = Router10();
+router10.get("/", async (req, res) => {
+  try {
+    const data = await fetchRecycleBin();
+    res.json(data);
+  } catch (err) {
+    console.error("[RecycleBin Router] GET Error:", err);
+    res.status(500).json({ error: err.message || "Failed to fetch recycle bin" });
+  }
+});
+router10.post("/", async (req, res) => {
+  try {
+    const payload = req.body;
+    const items = Array.isArray(payload) ? payload : [payload];
+    if (items.length === 0) {
+      return res.status(400).json({ error: "No items provided to move to recycle bin" });
+    }
+    const database = await getDb();
+    if (!database) {
+      res.setHeader("X-Database-Offline", "true");
+    } else {
+      res.setHeader("X-Database-Offline", "false");
+    }
+    const updated = await addToRecycleBin(items);
+    res.json(updated);
+  } catch (err) {
+    console.error("[RecycleBin Router] POST Error:", err);
+    res.status(500).json({ error: err.message || "Failed to add to recycle bin" });
+  }
+});
+router10.post("/restore", async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "Expected an array of ids to restore" });
+    }
+    const result = await restoreFromRecycleBin(ids);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    console.error("[RecycleBin Router] Restore Error:", err);
+    res.status(500).json({ error: err.message || "Failed to restore from recycle bin" });
+  }
+});
+router10.post("/delete", async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "Expected an array of ids to delete" });
+    }
+    const remaining = await deleteFromRecycleBin(ids);
+    res.json({ success: true, remaining });
+  } catch (err) {
+    console.error("[RecycleBin Router] Delete Error:", err);
+    res.status(500).json({ error: err.message || "Failed to permanently delete from recycle bin" });
+  }
+});
+router10.post("/clear", async (req, res) => {
+  try {
+    await clearRecycleBin();
+    res.json({ success: true, message: "Recycle bin completely cleared" });
+  } catch (err) {
+    console.error("[RecycleBin Router] Clear Error:", err);
+    res.status(500).json({ error: err.message || "Failed to clear recycle bin" });
+  }
+});
+router10.delete("/", async (req, res) => {
+  try {
+    await clearRecycleBin();
+    res.json({ success: true, message: "Recycle bin completely cleared" });
+  } catch (err) {
+    console.error("[RecycleBin Router] Clear Error:", err);
+    res.status(500).json({ error: err.message || "Failed to clear recycle bin" });
+  }
+});
+var recycleBin_default = router10;
+
+// backend/routes/cloudinary.ts
+init_cloudinaryService();
+import { Router as Router11 } from "express";
+import multer from "multer";
+import { v2 as cloudinary2 } from "cloudinary";
+var router11 = Router11();
+var uploadMiddleware = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 100 * 1024 * 1024 }
+  // 100MB limit for high-res images & video
+});
+router11.get("/status", async (req, res) => {
+  try {
+    const { ensureCloudinaryConfigured: ensureCloudinaryConfigured2 } = await Promise.resolve().then(() => (init_cloudinaryService(), cloudinaryService_exports));
+    await ensureCloudinaryConfigured2();
+    const status = getCloudinaryStatus();
+    res.json(status);
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to get Cloudinary status" });
+  }
+});
+router11.post("/config", async (req, res) => {
+  try {
+    let { cloudName, apiKey, apiSecret, cloudinaryUrl } = req.body;
+    cloudName = cloudName ? String(cloudName).replace(/^@+/, "").trim() : "";
+    apiKey = apiKey ? String(apiKey).trim() : "";
+    apiSecret = apiSecret ? String(apiSecret).trim() : "";
+    cloudinaryUrl = cloudinaryUrl ? String(cloudinaryUrl).trim() : "";
+    const success = configureCloudinary({ cloudName, apiKey, apiSecret, cloudinaryUrl });
+    if (!success) {
+      return res.status(400).json({ error: "Please provide either a valid CLOUDINARY_URL or Cloud Name, API Key, and API Secret." });
+    }
+    try {
+      await cloudinary2.api.ping();
+    } catch (pingErr) {
+      console.warn("[Cloudinary Config] Ping check failed with provided credentials:", pingErr.message);
+    }
+    const currentSettings = await fetchLayoutSettings();
+    const updatedSettings = {
+      ...currentSettings,
+      cloudinaryConfig: {
+        cloudName,
+        apiKey,
+        apiSecret,
+        cloudinaryUrl
+      }
+    };
+    await saveLayoutSettings(updatedSettings);
+    res.json({
+      success: true,
+      message: "Cloudinary credentials configured and saved successfully to database.",
+      status: getCloudinaryStatus()
+    });
+  } catch (err) {
+    console.error("[Cloudinary Config] Error saving config:", err);
+    res.status(500).json({ error: err.message || "Failed to configure Cloudinary" });
+  }
+});
+router11.get("/config", async (req, res) => {
+  try {
+    const settings = await fetchLayoutSettings();
+    const config = settings && settings.cloudinaryConfig || {};
+    res.json({
+      cloudName: config.cloudName || process.env.CLOUDINARY_CLOUD_NAME || "",
+      apiKey: config.apiKey || process.env.CLOUDINARY_API_KEY || "",
+      hasApiSecret: Boolean(config.apiSecret || process.env.CLOUDINARY_API_SECRET),
+      cloudinaryUrl: config.cloudinaryUrl ? "configured" : process.env.CLOUDINARY_URL ? "configured" : "",
+      status: getCloudinaryStatus()
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to get Cloudinary config" });
+  }
+});
+router11.post("/test", async (req, res) => {
+  try {
+    let { cloudName, apiKey, apiSecret, cloudinaryUrl } = req.body;
+    cloudName = cloudName ? String(cloudName).replace(/^@+/, "").trim() : void 0;
+    apiKey = apiKey ? String(apiKey).trim() : void 0;
+    apiSecret = apiSecret ? String(apiSecret).trim() : void 0;
+    cloudinaryUrl = cloudinaryUrl ? String(cloudinaryUrl).trim() : void 0;
+    if (cloudName || cloudinaryUrl || apiKey) {
+      configureCloudinary({ cloudName, apiKey, apiSecret, cloudinaryUrl });
+    } else {
+      const { ensureCloudinaryConfigured: ensureCloudinaryConfigured2 } = await Promise.resolve().then(() => (init_cloudinaryService(), cloudinaryService_exports));
+      await ensureCloudinaryConfigured2();
+    }
+    const pingResult = await cloudinary2.api.ping();
+    res.json({
+      success: true,
+      message: "Successfully connected to Cloudinary CDN servers!",
+      result: pingResult
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      error: err.message || "Cloudinary connection check failed. Verify your Cloud Name, API Key, and Secret."
+    });
+  }
+});
+router11.post("/disconnect", async (req, res) => {
+  try {
+    const currentSettings = await fetchLayoutSettings();
+    const updatedSettings = { ...currentSettings };
+    delete updatedSettings.cloudinaryConfig;
+    await saveLayoutSettings(updatedSettings);
+    const { disconnectCloudinary: disconnectCloudinary2 } = await Promise.resolve().then(() => (init_cloudinaryService(), cloudinaryService_exports));
+    disconnectCloudinary2();
+    res.json({
+      success: true,
+      message: "Cloudinary credentials disconnected. App will use database storage fallback.",
+      status: getCloudinaryStatus()
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to disconnect Cloudinary" });
+  }
+});
+router11.post("/upload", uploadMiddleware.single("file"), async (req, res) => {
+  try {
+    let fileBuffer = null;
+    let originalFilename = "";
+    let mimeType = "image/png";
+    let base64String = "";
+    if (req.file) {
+      fileBuffer = req.file.buffer;
+      originalFilename = req.file.originalname || "asset";
+      mimeType = req.file.mimetype || "image/png";
+    } else if (req.body && req.body.data) {
+      originalFilename = req.body.fileName || req.body.filename || "asset";
+      const data = req.body.data;
+      if (typeof data === "string" && data.startsWith("data:")) {
+        const matches = data.match(/^data:([^;]+);base64,(.+)$/);
+        if (matches && matches.length === 3) {
+          mimeType = matches[1];
+          base64String = matches[2];
+          fileBuffer = Buffer.from(base64String, "base64");
+        }
+      } else {
+        base64String = data;
+        fileBuffer = Buffer.from(base64String, "base64");
+      }
+    } else {
+      return res.status(400).json({ error: "Missing file or data parameter" });
+    }
+    const isVideo = mimeType.startsWith("video/") || /\.(mp4|mov|webm|avi|mkv|flv|wmv|m4v|ogv)$/i.test(originalFilename) || req.body?.resource_type === "video";
+    const resourceType = isVideo ? "video" : "image";
+    const uploadPayload = fileBuffer || Buffer.from(base64String, "base64");
+    const result = await uploadToCloudinary(uploadPayload, {
+      resourceType: isVideo ? "video" : "auto",
+      fileName: originalFilename
+    });
+    if (!result) {
+      return res.status(400).json({
+        error: "Cloudinary is not configured. Please configure your Cloudinary credentials first."
+      });
+    }
+    res.json({
+      success: true,
+      url: result.secure_url,
+      secure_url: result.secure_url,
+      public_id: result.public_id,
+      format: result.format,
+      resource_type: result.resource_type,
+      bytes: result.bytes,
+      isCloudinary: true
+    });
+  } catch (err) {
+    console.error("[Cloudinary Route Upload] Error:", err);
+    res.status(500).json({ error: err.message || "Cloudinary upload failed" });
+  }
+});
+router11.post("/upload-url", async (req, res) => {
+  try {
+    const { url, folder, fileName } = req.body;
+    if (!url || typeof url !== "string") {
+      return res.status(400).json({ error: "Missing url parameter" });
+    }
+    if (url.includes("res.cloudinary.com")) {
+      return res.json({
+        success: true,
+        url,
+        secure_url: url,
+        isCloudinary: true,
+        message: "Already on Cloudinary CDN"
+      });
+    }
+    const result = await uploadToCloudinary(url, {
+      folder: folder || "jade_tailor_luxury_store",
+      fileName: fileName || "migrated-asset"
+    });
+    if (!result) {
+      return res.status(400).json({
+        error: "Cloudinary is not configured. Please check your credentials in Development Mode."
+      });
+    }
+    res.json({
+      success: true,
+      url: result.secure_url,
+      secure_url: result.secure_url,
+      public_id: result.public_id,
+      format: result.format,
+      resource_type: result.resource_type,
+      isCloudinary: true
+    });
+  } catch (err) {
+    console.error("[Cloudinary Upload URL] Error:", err);
+    res.status(500).json({ error: err.message || "Failed to upload URL to Cloudinary" });
+  }
+});
+var cloudinary_default = router11;
+
+// backend/routes/developerMode.ts
+init_cloudinaryService();
+import { Router as Router12 } from "express";
+import fs4 from "fs";
+import path4 from "path";
+import { v2 as cloudinary3 } from "cloudinary";
+init_neonDb();
+import nodemailer2 from "nodemailer";
+var router12 = Router12();
+var DEV_SETTINGS_FILE = path4.join(process.cwd(), "developer_settings.json");
+var DEFAULT_DEV_SETTINGS = {
+  customCssEnabled: true,
+  customCss: `/* ========================================================
+   CUSTOM DEVELOPER CSS
+   Injected across all storefront pages in real time
+   ======================================================== */
+
+/* Example: Luxury accent highlights */
+.luxury-accent {
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* Example: Smooth transition for product cards */
+.product-card-hover {
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+`,
+  customJsEnabled: true,
+  customJs: `// ========================================================
+// CUSTOM DEVELOPER JAVASCRIPT
+// Executed safely across storefront pages
+// ========================================================
+
+console.log("[DevMode] Custom Developer JavaScript active on Jade Tailor Luxury Storefront.");
+
+// Example: Custom event listener or analytics dispatch
+window.addEventListener("DOMContentLoaded", () => {
+  // Developer custom tracking or DOM enhancements here
+});
+`,
+  siteProtectionMode: "live",
+  storePassword: "fashion2026",
+  comingSoonTitle: "Private Salon & Boutique Showroom",
+  comingSoonSubtitle: "BESPOKE CAPSULES \xB7 PRIVATE CLIENTELE ONLY",
+  comingSoonMessage: "We are currently preparing our exclusive Spring / Summer collection. Enter your client password below to unlock private showroom access.",
+  comingSoonLaunchDate: "2026-11-01T00:00:00Z",
+  comingSoonShowNewsletter: true,
+  comingSoonShowSocials: true,
+  comingSoonBackgroundUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+  apiKeys: {
+    cloudinaryCloudName: (process.env.CLOUDINARY_CLOUD_NAME || "").replace(/^@+/, ""),
+    cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",
+    cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET ? "configured" : "",
+    cloudinaryUrl: process.env.CLOUDINARY_URL || "",
+    databaseUrl: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL || "",
+    razorpayKeyId: process.env.RAZORPAY_KEY_ID || "",
+    razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET ? "configured" : "",
+    razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET ? "configured" : "",
+    emailHost: process.env.EMAIL_HOST || "smtp.ionos.co.uk",
+    emailPort: process.env.EMAIL_PORT || "587",
+    emailUser: process.env.EMAIL_USER || "Support@pouch-supply.com",
+    emailPass: process.env.EMAIL_PASS ? "configured" : "",
+    emailFrom: process.env.EMAIL_FROM || "Support <Support@pouch-supply.com>",
+    geminiApiKey: process.env.GEMINI_API_KEY ? "configured" : "",
+    googleAnalyticsId: "",
+    metaPixelId: "",
+    klaviyoPublicKey: "",
+    appUrl: process.env.APP_URL || "http://localhost:3000",
+    projectName: "Jade Tailor - Personal Stylist & Luxury Store"
+  },
+  debugConsoleLogs: false,
+  maintenanceBypassAdmins: true
+};
+async function loadDeveloperSettings() {
+  let settings = { ...DEFAULT_DEV_SETTINGS };
+  try {
+    const list = await fetchResource("developer_settings");
+    if (Array.isArray(list) && list.length > 0 && list[0]) {
+      settings = {
+        ...DEFAULT_DEV_SETTINGS,
+        ...list[0],
+        apiKeys: {
+          ...DEFAULT_DEV_SETTINGS.apiKeys,
+          ...list[0].apiKeys || {}
+        }
+      };
+      return settings;
+    }
+  } catch (_) {
+  }
+  try {
+    if (fs4.existsSync(DEV_SETTINGS_FILE)) {
+      const content = fs4.readFileSync(DEV_SETTINGS_FILE, "utf-8");
+      const parsed = JSON.parse(content);
+      settings = {
+        ...DEFAULT_DEV_SETTINGS,
+        ...parsed,
+        apiKeys: {
+          ...DEFAULT_DEV_SETTINGS.apiKeys,
+          ...parsed.apiKeys || {}
+        }
+      };
+      return settings;
+    }
+  } catch (_) {
+  }
+  return settings;
+}
+async function persistDeveloperSettings(data) {
+  const current = await loadDeveloperSettings();
+  const merged = {
+    ...current,
+    ...data,
+    apiKeys: {
+      ...current.apiKeys,
+      ...data.apiKeys || {}
+    },
+    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  try {
+    fs4.writeFileSync(DEV_SETTINGS_FILE, JSON.stringify(merged, null, 2), "utf-8");
+  } catch (err) {
+    console.warn("[DevMode] Error saving developer_settings.json:", err);
+  }
+  try {
+    await saveResource("developer_settings", [merged]);
+  } catch (err) {
+    console.warn("[DevMode] Error saving to developer_settings table:", err);
+  }
+  const cldKeys = merged.apiKeys;
+  if (cldKeys.cloudinaryCloudName || cldKeys.cloudinaryUrl || cldKeys.cloudinaryApiKey) {
+    try {
+      configureCloudinary({
+        cloudName: cldKeys.cloudinaryCloudName,
+        apiKey: cldKeys.cloudinaryApiKey,
+        apiSecret: cldKeys.cloudinaryApiSecret && cldKeys.cloudinaryApiSecret !== "configured" ? cldKeys.cloudinaryApiSecret : process.env.CLOUDINARY_API_SECRET,
+        cloudinaryUrl: cldKeys.cloudinaryUrl && cldKeys.cloudinaryUrl !== "configured" ? cldKeys.cloudinaryUrl : process.env.CLOUDINARY_URL
+      });
+    } catch (_) {
+    }
+  }
+  return merged;
+}
+router12.get("/", async (req, res) => {
+  try {
+    await ensureCloudinaryConfigured();
+    const settings = await loadDeveloperSettings();
+    const cldStatus = getCloudinaryStatus();
+    const envStatus = {
+      cloudinary: isCloudinaryConfigured(),
+      database: Boolean(process.env.DATABASE_URL || process.env.NEON_DATABASE_URL),
+      razorpay: Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
+      email: Boolean(process.env.EMAIL_HOST && process.env.EMAIL_USER),
+      gemini: Boolean(process.env.GEMINI_API_KEY)
+    };
+    const maskedKeys = {
+      ...settings.apiKeys,
+      cloudinaryApiSecret: settings.apiKeys.cloudinaryApiSecret ? settings.apiKeys.cloudinaryApiSecret === "configured" ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" : "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" : "",
+      razorpayKeySecret: settings.apiKeys.razorpayKeySecret ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" : "",
+      razorpayWebhookSecret: settings.apiKeys.razorpayWebhookSecret ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" : "",
+      emailPass: settings.apiKeys.emailPass ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" : "",
+      geminiApiKey: settings.apiKeys.geminiApiKey ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" : ""
+    };
+    res.json({
+      ...settings,
+      apiKeys: maskedKeys,
+      hasSecrets: {
+        cloudinary: Boolean(settings.apiKeys.cloudinaryApiSecret || process.env.CLOUDINARY_API_SECRET),
+        razorpay: Boolean(settings.apiKeys.razorpayKeySecret || process.env.RAZORPAY_KEY_SECRET),
+        email: Boolean(settings.apiKeys.emailPass || process.env.EMAIL_PASS),
+        gemini: Boolean(settings.apiKeys.geminiApiKey || process.env.GEMINI_API_KEY)
+      },
+      envStatus,
+      cloudinaryStatus: cldStatus
+    });
+  } catch (err) {
+    console.error("[DevMode] GET error:", err);
+    res.status(500).json({ error: err.message || "Failed to load developer settings" });
+  }
+});
+router12.get("/public", async (req, res) => {
+  try {
+    const settings = await loadDeveloperSettings();
+    res.json({
+      customCssEnabled: settings.customCssEnabled,
+      customCss: settings.customCssEnabled ? settings.customCss : "",
+      customJsEnabled: settings.customJsEnabled,
+      customJs: settings.customJsEnabled ? settings.customJs : "",
+      siteProtectionMode: settings.siteProtectionMode,
+      comingSoonTitle: settings.comingSoonTitle,
+      comingSoonSubtitle: settings.comingSoonSubtitle,
+      comingSoonMessage: settings.comingSoonMessage,
+      comingSoonLaunchDate: settings.comingSoonLaunchDate,
+      comingSoonShowNewsletter: settings.comingSoonShowNewsletter,
+      comingSoonShowSocials: settings.comingSoonShowSocials,
+      comingSoonBackgroundUrl: settings.comingSoonBackgroundUrl,
+      debugConsoleLogs: settings.debugConsoleLogs,
+      projectName: settings.apiKeys?.projectName || "Jade Tailor"
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to get public settings" });
+  }
+});
+router12.post("/", async (req, res) => {
+  try {
+    const payload = req.body;
+    const current = await loadDeveloperSettings();
+    if (payload.apiKeys) {
+      if (payload.apiKeys.cloudinaryApiSecret === "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" || payload.apiKeys.cloudinaryApiSecret === "configured") {
+        payload.apiKeys.cloudinaryApiSecret = current.apiKeys.cloudinaryApiSecret;
+      }
+      if (payload.apiKeys.razorpayKeySecret === "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" || payload.apiKeys.razorpayKeySecret === "configured") {
+        payload.apiKeys.razorpayKeySecret = current.apiKeys.razorpayKeySecret;
+      }
+      if (payload.apiKeys.razorpayWebhookSecret === "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" || payload.apiKeys.razorpayWebhookSecret === "configured") {
+        payload.apiKeys.razorpayWebhookSecret = current.apiKeys.razorpayWebhookSecret;
+      }
+      if (payload.apiKeys.emailPass === "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" || payload.apiKeys.emailPass === "configured") {
+        payload.apiKeys.emailPass = current.apiKeys.emailPass;
+      }
+      if (payload.apiKeys.geminiApiKey === "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" || payload.apiKeys.geminiApiKey === "configured") {
+        payload.apiKeys.geminiApiKey = current.apiKeys.geminiApiKey;
+      }
+    }
+    const saved = await persistDeveloperSettings(payload);
+    res.json({
+      success: true,
+      message: "Development mode settings updated successfully.",
+      data: saved
+    });
+  } catch (err) {
+    console.error("[DevMode] POST error:", err);
+    res.status(500).json({ error: err.message || "Failed to save developer settings" });
+  }
+});
+router12.post("/verify-password", async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ valid: false, error: "Please enter a password." });
+    }
+    const settings = await loadDeveloperSettings();
+    const correctPassword = settings.storePassword || "fashion2026";
+    if (password.trim() === correctPassword.trim()) {
+      res.json({
+        valid: true,
+        token: `unlocked_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        message: "Password verified! Welcome to the boutique showroom."
+      });
+    } else {
+      res.status(401).json({
+        valid: false,
+        error: "Incorrect password. Please verify and try again."
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ valid: false, error: err.message || "Verification failed" });
+  }
+});
+router12.post("/test-key", async (req, res) => {
+  const { service, config } = req.body;
+  try {
+    if (service === "cloudinary") {
+      const cloudName = (config?.cloudName || process.env.CLOUDINARY_CLOUD_NAME || "").replace(/^@+/, "").trim();
+      const apiKey = config?.apiKey || process.env.CLOUDINARY_API_KEY;
+      const apiSecret = config?.apiSecret && config.apiSecret !== "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" ? config.apiSecret : process.env.CLOUDINARY_API_SECRET;
+      const cldUrl = config?.cloudinaryUrl && config.cloudinaryUrl !== "configured" ? config.cloudinaryUrl : process.env.CLOUDINARY_URL;
+      if (cloudName || apiKey || cldUrl) {
+        configureCloudinary({ cloudName, apiKey, apiSecret, cloudinaryUrl: cldUrl });
+      } else {
+        await ensureCloudinaryConfigured();
+      }
+      const ping = await cloudinary3.api.ping();
+      return res.json({
+        success: true,
+        service: "cloudinary",
+        message: `\u2713 Cloudinary CDN connected successfully! Cloud: "${cloudName || cloudinary3.config().cloud_name}"`,
+        details: ping
+      });
+    }
+    if (service === "database") {
+      const dbStatus = await testConnection();
+      if (dbStatus.status === "connected") {
+        return res.json({
+          success: true,
+          service: "database",
+          message: `\u2713 Database connected (${dbStatus.uriHost || "PostgreSQL"})`,
+          details: dbStatus
+        });
+      } else {
+        return res.status(400).json({
+          success: false,
+          service: "database",
+          error: dbStatus.error || "Database connection test failed."
+        });
+      }
+    }
+    if (service === "razorpay") {
+      const keyId = config?.keyId || process.env.RAZORPAY_KEY_ID;
+      const keySecret = config?.keySecret && config.keySecret !== "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" ? config.keySecret : process.env.RAZORPAY_KEY_SECRET;
+      if (!keyId) {
+        return res.status(400).json({
+          success: false,
+          service: "razorpay",
+          error: "Missing Razorpay Key ID."
+        });
+      }
+      const Razorpay2 = (await import("razorpay")).default;
+      const instance = new Razorpay2({
+        key_id: keyId,
+        key_secret: keySecret || "test_secret"
+      });
+      try {
+        const testRes = await instance.orders.all({ count: 1 });
+        return res.json({
+          success: true,
+          service: "razorpay",
+          message: `\u2713 Razorpay API verified successfully for Key ID: ${keyId}`,
+          details: { orderCount: testRes.count }
+        });
+      } catch (rzpErr) {
+        if (rzpErr.statusCode === 401) {
+          throw new Error("Razorpay authentication failed: Invalid Key ID or Secret.");
+        }
+        return res.json({
+          success: true,
+          service: "razorpay",
+          message: `\u2713 Razorpay credentials formatted correctly: Key ID "${keyId}"`,
+          details: rzpErr.message
+        });
+      }
+    }
+    if (service === "email") {
+      const host = config?.host || process.env.EMAIL_HOST || "smtp.ionos.co.uk";
+      const port = parseInt(config?.port || process.env.EMAIL_PORT || "587", 10);
+      const user = config?.user || process.env.EMAIL_USER || "Support@pouch-supply.com";
+      const pass = config?.pass && config.pass !== "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" ? config.pass : process.env.EMAIL_PASS || "";
+      const transporter = nodemailer2.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass },
+        tls: { rejectUnauthorized: false }
+      });
+      try {
+        await transporter.verify();
+        return res.json({
+          success: true,
+          service: "email",
+          message: `\u2713 SMTP Outbox connected successfully to ${host}:${port} as ${user}`
+        });
+      } catch (mailErr) {
+        return res.status(400).json({
+          success: false,
+          service: "email",
+          error: `SMTP connection failed: ${mailErr.message}`
+        });
+      }
+    }
+    if (service === "gemini") {
+      const apiKey = config?.apiKey && config.apiKey !== "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" ? config.apiKey : process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(400).json({
+          success: false,
+          service: "gemini",
+          error: "Missing GEMINI_API_KEY."
+        });
+      }
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({ apiKey });
+      const model = ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: "Respond with the single word: OK"
+      });
+      const response = await model;
+      return res.json({
+        success: true,
+        service: "gemini",
+        message: `\u2713 Gemini AI API connected and generated response!`,
+        reply: response.text?.trim()
+      });
+    }
+    res.status(400).json({ error: `Unknown service: ${service}` });
+  } catch (err) {
+    console.error(`[DevMode Test] ${service} test failed:`, err);
+    res.status(400).json({
+      success: false,
+      service,
+      error: err.message || `Test failed for ${service}`
+    });
+  }
+});
+router12.get("/export", async (req, res) => {
+  try {
+    const devSettings = await loadDeveloperSettings();
+    const layoutSettings = await fetchLayoutSettings();
+    const products = await fetchResource("products");
+    const collections = await fetchResource("collections");
+    const exportPackage = {
+      version: "2.0.0",
+      exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      project: devSettings.apiKeys.projectName || "Jade Tailor Luxury Boutique",
+      developerSettings: devSettings,
+      layoutSettings,
+      counts: {
+        products: products.length,
+        collections: collections.length
+      }
+    };
+    res.setHeader("Content-Disposition", `attachment; filename=project-config-${Date.now()}.json`);
+    res.setHeader("Content-Type", "application/json");
+    res.send(JSON.stringify(exportPackage, null, 2));
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to export config" });
+  }
+});
+router12.post("/import", async (req, res) => {
+  try {
+    const pkg = req.body;
+    if (!pkg || typeof pkg !== "object") {
+      return res.status(400).json({ error: "Invalid JSON configuration package." });
+    }
+    if (pkg.developerSettings) {
+      await persistDeveloperSettings(pkg.developerSettings);
+    }
+    if (pkg.layoutSettings) {
+      await saveLayoutSettings(pkg.layoutSettings);
+    }
+    res.json({
+      success: true,
+      message: "\u2713 Project configuration imported successfully. Your website is now ready for the new project!"
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to import config" });
+  }
+});
+var developerMode_default = router12;
+
 // serverApp.ts
+init_cloudinaryService();
+import multer2 from "multer";
 async function createExpressApp() {
   const app = express();
+  ensureCloudinaryConfigured().catch(() => {
+  });
   app.use((req, res, next) => {
     if (req.body && typeof req.body === "object" && !Buffer.isBuffer(req.body)) {
       return next();
@@ -2161,18 +3458,18 @@ async function createExpressApp() {
     }
     express.urlencoded({ limit: "50mb", extended: true })(req, res, next);
   });
-  const uploadsPath = path3.join(process.cwd(), "uploads");
-  if (!fs3.existsSync(uploadsPath)) {
+  const uploadsPath = path5.join(process.cwd(), "uploads");
+  if (!fs5.existsSync(uploadsPath)) {
     try {
-      fs3.mkdirSync(uploadsPath, { recursive: true });
+      fs5.mkdirSync(uploadsPath, { recursive: true });
     } catch (_) {
     }
   }
   app.get("/uploads/:filename", async (req, res, next) => {
     try {
       const filename = req.params.filename;
-      const filePath = path3.join(uploadsPath, filename);
-      if (fs3.existsSync(filePath)) {
+      const filePath = path5.join(uploadsPath, filename);
+      if (fs5.existsSync(filePath)) {
         return res.sendFile(filePath);
       }
       const dotIndex = filename.lastIndexOf(".");
@@ -2184,7 +3481,7 @@ async function createExpressApp() {
       }
       if (imgDoc && imgDoc.base64Data) {
         try {
-          fs3.writeFileSync(filePath, Buffer.from(imgDoc.base64Data, "base64"));
+          fs5.writeFileSync(filePath, Buffer.from(imgDoc.base64Data, "base64"));
           console.log(`[Uploads Restore] Restored to disk successfully: ${filename}`);
         } catch (_) {
         }
@@ -2203,35 +3500,108 @@ async function createExpressApp() {
     next();
   });
   app.use("/uploads", express.static(uploadsPath));
-  app.post("/api/upload", async (req, res) => {
+  const uploadMiddleware2 = multer2({
+    storage: multer2.memoryStorage(),
+    limits: { fileSize: 100 * 1024 * 1024 }
+  });
+  app.post("/api/upload", uploadMiddleware2.single("file"), async (req, res) => {
     try {
-      const { data, filename } = req.body;
-      if (!data) {
-        return res.status(400).json({ error: "Missing data payload for upload." });
-      }
-      let base64String = data;
+      let fileBuffer = null;
+      let originalFilename = "";
       let mimeType = "image/png";
-      if (data.startsWith("data:")) {
-        const matches = data.match(/^data:([^;]+);base64,(.+)$/);
-        if (matches && matches.length === 3) {
-          mimeType = matches[1];
-          base64String = matches[2];
+      let base64String = "";
+      if (req.file) {
+        fileBuffer = req.file.buffer;
+        originalFilename = req.file.originalname || "uploaded-asset";
+        mimeType = req.file.mimetype || "image/png";
+        base64String = req.file.buffer.toString("base64");
+      } else if (req.body && req.body.data) {
+        const data = req.body.data;
+        originalFilename = req.body.filename || req.body.fileName || "uploaded-asset";
+        base64String = data;
+        if (typeof data === "string" && data.startsWith("data:")) {
+          const matches = data.match(/^data:([^;]+);base64,(.+)$/);
+          if (matches && matches.length === 3) {
+            mimeType = matches[1];
+            base64String = matches[2];
+          }
+        }
+        try {
+          fileBuffer = Buffer.from(base64String, "base64");
+        } catch (_) {
+        }
+      } else {
+        return res.status(400).json({ error: "Missing file or data payload for upload." });
+      }
+      const isVideo = mimeType.startsWith("video/") || /\.(mp4|mov|webm|avi|mkv|flv|wmv|m4v|ogv)$/i.test(originalFilename) || req.body?.resource_type === "video";
+      const resourceType = isVideo ? "video" : "image";
+      const ext = mimeType.includes("/") ? mimeType.split("/")[1] : isVideo ? "mp4" : "png";
+      const cleanExt = ext.replace(/[^a-zA-Z0-9]/g, "").toLowerCase() || (isVideo ? "mp4" : "png");
+      const uniqueId = `${isVideo ? "vid" : "img"}-${Date.now()}-${Math.floor(Math.random() * 1e5)}`;
+      const safeFileName = originalFilename && originalFilename.includes(".") ? originalFilename : `${uniqueId}.${cleanExt}`;
+      let finalUrl = "";
+      let isCloudinary = false;
+      let cloudinaryPublicId = "";
+      let fileSize = fileBuffer ? fileBuffer.length : base64String ? Math.round(base64String.length * 0.75) : 0;
+      try {
+        const uploadPayload = fileBuffer || ((dataUriOrBase64) => dataUriOrBase64.startsWith("data:") ? dataUriOrBase64 : `data:${mimeType};base64,${dataUriOrBase64}`)(base64String);
+        const cldResult = await uploadToCloudinary(uploadPayload, {
+          resourceType: isVideo ? "video" : "auto",
+          fileName: safeFileName
+        });
+        if (cldResult && cldResult.secure_url) {
+          finalUrl = cldResult.secure_url;
+          isCloudinary = true;
+          cloudinaryPublicId = cldResult.public_id;
+          if (cldResult.bytes) fileSize = cldResult.bytes;
+          console.log(`[API Upload] Successfully uploaded to Cloudinary: ${finalUrl} (resource_type: ${cldResult.resource_type})`);
+        }
+      } catch (cldErr) {
+        console.warn("[API Upload] Cloudinary upload attempt failed or not configured, using database/local storage fallback:", cldErr.message);
+      }
+      if (!finalUrl) {
+        finalUrl = await saveUploadedImage(uniqueId, base64String, mimeType);
+        try {
+          const diskFile = path5.join(uploadsPath, `${uniqueId}.${cleanExt}`);
+          fs5.writeFileSync(diskFile, Buffer.from(base64String, "base64"));
+        } catch (_) {
         }
       }
-      const id = `img-${Date.now()}-${Math.floor(Math.random() * 1e5)}`;
-      const relativeUrl = await saveUploadedImage(id, base64String, mimeType);
+      const sizeStr = fileSize > 1024 * 1024 ? `${(fileSize / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(fileSize / 1024))} KB`;
+      const newFileDoc = {
+        id: uniqueId,
+        fileName: safeFileName,
+        altText: safeFileName.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
+        dateAdded: (/* @__PURE__ */ new Date()).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        size: sizeStr,
+        references: isVideo ? "Video Section" : "Storefront Media",
+        url: finalUrl,
+        resourceType,
+        format: cleanExt,
+        cloudinaryPublicId: isCloudinary ? cloudinaryPublicId : void 0
+      };
       try {
-        const ext = mimeType.includes("/") ? mimeType.split("/")[1] : "png";
-        const diskFile = path3.join(uploadsPath, `${id}.${ext}`);
-        fs3.writeFileSync(diskFile, Buffer.from(base64String, "base64"));
-      } catch (e) {
-        console.warn("Could not write uploaded image to disk:", e);
+        const existingFiles = await fetchResource("files");
+        const updatedFiles = [newFileDoc, ...Array.isArray(existingFiles) ? existingFiles.filter((f) => f.url !== finalUrl) : []];
+        await saveResource("files", updatedFiles);
+        console.log(`[API Upload] Persisted file record to database: ${safeFileName} (${newFileDoc.id})`);
+      } catch (dbErr) {
+        console.warn("[API Upload] Failed to write file entry to files table:", dbErr);
       }
-      console.log(`[API Upload] Successfully persisted ${mimeType} image with ID: ${id}. URL: ${relativeUrl}`);
-      res.json({ url: relativeUrl, relativeUrl, id });
+      res.json({
+        url: finalUrl,
+        secure_url: finalUrl,
+        id: uniqueId,
+        fileName: safeFileName,
+        resource_type: resourceType,
+        format: cleanExt,
+        isCloudinary,
+        cloudinaryPublicId: isCloudinary ? cloudinaryPublicId : void 0,
+        file: newFileDoc
+      });
     } catch (err) {
       console.error("[API Upload] Fail:", err);
-      res.status(500).json({ error: err.message || "Failed to process image upload database insertion" });
+      res.status(500).json({ error: err.message || "Failed to process upload" });
     }
   });
   app.get("/api/images/:id", async (req, res) => {
@@ -2317,8 +3687,11 @@ async function createExpressApp() {
   app.use("/api/custompages", customPages_default);
   app.use("/api/blogs", blogs_default);
   app.use("/api/razorpay", razorpay_default);
+  app.use("/api/recyclebin", recycleBin_default);
+  app.use("/api/cloudinary", cloudinary_default);
+  app.use("/api/developer-mode", developerMode_default);
   app.get("/placeholder.png", (req, res) => {
-    res.sendFile(path3.resolve(process.cwd(), "placeholder.png"));
+    res.sendFile(path5.resolve(process.cwd(), "placeholder.png"));
   });
   if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     const { createServer: createViteServer } = await import("vite");
@@ -2334,8 +3707,8 @@ async function createExpressApp() {
         return next();
       }
       try {
-        const fs4 = await import("fs");
-        let html = fs4.readFileSync(path3.resolve(process.cwd(), "index.html"), "utf-8");
+        const fs6 = await import("fs");
+        let html = fs6.readFileSync(path5.resolve(process.cwd(), "index.html"), "utf-8");
         html = await vite.transformIndexHtml(url, html);
         res.status(200).set({ "Content-Type": "text/html" }).end(html);
       } catch (e) {
@@ -2343,7 +3716,7 @@ async function createExpressApp() {
       }
     });
   } else {
-    const distPath = path3.join(process.cwd(), "dist");
+    const distPath = path5.join(process.cwd(), "dist");
     console.log(`[Production Setup] Static directory: ${distPath}`);
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
@@ -2352,7 +3725,7 @@ async function createExpressApp() {
       if (url.startsWith("/api") || lastSegment.includes(".")) {
         return res.status(404).send("API or File Asset Not Found");
       }
-      const indexPath = path3.join(distPath, "index.html");
+      const indexPath = path5.join(distPath, "index.html");
       console.log(`[Production Fallback] Sending index.html for request: ${req.url}`);
       res.sendFile(indexPath, (err) => {
         if (err) {
