@@ -54,6 +54,19 @@ export interface DeveloperSettingsData {
     klaviyoPublicKey?: string;
     appUrl?: string;
     projectName?: string;
+    // UPI & Payment Recipients
+    upiPhoneNumber?: string;
+    upiVpa?: string;
+    upiPayeeName?: string;
+    upiGPayId?: string;
+    upiPhonePeId?: string;
+    upiPaytmId?: string;
+    upiEnabled?: boolean;
+    // Store General Settings
+    currency?: string;
+    currencySymbol?: string;
+    storeEmail?: string;
+    storePhone?: string;
   };
   debugConsoleLogs: boolean;
   maintenanceBypassAdmins: boolean;
@@ -119,7 +132,18 @@ window.addEventListener("DOMContentLoaded", () => {
     metaPixelId: "",
     klaviyoPublicKey: "",
     appUrl: process.env.APP_URL || "http://localhost:3000",
-    projectName: "Jade Tailor - Personal Stylist & Luxury Store"
+    projectName: "Jade Tailor - Personal Stylist & Luxury Store",
+    upiPhoneNumber: "8894030663",
+    upiVpa: "8894030663@upi",
+    upiPayeeName: "Jade Tailor Luxury Boutique",
+    upiGPayId: "8894030663@okaxis",
+    upiPhonePeId: "8894030663@ybl",
+    upiPaytmId: "8894030663@paytm",
+    upiEnabled: true,
+    currency: "INR",
+    currencySymbol: "₹",
+    storeEmail: "jade@tailorand.com",
+    storePhone: "+91 8894030663"
   },
   debugConsoleLogs: false,
   maintenanceBypassAdmins: true
@@ -133,13 +157,27 @@ export async function loadDeveloperSettings(): Promise<DeveloperSettingsData> {
   try {
     const list = await fetchResource("developer_settings");
     if (Array.isArray(list) && list.length > 0 && list[0]) {
+      const stored = list[0];
+      const mergedKeys = {
+        ...DEFAULT_DEV_SETTINGS.apiKeys,
+        ...(stored.apiKeys || {}),
+        upiPhoneNumber: (stored.apiKeys?.upiPhoneNumber && stored.apiKeys.upiPhoneNumber.trim() !== "") 
+          ? stored.apiKeys.upiPhoneNumber 
+          : DEFAULT_DEV_SETTINGS.apiKeys.upiPhoneNumber,
+        upiVpa: (stored.apiKeys?.upiVpa && stored.apiKeys.upiVpa.trim() !== "") 
+          ? stored.apiKeys.upiVpa 
+          : DEFAULT_DEV_SETTINGS.apiKeys.upiVpa,
+        upiPayeeName: stored.apiKeys?.upiPayeeName || DEFAULT_DEV_SETTINGS.apiKeys.upiPayeeName,
+        upiGPayId: stored.apiKeys?.upiGPayId || DEFAULT_DEV_SETTINGS.apiKeys.upiGPayId,
+        upiPhonePeId: stored.apiKeys?.upiPhonePeId || DEFAULT_DEV_SETTINGS.apiKeys.upiPhonePeId,
+        upiPaytmId: stored.apiKeys?.upiPaytmId || DEFAULT_DEV_SETTINGS.apiKeys.upiPaytmId,
+        upiEnabled: stored.apiKeys?.upiEnabled !== undefined ? stored.apiKeys.upiEnabled : true,
+      };
+
       settings = {
         ...DEFAULT_DEV_SETTINGS,
-        ...list[0],
-        apiKeys: {
-          ...DEFAULT_DEV_SETTINGS.apiKeys,
-          ...(list[0].apiKeys || {})
-        }
+        ...stored,
+        apiKeys: mergedKeys
       };
       return settings;
     }
@@ -150,13 +188,26 @@ export async function loadDeveloperSettings(): Promise<DeveloperSettingsData> {
     if (fs.existsSync(DEV_SETTINGS_FILE)) {
       const content = fs.readFileSync(DEV_SETTINGS_FILE, "utf-8");
       const parsed = JSON.parse(content);
+      const mergedKeys = {
+        ...DEFAULT_DEV_SETTINGS.apiKeys,
+        ...(parsed.apiKeys || {}),
+        upiPhoneNumber: (parsed.apiKeys?.upiPhoneNumber && parsed.apiKeys.upiPhoneNumber.trim() !== "") 
+          ? parsed.apiKeys.upiPhoneNumber 
+          : DEFAULT_DEV_SETTINGS.apiKeys.upiPhoneNumber,
+        upiVpa: (parsed.apiKeys?.upiVpa && parsed.apiKeys.upiVpa.trim() !== "") 
+          ? parsed.apiKeys.upiVpa 
+          : DEFAULT_DEV_SETTINGS.apiKeys.upiVpa,
+        upiPayeeName: parsed.apiKeys?.upiPayeeName || DEFAULT_DEV_SETTINGS.apiKeys.upiPayeeName,
+        upiGPayId: parsed.apiKeys?.upiGPayId || DEFAULT_DEV_SETTINGS.apiKeys.upiGPayId,
+        upiPhonePeId: parsed.apiKeys?.upiPhonePeId || DEFAULT_DEV_SETTINGS.apiKeys.upiPhonePeId,
+        upiPaytmId: parsed.apiKeys?.upiPaytmId || DEFAULT_DEV_SETTINGS.apiKeys.upiPaytmId,
+        upiEnabled: parsed.apiKeys?.upiEnabled !== undefined ? parsed.apiKeys.upiEnabled : true,
+      };
+
       settings = {
         ...DEFAULT_DEV_SETTINGS,
         ...parsed,
-        apiKeys: {
-          ...DEFAULT_DEV_SETTINGS.apiKeys,
-          ...(parsed.apiKeys || {})
-        }
+        apiKeys: mergedKeys
       };
       return settings;
     }
@@ -270,7 +321,14 @@ router.get("/public", async (req, res) => {
       comingSoonShowSocials: settings.comingSoonShowSocials,
       comingSoonBackgroundUrl: settings.comingSoonBackgroundUrl,
       debugConsoleLogs: settings.debugConsoleLogs,
-      projectName: settings.apiKeys?.projectName || "Jade Tailor"
+      projectName: settings.apiKeys?.projectName || "Jade Tailor",
+      upiPhoneNumber: settings.apiKeys?.upiPhoneNumber || "8894030663",
+      upiVpa: settings.apiKeys?.upiVpa || "8894030663@upi",
+      upiPayeeName: settings.apiKeys?.upiPayeeName || "Jade Tailor",
+      upiGPayId: settings.apiKeys?.upiGPayId || "8894030663@okaxis",
+      upiPhonePeId: settings.apiKeys?.upiPhonePeId || "8894030663@ybl",
+      upiPaytmId: settings.apiKeys?.upiPaytmId || "8894030663@paytm",
+      upiEnabled: settings.apiKeys?.upiEnabled !== false
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message || "Failed to get public settings" });

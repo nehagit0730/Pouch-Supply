@@ -10409,6 +10409,31 @@ export default function AdminDashboard({
     {/* SETTINGS VIEW */}
     {activeTab === 'settings' && (
       <div className="space-y-6 text-left animate-fadeIn">
+        {/* Developer Mode Unified Notice Banner */}
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 rounded-2xl border border-indigo-500/30 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0">
+              <Terminal className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Centrally Unified in Dev Mode</span>
+                <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Google Pay · PhonePe · UPI 8894030663 Active</span>
+              </div>
+              <h3 className="text-sm font-bold text-white">Payment, Recipient Phone (8894030663), Keys & Custom Scripts Managed in Dev Mode</h3>
+              <p className="text-xs text-slate-300 mt-0.5">UPI Phone (8894030663), Google Pay / PhonePe, Cloudinary, Database, SMTP, Custom CSS & JS are configured directly in Developer Mode.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('development')}
+            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+          >
+            <span>Go to Dev Setting</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+
         {/* Settings Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
           <div>

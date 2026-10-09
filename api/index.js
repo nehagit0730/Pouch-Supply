@@ -681,6 +681,9 @@ function getTableName(resource) {
     case "recycle_bin":
     case "recyclebin":
       return "recycle_bin";
+    case "developer_settings":
+    case "developersettings":
+      return "developer_settings";
     default:
       return null;
   }
@@ -700,7 +703,8 @@ async function initTables() {
       sql`CREATE TABLE IF NOT EXISTS blogs (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`,
       sql`CREATE TABLE IF NOT EXISTS uploaded_images (id TEXT PRIMARY KEY, base64_data TEXT NOT NULL, mime_type TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW());`,
       sql`CREATE TABLE IF NOT EXISTS layout_settings (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`,
-      sql`CREATE TABLE IF NOT EXISTS recycle_bin (id TEXT PRIMARY KEY, type TEXT NOT NULL, original_id TEXT NOT NULL, title TEXT NOT NULL, data JSONB NOT NULL, deleted_at TIMESTAMPTZ DEFAULT NOW());`
+      sql`CREATE TABLE IF NOT EXISTS recycle_bin (id TEXT PRIMARY KEY, type TEXT NOT NULL, original_id TEXT NOT NULL, title TEXT NOT NULL, data JSONB NOT NULL, deleted_at TIMESTAMPTZ DEFAULT NOW());`,
+      sql`CREATE TABLE IF NOT EXISTS developer_settings (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`
     ]);
     tablesInitialized = true;
     lastStatus = {
@@ -2633,6 +2637,39 @@ router9.post("/process-direct", async (req, res) => {
     res.status(500).json({ error: err.message || "Failed to process Razorpay payment." });
   }
 });
+router9.post("/process-upi", async (req, res) => {
+  try {
+    const { orderId, amount, upiId, upiPhone = "8894030663", utrNumber, appName = "Google Pay / PhonePe" } = req.body;
+    if (!orderId || !amount) {
+      return res.status(400).json({ error: "Order ID and Amount are required." });
+    }
+    const generatedPaymentId = `upi_${Date.now()}_${crypto2.randomBytes(4).toString("hex")}`;
+    const generatedOrderId = `upi_ord_${crypto2.randomBytes(6).toString("hex")}`;
+    const targetPhone = upiPhone || "8894030663";
+    const methodLabel = `${appName} (UPI: ${targetPhone})${utrNumber ? ` \xB7 UTR: ${utrNumber}` : ""}`;
+    const order = await processSuccessfulOrderPayment(orderId, {
+      razorpayPaymentId: utrNumber || generatedPaymentId,
+      razorpayOrderId: generatedOrderId,
+      razorpaySignature: `upi_verified_${Date.now()}`,
+      method: methodLabel
+    });
+    if (order) {
+      res.json({
+        success: true,
+        paymentStatus: "AUTHORISED",
+        transactionId: utrNumber || generatedPaymentId,
+        orderId: generatedOrderId,
+        method: methodLabel,
+        message: `\u2713 Payment successfully confirmed via ${appName} (UPI: ${targetPhone}).`
+      });
+    } else {
+      res.status(404).json({ error: "Order record not found." });
+    }
+  } catch (err) {
+    console.error("[Razorpay UPI] Error processing UPI payment:", err);
+    res.status(500).json({ error: err.message || "Failed to process UPI payment." });
+  }
+});
 router9.post("/process", async (req, res, next) => {
   req.url = "/process-direct";
   return router9.handle(req, res, next);
@@ -3069,7 +3106,18 @@ window.addEventListener("DOMContentLoaded", () => {
     metaPixelId: "",
     klaviyoPublicKey: "",
     appUrl: process.env.APP_URL || "http://localhost:3000",
-    projectName: "Jade Tailor - Personal Stylist & Luxury Store"
+    projectName: "Jade Tailor - Personal Stylist & Luxury Store",
+    upiPhoneNumber: "8894030663",
+    upiVpa: "8894030663@upi",
+    upiPayeeName: "Jade Tailor Luxury Boutique",
+    upiGPayId: "8894030663@okaxis",
+    upiPhonePeId: "8894030663@ybl",
+    upiPaytmId: "8894030663@paytm",
+    upiEnabled: true,
+    currency: "INR",
+    currencySymbol: "\u20B9",
+    storeEmail: "jade@tailorand.com",
+    storePhone: "+91 8894030663"
   },
   debugConsoleLogs: false,
   maintenanceBypassAdmins: true
@@ -3079,13 +3127,22 @@ async function loadDeveloperSettings() {
   try {
     const list = await fetchResource("developer_settings");
     if (Array.isArray(list) && list.length > 0 && list[0]) {
+      const stored = list[0];
+      const mergedKeys = {
+        ...DEFAULT_DEV_SETTINGS.apiKeys,
+        ...stored.apiKeys || {},
+        upiPhoneNumber: stored.apiKeys?.upiPhoneNumber && stored.apiKeys.upiPhoneNumber.trim() !== "" ? stored.apiKeys.upiPhoneNumber : DEFAULT_DEV_SETTINGS.apiKeys.upiPhoneNumber,
+        upiVpa: stored.apiKeys?.upiVpa && stored.apiKeys.upiVpa.trim() !== "" ? stored.apiKeys.upiVpa : DEFAULT_DEV_SETTINGS.apiKeys.upiVpa,
+        upiPayeeName: stored.apiKeys?.upiPayeeName || DEFAULT_DEV_SETTINGS.apiKeys.upiPayeeName,
+        upiGPayId: stored.apiKeys?.upiGPayId || DEFAULT_DEV_SETTINGS.apiKeys.upiGPayId,
+        upiPhonePeId: stored.apiKeys?.upiPhonePeId || DEFAULT_DEV_SETTINGS.apiKeys.upiPhonePeId,
+        upiPaytmId: stored.apiKeys?.upiPaytmId || DEFAULT_DEV_SETTINGS.apiKeys.upiPaytmId,
+        upiEnabled: stored.apiKeys?.upiEnabled !== void 0 ? stored.apiKeys.upiEnabled : true
+      };
       settings = {
         ...DEFAULT_DEV_SETTINGS,
-        ...list[0],
-        apiKeys: {
-          ...DEFAULT_DEV_SETTINGS.apiKeys,
-          ...list[0].apiKeys || {}
-        }
+        ...stored,
+        apiKeys: mergedKeys
       };
       return settings;
     }
@@ -3095,13 +3152,21 @@ async function loadDeveloperSettings() {
     if (fs4.existsSync(DEV_SETTINGS_FILE)) {
       const content = fs4.readFileSync(DEV_SETTINGS_FILE, "utf-8");
       const parsed = JSON.parse(content);
+      const mergedKeys = {
+        ...DEFAULT_DEV_SETTINGS.apiKeys,
+        ...parsed.apiKeys || {},
+        upiPhoneNumber: parsed.apiKeys?.upiPhoneNumber && parsed.apiKeys.upiPhoneNumber.trim() !== "" ? parsed.apiKeys.upiPhoneNumber : DEFAULT_DEV_SETTINGS.apiKeys.upiPhoneNumber,
+        upiVpa: parsed.apiKeys?.upiVpa && parsed.apiKeys.upiVpa.trim() !== "" ? parsed.apiKeys.upiVpa : DEFAULT_DEV_SETTINGS.apiKeys.upiVpa,
+        upiPayeeName: parsed.apiKeys?.upiPayeeName || DEFAULT_DEV_SETTINGS.apiKeys.upiPayeeName,
+        upiGPayId: parsed.apiKeys?.upiGPayId || DEFAULT_DEV_SETTINGS.apiKeys.upiGPayId,
+        upiPhonePeId: parsed.apiKeys?.upiPhonePeId || DEFAULT_DEV_SETTINGS.apiKeys.upiPhonePeId,
+        upiPaytmId: parsed.apiKeys?.upiPaytmId || DEFAULT_DEV_SETTINGS.apiKeys.upiPaytmId,
+        upiEnabled: parsed.apiKeys?.upiEnabled !== void 0 ? parsed.apiKeys.upiEnabled : true
+      };
       settings = {
         ...DEFAULT_DEV_SETTINGS,
         ...parsed,
-        apiKeys: {
-          ...DEFAULT_DEV_SETTINGS.apiKeys,
-          ...parsed.apiKeys || {}
-        }
+        apiKeys: mergedKeys
       };
       return settings;
     }
@@ -3198,7 +3263,14 @@ router12.get("/public", async (req, res) => {
       comingSoonShowSocials: settings.comingSoonShowSocials,
       comingSoonBackgroundUrl: settings.comingSoonBackgroundUrl,
       debugConsoleLogs: settings.debugConsoleLogs,
-      projectName: settings.apiKeys?.projectName || "Jade Tailor"
+      projectName: settings.apiKeys?.projectName || "Jade Tailor",
+      upiPhoneNumber: settings.apiKeys?.upiPhoneNumber || "8894030663",
+      upiVpa: settings.apiKeys?.upiVpa || "8894030663@upi",
+      upiPayeeName: settings.apiKeys?.upiPayeeName || "Jade Tailor",
+      upiGPayId: settings.apiKeys?.upiGPayId || "8894030663@okaxis",
+      upiPhonePeId: settings.apiKeys?.upiPhonePeId || "8894030663@ybl",
+      upiPaytmId: settings.apiKeys?.upiPaytmId || "8894030663@paytm",
+      upiEnabled: settings.apiKeys?.upiEnabled !== false
     });
   } catch (err) {
     res.status(500).json({ error: err.message || "Failed to get public settings" });

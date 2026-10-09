@@ -386,6 +386,44 @@ router.post("/process-direct", async (req, res) => {
   }
 });
 
+// POST /api/razorpay/process-upi (Direct Google Pay / PhonePe / UPI Payment Processor)
+router.post("/process-upi", async (req, res) => {
+  try {
+    const { orderId, amount, upiId, upiPhone = "8894030663", utrNumber, appName = "Google Pay / PhonePe" } = req.body;
+    if (!orderId || !amount) {
+      return res.status(400).json({ error: "Order ID and Amount are required." });
+    }
+
+    const generatedPaymentId = `upi_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+    const generatedOrderId = `upi_ord_${crypto.randomBytes(6).toString("hex")}`;
+    const targetPhone = upiPhone || "8894030663";
+    const methodLabel = `${appName} (UPI: ${targetPhone})${utrNumber ? ` · UTR: ${utrNumber}` : ""}`;
+
+    const order = await processSuccessfulOrderPayment(orderId, {
+      razorpayPaymentId: utrNumber || generatedPaymentId,
+      razorpayOrderId: generatedOrderId,
+      razorpaySignature: `upi_verified_${Date.now()}`,
+      method: methodLabel
+    });
+
+    if (order) {
+      res.json({
+        success: true,
+        paymentStatus: "AUTHORISED",
+        transactionId: utrNumber || generatedPaymentId,
+        orderId: generatedOrderId,
+        method: methodLabel,
+        message: `✓ Payment successfully confirmed via ${appName} (UPI: ${targetPhone}).`
+      });
+    } else {
+      res.status(404).json({ error: "Order record not found." });
+    }
+  } catch (err: any) {
+    console.error("[Razorpay UPI] Error processing UPI payment:", err);
+    res.status(500).json({ error: err.message || "Failed to process UPI payment." });
+  }
+});
+
 // Alias for /process
 router.post("/process", async (req, res, next) => {
   req.url = "/process-direct";

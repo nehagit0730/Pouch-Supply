@@ -97,6 +97,9 @@ export interface Order {
     description: string;
   }[];
   discountApplied?: Discount | null;
+  paymentMethod?: 'razorpay' | 'card' | 'upi' | 'store_credit';
+  upiUtr?: string;
+  upiPhoneNumber?: string;
   createdAt?: string;
 }
 

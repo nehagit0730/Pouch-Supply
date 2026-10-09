@@ -3,7 +3,8 @@ import {
   Code, Shield, Key, Eye, EyeOff, Save, Check, RefreshCw, AlertCircle, Copy, 
   ExternalLink, Sparkles, Download, Upload, Trash2, Globe, Database, Cloud, 
   Mail, Cpu, Play, Terminal, Layers, HelpCircle, Lock, Unlock, CheckCircle2,
-  Settings, ChevronRight, Zap, ArrowRight, Laptop, Sliders
+  Settings, ChevronRight, Zap, ArrowRight, Laptop, Sliders, Smartphone, QrCode,
+  CreditCard, Send, CheckCircle, RefreshCcw
 } from 'lucide-react';
 import ImageUploadInput from './ImageUploadInput';
 import PasswordProtectionGate from './PasswordProtectionGate';
@@ -42,13 +43,25 @@ interface DevSettings {
     klaviyoPublicKey?: string;
     appUrl?: string;
     projectName?: string;
+    // UPI & Payment Recipients
+    upiPhoneNumber?: string;
+    upiVpa?: string;
+    upiPayeeName?: string;
+    upiGPayId?: string;
+    upiPhonePeId?: string;
+    upiPaytmId?: string;
+    upiEnabled?: boolean;
+    currency?: string;
+    currencySymbol?: string;
+    storeEmail?: string;
+    storePhone?: string;
   };
   debugConsoleLogs: boolean;
   maintenanceBypassAdmins: boolean;
 }
 
 export default function DevelopmentModePanel() {
-  const [activeSubTab, setActiveSubTab] = useState<'scripts' | 'protection' | 'apikeys' | 'diagnostics'>('scripts');
+  const [activeSubTab, setActiveSubTab] = useState<'scripts' | 'protection' | 'apikeys' | 'payments' | 'diagnostics'>('scripts');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -68,7 +81,15 @@ export default function DevelopmentModePanel() {
     comingSoonShowNewsletter: true,
     comingSoonShowSocials: true,
     comingSoonBackgroundUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
-    apiKeys: {},
+    apiKeys: {
+      upiPhoneNumber: "8894030663",
+      upiVpa: "8894030663@upi",
+      upiPayeeName: "Jade Tailor Luxury Boutique",
+      upiGPayId: "8894030663@okaxis",
+      upiPhonePeId: "8894030663@ybl",
+      upiPaytmId: "8894030663@paytm",
+      upiEnabled: true,
+    },
     debugConsoleLogs: false,
     maintenanceBypassAdmins: true
   });
@@ -82,6 +103,19 @@ export default function DevelopmentModePanel() {
 
   // Preview Modal
   const [showComingSoonPreview, setShowComingSoonPreview] = useState(false);
+
+  // UPI testing state
+  const [testUpiAmount, setTestUpiAmount] = useState<string>('1500');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string, fieldName: string) => {
+    try {
+      navigator.clipboard.writeText(text);
+      setCopiedField(fieldName);
+      triggerToast(`✓ Copied ${fieldName}: ${text}`);
+      setTimeout(() => setCopiedField(null), 2500);
+    } catch (_) {}
+  };
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
@@ -307,6 +341,7 @@ export default function DevelopmentModePanel() {
           {[
             { id: 'scripts', label: 'Custom CSS & JavaScript', icon: Code },
             { id: 'protection', label: 'Website Status & Password Gate', icon: Lock, badge: settings.siteProtectionMode === 'password_protected' ? 'Private' : 'Live' },
+            { id: 'payments', label: '📱 Google Pay / PhonePe / UPI (8894030663)', icon: Smartphone },
             { id: 'apikeys', label: 'API Keys & Multi-Project Setup', icon: Key },
             { id: 'diagnostics', label: 'System Health & Tools', icon: Cpu }
           ].map(tab => {
@@ -1304,6 +1339,432 @@ export default function DevelopmentModePanel() {
                 <Save className="w-4 h-4" />
                 <span>Save All API Credentials</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SUBTAB: UPI & MOBILE PAYMENTS (GOOGLE PAY / PHONEPE / 8894030663) */}
+      {activeSubTab === 'payments' && (
+        <div className="space-y-6 animate-fadeIn">
+          {/* Top Banner Card */}
+          <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-indigo-950 text-white rounded-2xl p-6 border border-emerald-500/30 shadow-md relative overflow-hidden">
+            <div className="absolute right-0 top-0 bottom-0 w-80 bg-gradient-to-l from-emerald-500/10 to-transparent pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    <Smartphone className="w-4 h-4" />
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+                    Instant Mobile Payment Rails
+                  </span>
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Recipient: 8894030663
+                  </span>
+                </div>
+                <h2 className="text-xl font-black text-white tracking-tight">
+                  Google Pay, PhonePe, Paytm & Direct UPI Gateway
+                </h2>
+                <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                  Configure direct customer payments to phone number <strong className="text-white font-mono">8894030663</strong>. Customers can scan the dynamic QR code or tap Google Pay / PhonePe directly on mobile to instantly complete checkout.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = {
+                      ...settings,
+                      apiKeys: {
+                        ...settings.apiKeys,
+                        upiPhoneNumber: "8894030663",
+                        upiVpa: "8894030663@upi",
+                        upiPayeeName: "Jade Tailor Luxury Boutique",
+                        upiGPayId: "8894030663@okaxis",
+                        upiPhonePeId: "8894030663@ybl",
+                        upiPaytmId: "8894030663@paytm",
+                        upiEnabled: true
+                      }
+                    };
+                    setSettings(updated);
+                    handleSave(updated);
+                    triggerToast("✓ Reset UPI settings to primary phone 8894030663!");
+                  }}
+                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Use 8894030663 Defaults</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSave()}
+                  disabled={saving}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-md cursor-pointer disabled:opacity-50"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{saving ? 'Saving...' : 'Save UPI Settings'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left 7 Cols: Configuration Form */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Payment Settings Card */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                      <CreditCard className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">Mobile Payment Configuration</h3>
+                      <p className="text-xs text-slate-500">Live recipient credentials used across checkout</p>
+                    </div>
+                  </div>
+
+                  {/* Toggle UPI Checkout Active */}
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <span className="text-xs font-semibold text-slate-700">UPI Checkout:</span>
+                    <input
+                      type="checkbox"
+                      checked={settings.apiKeys.upiEnabled !== false}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        apiKeys: { ...settings.apiKeys, upiEnabled: e.target.checked }
+                      })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 relative"></div>
+                  </label>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Primary Phone Number (8894030663) */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <span>Primary UPI / Merchant Phone Number</span>
+                        <span className="text-[10px] text-emerald-600 font-extrabold uppercase px-1.5 py-0.2 bg-emerald-50 rounded">Required</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(settings.apiKeys.upiPhoneNumber || '8894030663', 'Phone Number')}
+                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>{copiedField === 'Phone Number' ? 'Copied!' : 'Copy'}</span>
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={settings.apiKeys.upiPhoneNumber ?? '8894030663'}
+                        onChange={(e) => setSettings({
+                          ...settings,
+                          apiKeys: { ...settings.apiKeys, upiPhoneNumber: e.target.value }
+                        })}
+                        placeholder="8894030663"
+                        className="w-full text-sm font-mono font-bold p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50/50"
+                      />
+                      <span className="absolute right-3 top-3 text-xs font-bold text-slate-400">
+                        IN (+91)
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Primary mobile number displayed to customers for Google Pay, PhonePe, and Paytm transfers.
+                    </p>
+                  </div>
+
+                  {/* Payee Name */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-800 block">
+                      Payee / Business Display Name
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.apiKeys.upiPayeeName ?? 'Jade Tailor Luxury Boutique'}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        apiKeys: { ...settings.apiKeys, upiPayeeName: e.target.value }
+                      })}
+                      placeholder="Jade Tailor Luxury Boutique"
+                      className="w-full text-xs p-3 border border-slate-300 rounded-xl focus:ring-1 focus:ring-slate-900 focus:outline-none"
+                    />
+                    <p className="text-[11px] text-slate-500">
+                      Name shown to the customer inside the banking app when scanning the QR code or clicking pay.
+                    </p>
+                  </div>
+
+                  {/* Primary UPI VPA */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800 block">
+                        Primary UPI ID (VPA)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(settings.apiKeys.upiVpa || '8894030663@upi', 'UPI VPA')}
+                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>{copiedField === 'UPI VPA' ? 'Copied!' : 'Copy'}</span>
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={settings.apiKeys.upiVpa ?? '8894030663@upi'}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        apiKeys: { ...settings.apiKeys, upiVpa: e.target.value }
+                      })}
+                      placeholder="8894030663@upi"
+                      className="w-full text-xs font-mono p-3 border border-slate-300 rounded-xl focus:ring-1 focus:ring-slate-900 focus:outline-none"
+                    />
+                  </div>
+
+                  {/* App Specific VPAs Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                    {/* Google Pay */}
+                    <div className="space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase text-blue-700">Google Pay</span>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(settings.apiKeys.upiGPayId || '8894030663@okaxis', 'GPay ID')}
+                          className="text-[10px] text-slate-500 hover:text-slate-800"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={settings.apiKeys.upiGPayId ?? '8894030663@okaxis'}
+                        onChange={(e) => setSettings({
+                          ...settings,
+                          apiKeys: { ...settings.apiKeys, upiGPayId: e.target.value }
+                        })}
+                        placeholder="8894030663@okaxis"
+                        className="w-full text-[11px] font-mono p-2 border border-slate-300 rounded-lg bg-white"
+                      />
+                    </div>
+
+                    {/* PhonePe */}
+                    <div className="space-y-1 bg-purple-50/50 p-3 rounded-xl border border-purple-200/60">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase text-purple-700">PhonePe</span>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(settings.apiKeys.upiPhonePeId || '8894030663@ybl', 'PhonePe ID')}
+                          className="text-[10px] text-slate-500 hover:text-slate-800"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={settings.apiKeys.upiPhonePeId ?? '8894030663@ybl'}
+                        onChange={(e) => setSettings({
+                          ...settings,
+                          apiKeys: { ...settings.apiKeys, upiPhonePeId: e.target.value }
+                        })}
+                        placeholder="8894030663@ybl"
+                        className="w-full text-[11px] font-mono p-2 border border-slate-300 rounded-lg bg-white"
+                      />
+                    </div>
+
+                    {/* Paytm */}
+                    <div className="space-y-1 bg-cyan-50/50 p-3 rounded-xl border border-cyan-200/60">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase text-cyan-800">Paytm</span>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(settings.apiKeys.upiPaytmId || '8894030663@paytm', 'Paytm ID')}
+                          className="text-[10px] text-slate-500 hover:text-slate-800"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={settings.apiKeys.upiPaytmId ?? '8894030663@paytm'}
+                        onChange={(e) => setSettings({
+                          ...settings,
+                          apiKeys: { ...settings.apiKeys, upiPaytmId: e.target.value }
+                        })}
+                        placeholder="8894030663@paytm"
+                        className="w-full text-[11px] font-mono p-2 border border-slate-300 rounded-lg bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-xs text-slate-500">
+                    Changes take effect across checkout immediately upon saving.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleSave()}
+                    disabled={saving}
+                    className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{saving ? 'Saving...' : 'Save Configuration'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Developer Integration Explainer */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-xs text-slate-600 space-y-2.5">
+                <div className="flex items-center gap-2 font-bold text-slate-900">
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  <span>How Customer Checkout Executes Payments</span>
+                </div>
+                <ol className="list-decimal list-inside space-y-1.5 pl-1 leading-relaxed text-slate-600">
+                  <li><strong>Customer selects UPI / GPay / PhonePe:</strong> The checkout dynamically presents the QR code and deep link buttons.</li>
+                  <li><strong>Direct Transfer to {settings.apiKeys.upiPhoneNumber || '8894030663'}:</strong> Tapping Google Pay or PhonePe on mobile opens the respective banking application directly with recipient and amount filled.</li>
+                  <li><strong>12-digit UTR Verification:</strong> The buyer submits their bank transaction reference number to lock in their luxury order.</li>
+                  <li><strong>Immediate Order Record:</strong> Order is marked Paid in your Admin Orders tab with full recipient tracing.</li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Right 5 Cols: Live Interactive QR & Intent Sandbox */}
+            <div className="lg:col-span-5 space-y-6">
+              {/* Dynamic QR Code Simulator */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs text-center space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <QrCode className="w-4 h-4 text-indigo-600" />
+                    <span className="text-xs font-bold text-slate-900">Live Dynamic QR Preview</span>
+                  </div>
+                  <span className="text-[10px] font-mono bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
+                    Scan with Phone
+                  </span>
+                </div>
+
+                {/* Amount selector for testing */}
+                <div className="space-y-1 text-left">
+                  <label className="text-[11px] font-bold text-slate-700">Simulate Test Order Amount (₹):</label>
+                  <div className="flex gap-2">
+                    {['500', '1500', '3500'].map(amt => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setTestUpiAmount(amt)}
+                        className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                          testUpiAmount === amt ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        ₹{amt}
+                      </button>
+                    ))}
+                    <input
+                      type="number"
+                      value={testUpiAmount}
+                      onChange={(e) => setTestUpiAmount(e.target.value)}
+                      placeholder="Custom"
+                      className="w-24 text-xs font-mono p-1 px-2 border border-slate-300 rounded-lg text-right"
+                    />
+                  </div>
+                </div>
+
+                {/* The QR Code Graphic */}
+                {(() => {
+                  const currentVpa = settings.apiKeys.upiVpa || '8894030663@upi';
+                  const currentName = settings.apiKeys.upiPayeeName || 'Jade Tailor Luxury Boutique';
+                  const upiUri = `upi://pay?pa=${encodeURIComponent(currentVpa)}&pn=${encodeURIComponent(currentName)}&am=${testUpiAmount || '1500'}&cu=INR&tn=${encodeURIComponent('Jade Tailor Atelier Order')}`;
+                  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUri)}`;
+
+                  return (
+                    <div className="space-y-3">
+                      <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-inner inline-block mx-auto relative group">
+                        <img
+                          src={qrUrl}
+                          alt="Live UPI QR Code"
+                          className="w-44 h-44 mx-auto object-contain rounded-lg"
+                        />
+                        <div className="mt-2 text-[10px] font-mono text-slate-500 font-bold">
+                          {currentVpa}
+                        </div>
+                      </div>
+
+                      {/* Deep Link Quick Test Buttons */}
+                      <div className="space-y-1.5 pt-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                          Instant App Deep Links (Mobile Intents)
+                        </span>
+
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const gpayUri = `upi://pay?pa=${encodeURIComponent(settings.apiKeys.upiGPayId || '8894030663@okaxis')}&pn=${encodeURIComponent(currentName)}&am=${testUpiAmount || '1500'}&cu=INR&tn=Jade Tailor`;
+                              copyToClipboard(gpayUri, 'Google Pay Link');
+                            }}
+                            className="p-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl border border-blue-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <span>Google Pay</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const phonepeUri = `upi://pay?pa=${encodeURIComponent(settings.apiKeys.upiPhonePeId || '8894030663@ybl')}&pn=${encodeURIComponent(currentName)}&am=${testUpiAmount || '1500'}&cu=INR&tn=Jade Tailor`;
+                              copyToClipboard(phonepeUri, 'PhonePe Link');
+                            }}
+                            className="p-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-xl border border-purple-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <span>PhonePe</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const paytmUri = `upi://pay?pa=${encodeURIComponent(settings.apiKeys.upiPaytmId || '8894030663@paytm')}&pn=${encodeURIComponent(currentName)}&am=${testUpiAmount || '1500'}&cu=INR&tn=Jade Tailor`;
+                              copyToClipboard(paytmUri, 'Paytm Link');
+                            }}
+                            className="p-2.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 font-bold rounded-xl border border-cyan-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <span>Paytm</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              copyToClipboard(upiUri, 'Raw UPI URI');
+                            }}
+                            className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl border border-slate-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <span>Copy UPI URI</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Display String */}
+                      <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-mono text-slate-600 text-left break-all select-all">
+                        {upiUri}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Status Indicator */}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-emerald-900 space-y-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="text-xs font-bold">UPI Engine Fully Synchronized</span>
+                </div>
+                <p className="text-[11px] text-emerald-700 leading-relaxed">
+                  Both storefront checkout and administration are directly connected to database persistence. Number <strong className="font-mono">8894030663</strong> is registered as the default recipient.
+                </p>
+              </div>
             </div>
           </div>
         </div>

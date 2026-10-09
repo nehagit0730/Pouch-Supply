@@ -71,6 +71,8 @@ export function getTableName(resource: string): string | null {
     case 'blogs': return 'blogs';
     case 'recycle_bin':
     case 'recyclebin': return 'recycle_bin';
+    case 'developer_settings':
+    case 'developersettings': return 'developer_settings';
     default: return null;
   }
 }
@@ -92,7 +94,8 @@ export async function initTables(): Promise<boolean> {
       sql`CREATE TABLE IF NOT EXISTS blogs (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`,
       sql`CREATE TABLE IF NOT EXISTS uploaded_images (id TEXT PRIMARY KEY, base64_data TEXT NOT NULL, mime_type TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW());`,
       sql`CREATE TABLE IF NOT EXISTS layout_settings (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`,
-      sql`CREATE TABLE IF NOT EXISTS recycle_bin (id TEXT PRIMARY KEY, type TEXT NOT NULL, original_id TEXT NOT NULL, title TEXT NOT NULL, data JSONB NOT NULL, deleted_at TIMESTAMPTZ DEFAULT NOW());`
+      sql`CREATE TABLE IF NOT EXISTS recycle_bin (id TEXT PRIMARY KEY, type TEXT NOT NULL, original_id TEXT NOT NULL, title TEXT NOT NULL, data JSONB NOT NULL, deleted_at TIMESTAMPTZ DEFAULT NOW());`,
+      sql`CREATE TABLE IF NOT EXISTS developer_settings (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());`
     ]);
 
     tablesInitialized = true;
