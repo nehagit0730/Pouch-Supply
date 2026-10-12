@@ -839,6 +839,22 @@ export default function App() {
       .replace(/[^\w\-]+/g, '')
       .replace(/\-\-+/g, '-');
   };
+
+  const normalizeSlug = (s?: string) => (s || '').toLowerCase().trim().replace(/^\/+/, '').replace(/\/+$/, '').replace(/^pages\//, '').replace(/^page-/, '');
+
+  const findCustomPage = (tab: string) => {
+    const norm = normalizeSlug(tab);
+    if (!norm) return null;
+    return customPages.find(p => 
+      !p.isHomepage && (
+        p.slug === tab ||
+        normalizeSlug(p.slug) === norm ||
+        p.id === tab ||
+        slugify(p.slug) === norm ||
+        slugify(p.title) === norm
+      )
+    ) || null;
+  };
   
   // Checkout Successful Indicator modal
   const [checkoutSuccessful, setCheckoutSuccessful] = useState<{ id: string; amount: number } | null>(null);
@@ -885,7 +901,8 @@ export default function App() {
         setSelectedBlogSlug(slug);
         setCurrentTab('blog-detail');
       } else if (path.startsWith('/pages/')) {
-        const slug = path.replace('/pages/', '');
+        const rawSlug = path.replace('/pages/', '');
+        const slug = normalizeSlug(rawSlug);
         if (slug === 'subscribe' || slug.startsWith('subscribe/')) {
           setCurrentTab('frontend-subscribe');
         } else if (slug === 'brands') {
@@ -927,13 +944,21 @@ export default function App() {
         const prodId = path.replace('/products/', '');
         setSelectedProductId(decodeURIComponent(prodId));
         setCurrentTab('product-detail');
+      } else {
+        const cleanPath = normalizeSlug(path);
+        if (cleanPath) {
+          const customMatch = customPages.find(p => !p.isHomepage && (normalizeSlug(p.slug) === cleanPath || slugify(p.title) === cleanPath));
+          if (customMatch) {
+            setCurrentTab(customMatch.slug);
+          }
+        }
       }
     };
 
     handleLocationChange();
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
-  }, [collections]);
+  }, [collections, customPages]);
 
   // Synchronize browser URL when isAdminActive state changes in React UI
   useEffect(() => {
@@ -1862,8 +1887,8 @@ export default function App() {
             )}
 
             {/* FRONTEND VIEW - CUSTOMIZABLE BUILDER SUBPAGES */}
-            {customPages.some(p => p.slug === currentTab && !p.isHomepage) && (() => {
-              const matchedPage = customPages.find(p => p.slug === currentTab);
+            {(() => {
+              const matchedPage = findCustomPage(currentTab);
               if (!matchedPage) return null;
               return (
                 <PageRenderer 
@@ -2551,7 +2576,7 @@ export default function App() {
             )}
 
             {/* FRONTEND VIEW - 404 NOT FOUND FOR NONEXISTENT PAGES */}
-            {!['frontend-home', 'frontend-shop', 'frontend-brands', 'frontend-subscribe', 'frontend-account', 'product-detail', 'collection-detail', 'blogs', 'blog-detail', 'privacy-policy', 'shipping-policy', 'refund-policy', 'terms-conditions', 'frontend-checkout', 'payment-razorpay-gateway', 'payment-success', 'payment-failed', 'payment-cancelled'].includes(currentTab) && !customPages.some(p => p.slug === currentTab) && (
+            {!['frontend-home', 'frontend-shop', 'frontend-brands', 'frontend-subscribe', 'frontend-account', 'product-detail', 'collection-detail', 'blogs', 'blog-detail', 'privacy-policy', 'shipping-policy', 'refund-policy', 'terms-conditions', 'frontend-checkout', 'payment-razorpay-gateway', 'payment-success', 'payment-failed', 'payment-cancelled'].includes(currentTab) && !findCustomPage(currentTab) && (
               <div className="max-w-6xl mx-auto py-24 px-4 text-center space-y-6">
                 <span className="text-7xl block">🔍</span>
                 <div className="space-y-1.5">

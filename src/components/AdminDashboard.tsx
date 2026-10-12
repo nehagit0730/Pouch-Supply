@@ -1279,6 +1279,11 @@ export default function AdminDashboard({
   };
 
   const handlePreviewPage = (page: CustomPage) => {
+    parentOnUpdateCustomPages(localPages);
+    try {
+      localStorage.setItem('ps_custom_pages', JSON.stringify(localPages));
+    } catch (e) {}
+
     if (onNavigateToPage) {
       onNavigateToPage(page.isHomepage ? '' : page.slug);
     } else {
@@ -2244,7 +2249,10 @@ export default function AdminDashboard({
 
     const updatedPages = [...localPages, page];
     setLocalPages(updatedPages);
-    onUpdateCustomPages(updatedPages);
+    parentOnUpdateCustomPages(updatedPages);
+    try {
+      localStorage.setItem('ps_custom_pages', JSON.stringify(updatedPages));
+    } catch (e) {}
     setShowAddPage(false);
     setNewPageForm({ title: '', slug: '' });
   };
@@ -2274,6 +2282,10 @@ export default function AdminDashboard({
         return page;
       });
       setLocalPages(updated);
+      parentOnUpdateCustomPages(updated);
+      try {
+        localStorage.setItem('ps_custom_pages', JSON.stringify(updated));
+      } catch (e) {}
       setSelectedBuilderSectionId(newSection.id);
       setHasUnsavedChanges(true);
       if (onDirtyChange) onDirtyChange(true);
@@ -2441,6 +2453,10 @@ export default function AdminDashboard({
       return page;
     });
     setLocalPages(updated);
+    parentOnUpdateCustomPages(updated);
+    try {
+      localStorage.setItem('ps_custom_pages', JSON.stringify(updated));
+    } catch (e) {}
     setHasUnsavedChanges(true);
     setSelectedBuilderSectionId(newSection.id);
   };
@@ -2457,6 +2473,10 @@ export default function AdminDashboard({
       return page;
     });
     setLocalPages(updated);
+    parentOnUpdateCustomPages(updated);
+    try {
+      localStorage.setItem('ps_custom_pages', JSON.stringify(updated));
+    } catch (e) {}
     setHasUnsavedChanges(true);
     if (selectedBuilderSectionId === sectionId) {
       setSelectedBuilderSectionId(null);
@@ -2925,7 +2945,10 @@ export default function AdminDashboard({
           onUpdatePage={(updated) => {
             const nextPages = localPages.map(p => p.id === updated.id ? updated : p);
             setLocalPages(nextPages);
-            onUpdateCustomPages(nextPages);
+            parentOnUpdateCustomPages(nextPages);
+            try {
+              localStorage.setItem('ps_custom_pages', JSON.stringify(nextPages));
+            } catch (e) {}
             setHasUnsavedChanges(true);
             if (onDirtyChange) onDirtyChange(true);
           }}
@@ -2941,6 +2964,11 @@ export default function AdminDashboard({
           hasUnsavedChanges={hasUnsavedChanges}
           onDirtyChange={onDirtyChange}
           onPreviewLive={() => {
+            const nextPages = localPages;
+            parentOnUpdateCustomPages(nextPages);
+            try {
+              localStorage.setItem('ps_custom_pages', JSON.stringify(nextPages));
+            } catch (e) {}
             onNavigateToPage?.(pageToEdit.isHomepage ? '' : pageToEdit.slug);
           }}
         />

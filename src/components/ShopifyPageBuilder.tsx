@@ -249,33 +249,36 @@ export default function ShopifyPageBuilder({
 
   // Add new section from available templates
   const handleAddNewSection = (type: any) => {
+    const liveTemplateSec = DEFAULT_PAGES[0]?.sections.find(s => s.type === type);
     const template = AVAILABLE_SECTION_TEMPLATES.find(t => t.type === type);
+    const baseSettings: PageSection['settings'] = liveTemplateSec ? JSON.parse(JSON.stringify(liveTemplateSec.settings)) : {
+      title: template ? template.label : 'New Section',
+      subtitle: 'PREMIUM STORE CURATION',
+      description: 'Refined modern silhouettes tailored with virgin wool and organic cotton.',
+      buttonText: 'SHOP COLLECTION',
+      buttonLink: '/collections/all',
+      imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=80',
+      backgroundColor: '#FFFFFF',
+      headingColor: '#111827',
+      textColor: '#4B5563',
+      height: 'Large',
+      overlayOpacity: 30,
+      alignment: 'Center',
+      fullWidth: true,
+      itemsCount: 4,
+      columnsDesktop: 4,
+      selectedCollectionId: 'all',
+      blocks: [
+        { id: `blk-1-${Date.now()}`, type: 'heading', title: template?.label || 'Heading' },
+        { id: `blk-2-${Date.now()}`, type: 'text', text: 'Pair text with an image to focus on your chosen product, collection, or blog post.' },
+        { id: `blk-3-${Date.now()}`, type: 'buttons', buttonText: 'Explore More', buttonLink: '/collections/all' }
+      ]
+    };
+
     const newSection: PageSection = {
       id: `sec-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       type: type,
-      settings: {
-        title: template ? template.label : 'New Section',
-        subtitle: 'PREMIUM STORE CURATION',
-        description: 'Refined modern silhouettes tailored with virgin wool and organic cotton.',
-        buttonText: 'SHOP COLLECTION',
-        buttonLink: '/collections/all',
-        imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=80',
-        backgroundColor: '#FFFFFF',
-        headingColor: '#111827',
-        textColor: '#4B5563',
-        height: 'Large',
-        overlayOpacity: 30,
-        alignment: 'Center',
-        fullWidth: true,
-        itemsCount: 4,
-        columnsDesktop: 4,
-        selectedCollectionId: 'all',
-        blocks: [
-          { id: `blk-1-${Date.now()}`, type: 'heading', title: template?.label || 'Heading' },
-          { id: `blk-2-${Date.now()}`, type: 'text', text: 'Pair text with an image to focus on your chosen product, collection, or blog post.' },
-          { id: `blk-3-${Date.now()}`, type: 'buttons', buttonText: 'Explore More', buttonLink: '/collections/all' }
-        ]
-      }
+      settings: baseSettings
     };
 
     const updatedSections = [...page.sections, newSection];
