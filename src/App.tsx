@@ -516,6 +516,22 @@ export default function App() {
             'Brand Logos'
           ];
           let sanitizedPages = [...pagesRes];
+          // Preserve any custom pages created locally that might not yet be in the backend response
+          try {
+            const local = safeLoadFromLocalStorage<CustomPage[]>('ps_custom_pages', []);
+            if (Array.isArray(local) && local.length > 0) {
+              local.forEach(lp => {
+                if (!lp) return;
+                const existingIdx = sanitizedPages.findIndex(sp => sp && (sp.id === lp.id || (lp.slug && sp.slug === lp.slug)));
+                if (existingIdx === -1) {
+                  sanitizedPages.push(lp);
+                } else if ((lp.sections?.length || 0) > (sanitizedPages[existingIdx]?.sections?.length || 0)) {
+                  sanitizedPages[existingIdx] = lp;
+                }
+              });
+            }
+          } catch (e) {}
+
           const homeIdx = sanitizedPages.findIndex((p: any) => p && p.isHomepage);
           if (homeIdx === -1 && defaultHome) {
             sanitizedPages = [defaultHome, ...sanitizedPages];
@@ -764,8 +780,14 @@ export default function App() {
       url = '/pages/brands';
     } else if (tab === 'frontend-subscribe') {
       url = '/pages/subscribe';
-    } else if (tab === 'frontend-account') {
-      url = '/pages/account';
+    } else if (tab === 'frontend-account' || tab === 'account' || tab.startsWith('account/')) {
+      if (tab.startsWith('account/')) {
+        url = `/pages/${tab}`;
+      } else {
+        const currentP = typeof window !== 'undefined' ? window.location.pathname : '';
+        url = currentP.startsWith('/pages/account/') ? currentP : '/pages/account/dashboard';
+      }
+      tab = 'frontend-account';
     } else if (tab === 'frontend-checkout') {
       url = '/pages/checkout';
     } else if (tab === 'blogs') {
@@ -845,7 +867,7 @@ export default function App() {
   const findCustomPage = (tab: string) => {
     const norm = normalizeSlug(tab);
     if (!norm) return null;
-    return customPages.find(p => 
+    let match = customPages.find(p => 
       !p.isHomepage && (
         p.slug === tab ||
         normalizeSlug(p.slug) === norm ||
@@ -854,6 +876,29 @@ export default function App() {
         slugify(p.title) === norm
       )
     ) || null;
+
+    // Check localStorage fallback to ensure newly added pages/sections in Page Builder are immediately previewable
+    try {
+      const local = safeLoadFromLocalStorage<CustomPage[]>('ps_custom_pages', []);
+      if (Array.isArray(local) && local.length > 0) {
+        const localMatch = local.find(p => 
+          !p.isHomepage && (
+            p.slug === tab ||
+            normalizeSlug(p.slug) === norm ||
+            p.id === tab ||
+            slugify(p.slug) === norm ||
+            slugify(p.title) === norm
+          )
+        );
+        if (localMatch) {
+          if (!match || (localMatch.sections?.length || 0) > (match.sections?.length || 0)) {
+            match = localMatch;
+          }
+        }
+      }
+    } catch (e) {}
+
+    return match;
   };
   
   // Checkout Successful Indicator modal
@@ -907,7 +952,7 @@ export default function App() {
           setCurrentTab('frontend-subscribe');
         } else if (slug === 'brands') {
           setCurrentTab('frontend-brands');
-        } else if (slug === 'account') {
+        } else if (slug === 'account' || slug.startsWith('account/')) {
           setCurrentTab('frontend-account');
         } else if (slug === 'checkout') {
           setCurrentTab('frontend-checkout');

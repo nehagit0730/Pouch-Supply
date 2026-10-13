@@ -1279,15 +1279,17 @@ export default function AdminDashboard({
   };
 
   const handlePreviewPage = (page: CustomPage) => {
+    const freshPage = localPages.find(p => p.id === page.id) || page;
     parentOnUpdateCustomPages(localPages);
     try {
       localStorage.setItem('ps_custom_pages', JSON.stringify(localPages));
     } catch (e) {}
 
+    const cleanSlug = freshPage.slug ? freshPage.slug.replace(/^\/+/, '').replace(/\/+$/, '') : '';
     if (onNavigateToPage) {
-      onNavigateToPage(page.isHomepage ? '' : page.slug);
+      onNavigateToPage(freshPage.isHomepage ? '' : (cleanSlug || freshPage.id));
     } else {
-      const url = page.isHomepage ? '/' : `/pages/${page.slug}`;
+      const url = freshPage.isHomepage ? '/' : `/pages/${cleanSlug || freshPage.id}`;
       window.open(url, '_blank');
     }
   };
@@ -2969,7 +2971,9 @@ export default function AdminDashboard({
             try {
               localStorage.setItem('ps_custom_pages', JSON.stringify(nextPages));
             } catch (e) {}
-            onNavigateToPage?.(pageToEdit.isHomepage ? '' : pageToEdit.slug);
+            const latestPage = localPages.find(p => p.id === pageToEdit.id) || pageToEdit;
+            const cleanSlug = latestPage.slug ? latestPage.slug.replace(/^\/+/, '').replace(/\/+$/, '') : '';
+            onNavigateToPage?.(latestPage.isHomepage ? '' : (cleanSlug || latestPage.id));
           }}
         />
       );

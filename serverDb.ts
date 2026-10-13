@@ -131,19 +131,25 @@ export async function fetchResource(resource: string): Promise<any[]> {
   } catch (error: any) {
     console.error(`[fetchResource] Error fetching "${resource}" from Neon Postgres:`, error);
   }
-  return memoryCache[resource] || [];
+  return memoryCache[resKey] || memoryCache[resource] || [];
 }
 
 export async function saveResource(resource: string, list: any[]): Promise<any[]> {
-  // Update local memory cache immediately
+  // Update local memory cache immediately under all key variations
+  const resKey = resource.toLowerCase();
   memoryCache[resource] = [...list];
+  memoryCache[resKey] = [...list];
+  if (resKey === 'custompages') {
+    memoryCache['customPages'] = [...list];
+    memoryCache['custompages'] = [...list];
+  }
 
   try {
     await saveResourceToNeon(resource, list);
   } catch (error: any) {
     console.error(`[saveResource] Error saving "${resource}" to Neon Postgres:`, error);
   }
-  return memoryCache[resource];
+  return memoryCache[resource] || memoryCache[resKey] || [];
 }
 
 // Memory cache buffer for uploaded files when Neon Postgres is offline

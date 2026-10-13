@@ -125,6 +125,9 @@ export interface Customer {
   location: string;
   ordersCount: number;
   amountSpent: number;
+  totalSpent?: number;
+  phone?: string;
+  tags?: string[];
   addresses: string[];
   wishlist: string[]; // Product IDs
   referralCode?: string;
