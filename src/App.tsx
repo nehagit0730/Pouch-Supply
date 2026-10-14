@@ -741,6 +741,7 @@ export default function App() {
   const [customerDrawerOpen, setCustomerDrawerOpen] = useState<boolean>(false);
   const [customerDrawerTab, setCustomerDrawerTab] = useState<'orders' | 'addresses' | 'wishlist' | 'emails'>('orders');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [accountSubTab, setAccountSubTab] = useState<string>('dashboard');
 
   // Razorpay checkout persistent states
   const [checkoutDiscount, setCheckoutDiscount] = useState<Discount | null>(null);
@@ -781,12 +782,21 @@ export default function App() {
     } else if (tab === 'frontend-subscribe') {
       url = '/pages/subscribe';
     } else if (tab === 'frontend-account' || tab === 'account' || tab.startsWith('account/')) {
+      let sub = 'dashboard';
       if (tab.startsWith('account/')) {
-        url = `/pages/${tab}`;
+        sub = tab.replace('account/', '');
+        url = `/pages/account/${sub}`;
       } else {
         const currentP = typeof window !== 'undefined' ? window.location.pathname : '';
-        url = currentP.startsWith('/pages/account/') ? currentP : '/pages/account/dashboard';
+        if (currentP.startsWith('/pages/account/')) {
+          url = currentP;
+          sub = currentP.replace('/pages/account/', '').split('/')[0] || 'dashboard';
+        } else {
+          url = '/pages/account/dashboard';
+          sub = 'dashboard';
+        }
       }
+      setAccountSubTab(sub);
       tab = 'frontend-account';
     } else if (tab === 'frontend-checkout') {
       url = '/pages/checkout';
@@ -953,6 +963,8 @@ export default function App() {
         } else if (slug === 'brands') {
           setCurrentTab('frontend-brands');
         } else if (slug === 'account' || slug.startsWith('account/')) {
+          const sub = slug.startsWith('account/') ? slug.replace('account/', '').split('/')[0] : 'dashboard';
+          setAccountSubTab(sub || 'dashboard');
           setCurrentTab('frontend-account');
         } else if (slug === 'checkout') {
           setCurrentTab('frontend-checkout');
@@ -2144,6 +2156,10 @@ export default function App() {
                 onUpdateProfile={handleUpdateProfile}
                 onUpdateOrder={handleUpdateOrder}
                 discounts={discounts}
+                initialSubTab={accountSubTab}
+                onNavigateToTab={(targetTab) => {
+                  navigateToTab(targetTab);
+                }}
               />
             )}
 
@@ -2684,9 +2700,10 @@ export default function App() {
         onRemoveAddress={handleRemoveAddress}
         onOpenCart={() => setCartOpen(true)}
         initialTab={customerDrawerTab}
-        onNavigateToPortal={() => {
+        onNavigateToPortal={(targetSlug?: string) => {
           setCustomerDrawerOpen(false);
-          navigateToTab('frontend-account');
+          const sub = targetSlug || 'dashboard';
+          navigateToTab(`account/${sub}`);
         }}
       />
 
